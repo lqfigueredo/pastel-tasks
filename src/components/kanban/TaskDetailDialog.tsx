@@ -40,6 +40,7 @@ export function TaskDetailDialog({ task, allStatuses, open, onOpenChange, onRefr
   const [startDate, setStartDate] = useState(task.start_date || '');
   const [endDate, setEndDate] = useState(task.end_date || '');
   const [estimatedDate, setEstimatedDate] = useState(task.estimated_delivery_date || '');
+  const [actualEndDate, setActualEndDate] = useState(task.actual_end_date || '');
   const [assigneeIds, setAssigneeIds] = useState<string[]>(task.assignees.map((a) => a.user_id));
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState('');
@@ -57,6 +58,7 @@ export function TaskDetailDialog({ task, allStatuses, open, onOpenChange, onRefr
       setStartDate(task.start_date || '');
       setEndDate(task.end_date || '');
       setEstimatedDate(task.estimated_delivery_date || '');
+      setActualEndDate(task.actual_end_date || '');
       setAssigneeIds(task.assignees.map((a) => a.user_id));
       fetchComments();
     }
@@ -132,6 +134,7 @@ export function TaskDetailDialog({ task, allStatuses, open, onOpenChange, onRefr
       start_date: startDate || null,
       end_date: endDate || null,
       estimated_delivery_date: estimatedDate || null,
+      actual_end_date: actualEndDate || null,
     }).eq('id', task.id);
 
     if (error) {
@@ -212,7 +215,7 @@ export function TaskDetailDialog({ task, allStatuses, open, onOpenChange, onRefr
               </div>
               <div className="space-y-2">
                 <Label>Fim Real</Label>
-                <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+                <Input type="date" value={actualEndDate} onChange={(e) => setActualEndDate(e.target.value)} />
               </div>
             </div>
 
