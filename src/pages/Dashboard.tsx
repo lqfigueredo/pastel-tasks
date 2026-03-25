@@ -5,7 +5,7 @@ import { Task, TaskStatus } from '@/components/kanban/KanbanBoard';
 import { Profile } from '@/components/kanban/AssigneeSelector';
 import { TaskDetailDialog } from '@/components/kanban/TaskDetailDialog';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight, CheckCircle2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, CheckCircle2, UserCircle } from 'lucide-react';
 import {
   startOfMonth,
   endOfMonth,
@@ -318,24 +318,29 @@ export default function Dashboard() {
 
                     {/* Single-day tasks rendered below bars area */}
                     <div style={{ marginTop: `${barsAreaHeight}px` }} className="space-y-0.5">
-                      {singleTasks.map((task) => (
-                        <button
-                          key={task.id}
-                          onClick={() => setSelectedTask(task)}
-                          className="flex w-full items-center gap-1 rounded px-1.5 py-0.5 text-left text-[11px] leading-tight transition-colors hover:bg-accent/40"
-                        >
-                          <span
-                            className="mt-0.5 h-2 w-2 shrink-0 rounded-full"
-                            style={{ backgroundColor: statusColorMap.get(task.status_id) || 'hsl(var(--muted))' }}
-                          />
-                          <span className="truncate text-foreground">{task.title}</span>
-                        </button>
-                      ))}
+                      {singleTasks.map((task) => {
+                        const isAssignedByOther = myAssignedIds.has(task.id) && task.created_by !== user?.id;
+                        return (
+                          <button
+                            key={task.id}
+                            onClick={() => setSelectedTask(task)}
+                            className="flex w-full items-center gap-1 rounded px-1.5 py-0.5 text-left text-[11px] leading-tight transition-colors hover:bg-accent/40"
+                          >
+                            <span
+                              className="mt-0.5 h-2 w-2 shrink-0 rounded-full"
+                              style={{ backgroundColor: statusColorMap.get(task.status_id) || 'hsl(var(--muted))' }}
+                            />
+                            {isAssignedByOther && <UserCircle className="h-2.5 w-2.5 shrink-0 text-primary" />}
+                            <span className="truncate text-foreground">{task.title}</span>
+                          </button>
+                        );
+                      })}
                       {overflowCount > 0 && (
                         <span className="block px-1.5 text-[10px] text-muted-foreground">+{overflowCount} mais</span>
                       )}
                       {completedOnDay.map((task) => {
                         const color = statusColorMap.get(task.status_id) || 'hsl(var(--muted))';
+                        const isAssignedByOther = myAssignedIds.has(task.id) && task.created_by !== user?.id;
                         return (
                           <button
                             key={`done-${task.id}`}
@@ -344,6 +349,7 @@ export default function Dashboard() {
                             style={{ backgroundColor: color + '25' }}
                           >
                             <CheckCircle2 className="h-3 w-3 shrink-0" style={{ color }} />
+                            {isAssignedByOther && <UserCircle className="h-2.5 w-2.5 shrink-0 text-primary" />}
                             <span className="truncate text-foreground">{task.title}</span>
                           </button>
                         );
@@ -356,6 +362,7 @@ export default function Dashboard() {
               {/* Multi-day bars (absolute positioned over the week row) */}
               {bars.map((bar, bi) => {
                 const color = statusColorMap.get(bar.task.status_id) || 'hsl(var(--muted))';
+                const isAssignedByOther = myAssignedIds.has(bar.task.id) && bar.task.created_by !== user?.id;
                 const left = `${(bar.startCol / 7) * 100}%`;
                 const width = `${((bar.endCol - bar.startCol + 1) / 7) * 100}%`;
                 const top = TOP_OFFSET + bar.row * (BAR_HEIGHT + BAR_GAP);
@@ -371,10 +378,11 @@ export default function Dashboard() {
                       top: `${top}px`,
                       height: `${BAR_HEIGHT}px`,
                       backgroundColor: color + '30',
-                      borderLeft: `3px solid ${color}`,
+                      borderLeft: `3px ${isAssignedByOther ? 'dashed' : 'solid'} ${color}`,
                       borderRadius: `${bar.isStart ? '6px' : '0'} ${bar.isEnd ? '6px' : '0'} ${bar.isEnd ? '6px' : '0'} ${bar.isStart ? '6px' : '0'}`,
                     }}
                   >
+                    {isAssignedByOther && <UserCircle className="mr-1 h-3 w-3 shrink-0 text-primary" />}
                     <span className="truncate text-foreground">{bar.task.title}</span>
                   </button>
                 );
