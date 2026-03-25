@@ -1,14 +1,96 @@
+import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Trash2, Plus, Loader2 } from 'lucide-react';
+
+interface Status {
+  id: string;
+  name: string;
+  color: string;
+  position: number;
+  is_default: boolean;
+}
+
+const PASTEL_COLORS = [
+  '#B2DFDB', '#E0F2F1', '#DCEDC8', '#FFF9C4',
+  '#F8BBD0', '#D1C4E9', '#BBDEFB', '#FFE0B2',
+  '#FFCCBC', '#C8E6C9', '#B3E5FC', '#F0F4C3',
+];
 
 const Settings = () => {
   const { user } = useAuth();
+  const { toast } = useToast();
+  const [statuses, setStatuses] = useState<Status[]>([]);
+  const [newName, setNewName] = useState('');
+  const [newColor, setNewColor] = useState(PASTEL_COLORS[0]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  const fetchStatuses = async () => {
+    const { data } = await supabase.from('task_statuses').select('*').order('position');
+    if (data) setStatuses(data);
+    setLoading(false);
+  };
+
+  useEffect(() => { fetchStatuses(); }, []);
+
+  const handleCreate = async () => {
+    if (!newName.trim()) return;
+    setSaving(true);
+    const maxPos = statuses.length > 0 ? Math.max(...statuses.map(s => s.position)) : 0;
+    const { error } = await supabase.from('task_statuses').insert({
+      name: newName.trim(),
+      color: newColor,
+      position: maxPos + 1,
+    });
+    if (error) {
+      toast({ title: 'Erro ao criar status', variant: 'destructive' });
+    } else {
+      setNewName('');
+      toast({ title: 'Status criado!' });
+      await fetchStatuses();
+    }
+    setSaving(false);
+  };
+
+  const handleDelete = async (status: Status) => {
+    // Check if tasks use this status
+    const { count } = await supabase
+      .from('tasks')
+      .select('id', { count: 'exact', head: true })
+      .eq('status_id', status.id);
+
+    if (count && count > 0) {
+      toast({
+        title: 'Não é possível excluir',
+        description: `Existem ${count} tarefa(s) usando este status. Mova-as antes de excluir.`,
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const { error } = await supabase.from('task_statuses').delete().eq('id', status.id);
+    if (error) {
+      toast({ title: 'Erro ao excluir', variant: 'destructive' });
+    } else {
+      toast({ title: 'Status excluído' });
+      await fetchStatuses();
+    }
+  };
 
   return (
-    <div className="animate-fade-in max-w-2xl">
-      <h1 className="font-display text-2xl font-bold text-foreground mb-2">Configurações</h1>
-      <p className="text-sm text-muted-foreground mb-6">Gerencie seu perfil e preferências</p>
+    <div className="animate-fade-in max-w-2xl space-y-8">
+      <div>
+        <h1 className="font-display text-2xl font-bold text-foreground mb-2">Configurações</h1>
+        <p className="text-sm text-muted-foreground mb-6">Gerencie seu perfil e preferências</p>
+      </div>
 
+      {/* Profile */}
       <div className="rounded-xl border border-border/50 bg-card p-6 space-y-4">
+        <h2 className="text-lg font-semibold text-foreground">Perfil</h2>
         <div>
           <label className="text-sm font-medium text-foreground">E-mail</label>
           <p className="text-sm text-muted-foreground">{user?.email}</p>
@@ -16,6 +98,63 @@ const Settings = () => {
         <div>
           <label className="text-sm font-medium text-foreground">Nome</label>
           <p className="text-sm text-muted-foreground">{user?.user_metadata?.display_name || '—'}</p>
+        </div>
+      </div>
+
+      {/* Kanban Statuses */}
+      <div className="rounded-xl border border-border/50 bg-card p-6 space-y-4">
+        <h2 className="text-lg font-semibold text-foreground">Status do Kanban</h2>
+        <p className="text-sm text-muted-foreground">Gerencie as colunas do seu quadro Kanban</p>
+
+        {loading ? (
+          <div className="flex justify-center py-4"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>
+        ) : (
+          <div className="space-y-2">
+            {statuses.map((s) => (
+              <div key={s.id} className="flex items-center gap-3 py-2 px-3 rounded-lg bg-muted/30">
+                <span className="h-4 w-4 rounded-full shrink-0" style={{ backgroundColor: s.color }} />
+                <span className="text-sm font-medium text-foreground flex-1">{s.name}</span>
+                {s.is_default ? (
+                  <span className="text-xs text-muted-foreground">Padrão</span>
+                ) : (
+                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleDelete(s)}>
+                    <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                  </Button>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Create new */}
+        <div className="pt-2 border-t border-border/50 space-y-3">
+          <p className="text-sm font-medium text-foreground">Novo status</p>
+          <div className="flex flex-wrap gap-2">
+            {PASTEL_COLORS.map((c) => (
+              <button
+                key={c}
+                className="h-7 w-7 rounded-full border-2 transition-transform hover:scale-110"
+                style={{
+                  backgroundColor: c,
+                  borderColor: newColor === c ? 'hsl(var(--foreground))' : 'transparent',
+                }}
+                onClick={() => setNewColor(c)}
+              />
+            ))}
+          </div>
+          <div className="flex gap-2">
+            <Input
+              placeholder="Nome do status"
+              value={newName}
+              onChange={(e) => setNewName(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleCreate()}
+              className="flex-1"
+            />
+            <Button onClick={handleCreate} disabled={saving || !newName.trim()} size="sm">
+              {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+              Criar
+            </Button>
+          </div>
         </div>
       </div>
     </div>
