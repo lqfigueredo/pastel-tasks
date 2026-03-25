@@ -76,7 +76,21 @@ export default function Dashboard() {
   const statusColorMap = new Map(statuses.map((s) => [s.id, s.color]));
 
   const getTasksForDay = (day: Date) =>
-    tasks.filter((t) => t.estimated_delivery_date && isSameDay(new Date(t.estimated_delivery_date), day));
+    tasks.filter((t) => {
+      const start = t.start_date ? parseISO(t.start_date) : null;
+      const end = t.end_date ? parseISO(t.end_date) : null;
+
+      if (start && end) {
+        return isWithinInterval(day, { start, end });
+      }
+      if (start && !end) {
+        return isSameDay(day, start) || isAfter(day, start);
+      }
+      if (!start && end) {
+        return isSameDay(day, end) || isBefore(day, end);
+      }
+      return t.estimated_delivery_date && isSameDay(parseISO(t.estimated_delivery_date), day);
+    });
 
   return (
     <div className="space-y-6">
