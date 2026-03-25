@@ -1,10 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Trash2, Plus, Loader2, Pencil, Check, X } from 'lucide-react';
+import { Trash2, Plus, Loader2, Pencil, Check, X, GripVertical } from 'lucide-react';
 
 interface Status {
   id: string;
