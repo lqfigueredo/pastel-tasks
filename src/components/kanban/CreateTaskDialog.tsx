@@ -31,6 +31,9 @@ export function CreateTaskDialog({ open, onOpenChange, onTaskCreated }: Props) {
   const [teamId, setTeamId] = useState<string | null>(null);
   const [userTeam, setUserTeam] = useState<{ id: string; name: string } | null>(null);
   const [saving, setSaving] = useState(false);
+  const [isRecurring, setIsRecurring] = useState(false);
+  const [recurrenceType, setRecurrenceType] = useState('weekly');
+  const [recurrenceDay, setRecurrenceDay] = useState<number>(1);
 
   useEffect(() => {
     if (open) {
