@@ -8,8 +8,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Switch } from '@/components/ui/switch';
 import { AssigneeSelector } from './AssigneeSelector';
-import { X, Users } from 'lucide-react';
+import { X, Users, Repeat } from 'lucide-react';
 
 interface Props {
   open: boolean;
@@ -30,6 +31,9 @@ export function CreateTaskDialog({ open, onOpenChange, onTaskCreated }: Props) {
   const [teamId, setTeamId] = useState<string | null>(null);
   const [userTeam, setUserTeam] = useState<{ id: string; name: string } | null>(null);
   const [saving, setSaving] = useState(false);
+  const [isRecurring, setIsRecurring] = useState(false);
+  const [recurrenceType, setRecurrenceType] = useState('weekly');
+  const [recurrenceDay, setRecurrenceDay] = useState<number>(1);
 
   useEffect(() => {
     if (open) {
@@ -58,35 +62,83 @@ export function CreateTaskDialog({ open, onOpenChange, onTaskCreated }: Props) {
     if (!user || !title.trim()) return;
     setSaving(true);
 
-    const { data, error } = await supabase.from('tasks').insert({
-      title: title.trim(),
-      description: description.trim() || null,
-      status_id: statusId,
-      start_date: startDate || null,
-      estimated_delivery_date: estimatedDate || null,
-      created_by: user.id,
-      team_id: teamId,
-    }).select('id').single();
-
-    if (error) {
-      toast({ title: 'Erro ao criar tarefa', description: error.message, variant: 'destructive' });
-    } else {
-      if (data && assigneeIds.length > 0) {
-        await supabase.from('task_assignees').insert(
-          assigneeIds.map((user_id) => ({ task_id: data.id, user_id }))
-        );
+    if (isRecurring) {
+      // Calculate next_run_date based on recurrence type
+      const today = new Date();
+      let nextRun: Date;
+      if (recurrenceType === 'weekly') {
+        const currentDay = today.getDay();
+        const diff = (recurrenceDay - currentDay + 7) % 7 || 7;
+        nextRun = new Date(today);
+        nextRun.setDate(today.getDate() + diff);
+      } else if (recurrenceType === 'monthly') {
+        nextRun = new Date(today.getFullYear(), today.getMonth() + 1, Math.min(recurrenceDay, 28));
+      } else {
+        nextRun = new Date(today.getFullYear() + 1, 0, Math.min(recurrenceDay, 365));
+        // For yearly, recurrenceDay is month (0-11), use day 1
+        nextRun = new Date(today.getFullYear() + (today.getMonth() >= recurrenceDay ? 1 : 0), recurrenceDay, 1);
       }
-      toast({ title: 'Tarefa criada!' });
-      setTitle('');
-      setDescription('');
-      setStartDate('');
-      setEstimatedDate('');
-      setAssigneeIds([]);
-      setTeamId(null);
-      onOpenChange(false);
-      onTaskCreated?.();
+
+      const nextRunStr = nextRun.toISOString().split('T')[0];
+
+      const { error } = await supabase.from('recurring_tasks').insert({
+        title: title.trim(),
+        description: description.trim() || null,
+        status_id: statusId,
+        created_by: user.id,
+        team_id: teamId,
+        assignee_ids: assigneeIds,
+        recurrence_type: recurrenceType,
+        recurrence_day: recurrenceDay,
+        next_run_date: nextRunStr,
+      });
+
+      if (error) {
+        toast({ title: 'Erro ao criar recorrência', description: error.message, variant: 'destructive' });
+      } else {
+        toast({ title: 'Tarefa recorrente criada!' });
+        resetForm();
+        onOpenChange(false);
+        onTaskCreated?.();
+      }
+    } else {
+      const { data, error } = await supabase.from('tasks').insert({
+        title: title.trim(),
+        description: description.trim() || null,
+        status_id: statusId,
+        start_date: startDate || null,
+        estimated_delivery_date: estimatedDate || null,
+        created_by: user.id,
+        team_id: teamId,
+      }).select('id').single();
+
+      if (error) {
+        toast({ title: 'Erro ao criar tarefa', description: error.message, variant: 'destructive' });
+      } else {
+        if (data && assigneeIds.length > 0) {
+          await supabase.from('task_assignees').insert(
+            assigneeIds.map((user_id) => ({ task_id: data.id, user_id }))
+          );
+        }
+        toast({ title: 'Tarefa criada!' });
+        resetForm();
+        onOpenChange(false);
+        onTaskCreated?.();
+      }
     }
     setSaving(false);
+  };
+
+  const resetForm = () => {
+    setTitle('');
+    setDescription('');
+    setStartDate('');
+    setEstimatedDate('');
+    setAssigneeIds([]);
+    setTeamId(null);
+    setIsRecurring(false);
+    setRecurrenceType('weekly');
+    setRecurrenceDay(1);
   };
 
   if (!open) return null;
@@ -140,19 +192,89 @@ export function CreateTaskDialog({ open, onOpenChange, onTaskCreated }: Props) {
               </label>
             </div>
           )}
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-2">
-              <Label>Data de Início</Label>
-              <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+
+          {/* Recurring task toggle */}
+          <div className="flex items-center justify-between rounded-lg border border-border/50 p-3">
+            <div className="flex items-center gap-2">
+              <Repeat className="h-4 w-4 text-muted-foreground" />
+              <Label htmlFor="recurring-toggle" className="cursor-pointer text-sm">Tarefa recorrente</Label>
             </div>
-            <div className="space-y-2">
-              <Label>Previsão de Entrega</Label>
-              <Input type="date" value={estimatedDate} onChange={(e) => setEstimatedDate(e.target.value)} />
-            </div>
+            <Switch id="recurring-toggle" checked={isRecurring} onCheckedChange={setIsRecurring} />
           </div>
+
+          {isRecurring ? (
+            <div className="space-y-3 rounded-lg border border-border/50 bg-muted/20 p-3">
+              <div className="space-y-2">
+                <Label>Frequência</Label>
+                <Select value={recurrenceType} onValueChange={(v) => { setRecurrenceType(v); setRecurrenceDay(v === 'weekly' ? 1 : 1); }}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="weekly">Semanal</SelectItem>
+                    <SelectItem value="monthly">Mensal</SelectItem>
+                    <SelectItem value="yearly">Anual</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                {recurrenceType === 'weekly' && (
+                  <>
+                    <Label>Dia da semana</Label>
+                    <Select value={String(recurrenceDay)} onValueChange={(v) => setRecurrenceDay(Number(v))}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'].map((d, i) => (
+                          <SelectItem key={i} value={String(i)}>{d}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </>
+                )}
+                {recurrenceType === 'monthly' && (
+                  <>
+                    <Label>Dia do mês</Label>
+                    <Select value={String(recurrenceDay)} onValueChange={(v) => setRecurrenceDay(Number(v))}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {Array.from({ length: 28 }, (_, i) => (
+                          <SelectItem key={i + 1} value={String(i + 1)}>Dia {i + 1}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </>
+                )}
+                {recurrenceType === 'yearly' && (
+                  <>
+                    <Label>Mês</Label>
+                    <Select value={String(recurrenceDay)} onValueChange={(v) => setRecurrenceDay(Number(v))}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'].map((m, i) => (
+                          <SelectItem key={i} value={String(i)}>{m}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </>
+                )}
+              </div>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label>Data de Início</Label>
+                <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <Label>Previsão de Entrega</Label>
+                <Input type="date" value={estimatedDate} onChange={(e) => setEstimatedDate(e.target.value)} />
+              </div>
+            </div>
+          )}
+
           <div className="flex justify-end gap-2 pt-2">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-            <Button type="submit" disabled={saving}>{saving ? 'Criando...' : 'Criar Tarefa'}</Button>
+            <Button type="submit" disabled={saving}>
+              {saving ? 'Criando...' : isRecurring ? 'Criar Recorrência' : 'Criar Tarefa'}
+            </Button>
           </div>
         </form>
       </div>

@@ -5,6 +5,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Trash2, Plus, Loader2, Pencil, Check, X, GripVertical, AlertTriangle, RotateCcw, ChevronDown } from 'lucide-react';
+import { RecurringTasksSettings } from '@/components/settings/RecurringTasksSettings';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -374,6 +375,9 @@ const Settings = () => {
           </div>
         )}
       </div>
+
+      {/* Recurring Tasks */}
+      <RecurringTasksSettings />
 
       {/* Delete confirmation dialog */}
       <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
