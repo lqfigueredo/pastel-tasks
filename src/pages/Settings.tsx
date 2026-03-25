@@ -277,7 +277,7 @@ const Settings = () => {
                       <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
                     </Button>
                     {!s.is_default && (
-                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleDelete(s)}>
+                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleDeleteClick(s)}>
                         <Trash2 className="h-3.5 w-3.5 text-destructive" />
                       </Button>
                     )}
