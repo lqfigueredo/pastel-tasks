@@ -127,7 +127,19 @@ export function CreateTaskDialog({ open, onOpenChange, onTaskCreated }: Props) {
             <Label>Responsáveis</Label>
             <AssigneeSelector selectedIds={assigneeIds} onChange={setAssigneeIds} />
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          {userTeam && (
+            <div className="flex items-center gap-2">
+              <Checkbox
+                id="team-task"
+                checked={teamId === userTeam.id}
+                onCheckedChange={(checked) => setTeamId(checked ? userTeam.id : null)}
+              />
+              <label htmlFor="team-task" className="text-sm flex items-center gap-1.5 cursor-pointer">
+                <Users className="h-3.5 w-3.5 text-muted-foreground" />
+                Associar ao time <span className="font-medium">{userTeam.name}</span>
+              </label>
+            </div>
+          )}
             <div className="space-y-2">
               <Label>Data de Início</Label>
               <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
