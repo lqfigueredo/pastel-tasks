@@ -396,23 +396,29 @@ export default function Dashboard() {
                 const top = TOP_OFFSET + bar.row * (BAR_HEIGHT + BAR_GAP);
 
                 return (
-                  <button
+                  <TaskTooltip
                     key={`${bar.task.id}-${bi}`}
-                    onClick={() => setSelectedTask(bar.task)}
-                    className="absolute z-10 flex items-center overflow-hidden px-2 text-[11px] font-medium leading-tight transition-opacity hover:opacity-80"
-                    style={{
-                      left,
-                      width,
-                      top: `${top}px`,
-                      height: `${BAR_HEIGHT}px`,
-                      backgroundColor: color + '30',
-                      borderLeft: `3px ${isAssignedByOther ? 'dashed' : 'solid'} ${color}`,
-                      borderRadius: `${bar.isStart ? '6px' : '0'} ${bar.isEnd ? '6px' : '0'} ${bar.isEnd ? '6px' : '0'} ${bar.isStart ? '6px' : '0'}`,
-                    }}
+                    task={bar.task}
+                    statusName={statusNameMap.get(bar.task.status_id) || 'Sem status'}
+                    statusColor={color}
                   >
-                    {isAssignedByOther && <UserCircle className="mr-1 h-3 w-3 shrink-0 text-primary" />}
-                    <span className="truncate text-foreground">{bar.task.title}</span>
-                  </button>
+                    <button
+                      onClick={() => setSelectedTask(bar.task)}
+                      className="absolute z-10 flex items-center overflow-hidden px-2 text-[11px] font-medium leading-tight transition-opacity hover:opacity-80"
+                      style={{
+                        left,
+                        width,
+                        top: `${top}px`,
+                        height: `${BAR_HEIGHT}px`,
+                        backgroundColor: color + '30',
+                        borderLeft: `3px ${isAssignedByOther ? 'dashed' : 'solid'} ${color}`,
+                        borderRadius: `${bar.isStart ? '6px' : '0'} ${bar.isEnd ? '6px' : '0'} ${bar.isEnd ? '6px' : '0'} ${bar.isStart ? '6px' : '0'}`,
+                      }}
+                    >
+                      {isAssignedByOther && <UserCircle className="mr-1 h-3 w-3 shrink-0 text-primary" />}
+                      <span className="truncate text-foreground">{bar.task.title}</span>
+                    </button>
+                  </TaskTooltip>
                 );
               })}
             </div>
