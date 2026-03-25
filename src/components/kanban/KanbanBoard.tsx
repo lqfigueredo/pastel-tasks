@@ -15,6 +15,7 @@ export interface Task {
   estimated_delivery_date: string | null;
   actual_end_date: string | null;
   is_minimized: boolean;
+  recurring_task_id: string | null;
   created_by: string;
   team_id: string | null;
   created_at: string;
