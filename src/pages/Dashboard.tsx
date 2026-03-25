@@ -132,6 +132,7 @@ export default function Dashboard() {
   }, [allTasks, filter, user, myAssignedIds]);
 
   const monthStart = startOfMonth(currentMonth);
+  const monthEnd = endOfMonth(currentMonth);
   const calendarStart = startOfWeek(monthStart);
   const calendarEnd = endOfWeek(monthEnd);
   const days = eachDayOfInterval({ start: calendarStart, end: calendarEnd });
