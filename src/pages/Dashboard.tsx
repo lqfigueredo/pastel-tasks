@@ -5,7 +5,7 @@ import { Task, TaskStatus } from '@/components/kanban/KanbanBoard';
 import { Profile } from '@/components/kanban/AssigneeSelector';
 import { TaskDetailDialog } from '@/components/kanban/TaskDetailDialog';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, CheckCircle2 } from 'lucide-react';
 import {
   startOfMonth,
   endOfMonth,
@@ -245,6 +245,7 @@ export default function Dashboard() {
                 const inMonth = isSameMonth(day, currentMonth);
                 const today = isToday(day);
                 const singleTasks = getSingleDayTasks(day);
+                const completedOnDay = tasks.filter((t) => t.actual_end_date && isSameDay(day, parseISO(t.actual_end_date)));
                 const overflowCount = overflow.get(di) || 0;
 
                 return (
@@ -285,6 +286,20 @@ export default function Dashboard() {
                       {overflowCount > 0 && (
                         <span className="block px-1.5 text-[10px] text-muted-foreground">+{overflowCount} mais</span>
                       )}
+                      {completedOnDay.map((task) => {
+                        const color = statusColorMap.get(task.status_id) || 'hsl(var(--muted))';
+                        return (
+                          <button
+                            key={`done-${task.id}`}
+                            onClick={() => setSelectedTask(task)}
+                            className="flex w-full items-center gap-1 rounded px-1.5 py-0.5 text-left text-[11px] font-semibold leading-tight transition-colors hover:bg-accent/40"
+                            style={{ backgroundColor: color + '25' }}
+                          >
+                            <CheckCircle2 className="h-3 w-3 shrink-0" style={{ color }} />
+                            <span className="truncate text-foreground">{task.title}</span>
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
                 );
