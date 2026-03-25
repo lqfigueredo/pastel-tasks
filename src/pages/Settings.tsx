@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Trash2, Plus, Loader2 } from 'lucide-react';
+import { Trash2, Plus, Loader2, Pencil, Check, X } from 'lucide-react';
 
 interface Status {
   id: string;
@@ -18,6 +18,7 @@ const PASTEL_COLORS = [
   '#B2DFDB', '#E0F2F1', '#DCEDC8', '#FFF9C4',
   '#F8BBD0', '#D1C4E9', '#BBDEFB', '#FFE0B2',
   '#FFCCBC', '#C8E6C9', '#B3E5FC', '#F0F4C3',
+  '#CFD8DC', '#D7CCC8', '#FFCDD2', '#E1BEE7',
 ];
 
 const Settings = () => {
@@ -29,6 +30,12 @@ const Settings = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
+  // Edit state
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editName, setEditName] = useState('');
+  const [editColor, setEditColor] = useState('');
+  const [editSaving, setEditSaving] = useState(false);
+
   const fetchStatuses = async () => {
     const { data } = await supabase.from('task_statuses').select('*').order('position');
     if (data) setStatuses(data);
@@ -36,6 +43,8 @@ const Settings = () => {
   };
 
   useEffect(() => { fetchStatuses(); }, []);
+
+  const getFallbackStatus = () => statuses.find(s => s.is_default && s.position === 0) || statuses.find(s => s.is_default);
 
   const handleCreate = async () => {
     if (!newName.trim()) return;
@@ -57,28 +66,73 @@ const Settings = () => {
   };
 
   const handleDelete = async (status: Status) => {
-    // Check if tasks use this status
+    const fallback = getFallbackStatus();
+    if (!fallback || fallback.id === status.id) {
+      toast({ title: 'Não é possível excluir o status padrão', variant: 'destructive' });
+      return;
+    }
+
+    // Check how many tasks use this status
     const { count } = await supabase
       .from('tasks')
       .select('id', { count: 'exact', head: true })
       .eq('status_id', status.id);
 
-    if (count && count > 0) {
-      toast({
-        title: 'Não é possível excluir',
-        description: `Existem ${count} tarefa(s) usando este status. Mova-as antes de excluir.`,
-        variant: 'destructive',
-      });
-      return;
+    const taskCount = count || 0;
+
+    if (taskCount > 0) {
+      // Migrate tasks to fallback status
+      const { error: moveError } = await supabase
+        .from('tasks')
+        .update({ status_id: fallback.id })
+        .eq('status_id', status.id);
+
+      if (moveError) {
+        toast({ title: 'Erro ao migrar tarefas', variant: 'destructive' });
+        return;
+      }
     }
 
     const { error } = await supabase.from('task_statuses').delete().eq('id', status.id);
     if (error) {
       toast({ title: 'Erro ao excluir', variant: 'destructive' });
     } else {
-      toast({ title: 'Status excluído' });
+      toast({
+        title: 'Status excluído',
+        description: taskCount > 0 ? `${taskCount} tarefa(s) movida(s) para "${fallback.name}".` : undefined,
+      });
       await fetchStatuses();
     }
+  };
+
+  const startEdit = (status: Status) => {
+    setEditingId(status.id);
+    setEditName(status.name);
+    setEditColor(status.color);
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
+    setEditName('');
+    setEditColor('');
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingId || !editName.trim()) return;
+    setEditSaving(true);
+    const { error } = await supabase
+      .from('task_statuses')
+      .update({ name: editName.trim(), color: editColor })
+      .eq('id', editingId);
+
+    if (error) {
+      toast({ title: 'Erro ao atualizar status', variant: 'destructive' });
+    } else {
+      toast({ title: 'Status atualizado!' });
+      cancelEdit();
+      await fetchStatuses();
+    }
+    setEditSaving(false);
   };
 
   return (
@@ -112,14 +166,49 @@ const Settings = () => {
           <div className="space-y-2">
             {statuses.map((s) => (
               <div key={s.id} className="flex items-center gap-3 py-2 px-3 rounded-lg bg-muted/30">
-                <span className="h-4 w-4 rounded-full shrink-0" style={{ backgroundColor: s.color }} />
-                <span className="text-sm font-medium text-foreground flex-1">{s.name}</span>
-                {s.is_default ? (
-                  <span className="text-xs text-muted-foreground">Padrão</span>
+                {editingId === s.id ? (
+                  <>
+                    {/* Color picker inline */}
+                    <div className="flex flex-wrap gap-1.5">
+                      {PASTEL_COLORS.map((c) => (
+                        <button
+                          key={c}
+                          className="h-5 w-5 rounded-full border-2 transition-transform hover:scale-110"
+                          style={{
+                            backgroundColor: c,
+                            borderColor: editColor === c ? 'hsl(var(--foreground))' : 'transparent',
+                          }}
+                          onClick={() => setEditColor(c)}
+                        />
+                      ))}
+                    </div>
+                    <Input
+                      value={editName}
+                      onChange={(e) => setEditName(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && handleSaveEdit()}
+                      className="flex-1 h-8 text-sm"
+                      autoFocus
+                    />
+                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleSaveEdit} disabled={editSaving || !editName.trim()}>
+                      {editSaving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5 text-green-600" />}
+                    </Button>
+                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={cancelEdit}>
+                      <X className="h-3.5 w-3.5 text-muted-foreground" />
+                    </Button>
+                  </>
                 ) : (
-                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleDelete(s)}>
-                    <Trash2 className="h-3.5 w-3.5 text-destructive" />
-                  </Button>
+                  <>
+                    <span className="h-4 w-4 rounded-full shrink-0" style={{ backgroundColor: s.color }} />
+                    <span className="text-sm font-medium text-foreground flex-1">{s.name}</span>
+                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => startEdit(s)}>
+                      <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
+                    </Button>
+                    {!s.is_default && (
+                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleDelete(s)}>
+                        <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                      </Button>
+                    )}
+                  </>
                 )}
               </div>
             ))}
