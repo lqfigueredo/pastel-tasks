@@ -1,0 +1,1 @@
+ALTER TABLE public.task_statuses ADD COLUMN deleted_at timestamptz DEFAULT NULL;
