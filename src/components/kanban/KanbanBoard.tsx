@@ -68,13 +68,32 @@ export const KanbanBoard = forwardRef<KanbanBoardRef>((_props, ref) => {
       }
     }
 
+    const loadedStatuses = statusRes.data || [];
+    const statusIds = new Set(loadedStatuses.map(s => s.id));
+    const fallbackStatus = loadedStatuses.find(s => (s as any).is_default && s.position === 0) || loadedStatuses.find(s => (s as any).is_default);
+
     if (taskRes.data) {
-      setTasks(
-        taskRes.data.map((t) => ({
-          ...t,
-          assignees: assigneeMap.get(t.id) || [],
-        }))
-      );
+      const mappedTasks = taskRes.data.map((t) => ({
+        ...t,
+        assignees: assigneeMap.get(t.id) || [],
+      }));
+
+      // Fix orphaned tasks (status_id not in current statuses)
+      if (fallbackStatus) {
+        const orphaned = mappedTasks.filter(t => !statusIds.has(t.status_id));
+        if (orphaned.length > 0) {
+          await Promise.all(
+            orphaned.map(t =>
+              supabase.from('tasks').update({ status_id: fallbackStatus.id }).eq('id', t.id)
+            )
+          );
+          for (const t of orphaned) {
+            t.status_id = fallbackStatus.id;
+          }
+        }
+      }
+
+      setTasks(mappedTasks);
     }
     setLoading(false);
   }, [user]);
