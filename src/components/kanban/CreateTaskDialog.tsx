@@ -7,8 +7,9 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
 import { AssigneeSelector } from './AssigneeSelector';
-import { X } from 'lucide-react';
+import { X, Users } from 'lucide-react';
 
 interface Props {
   open: boolean;
@@ -64,6 +65,7 @@ export function CreateTaskDialog({ open, onOpenChange, onTaskCreated }: Props) {
       start_date: startDate || null,
       estimated_delivery_date: estimatedDate || null,
       created_by: user.id,
+      team_id: teamId,
     }).select('id').single();
 
     if (error) {
@@ -80,6 +82,7 @@ export function CreateTaskDialog({ open, onOpenChange, onTaskCreated }: Props) {
       setStartDate('');
       setEstimatedDate('');
       setAssigneeIds([]);
+      setTeamId(null);
       onOpenChange(false);
       onTaskCreated?.();
     }
