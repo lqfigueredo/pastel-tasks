@@ -8,8 +8,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Switch } from '@/components/ui/switch';
 import { AssigneeSelector } from './AssigneeSelector';
-import { X, Users } from 'lucide-react';
+import { X, Users, Repeat } from 'lucide-react';
 
 interface Props {
   open: boolean;
