@@ -365,6 +365,53 @@ const Team = () => {
         </CardContent>
       </Card>
 
+      {/* Sobre o Time */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg flex items-center gap-2">
+            <FileText className="h-5 w-5" /> Sobre o Time
+          </CardTitle>
+          <CardDescription>Descrição e informações sobre o time</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {isCreator ? (
+            <div className="space-y-3">
+              <Textarea
+                placeholder="Descreva o propósito e objetivos do time..."
+                value={description}
+                onChange={e => setDescription(e.target.value)}
+                rows={4}
+              />
+              <Button
+                size="sm"
+                onClick={handleSaveDescription}
+                disabled={savingDescription}
+              >
+                {savingDescription ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Save className="h-4 w-4 mr-1" />}
+                Salvar
+              </Button>
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+              {description || 'Nenhuma descrição adicionada.'}
+            </p>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Anexos do Time */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg flex items-center gap-2">
+            <FileText className="h-5 w-5" /> Anexos do Time
+          </CardTitle>
+          <CardDescription>Arquivos compartilhados com a equipe</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <TeamAttachments teamId={team.id} />
+        </CardContent>
+      </Card>
+
       {/* Team Tasks */}
       <Card>
         <CardHeader>
