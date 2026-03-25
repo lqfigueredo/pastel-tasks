@@ -15,9 +15,13 @@ import {
   isSameMonth,
   isSameDay,
   isToday,
+  isWithinInterval,
+  isBefore,
+  isAfter,
   format,
   addMonths,
   subMonths,
+  parseISO,
 } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
