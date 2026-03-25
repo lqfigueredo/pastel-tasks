@@ -51,6 +51,9 @@ const Team = () => {
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviting, setInviting] = useState(false);
 
+  const [description, setDescription] = useState('');
+  const [savingDescription, setSavingDescription] = useState(false);
+
   const isCreator = team?.created_by === user?.id;
 
   const loadTeam = useCallback(async () => {
