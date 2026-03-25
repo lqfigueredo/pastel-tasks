@@ -15,6 +15,7 @@ import { TeamAttachments } from '@/components/team/TeamAttachments';
 interface TeamData {
   id: string;
   name: string;
+  description: string | null;
   created_by: string;
   max_members: number;
 }
