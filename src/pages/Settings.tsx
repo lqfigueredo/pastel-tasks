@@ -36,6 +36,10 @@ const Settings = () => {
   const [editColor, setEditColor] = useState('');
   const [editSaving, setEditSaving] = useState(false);
 
+  // Drag state
+  const [dragIdx, setDragIdx] = useState<number | null>(null);
+  const [dragOverIdx, setDragOverIdx] = useState<number | null>(null);
+
   const fetchStatuses = async () => {
     const { data } = await supabase.from('task_statuses').select('*').order('position');
     if (data) setStatuses(data);
