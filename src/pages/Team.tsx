@@ -88,6 +88,7 @@ const Team = () => {
       return;
     }
     setTeam(teamData);
+    setDescription(teamData.description || '');
 
     // Load members with profiles
     const { data: memberRows } = await supabase
@@ -233,6 +234,21 @@ const Team = () => {
       loadTeam();
     }
     setInviting(false);
+  };
+
+  const handleSaveDescription = async () => {
+    if (!team) return;
+    setSavingDescription(true);
+    const { error } = await supabase
+      .from('teams')
+      .update({ description: description.trim() || null })
+      .eq('id', team.id);
+    if (error) {
+      toast({ title: 'Erro ao salvar descrição', description: error.message, variant: 'destructive' });
+    } else {
+      toast({ title: 'Descrição salva!' });
+    }
+    setSavingDescription(false);
   };
 
   const handleRemoveMember = async (userId: string) => {
