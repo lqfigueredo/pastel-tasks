@@ -26,6 +26,8 @@ export function CreateTaskDialog({ open, onOpenChange, onTaskCreated }: Props) {
   const [estimatedDate, setEstimatedDate] = useState('');
   const [assigneeIds, setAssigneeIds] = useState<string[]>([]);
   const [statuses, setStatuses] = useState<{ id: string; name: string }[]>([]);
+  const [teamId, setTeamId] = useState<string | null>(null);
+  const [userTeam, setUserTeam] = useState<{ id: string; name: string } | null>(null);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -36,6 +38,17 @@ export function CreateTaskDialog({ open, onOpenChange, onTaskCreated }: Props) {
           if (data.length > 0 && !statusId) setStatusId(data[0].id);
         }
       });
+      // Check if user has a team
+      if (user) {
+        supabase.from('team_members').select('team_id').eq('user_id', user.id).limit(1).maybeSingle().then(async ({ data: membership }) => {
+          if (membership) {
+            const { data: team } = await supabase.from('teams').select('id, name').eq('id', membership.team_id).single();
+            setUserTeam(team || null);
+          } else {
+            setUserTeam(null);
+          }
+        });
+      }
     }
   }, [open]);
 
