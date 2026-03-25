@@ -56,6 +56,7 @@ const Team = () => {
   const [savingDescription, setSavingDescription] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [deleteConfirmName, setDeleteConfirmName] = useState('');
 
   const isCreator = team?.created_by === user?.id;
 
@@ -269,7 +270,7 @@ const Team = () => {
         )}
       </div>
 
-      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+      <Dialog open={deleteDialogOpen} onOpenChange={(open) => { setDeleteDialogOpen(open); if (!open) setDeleteConfirmName(''); }}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
@@ -279,9 +280,19 @@ const Team = () => {
               Tem certeza que deseja excluir o time <strong>{team.name}</strong>? Todos os membros, anexos e dados associados serão removidos permanentemente.
             </DialogDescription>
           </DialogHeader>
+          <div className="space-y-2 py-2">
+            <p className="text-sm text-muted-foreground">
+              Para confirmar, digite <strong className="text-foreground">{team.name}</strong> abaixo:
+            </p>
+            <Input
+              value={deleteConfirmName}
+              onChange={e => setDeleteConfirmName(e.target.value)}
+              placeholder={team.name}
+            />
+          </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDeleteDialogOpen(false)} disabled={deleting}>Cancelar</Button>
-            <Button variant="destructive" onClick={handleDeleteTeam} disabled={deleting}>
+            <Button variant="destructive" onClick={handleDeleteTeam} disabled={deleting || deleteConfirmName !== team.name}>
               {deleting ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : null}
               Excluir
             </Button>
