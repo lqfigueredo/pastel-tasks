@@ -7,8 +7,9 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
 import { AssigneeSelector } from './AssigneeSelector';
-import { X } from 'lucide-react';
+import { X, Users } from 'lucide-react';
 
 interface Props {
   open: boolean;
@@ -26,6 +27,8 @@ export function CreateTaskDialog({ open, onOpenChange, onTaskCreated }: Props) {
   const [estimatedDate, setEstimatedDate] = useState('');
   const [assigneeIds, setAssigneeIds] = useState<string[]>([]);
   const [statuses, setStatuses] = useState<{ id: string; name: string }[]>([]);
+  const [teamId, setTeamId] = useState<string | null>(null);
+  const [userTeam, setUserTeam] = useState<{ id: string; name: string } | null>(null);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -36,6 +39,17 @@ export function CreateTaskDialog({ open, onOpenChange, onTaskCreated }: Props) {
           if (data.length > 0 && !statusId) setStatusId(data[0].id);
         }
       });
+      // Check if user has a team
+      if (user) {
+        supabase.from('team_members').select('team_id').eq('user_id', user.id).limit(1).maybeSingle().then(async ({ data: membership }) => {
+          if (membership) {
+            const { data: team } = await supabase.from('teams').select('id, name').eq('id', membership.team_id).single();
+            setUserTeam(team || null);
+          } else {
+            setUserTeam(null);
+          }
+        });
+      }
     }
   }, [open]);
 
@@ -51,6 +65,7 @@ export function CreateTaskDialog({ open, onOpenChange, onTaskCreated }: Props) {
       start_date: startDate || null,
       estimated_delivery_date: estimatedDate || null,
       created_by: user.id,
+      team_id: teamId,
     }).select('id').single();
 
     if (error) {
@@ -67,6 +82,7 @@ export function CreateTaskDialog({ open, onOpenChange, onTaskCreated }: Props) {
       setStartDate('');
       setEstimatedDate('');
       setAssigneeIds([]);
+      setTeamId(null);
       onOpenChange(false);
       onTaskCreated?.();
     }
@@ -111,6 +127,19 @@ export function CreateTaskDialog({ open, onOpenChange, onTaskCreated }: Props) {
             <Label>Responsáveis</Label>
             <AssigneeSelector selectedIds={assigneeIds} onChange={setAssigneeIds} />
           </div>
+          {userTeam && (
+            <div className="flex items-center gap-2">
+              <Checkbox
+                id="team-task"
+                checked={teamId === userTeam.id}
+                onCheckedChange={(checked) => setTeamId(checked ? userTeam.id : null)}
+              />
+              <label htmlFor="team-task" className="text-sm flex items-center gap-1.5 cursor-pointer">
+                <Users className="h-3.5 w-3.5 text-muted-foreground" />
+                Associar ao time <span className="font-medium">{userTeam.name}</span>
+              </label>
+            </div>
+          )}
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
               <Label>Data de Início</Label>
