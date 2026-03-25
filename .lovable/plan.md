@@ -1,57 +1,80 @@
 
 
-# Cadastro de Usuário pelo Admin (com Time)
+# Descritivo e Anexos do Time
 
-Criar uma página de administração onde admins podem cadastrar novos usuários e já associá-los a um time.
+Adicionar descrição e anexos diretamente na página de Equipe existente, como uma nova seção/card dentro do time já criado.
 
 ## Mudanças
 
-### 1. Edge Function `admin-create-user`
-
-Nova edge function que recebe `{ email, password, displayName, teamId? }` e:
-- Valida que o chamador tem role `admin` (via token JWT)
-- Usa `supabase.auth.admin.createUser()` com `email_confirm: true` (já confirmado)
-- O trigger `handle_new_user` já cria o profile e o role `user` automaticamente
-- Se `teamId` fornecido, insere em `team_members`
-- Retorna o `user_id` criado
-
-### 2. Página Admin (`src/pages/Admin.tsx`)
-
-Acessível apenas por admins. Contém:
-- **Formulário de cadastro**: campos Nome, Email, Senha, seletor de Time (opcional, dropdown com times existentes)
-- **Lista de usuários**: tabela com nome, email, time, data de criação
-- Verificação de role admin via `has_role` no carregamento — se não for admin, redireciona ou mostra mensagem de acesso negado
-
-### 3. Rota e Navegação
-
-- Adicionar rota `/admin` em `App.tsx`
-- Adicionar item "Administração" no sidebar (`AppSidebar.tsx`), visível apenas para admins
-- Usar `ShieldCheck` icon do lucide
-
-### 4. Migration — RLS para admin listar usuários
-
-Não é necessário migration extra: o edge function usa `service_role` para criar usuários, e a listagem de profiles já permite SELECT para todos autenticados. Para listar times, a policy existente já cobre membros — mas o admin precisa ver todos os times:
+### 1. Migration — Adicionar coluna `description` na tabela `teams` + tabela de anexos + bucket
 
 ```sql
-CREATE POLICY "Admins can view all teams" ON public.teams
+-- Descrição do time
+ALTER TABLE public.teams ADD COLUMN description text;
+
+-- Tabela de anexos do time
+CREATE TABLE public.team_attachments (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  team_id uuid NOT NULL REFERENCES public.teams(id) ON DELETE CASCADE,
+  uploaded_by uuid NOT NULL,
+  file_name text NOT NULL,
+  file_path text NOT NULL,
+  file_type text NOT NULL,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+
+ALTER TABLE public.team_attachments ENABLE ROW LEVEL SECURITY;
+
+-- Membros do time podem ver anexos
+CREATE POLICY "Team members can view attachments" ON public.team_attachments
   FOR SELECT TO authenticated
-  USING (public.has_role(auth.uid(), 'admin'));
+  USING (team_id IN (SELECT public.get_user_team_ids(auth.uid())));
+
+-- Membros podem adicionar anexos
+CREATE POLICY "Team members can add attachments" ON public.team_attachments
+  FOR INSERT TO authenticated
+  WITH CHECK (team_id IN (SELECT public.get_user_team_ids(auth.uid())));
+
+-- Criador do time ou quem fez upload pode deletar
+CREATE POLICY "Uploader can delete attachments" ON public.team_attachments
+  FOR DELETE TO authenticated
+  USING (uploaded_by = auth.uid());
+
+-- Bucket de storage
+INSERT INTO storage.buckets (id, name, public) VALUES ('team-attachments', 'team-attachments', false);
+
+CREATE POLICY "Team members can upload" ON storage.objects
+  FOR INSERT TO authenticated WITH CHECK (bucket_id = 'team-attachments');
+
+CREATE POLICY "Team members can view" ON storage.objects
+  FOR SELECT TO authenticated USING (bucket_id = 'team-attachments');
+
+CREATE POLICY "Uploader can delete" ON storage.objects
+  FOR DELETE TO authenticated USING (bucket_id = 'team-attachments' AND auth.uid()::text = (storage.foldername(name))[1]);
 ```
+
+### 2. Componente `src/components/team/TeamAttachments.tsx`
+
+Componente reutilizando o mesmo padrão de `TaskAttachments`, mas apontando para bucket `team-attachments` e tabela `team_attachments`, recebendo `teamId` como prop.
+
+### 3. Atualizar `src/pages/Team.tsx`
+
+Quando o time existe, adicionar dois novos cards na página:
+
+- **Card "Sobre o Time"**: campo de descrição editável (textarea) com botão salvar. Usa `supabase.from('teams').update({ description })`. Visível para todos os membros, editável apenas pelo criador.
+- **Card "Anexos do Time"**: usa o componente `TeamAttachments` para upload/download/exclusão de arquivos do time.
+
+### Fluxo
+
+1. Usuário acessa a página "Equipe" e vê seu time
+2. Abaixo dos membros, vê o card "Sobre o Time" com a descrição editável (se for criador) ou somente leitura
+3. Abaixo, o card "Anexos do Time" permite upload de arquivos associados ao time
 
 ## Arquivos
 
 | Arquivo | Alteração |
 |---|---|
-| `supabase/functions/admin-create-user/index.ts` | Nova edge function |
-| Migration SQL | Policy admin view all teams |
-| `src/pages/Admin.tsx` | Nova página de administração |
-| `src/App.tsx` | Adicionar rota `/admin` |
-| `src/components/AppSidebar.tsx` | Item "Administração" condicional para admins |
-
-## Fluxo
-
-1. Admin acessa "Administração" no sidebar
-2. Preenche nome, email, senha e opcionalmente seleciona um time
-3. Clica "Cadastrar" → edge function cria o usuário (já confirmado) e adiciona ao time
-4. Usuário aparece na lista e pode fazer login imediatamente
+| Migration SQL | Coluna description em teams, tabela team_attachments, bucket, RLS |
+| `src/components/team/TeamAttachments.tsx` | Novo componente de anexos do time |
+| `src/pages/Team.tsx` | Cards de descrição e anexos na view do time |
 
