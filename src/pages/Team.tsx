@@ -8,11 +8,14 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Users, Plus, Trash2, Loader2, Mail, Crown, Calendar } from 'lucide-react';
+import { Users, Plus, Trash2, Loader2, Mail, Crown, Calendar, FileText, Save } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
+import { TeamAttachments } from '@/components/team/TeamAttachments';
 
 interface TeamData {
   id: string;
   name: string;
+  description: string | null;
   created_by: string;
   max_members: number;
 }
@@ -48,6 +51,9 @@ const Team = () => {
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviting, setInviting] = useState(false);
 
+  const [description, setDescription] = useState('');
+  const [savingDescription, setSavingDescription] = useState(false);
+
   const isCreator = team?.created_by === user?.id;
 
   const loadTeam = useCallback(async () => {
@@ -82,6 +88,7 @@ const Team = () => {
       return;
     }
     setTeam(teamData);
+    setDescription(teamData.description || '');
 
     // Load members with profiles
     const { data: memberRows } = await supabase
@@ -229,6 +236,21 @@ const Team = () => {
     setInviting(false);
   };
 
+  const handleSaveDescription = async () => {
+    if (!team) return;
+    setSavingDescription(true);
+    const { error } = await supabase
+      .from('teams')
+      .update({ description: description.trim() || null })
+      .eq('id', team.id);
+    if (error) {
+      toast({ title: 'Erro ao salvar descrição', description: error.message, variant: 'destructive' });
+    } else {
+      toast({ title: 'Descrição salva!' });
+    }
+    setSavingDescription(false);
+  };
+
   const handleRemoveMember = async (userId: string) => {
     if (!team) return;
     await supabase.from('team_members').delete().eq('team_id', team.id).eq('user_id', userId);
@@ -340,6 +362,53 @@ const Team = () => {
               </Button>
             </div>
           )}
+        </CardContent>
+      </Card>
+
+      {/* Sobre o Time */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg flex items-center gap-2">
+            <FileText className="h-5 w-5" /> Sobre o Time
+          </CardTitle>
+          <CardDescription>Descrição e informações sobre o time</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {isCreator ? (
+            <div className="space-y-3">
+              <Textarea
+                placeholder="Descreva o propósito e objetivos do time..."
+                value={description}
+                onChange={e => setDescription(e.target.value)}
+                rows={4}
+              />
+              <Button
+                size="sm"
+                onClick={handleSaveDescription}
+                disabled={savingDescription}
+              >
+                {savingDescription ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Save className="h-4 w-4 mr-1" />}
+                Salvar
+              </Button>
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+              {description || 'Nenhuma descrição adicionada.'}
+            </p>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Anexos do Time */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg flex items-center gap-2">
+            <FileText className="h-5 w-5" /> Anexos do Time
+          </CardTitle>
+          <CardDescription>Arquivos compartilhados com a equipe</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <TeamAttachments teamId={team.id} />
         </CardContent>
       </Card>
 

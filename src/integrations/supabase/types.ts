@@ -273,6 +273,44 @@ export type Database = {
           },
         ]
       }
+      team_attachments: {
+        Row: {
+          created_at: string
+          file_name: string
+          file_path: string
+          file_type: string
+          id: string
+          team_id: string
+          uploaded_by: string
+        }
+        Insert: {
+          created_at?: string
+          file_name: string
+          file_path: string
+          file_type: string
+          id?: string
+          team_id: string
+          uploaded_by: string
+        }
+        Update: {
+          created_at?: string
+          file_name?: string
+          file_path?: string
+          file_type?: string
+          id?: string
+          team_id?: string
+          uploaded_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_attachments_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       team_members: {
         Row: {
           id: string
@@ -306,6 +344,7 @@ export type Database = {
         Row: {
           created_at: string
           created_by: string
+          description: string | null
           id: string
           max_members: number
           name: string
@@ -313,6 +352,7 @@ export type Database = {
         Insert: {
           created_at?: string
           created_by: string
+          description?: string | null
           id?: string
           max_members?: number
           name: string
@@ -320,6 +360,7 @@ export type Database = {
         Update: {
           created_at?: string
           created_by?: string
+          description?: string | null
           id?: string
           max_members?: number
           name?: string
