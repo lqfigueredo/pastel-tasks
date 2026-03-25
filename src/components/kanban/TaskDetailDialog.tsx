@@ -13,6 +13,7 @@ import { AssigneeSelector } from './AssigneeSelector';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { MessageSquare, Send, AlertTriangle, X } from 'lucide-react';
+import { TaskAttachments } from './TaskAttachments';
 
 interface Comment {
   id: string;
