@@ -76,6 +76,66 @@ export type Database = {
         }
         Relationships: []
       }
+      recurring_tasks: {
+        Row: {
+          assignee_ids: string[] | null
+          created_at: string
+          created_by: string
+          description: string | null
+          id: string
+          is_active: boolean
+          next_run_date: string
+          recurrence_day: number | null
+          recurrence_type: string
+          status_id: string
+          team_id: string | null
+          title: string
+        }
+        Insert: {
+          assignee_ids?: string[] | null
+          created_at?: string
+          created_by: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          next_run_date: string
+          recurrence_day?: number | null
+          recurrence_type: string
+          status_id: string
+          team_id?: string | null
+          title: string
+        }
+        Update: {
+          assignee_ids?: string[] | null
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          next_run_date?: string
+          recurrence_day?: number | null
+          recurrence_type?: string
+          status_id?: string
+          team_id?: string | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recurring_tasks_status_id_fkey"
+            columns: ["status_id"]
+            isOneToOne: false
+            referencedRelation: "task_statuses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "recurring_tasks_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       task_assignees: {
         Row: {
           assigned_at: string
@@ -229,6 +289,7 @@ export type Database = {
           estimated_delivery_date: string | null
           id: string
           is_minimized: boolean
+          recurring_task_id: string | null
           start_date: string | null
           status_id: string
           team_id: string | null
@@ -244,6 +305,7 @@ export type Database = {
           estimated_delivery_date?: string | null
           id?: string
           is_minimized?: boolean
+          recurring_task_id?: string | null
           start_date?: string | null
           status_id: string
           team_id?: string | null
@@ -259,6 +321,7 @@ export type Database = {
           estimated_delivery_date?: string | null
           id?: string
           is_minimized?: boolean
+          recurring_task_id?: string | null
           start_date?: string | null
           status_id?: string
           team_id?: string | null
@@ -266,6 +329,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "tasks_recurring_task_id_fkey"
+            columns: ["recurring_task_id"]
+            isOneToOne: false
+            referencedRelation: "recurring_tasks"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "tasks_status_id_fkey"
             columns: ["status_id"]
