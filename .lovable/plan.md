@@ -1,27 +1,68 @@
 
 
-# Melhorar visibilidade das tarefas atribuídas ao usuário
+# Tarefas Recorrentes com Cron Automático
 
-O problema: no calendário, tarefas criadas pelo usuário e tarefas atribuídas a ele aparecem visualmente idênticas. Nao ha como distinguir rapidamente quais sao "minhas" vs "atribuidas por outros".
+## Resumo
 
-## Mudanca proposta
+Adicionar suporte a tarefas recorrentes (semanal, mensal, anual) usando uma edge function que roda via `pg_cron` diariamente, criando automaticamente as próximas ocorrências.
 
-### `src/pages/Dashboard.tsx`
+## Mudanças no Banco de Dados
 
-1. **Indicador visual nas barras multi-dia**: Tarefas onde o usuario e assignee (mas nao criador) recebem um icone de avatar/pessoa no inicio da barra, antes do titulo.
+### 1. Nova tabela `recurring_tasks`
 
-2. **Indicador visual nos badges single-day**: Mesma logica — tarefas atribuidas ganham um pequeno icone de pessoa (UserCircle) ao lado do dot de status.
+Armazena o template da recorrência:
 
-3. **Borda diferenciada**: Barras de tarefas atribuidas recebem borda tracejada (dashed) em vez de solida, criando distincao visual imediata.
+```sql
+CREATE TABLE public.recurring_tasks (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  title text NOT NULL,
+  description text,
+  status_id uuid NOT NULL,
+  created_by uuid NOT NULL,
+  team_id uuid,
+  assignee_ids uuid[] DEFAULT '{}',
+  recurrence_type text NOT NULL CHECK (recurrence_type IN ('weekly', 'monthly', 'yearly')),
+  recurrence_day integer, -- dia da semana (0-6) ou dia do mês (1-31) ou dia do ano (1-365)
+  next_run_date date NOT NULL,
+  is_active boolean NOT NULL DEFAULT true,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+```
 
-4. **Logica de deteccao**: Usar `myAssignedIds.has(task.id) && task.created_by !== user.id` para identificar tarefas atribuidas por outros.
+RLS: criador pode CRUD, mesma lógica das tasks.
 
-### Detalhes de implementacao
+### 2. Coluna opcional em `tasks`
 
-- Importar `UserCircle` do lucide-react
-- Nas barras multi-dia (`bars.map`): se a tarefa e atribuida, adicionar icone `UserCircle` (12px) antes do titulo e mudar `borderLeft` para `border-left-style: dashed`
-- Nos badges single-day (`singleTasks.map`): adicionar icone `UserCircle` (10px) entre o dot de status e o titulo
-- Nos badges de conclusao (`completedOnDay.map`): mesma logica
+Adicionar `recurring_task_id uuid` na tabela `tasks` para rastrear qual recorrência gerou a tarefa.
 
-Arquivo unico: `src/pages/Dashboard.tsx`
+## Edge Function: `process-recurring-tasks`
+
+- Busca `recurring_tasks` onde `next_run_date <= today` e `is_active = true`
+- Para cada registro, cria uma task com os dados do template + assignees
+- Calcula e atualiza `next_run_date` baseado no `recurrence_type`
+- Usa service role key para bypass de RLS
+
+## Cron Job (pg_cron)
+
+Agenda execução diária à meia-noite via `cron.schedule`.
+
+## UI: CreateTaskDialog
+
+Adicionar toggle "Tarefa recorrente" no `CreateTaskDialog` com:
+- Select de frequência: Semanal / Mensal / Anual
+- Campo de dia (ex: "Toda segunda", "Dia 15", "15 de março")
+- Quando ativado, ao submeter, insere em `recurring_tasks` em vez de (ou além de) `tasks`
+
+## UI: Gerenciamento
+
+Adicionar seção em Configurações ou no Kanban para listar/editar/desativar recorrências ativas.
+
+## Arquivos Modificados
+
+| Arquivo | Mudança |
+|---|---|
+| Migration SQL | Criar tabela `recurring_tasks`, adicionar coluna `recurring_task_id` em `tasks` |
+| `supabase/functions/process-recurring-tasks/index.ts` | Nova edge function |
+| `src/components/kanban/CreateTaskDialog.tsx` | Adicionar campos de recorrência |
+| `src/pages/Settings.tsx` | Seção para gerenciar recorrências |
 
