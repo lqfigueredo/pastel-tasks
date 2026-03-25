@@ -139,6 +139,43 @@ const Settings = () => {
     setEditSaving(false);
   };
 
+  const handleDragStart = (idx: number) => {
+    setDragIdx(idx);
+  };
+
+  const handleDragEnter = (idx: number) => {
+    if (dragIdx === null || dragIdx === idx) return;
+    setDragOverIdx(idx);
+  };
+
+  const handleDragEnd = async () => {
+    if (dragIdx === null || dragOverIdx === null || dragIdx === dragOverIdx) {
+      setDragIdx(null);
+      setDragOverIdx(null);
+      return;
+    }
+
+    const reordered = [...statuses];
+    const [moved] = reordered.splice(dragIdx, 1);
+    reordered.splice(dragOverIdx, 0, moved);
+
+    // Update positions
+    const updated = reordered.map((s, i) => ({ ...s, position: i }));
+    setStatuses(updated);
+    setDragIdx(null);
+    setDragOverIdx(null);
+
+    // Persist all position changes
+    const promises = updated.map((s) =>
+      supabase.from('task_statuses').update({ position: s.position }).eq('id', s.id)
+    );
+    const results = await Promise.all(promises);
+    if (results.some((r) => r.error)) {
+      toast({ title: 'Erro ao reordenar', variant: 'destructive' });
+      await fetchStatuses();
+    }
+  };
+
   return (
     <div className="animate-fade-in max-w-2xl space-y-8">
       <div>
@@ -162,17 +199,26 @@ const Settings = () => {
       {/* Kanban Statuses */}
       <div className="rounded-xl border border-border/50 bg-card p-6 space-y-4">
         <h2 className="text-lg font-semibold text-foreground">Status do Kanban</h2>
-        <p className="text-sm text-muted-foreground">Gerencie as colunas do seu quadro Kanban</p>
+        <p className="text-sm text-muted-foreground">Gerencie as colunas do seu quadro Kanban. Arraste para reordenar.</p>
 
         {loading ? (
           <div className="flex justify-center py-4"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>
         ) : (
-          <div className="space-y-2">
-            {statuses.map((s) => (
-              <div key={s.id} className="flex items-center gap-3 py-2 px-3 rounded-lg bg-muted/30">
+          <div className="space-y-1">
+            {statuses.map((s, idx) => (
+              <div
+                key={s.id}
+                draggable={editingId !== s.id}
+                onDragStart={() => handleDragStart(idx)}
+                onDragEnter={() => handleDragEnter(idx)}
+                onDragOver={(e) => e.preventDefault()}
+                onDragEnd={handleDragEnd}
+                className={`flex items-center gap-2 py-2 px-3 rounded-lg bg-muted/30 transition-all cursor-grab active:cursor-grabbing ${
+                  dragOverIdx === idx ? 'border-2 border-primary/50' : 'border-2 border-transparent'
+                }`}
+              >
                 {editingId === s.id ? (
                   <>
-                    {/* Color picker inline */}
                     <div className="flex flex-wrap gap-1.5">
                       {PASTEL_COLORS.map((c) => (
                         <button
@@ -202,6 +248,7 @@ const Settings = () => {
                   </>
                 ) : (
                   <>
+                    <GripVertical className="h-4 w-4 text-muted-foreground shrink-0" />
                     <span className="h-4 w-4 rounded-full shrink-0" style={{ backgroundColor: s.color }} />
                     <span className="text-sm font-medium text-foreground flex-1">{s.name}</span>
                     <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => startEdit(s)}>
