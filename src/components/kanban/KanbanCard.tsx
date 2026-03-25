@@ -45,7 +45,7 @@ export function KanbanCard({ task, allStatuses, onRefresh }: KanbanCardProps) {
           <div className="flex items-start justify-between gap-1">
             <div className="flex items-center gap-1.5">
               {task.recurring_task_id && (
-                <Repeat className="h-3 w-3 shrink-0 text-primary" title="Tarefa recorrente" />
+                <Repeat className="h-3 w-3 shrink-0 text-primary" />
               )}
               <h4 className={cn(
                 "text-sm font-medium text-foreground leading-snug",
