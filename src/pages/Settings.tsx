@@ -376,6 +376,9 @@ const Settings = () => {
         )}
       </div>
 
+      {/* Recurring Tasks */}
+      <RecurringTasksSettings />
+
       {/* Delete confirmation dialog */}
       <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
         <AlertDialogContent>
