@@ -254,6 +254,16 @@ export default function Dashboard() {
             </button>
           ))}
         </div>
+        <div className="flex items-center gap-4 text-[11px] text-muted-foreground">
+          <div className="flex items-center gap-1.5">
+            <span className="inline-block h-4 w-6 rounded border-l-[3px] border-dashed border-primary bg-primary/20" />
+            <span>Atribuída a mim</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <UserCircle className="h-3.5 w-3.5 text-primary" />
+            <span>Criada por outro</span>
+          </div>
+        </div>
       </div>
 
       <div className="rounded-xl border border-border bg-card shadow-sm">
