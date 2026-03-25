@@ -8,6 +8,7 @@ import AppLayout from "@/components/AppLayout";
 import Auth from "@/pages/Auth";
 import Index from "@/pages/Index";
 import Team from "@/pages/Team";
+import TeamList from "@/pages/TeamList";
 import Settings from "@/pages/Settings";
 import Admin from "@/pages/Admin";
 import NotFound from "@/pages/NotFound";
@@ -25,7 +26,8 @@ const App = () => (
             <Route path="/auth" element={<Auth />} />
             <Route element={<AppLayout />}>
               <Route path="/" element={<Index />} />
-              <Route path="/equipe" element={<Team />} />
+              <Route path="/equipe" element={<TeamList />} />
+              <Route path="/equipe/:teamId" element={<Team />} />
               <Route path="/configuracoes" element={<Settings />} />
               <Route path="/admin" element={<Admin />} />
             </Route>
