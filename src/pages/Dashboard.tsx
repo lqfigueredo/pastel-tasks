@@ -114,8 +114,10 @@ export default function Dashboard() {
       assignedTasks = data || [];
     }
 
-    const allTasks = [...createdTasks, ...assignedTasks];
-    setTasks(allTasks.map((t) => ({ ...t, assignees: assigneeMap.get(t.id) || [] })));
+    const merged = [...createdTasks, ...assignedTasks];
+    const assignedIdSet = new Set((myAssignmentsRes.data || []).map((r) => r.task_id));
+    setMyAssignedIds(assignedIdSet);
+    setAllTasks(merged.map((t) => ({ ...t, assignees: assigneeMap.get(t.id) || [] })));
   }, [user]);
 
   useEffect(() => {
