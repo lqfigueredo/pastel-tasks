@@ -262,9 +262,32 @@ const Team = () => {
             {members.length}/{team.max_members} membros
           </p>
         </div>
+        {isCreator && (
+          <Button variant="ghost" size="icon" className="ml-auto text-destructive hover:text-destructive" onClick={() => setDeleteDialogOpen(true)}>
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        )}
       </div>
 
-      {/* Members */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-destructive" /> Excluir Time
+            </DialogTitle>
+            <DialogDescription>
+              Tem certeza que deseja excluir o time <strong>{team.name}</strong>? Todos os membros, anexos e dados associados serão removidos permanentemente.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)} disabled={deleting}>Cancelar</Button>
+            <Button variant="destructive" onClick={handleDeleteTeam} disabled={deleting}>
+              {deleting ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : null}
+              Excluir
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       <Card>
         <CardHeader>
           <CardTitle className="text-lg flex items-center gap-2">
