@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { KanbanColumn } from './KanbanColumn';
 import { useToast } from '@/hooks/use-toast';
+import { Profile } from './AssigneeSelector';
 
 export interface Task {
   id: string;
@@ -15,6 +16,7 @@ export interface Task {
   created_by: string;
   team_id: string | null;
   created_at: string;
+  assignees: Profile[];
 }
 
 export interface TaskStatus {
@@ -38,13 +40,37 @@ export const KanbanBoard = forwardRef<KanbanBoardRef>((_props, ref) => {
   const fetchData = useCallback(async () => {
     if (!user) return;
 
-    const [statusRes, taskRes] = await Promise.all([
+    const [statusRes, taskRes, assigneeRes] = await Promise.all([
       supabase.from('task_statuses').select('*').order('position'),
       supabase.from('tasks').select('*').eq('created_by', user.id).order('created_at', { ascending: false }),
+      supabase.from('task_assignees').select('task_id, user_id, profiles!inner(user_id, display_name, avatar_url)').order('assigned_at'),
     ]);
 
     if (statusRes.data) setStatuses(statusRes.data);
-    if (taskRes.data) setTasks(taskRes.data);
+
+    // Build assignee map
+    const assigneeMap = new Map<string, Profile[]>();
+    if (assigneeRes.data) {
+      for (const row of assigneeRes.data as any[]) {
+        const taskId = row.task_id as string;
+        const profile: Profile = {
+          user_id: row.profiles.user_id,
+          display_name: row.profiles.display_name,
+          avatar_url: row.profiles.avatar_url,
+        };
+        if (!assigneeMap.has(taskId)) assigneeMap.set(taskId, []);
+        assigneeMap.get(taskId)!.push(profile);
+      }
+    }
+
+    if (taskRes.data) {
+      setTasks(
+        taskRes.data.map((t) => ({
+          ...t,
+          assignees: assigneeMap.get(t.id) || [],
+        }))
+      );
+    }
     setLoading(false);
   }, [user]);
 

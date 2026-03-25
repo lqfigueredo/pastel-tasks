@@ -3,6 +3,7 @@ import { Calendar } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Task, TaskStatus } from './KanbanBoard';
 import { TaskDetailDialog } from './TaskDetailDialog';
+import { AssigneeAvatars } from './AssigneeSelector';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -32,12 +33,15 @@ export function KanbanCard({ task, allStatuses, onRefresh }: KanbanCardProps) {
           {task.description && (
             <p className="mt-1 text-xs text-muted-foreground line-clamp-2">{task.description}</p>
           )}
-          {task.estimated_delivery_date && (
-            <div className="mt-2 flex items-center gap-1 text-xs text-muted-foreground">
-              <Calendar className="h-3 w-3" />
-              <span>{format(new Date(task.estimated_delivery_date), "dd MMM", { locale: ptBR })}</span>
-            </div>
-          )}
+          <div className="mt-2 flex items-center justify-between">
+            <AssigneeAvatars assignees={task.assignees} />
+            {task.estimated_delivery_date && (
+              <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                <Calendar className="h-3 w-3" />
+                <span>{format(new Date(task.estimated_delivery_date), "dd MMM", { locale: ptBR })}</span>
+              </div>
+            )}
+          </div>
         </CardContent>
       </Card>
       <TaskDetailDialog
