@@ -62,35 +62,83 @@ export function CreateTaskDialog({ open, onOpenChange, onTaskCreated }: Props) {
     if (!user || !title.trim()) return;
     setSaving(true);
 
-    const { data, error } = await supabase.from('tasks').insert({
-      title: title.trim(),
-      description: description.trim() || null,
-      status_id: statusId,
-      start_date: startDate || null,
-      estimated_delivery_date: estimatedDate || null,
-      created_by: user.id,
-      team_id: teamId,
-    }).select('id').single();
-
-    if (error) {
-      toast({ title: 'Erro ao criar tarefa', description: error.message, variant: 'destructive' });
-    } else {
-      if (data && assigneeIds.length > 0) {
-        await supabase.from('task_assignees').insert(
-          assigneeIds.map((user_id) => ({ task_id: data.id, user_id }))
-        );
+    if (isRecurring) {
+      // Calculate next_run_date based on recurrence type
+      const today = new Date();
+      let nextRun: Date;
+      if (recurrenceType === 'weekly') {
+        const currentDay = today.getDay();
+        const diff = (recurrenceDay - currentDay + 7) % 7 || 7;
+        nextRun = new Date(today);
+        nextRun.setDate(today.getDate() + diff);
+      } else if (recurrenceType === 'monthly') {
+        nextRun = new Date(today.getFullYear(), today.getMonth() + 1, Math.min(recurrenceDay, 28));
+      } else {
+        nextRun = new Date(today.getFullYear() + 1, 0, Math.min(recurrenceDay, 365));
+        // For yearly, recurrenceDay is month (0-11), use day 1
+        nextRun = new Date(today.getFullYear() + (today.getMonth() >= recurrenceDay ? 1 : 0), recurrenceDay, 1);
       }
-      toast({ title: 'Tarefa criada!' });
-      setTitle('');
-      setDescription('');
-      setStartDate('');
-      setEstimatedDate('');
-      setAssigneeIds([]);
-      setTeamId(null);
-      onOpenChange(false);
-      onTaskCreated?.();
+
+      const nextRunStr = nextRun.toISOString().split('T')[0];
+
+      const { error } = await supabase.from('recurring_tasks').insert({
+        title: title.trim(),
+        description: description.trim() || null,
+        status_id: statusId,
+        created_by: user.id,
+        team_id: teamId,
+        assignee_ids: assigneeIds,
+        recurrence_type: recurrenceType,
+        recurrence_day: recurrenceDay,
+        next_run_date: nextRunStr,
+      });
+
+      if (error) {
+        toast({ title: 'Erro ao criar recorrência', description: error.message, variant: 'destructive' });
+      } else {
+        toast({ title: 'Tarefa recorrente criada!' });
+        resetForm();
+        onOpenChange(false);
+        onTaskCreated?.();
+      }
+    } else {
+      const { data, error } = await supabase.from('tasks').insert({
+        title: title.trim(),
+        description: description.trim() || null,
+        status_id: statusId,
+        start_date: startDate || null,
+        estimated_delivery_date: estimatedDate || null,
+        created_by: user.id,
+        team_id: teamId,
+      }).select('id').single();
+
+      if (error) {
+        toast({ title: 'Erro ao criar tarefa', description: error.message, variant: 'destructive' });
+      } else {
+        if (data && assigneeIds.length > 0) {
+          await supabase.from('task_assignees').insert(
+            assigneeIds.map((user_id) => ({ task_id: data.id, user_id }))
+          );
+        }
+        toast({ title: 'Tarefa criada!' });
+        resetForm();
+        onOpenChange(false);
+        onTaskCreated?.();
+      }
     }
     setSaving(false);
+  };
+
+  const resetForm = () => {
+    setTitle('');
+    setDescription('');
+    setStartDate('');
+    setEstimatedDate('');
+    setAssigneeIds([]);
+    setTeamId(null);
+    setIsRecurring(false);
+    setRecurrenceType('weekly');
+    setRecurrenceDay(1);
   };
 
   if (!open) return null;
