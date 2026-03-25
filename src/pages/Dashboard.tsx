@@ -61,12 +61,16 @@ function isMultiDay(t: Task): boolean {
   return differenceInDays(interval.end, interval.start) >= 1;
 }
 
+type TaskFilter = 'all' | 'created' | 'assigned';
+
 export default function Dashboard() {
   const { user } = useAuth();
   const [currentMonth, setCurrentMonth] = useState(new Date());
-  const [tasks, setTasks] = useState<Task[]>([]);
+  const [allTasks, setAllTasks] = useState<Task[]>([]);
+  const [myAssignedIds, setMyAssignedIds] = useState<Set<string>>(new Set());
   const [statuses, setStatuses] = useState<TaskStatus[]>([]);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [filter, setFilter] = useState<TaskFilter>('all');
 
   const fetchData = useCallback(async () => {
     if (!user) return;
@@ -110,13 +114,22 @@ export default function Dashboard() {
       assignedTasks = data || [];
     }
 
-    const allTasks = [...createdTasks, ...assignedTasks];
-    setTasks(allTasks.map((t) => ({ ...t, assignees: assigneeMap.get(t.id) || [] })));
+    const merged = [...createdTasks, ...assignedTasks];
+    const assignedIdSet = new Set((myAssignmentsRes.data || []).map((r) => r.task_id));
+    setMyAssignedIds(assignedIdSet);
+    setAllTasks(merged.map((t) => ({ ...t, assignees: assigneeMap.get(t.id) || [] })));
   }, [user]);
 
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  const tasks = useMemo(() => {
+    if (!user) return allTasks;
+    if (filter === 'created') return allTasks.filter((t) => t.created_by === user.id);
+    if (filter === 'assigned') return allTasks.filter((t) => myAssignedIds.has(t.id));
+    return allTasks;
+  }, [allTasks, filter, user, myAssignedIds]);
 
   const monthStart = startOfMonth(currentMonth);
   const monthEnd = endOfMonth(currentMonth);
@@ -217,9 +230,30 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
-        <p className="text-sm text-muted-foreground">Calendário mensal de atividades</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
+          <p className="text-sm text-muted-foreground">Calendário mensal de atividades</p>
+        </div>
+        <div className="flex gap-1 rounded-lg border border-border bg-muted/50 p-1">
+          {([
+            { value: 'all' as TaskFilter, label: 'Todas' },
+            { value: 'created' as TaskFilter, label: 'Minhas tarefas' },
+            { value: 'assigned' as TaskFilter, label: 'Atribuídas a mim' },
+          ]).map((opt) => (
+            <button
+              key={opt.value}
+              onClick={() => setFilter(opt.value)}
+              className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
+                filter === opt.value
+                  ? 'bg-background text-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       <div className="rounded-xl border border-border bg-card shadow-sm">
