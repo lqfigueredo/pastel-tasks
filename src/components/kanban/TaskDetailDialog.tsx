@@ -13,6 +13,7 @@ import { AssigneeSelector } from './AssigneeSelector';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { MessageSquare, Send, AlertTriangle, X } from 'lucide-react';
+import { TaskAttachments } from './TaskAttachments';
 
 interface Comment {
   id: string;
@@ -219,6 +220,10 @@ export function TaskDetailDialog({ task, allStatuses, open, onOpenChange, onRefr
               <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
               <Button onClick={handleSave} disabled={saving}>{saving ? 'Salvando...' : 'Salvar'}</Button>
             </div>
+
+            <Separator />
+
+            <TaskAttachments taskId={task.id} />
 
             <Separator />
 
