@@ -1,55 +1,26 @@
 
 
-# Barra visual contínua para tarefas multi-dia
+# Adicionar campo "Fim Real" (data de conclusão) com marca visual no calendário
 
-Substituir os badges repetidos por barras horizontais contínuas que se estendem visualmente entre os dias, similar ao Google Calendar.
+## O que muda
 
-## Abordagem
+### 1. Nova coluna no banco de dados
+Adicionar coluna `actual_end_date` (tipo `date`, nullable) na tabela `tasks` — representa a data real de conclusão da tarefa.
 
-### Renderização em camadas no `src/pages/Dashboard.tsx`
+### 2. Atualizar interface `Task` em `src/components/kanban/KanbanBoard.tsx`
+Adicionar `actual_end_date: string | null` ao tipo `Task`.
 
-A lógica muda de "listar tarefas por dia" para "posicionar barras por semana":
+### 3. Atualizar `TaskDetailDialog` em `src/components/kanban/TaskDetailDialog.tsx`
+- Adicionar campo de data "Fim Real" no formulário de edição
+- Salvar o valor no banco ao atualizar a tarefa
 
-1. **Pré-processamento por semana**: Para cada linha (semana) do calendário, calcular quais tarefas multi-dia cruzam aquela semana e determinar:
-   - `startCol`: coluna onde a barra começa (0-6), clampada ao início da semana
-   - `endCol`: coluna onde a barra termina (0-6), clampada ao fim da semana
-   - `row`: slot vertical (para empilhar barras sem sobreposição)
+### 4. Marca visual no calendário em `src/pages/Dashboard.tsx`
+- No dia correspondente ao `actual_end_date`, renderizar um indicador visual destacado — um badge/chip com ícone de check (✓) e borda mais forte, diferenciando-o dos outros dias da barra
+- A barra multi-dia continua normalmente, mas o dia do "Fim Real" recebe uma marcação especial (ex: ícone ✓ + fundo mais escuro/sólido na cor do status)
+- Para tarefas de um dia só que têm `actual_end_date`, o badge ganha o mesmo destaque
 
-2. **Layout da célula**: Cada célula de dia terá altura fixa com área reservada para as barras (posicionamento absoluto relativo à linha da semana). As barras usam `position: absolute`, `left` e `width` calculados em % (cada coluna = 1/7).
-
-3. **Estilo da barra**:
-   - Fundo com a cor do status (com opacidade ~30%)
-   - Texto do título truncado, fonte 11px
-   - Bordas arredondadas apenas nas extremidades reais da tarefa (não nas quebras de semana)
-   - Clicável para abrir `TaskDetailDialog`
-
-4. **Tarefas de um dia só**: Continuam como badge inline (comportamento atual).
-
-### Estrutura do grid por semana
-
-```text
-Semana renderizada como container relative:
-┌───────┬───────┬───────┬───────┬───────┬───────┬───────┐
-│  23   │  24   │  25   │  26   │  27   │  28   │  29   │
-│ ████████████████████████████  ← barra task A (col 0-3)│
-│       │ ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ ← task B│
-│       │       │[T3]  │       │       │       │       │
-└───────┴───────┴───────┴───────┴───────┴───────┴───────┘
-```
-
-### Algoritmo de slot allocation
-
-- Para cada semana, iterar tarefas multi-dia ordenadas por duração (maior primeiro)
-- Atribuir cada tarefa ao primeiro slot (row) livre que não tenha sobreposição de colunas
-- Limitar a MAX_VISIBLE slots (3), excedentes mostram "+N mais"
-
-### Mudanças no arquivo
-
-**`src/pages/Dashboard.tsx`** — refatorar o grid para renderizar por semana em vez de por dia individual:
-- Agrupar `days` em chunks de 7 (semanas)
-- Para cada semana: calcular barras multi-dia + tarefas single-day
-- Cada semana é um `div relative` com grid 7 colunas
-- Barras multi-dia são `button` com `position: absolute` sobrepostas ao grid
-- Tarefas single-day ficam abaixo das barras como badges normais
-- Importar `differenceInDays`, `max`, `min` do date-fns
+### Detalhes técnicos
+- Migração SQL: `ALTER TABLE tasks ADD COLUMN actual_end_date date;`
+- O `getTaskInterval` continua usando `start_date`/`end_date` para a barra — o `actual_end_date` é apenas uma marcação adicional no calendário
+- Na renderização das barras e badges, verificar se `isSameDay(day, parseISO(task.actual_end_date))` para aplicar estilo diferenciado
 
