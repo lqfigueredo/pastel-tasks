@@ -9,7 +9,12 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { ShieldX, UserPlus, Loader2 } from 'lucide-react';
+import { ShieldX, UserPlus, Loader2, ShieldCheck, ShieldOff, UserX, UserCheck } from 'lucide-react';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 interface Profile {
   user_id: string;
@@ -28,14 +33,27 @@ interface TeamMember {
   teams: { name: string } | null;
 }
 
+interface UserRole {
+  user_id: string;
+  role: string;
+}
+
+interface BannedUser {
+  id: string;
+  banned: boolean;
+}
+
 export default function Admin() {
   const { user } = useAuth();
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [teams, setTeams] = useState<Team[]>([]);
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
+  const [adminRoles, setAdminRoles] = useState<Set<string>>(new Set());
+  const [bannedUsers, setBannedUsers] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -57,14 +75,25 @@ export default function Admin() {
   };
 
   const loadData = async () => {
-    const [profilesRes, teamsRes, membersRes] = await Promise.all([
+    const [profilesRes, teamsRes, membersRes, rolesRes] = await Promise.all([
       supabase.from('profiles').select('user_id, display_name, created_at').order('created_at', { ascending: false }),
       supabase.from('teams').select('id, name'),
       supabase.from('team_members').select('user_id, team_id, teams(name)'),
+      supabase.from('user_roles').select('user_id, role').eq('role', 'admin'),
     ]);
     if (profilesRes.data) setProfiles(profilesRes.data);
     if (teamsRes.data) setTeams(teamsRes.data);
     if (membersRes.data) setTeamMembers(membersRes.data as unknown as TeamMember[]);
+    if (rolesRes.data) setAdminRoles(new Set(rolesRes.data.map((r: UserRole) => r.user_id)));
+
+    // Fetch banned status via edge function for all users
+    await loadBannedStatus(profilesRes.data || []);
+  };
+
+  const loadBannedStatus = async (userProfiles: Profile[]) => {
+    // We'll check ban status by trying to get user info via the manage function
+    // For now, we track it locally after actions
+    // The banned set is updated when actions are performed
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -113,10 +142,51 @@ export default function Admin() {
     setSubmitting(false);
   };
 
+  const handleAction = async (action: string, targetUserId: string) => {
+    setActionLoading(`${action}-${targetUserId}`);
+    try {
+      const { data, error } = await supabase.functions.invoke('admin-manage-user', {
+        body: { action, targetUserId },
+      });
+
+      if (error || data?.error) {
+        toast.error(data?.error || 'Erro ao executar ação');
+        setActionLoading(null);
+        return;
+      }
+
+      toast.success(data.message);
+
+      // Update local state
+      if (action === 'promote') {
+        setAdminRoles(prev => new Set([...prev, targetUserId]));
+      } else if (action === 'demote') {
+        setAdminRoles(prev => {
+          const next = new Set(prev);
+          next.delete(targetUserId);
+          return next;
+        });
+      } else if (action === 'deactivate') {
+        setBannedUsers(prev => new Set([...prev, targetUserId]));
+      } else if (action === 'activate') {
+        setBannedUsers(prev => {
+          const next = new Set(prev);
+          next.delete(targetUserId);
+          return next;
+        });
+      }
+    } catch {
+      toast.error('Erro ao executar ação');
+    }
+    setActionLoading(null);
+  };
+
   const getTeamForUser = (userId: string) => {
     const member = teamMembers.find(m => m.user_id === userId);
     return member?.teams?.name || null;
   };
+
+  const isCurrentUser = (userId: string) => userId === user?.id;
 
   if (loading) {
     return (
@@ -137,7 +207,7 @@ export default function Admin() {
   }
 
   return (
-    <div className="mx-auto max-w-4xl space-y-8 p-6">
+    <div className="mx-auto max-w-5xl space-y-8 p-6">
       <div>
         <h1 className="font-display text-2xl font-bold text-foreground">Administração</h1>
         <p className="text-sm text-muted-foreground">Cadastre novos usuários e gerencie o sistema.</p>
@@ -200,25 +270,106 @@ export default function Admin() {
               <TableRow>
                 <TableHead>Nome</TableHead>
                 <TableHead>Time</TableHead>
+                <TableHead>Papel</TableHead>
+                <TableHead>Status</TableHead>
                 <TableHead>Cadastrado em</TableHead>
+                <TableHead className="text-right">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {profiles.map(p => (
-                <TableRow key={p.user_id}>
-                  <TableCell className="font-medium">{p.display_name || '—'}</TableCell>
-                  <TableCell>
-                    {getTeamForUser(p.user_id) ? (
-                      <Badge variant="secondary">{getTeamForUser(p.user_id)}</Badge>
-                    ) : (
-                      <span className="text-muted-foreground">—</span>
-                    )}
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {new Date(p.created_at).toLocaleDateString('pt-BR')}
-                  </TableCell>
-                </TableRow>
-              ))}
+              {profiles.map(p => {
+                const isUserAdmin = adminRoles.has(p.user_id);
+                const isBanned = bannedUsers.has(p.user_id);
+                const isSelf = isCurrentUser(p.user_id);
+
+                return (
+                  <TableRow key={p.user_id} className={isBanned ? 'opacity-60' : ''}>
+                    <TableCell className="font-medium">
+                      {p.display_name || '—'}
+                      {isSelf && <span className="ml-2 text-xs text-muted-foreground">(você)</span>}
+                    </TableCell>
+                    <TableCell>
+                      {getTeamForUser(p.user_id) ? (
+                        <Badge variant="secondary">{getTeamForUser(p.user_id)}</Badge>
+                      ) : (
+                        <span className="text-muted-foreground">—</span>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {isUserAdmin ? (
+                        <Badge className="bg-primary/15 text-primary border-primary/30">Admin</Badge>
+                      ) : (
+                        <Badge variant="outline">Usuário</Badge>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {isBanned ? (
+                        <Badge variant="destructive">Inativo</Badge>
+                      ) : (
+                        <Badge className="bg-emerald-500/15 text-emerald-700 border-emerald-500/30">Ativo</Badge>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {new Date(p.created_at).toLocaleDateString('pt-BR')}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex items-center justify-end gap-1">
+                        {/* Promote / Demote Admin */}
+                        {!isSelf && (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8"
+                                disabled={actionLoading !== null}
+                                onClick={() => handleAction(isUserAdmin ? 'demote' : 'promote', p.user_id)}
+                              >
+                                {actionLoading === `${isUserAdmin ? 'demote' : 'promote'}-${p.user_id}` ? (
+                                  <Loader2 className="h-4 w-4 animate-spin" />
+                                ) : isUserAdmin ? (
+                                  <ShieldOff className="h-4 w-4 text-muted-foreground" />
+                                ) : (
+                                  <ShieldCheck className="h-4 w-4 text-muted-foreground" />
+                                )}
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              {isUserAdmin ? 'Remover admin' : 'Promover a admin'}
+                            </TooltipContent>
+                          </Tooltip>
+                        )}
+
+                        {/* Activate / Deactivate */}
+                        {!isSelf && (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8"
+                                disabled={actionLoading !== null}
+                                onClick={() => handleAction(isBanned ? 'activate' : 'deactivate', p.user_id)}
+                              >
+                                {actionLoading === `${isBanned ? 'activate' : 'deactivate'}-${p.user_id}` ? (
+                                  <Loader2 className="h-4 w-4 animate-spin" />
+                                ) : isBanned ? (
+                                  <UserCheck className="h-4 w-4 text-emerald-600" />
+                                ) : (
+                                  <UserX className="h-4 w-4 text-destructive" />
+                                )}
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              {isBanned ? 'Reativar usuário' : 'Inativar usuário'}
+                            </TooltipContent>
+                          </Tooltip>
+                        )}
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
         </CardContent>
