@@ -319,6 +319,34 @@ const Settings = () => {
           </div>
         </div>
       </div>
+
+      {/* Delete confirmation dialog */}
+      <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-destructive" />
+              Excluir status "{deleteTarget?.status.name}"?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {deleteTarget?.taskCount === 1
+                ? `Existe 1 tarefa usando este status. Ela será movida para "${getFallbackStatus()?.name || 'Não Afiliado'}".`
+                : `Existem ${deleteTarget?.taskCount} tarefas usando este status. Elas serão movidas para "${getFallbackStatus()?.name || 'Não Afiliado'}".`}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={deleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => deleteTarget && executeDelete(deleteTarget.status, deleteTarget.taskCount)}
+            >
+              {deleting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+              Excluir e migrar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
