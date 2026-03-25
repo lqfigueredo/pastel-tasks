@@ -1,11 +1,16 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { KanbanBoard } from '@/components/kanban/KanbanBoard';
+import { KanbanBoard, KanbanBoardRef } from '@/components/kanban/KanbanBoard';
 import { CreateTaskDialog } from '@/components/kanban/CreateTaskDialog';
 
 const Index = () => {
   const [createOpen, setCreateOpen] = useState(false);
+  const boardRef = useRef<KanbanBoardRef>(null);
+
+  const handleTaskCreated = () => {
+    boardRef.current?.refresh();
+  };
 
   return (
     <div className="animate-fade-in">
@@ -19,8 +24,8 @@ const Index = () => {
           Nova Tarefa
         </Button>
       </div>
-      <KanbanBoard />
-      <CreateTaskDialog open={createOpen} onOpenChange={setCreateOpen} />
+      <KanbanBoard ref={boardRef} />
+      <CreateTaskDialog open={createOpen} onOpenChange={setCreateOpen} onTaskCreated={handleTaskCreated} />
     </div>
   );
 };

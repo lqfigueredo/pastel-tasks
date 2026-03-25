@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback, useImperativeHandle, forwardRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { KanbanColumn } from './KanbanColumn';
@@ -24,14 +24,18 @@ export interface TaskStatus {
   position: number;
 }
 
-export function KanbanBoard() {
+export interface KanbanBoardRef {
+  refresh: () => void;
+}
+
+export const KanbanBoard = forwardRef<KanbanBoardRef>((_props, ref) => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [statuses, setStatuses] = useState<TaskStatus[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     if (!user) return;
 
     const [statusRes, taskRes] = await Promise.all([
@@ -42,11 +46,13 @@ export function KanbanBoard() {
     if (statusRes.data) setStatuses(statusRes.data);
     if (taskRes.data) setTasks(taskRes.data);
     setLoading(false);
-  };
+  }, [user]);
+
+  useImperativeHandle(ref, () => ({ refresh: fetchData }), [fetchData]);
 
   useEffect(() => {
     fetchData();
-  }, [user]);
+  }, [fetchData]);
 
   const moveTask = async (taskId: string, newStatusId: string) => {
     setTasks((prev) =>
@@ -88,4 +94,6 @@ export function KanbanBoard() {
       ))}
     </div>
   );
-}
+});
+
+KanbanBoard.displayName = 'KanbanBoard';
