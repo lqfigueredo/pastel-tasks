@@ -223,6 +223,10 @@ export function TaskDetailDialog({ task, allStatuses, open, onOpenChange, onRefr
 
             <Separator />
 
+            <TaskAttachments taskId={task.id} />
+
+            <Separator />
+
             <div>
               <h4 className="flex items-center gap-2 text-sm font-semibold mb-3">
                 <MessageSquare className="h-4 w-4" /> Comentários
