@@ -54,8 +54,23 @@ const Team = () => {
 
   const [description, setDescription] = useState('');
   const [savingDescription, setSavingDescription] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const isCreator = team?.created_by === user?.id;
+
+  const handleDeleteTeam = async () => {
+    if (!team) return;
+    setDeleting(true);
+    const { error } = await supabase.from('teams').delete().eq('id', team.id);
+    if (error) {
+      toast({ title: 'Erro ao excluir time', description: error.message, variant: 'destructive' });
+      setDeleting(false);
+    } else {
+      toast({ title: 'Time excluído com sucesso' });
+      navigate('/equipe');
+    }
+  };
 
   const loadTeam = useCallback(async () => {
     if (!user || !teamId) return;
