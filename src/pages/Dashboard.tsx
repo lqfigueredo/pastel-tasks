@@ -71,11 +71,12 @@ export default function Dashboard() {
   const fetchData = useCallback(async () => {
     if (!user) return;
 
-    const [statusRes, taskRes, assigneeRes, profileRes] = await Promise.all([
+    const [statusRes, taskRes, assigneeRes, profileRes, myAssignmentsRes] = await Promise.all([
       supabase.from('task_statuses').select('*').is('deleted_at', null).order('position'),
       supabase.from('tasks').select('*').eq('created_by', user.id),
       supabase.from('task_assignees').select('task_id, user_id'),
       supabase.from('profiles').select('user_id, display_name, avatar_url'),
+      supabase.from('task_assignees').select('task_id').eq('user_id', user.id),
     ]);
 
     if (statusRes.data) setStatuses(statusRes.data);
@@ -95,9 +96,22 @@ export default function Dashboard() {
       }
     }
 
-    if (taskRes.data) {
-      setTasks(taskRes.data.map((t) => ({ ...t, assignees: assigneeMap.get(t.id) || [] })));
+    // Merge created tasks + assigned tasks
+    const createdTasks = taskRes.data || [];
+    const createdIds = new Set(createdTasks.map((t) => t.id));
+
+    const assignedTaskIds = (myAssignmentsRes.data || [])
+      .map((r) => r.task_id)
+      .filter((id) => !createdIds.has(id));
+
+    let assignedTasks: typeof createdTasks = [];
+    if (assignedTaskIds.length > 0) {
+      const { data } = await supabase.from('tasks').select('*').in('id', assignedTaskIds);
+      assignedTasks = data || [];
     }
+
+    const allTasks = [...createdTasks, ...assignedTasks];
+    setTasks(allTasks.map((t) => ({ ...t, assignees: assigneeMap.get(t.id) || [] })));
   }, [user]);
 
   useEffect(() => {
