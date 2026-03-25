@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { CheckSquare } from 'lucide-react';
+import { ThemeToggle } from '@/components/ThemeToggle';
 
 const Auth = () => {
   const { user, loading, signIn, signUp } = useAuth();

@@ -17,6 +17,7 @@ import {
   useSidebar,
 } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
+import { ThemeToggle } from '@/components/ThemeToggle';
 
 const navItems = [
   { title: 'Dashboard', url: '/dashboard', icon: CalendarDays },
