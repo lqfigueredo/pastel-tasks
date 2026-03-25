@@ -40,7 +40,7 @@ export const KanbanBoard = forwardRef<KanbanBoardRef>((_props, ref) => {
   const fetchData = useCallback(async () => {
     if (!user) return;
 
-    const [statusRes, taskRes, assigneeRes] = await Promise.all([
+    const [statusRes, taskRes, assigneeRes, profileRes] = await Promise.all([
       supabase.from('task_statuses').select('*').order('position'),
       supabase.from('tasks').select('*').eq('created_by', user.id).order('created_at', { ascending: false }),
       supabase.from('task_assignees').select('task_id, user_id').order('assigned_at'),
@@ -49,18 +49,22 @@ export const KanbanBoard = forwardRef<KanbanBoardRef>((_props, ref) => {
 
     if (statusRes.data) setStatuses(statusRes.data);
 
+    // Build profile lookup
+    const profileMap = new Map<string, Profile>();
+    if (profileRes.data) {
+      for (const p of profileRes.data) {
+        profileMap.set(p.user_id, p);
+      }
+    }
+
     // Build assignee map
     const assigneeMap = new Map<string, Profile[]>();
     if (assigneeRes.data) {
-      for (const row of assigneeRes.data as any[]) {
-        const taskId = row.task_id as string;
-        const profile: Profile = {
-          user_id: row.profiles.user_id,
-          display_name: row.profiles.display_name,
-          avatar_url: row.profiles.avatar_url,
-        };
-        if (!assigneeMap.has(taskId)) assigneeMap.set(taskId, []);
-        assigneeMap.get(taskId)!.push(profile);
+      for (const row of assigneeRes.data) {
+        const profile = profileMap.get(row.user_id);
+        if (!profile) continue;
+        if (!assigneeMap.has(row.task_id)) assigneeMap.set(row.task_id, []);
+        assigneeMap.get(row.task_id)!.push(profile);
       }
     }
 
