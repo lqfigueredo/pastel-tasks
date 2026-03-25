@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { AssigneeSelector } from './AssigneeSelector';
 import { X } from 'lucide-react';
 
 interface Props {
@@ -23,6 +24,7 @@ export function CreateTaskDialog({ open, onOpenChange, onTaskCreated }: Props) {
   const [statusId, setStatusId] = useState('');
   const [startDate, setStartDate] = useState('');
   const [estimatedDate, setEstimatedDate] = useState('');
+  const [assigneeIds, setAssigneeIds] = useState<string[]>([]);
   const [statuses, setStatuses] = useState<{ id: string; name: string }[]>([]);
   const [saving, setSaving] = useState(false);
 
@@ -42,23 +44,29 @@ export function CreateTaskDialog({ open, onOpenChange, onTaskCreated }: Props) {
     if (!user || !title.trim()) return;
     setSaving(true);
 
-    const { error } = await supabase.from('tasks').insert({
+    const { data, error } = await supabase.from('tasks').insert({
       title: title.trim(),
       description: description.trim() || null,
       status_id: statusId,
       start_date: startDate || null,
       estimated_delivery_date: estimatedDate || null,
       created_by: user.id,
-    });
+    }).select('id').single();
 
     if (error) {
       toast({ title: 'Erro ao criar tarefa', description: error.message, variant: 'destructive' });
     } else {
+      if (data && assigneeIds.length > 0) {
+        await supabase.from('task_assignees').insert(
+          assigneeIds.map((user_id) => ({ task_id: data.id, user_id }))
+        );
+      }
       toast({ title: 'Tarefa criada!' });
       setTitle('');
       setDescription('');
       setStartDate('');
       setEstimatedDate('');
+      setAssigneeIds([]);
       onOpenChange(false);
       onTaskCreated?.();
     }
@@ -98,6 +106,10 @@ export function CreateTaskDialog({ open, onOpenChange, onTaskCreated }: Props) {
                 ))}
               </SelectContent>
             </Select>
+          </div>
+          <div className="space-y-2">
+            <Label>Responsáveis</Label>
+            <AssigneeSelector selectedIds={assigneeIds} onChange={setAssigneeIds} />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">

@@ -9,6 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
+import { AssigneeSelector } from './AssigneeSelector';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { MessageSquare, Send, AlertTriangle, X } from 'lucide-react';
@@ -38,11 +39,11 @@ export function TaskDetailDialog({ task, allStatuses, open, onOpenChange, onRefr
   const [startDate, setStartDate] = useState(task.start_date || '');
   const [endDate, setEndDate] = useState(task.end_date || '');
   const [estimatedDate, setEstimatedDate] = useState(task.estimated_delivery_date || '');
+  const [assigneeIds, setAssigneeIds] = useState<string[]>(task.assignees.map((a) => a.user_id));
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState('');
   const [saving, setSaving] = useState(false);
 
-  // Justification modal state
   const [justifyOpen, setJustifyOpen] = useState(false);
   const [justification, setJustification] = useState('');
   const [pendingDate, setPendingDate] = useState('');
@@ -55,6 +56,7 @@ export function TaskDetailDialog({ task, allStatuses, open, onOpenChange, onRefr
       setStartDate(task.start_date || '');
       setEndDate(task.end_date || '');
       setEstimatedDate(task.estimated_delivery_date || '');
+      setAssigneeIds(task.assignees.map((a) => a.user_id));
       fetchComments();
     }
   }, [open, task]);
@@ -82,26 +84,42 @@ export function TaskDetailDialog({ task, allStatuses, open, onOpenChange, onRefr
       toast({ title: 'Justificativa obrigatória', variant: 'destructive' });
       return;
     }
-
     await supabase.from('delivery_date_logs').insert({
       task_id: task.id,
       old_date: task.estimated_delivery_date,
       new_date: pendingDate,
       changed_by: user!.id,
     });
-
     await supabase.from('task_comments').insert({
       task_id: task.id,
       user_id: user!.id,
       content: `📅 Data de previsão alterada: ${justification}`,
       comment_type: 'justification',
     });
-
     setEstimatedDate(pendingDate);
     setJustifyOpen(false);
     setJustification('');
     setPendingDate('');
     fetchComments();
+  };
+
+  const saveAssignees = async () => {
+    const currentIds = task.assignees.map((a) => a.user_id);
+    const toAdd = assigneeIds.filter((id) => !currentIds.includes(id));
+    const toRemove = currentIds.filter((id) => !assigneeIds.includes(id));
+
+    if (toAdd.length > 0) {
+      await supabase.from('task_assignees').insert(
+        toAdd.map((user_id) => ({ task_id: task.id, user_id }))
+      );
+    }
+    if (toRemove.length > 0) {
+      await supabase
+        .from('task_assignees')
+        .delete()
+        .eq('task_id', task.id)
+        .in('user_id', toRemove);
+    }
   };
 
   const handleSave = async () => {
@@ -118,6 +136,7 @@ export function TaskDetailDialog({ task, allStatuses, open, onOpenChange, onRefr
     if (error) {
       toast({ title: 'Erro ao salvar', variant: 'destructive' });
     } else {
+      await saveAssignees();
       toast({ title: 'Tarefa atualizada!' });
       onRefresh();
       onOpenChange(false);
@@ -176,6 +195,11 @@ export function TaskDetailDialog({ task, allStatuses, open, onOpenChange, onRefr
               </Select>
             </div>
 
+            <div className="space-y-2">
+              <Label>Responsáveis</Label>
+              <AssigneeSelector selectedIds={assigneeIds} onChange={setAssigneeIds} />
+            </div>
+
             <div className="grid grid-cols-3 gap-3">
               <div className="space-y-2">
                 <Label>Início</Label>
@@ -198,7 +222,6 @@ export function TaskDetailDialog({ task, allStatuses, open, onOpenChange, onRefr
 
             <Separator />
 
-            {/* Comments */}
             <div>
               <h4 className="flex items-center gap-2 text-sm font-semibold mb-3">
                 <MessageSquare className="h-4 w-4" /> Comentários
@@ -239,7 +262,6 @@ export function TaskDetailDialog({ task, allStatuses, open, onOpenChange, onRefr
         </div>
       </div>
 
-      {/* Justification modal */}
       {justifyOpen && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center">
           <div className="fixed inset-0 bg-black/60" onClick={() => { setJustifyOpen(false); setPendingDate(''); }} />
