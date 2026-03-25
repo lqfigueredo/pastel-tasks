@@ -2,14 +2,12 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
-} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { X } from 'lucide-react';
 
 interface Props {
   open: boolean;
@@ -67,13 +65,20 @@ export function CreateTaskDialog({ open, onOpenChange, onTaskCreated }: Props) {
     setSaving(false);
   };
 
+  if (!open) return null;
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Nova Tarefa</DialogTitle>
-          <DialogDescription>Preencha os detalhes da nova tarefa</DialogDescription>
-        </DialogHeader>
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      <div className="fixed inset-0 bg-black/60" onClick={() => onOpenChange(false)} />
+      <div className="relative z-50 w-full max-w-md rounded-xl border border-border bg-card p-6 shadow-xl animate-fade-in">
+        <button
+          onClick={() => onOpenChange(false)}
+          className="absolute right-4 top-4 rounded-sm opacity-70 hover:opacity-100"
+        >
+          <X className="h-4 w-4" />
+        </button>
+        <h2 className="text-lg font-semibold mb-1">Nova Tarefa</h2>
+        <p className="text-sm text-muted-foreground mb-4">Preencha os detalhes da nova tarefa</p>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label>Título *</Label>
@@ -109,7 +114,7 @@ export function CreateTaskDialog({ open, onOpenChange, onTaskCreated }: Props) {
             <Button type="submit" disabled={saving}>{saving ? 'Criando...' : 'Criar Tarefa'}</Button>
           </div>
         </form>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </div>
   );
 }

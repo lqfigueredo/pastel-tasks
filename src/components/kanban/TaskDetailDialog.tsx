@@ -3,9 +3,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { Task, TaskStatus } from './KanbanBoard';
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
-} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -14,11 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Separator } from '@/components/ui/separator';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { MessageSquare, Send, AlertTriangle } from 'lucide-react';
-import {
-  AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle,
-  AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction,
-} from '@/components/ui/alert-dialog';
+import { MessageSquare, Send, AlertTriangle, X } from 'lucide-react';
 
 interface Comment {
   id: string;
@@ -90,7 +83,6 @@ export function TaskDetailDialog({ task, allStatuses, open, onOpenChange, onRefr
       return;
     }
 
-    // Log the change
     await supabase.from('delivery_date_logs').insert({
       task_id: task.id,
       old_date: task.estimated_delivery_date,
@@ -98,7 +90,6 @@ export function TaskDetailDialog({ task, allStatuses, open, onOpenChange, onRefr
       changed_by: user!.id,
     });
 
-    // Add justification comment
     await supabase.from('task_comments').insert({
       task_id: task.id,
       user_id: user!.id,
@@ -146,14 +137,21 @@ export function TaskDetailDialog({ task, allStatuses, open, onOpenChange, onRefr
     fetchComments();
   };
 
+  if (!open) return null;
+
   return (
     <>
-      <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-xl max-h-[85vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Detalhes da Tarefa</DialogTitle>
-            <DialogDescription>Edite os campos e salve as alterações</DialogDescription>
-          </DialogHeader>
+      <div className="fixed inset-0 z-50 flex items-center justify-center">
+        <div className="fixed inset-0 bg-black/60" onClick={() => onOpenChange(false)} />
+        <div className="relative z-50 w-full max-w-xl max-h-[85vh] overflow-y-auto rounded-xl border border-border bg-card p-6 shadow-xl animate-fade-in">
+          <button
+            onClick={() => onOpenChange(false)}
+            className="absolute right-4 top-4 rounded-sm opacity-70 hover:opacity-100"
+          >
+            <X className="h-4 w-4" />
+          </button>
+          <h2 className="text-lg font-semibold mb-1">Detalhes da Tarefa</h2>
+          <p className="text-sm text-muted-foreground mb-4">Edite os campos e salve as alterações</p>
 
           <div className="space-y-4">
             <div className="space-y-2">
@@ -238,35 +236,36 @@ export function TaskDetailDialog({ task, allStatuses, open, onOpenChange, onRefr
               </div>
             </div>
           </div>
-        </DialogContent>
-      </Dialog>
+        </div>
+      </div>
 
-      {/* Justification Alert */}
-      <AlertDialog open={justifyOpen} onOpenChange={setJustifyOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle className="flex items-center gap-2">
+      {/* Justification modal */}
+      {justifyOpen && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center">
+          <div className="fixed inset-0 bg-black/60" onClick={() => { setJustifyOpen(false); setPendingDate(''); }} />
+          <div className="relative z-[60] w-full max-w-md rounded-xl border border-border bg-card p-6 shadow-xl animate-fade-in">
+            <h3 className="flex items-center gap-2 text-lg font-semibold mb-2">
               <AlertTriangle className="h-5 w-5 text-destructive" />
               Justificativa Obrigatória
-            </AlertDialogTitle>
-            <AlertDialogDescription>
+            </h3>
+            <p className="text-sm text-muted-foreground mb-4">
               A data de previsão de entrega está sendo alterada. Informe o motivo da mudança.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <Textarea
-            value={justification}
-            onChange={(e) => setJustification(e.target.value)}
-            placeholder="Motivo da alteração da data..."
-            rows={3}
-          />
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => { setJustifyOpen(false); setPendingDate(''); }}>
-              Cancelar
-            </AlertDialogCancel>
-            <AlertDialogAction onClick={handleJustifyConfirm}>Confirmar</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+            </p>
+            <Textarea
+              value={justification}
+              onChange={(e) => setJustification(e.target.value)}
+              placeholder="Motivo da alteração da data..."
+              rows={3}
+            />
+            <div className="flex justify-end gap-2 mt-4">
+              <Button variant="outline" onClick={() => { setJustifyOpen(false); setPendingDate(''); }}>
+                Cancelar
+              </Button>
+              <Button onClick={handleJustifyConfirm}>Confirmar</Button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
