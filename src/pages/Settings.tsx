@@ -4,7 +4,11 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Trash2, Plus, Loader2, Pencil, Check, X, GripVertical } from 'lucide-react';
+import { Trash2, Plus, Loader2, Pencil, Check, X, GripVertical, AlertTriangle } from 'lucide-react';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 interface Status {
   id: string;
@@ -40,6 +44,10 @@ const Settings = () => {
   const [dragIdx, setDragIdx] = useState<number | null>(null);
   const [dragOverIdx, setDragOverIdx] = useState<number | null>(null);
 
+  // Delete confirmation state
+  const [deleteTarget, setDeleteTarget] = useState<{ status: Status; taskCount: number } | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
   const fetchStatuses = async () => {
     const { data } = await supabase.from('task_statuses').select('*').order('position');
     if (data) setStatuses(data);
@@ -69,14 +77,13 @@ const Settings = () => {
     setSaving(false);
   };
 
-  const handleDelete = async (status: Status) => {
+  const handleDeleteClick = async (status: Status) => {
     const fallback = getFallbackStatus();
     if (!fallback || fallback.id === status.id) {
       toast({ title: 'Não é possível excluir o status padrão', variant: 'destructive' });
       return;
     }
 
-    // Check how many tasks use this status
     const { count } = await supabase
       .from('tasks')
       .select('id', { count: 'exact', head: true })
@@ -85,7 +92,18 @@ const Settings = () => {
     const taskCount = count || 0;
 
     if (taskCount > 0) {
-      // Migrate tasks to fallback status
+      setDeleteTarget({ status, taskCount });
+    } else {
+      // No tasks, delete directly
+      await executeDelete(status, 0);
+    }
+  };
+
+  const executeDelete = async (status: Status, taskCount: number) => {
+    const fallback = getFallbackStatus()!;
+    setDeleting(true);
+
+    if (taskCount > 0) {
       const { error: moveError } = await supabase
         .from('tasks')
         .update({ status_id: fallback.id })
@@ -93,6 +111,8 @@ const Settings = () => {
 
       if (moveError) {
         toast({ title: 'Erro ao migrar tarefas', variant: 'destructive' });
+        setDeleting(false);
+        setDeleteTarget(null);
         return;
       }
     }
@@ -107,6 +127,8 @@ const Settings = () => {
       });
       await fetchStatuses();
     }
+    setDeleting(false);
+    setDeleteTarget(null);
   };
 
   const startEdit = (status: Status) => {
@@ -255,7 +277,7 @@ const Settings = () => {
                       <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
                     </Button>
                     {!s.is_default && (
-                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleDelete(s)}>
+                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleDeleteClick(s)}>
                         <Trash2 className="h-3.5 w-3.5 text-destructive" />
                       </Button>
                     )}
@@ -297,6 +319,34 @@ const Settings = () => {
           </div>
         </div>
       </div>
+
+      {/* Delete confirmation dialog */}
+      <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-destructive" />
+              Excluir status "{deleteTarget?.status.name}"?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {deleteTarget?.taskCount === 1
+                ? `Existe 1 tarefa usando este status. Ela será movida para "${getFallbackStatus()?.name || 'Não Afiliado'}".`
+                : `Existem ${deleteTarget?.taskCount} tarefas usando este status. Elas serão movidas para "${getFallbackStatus()?.name || 'Não Afiliado'}".`}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={deleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => deleteTarget && executeDelete(deleteTarget.status, deleteTarget.taskCount)}
+            >
+              {deleting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+              Excluir e migrar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
