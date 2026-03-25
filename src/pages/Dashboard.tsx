@@ -5,7 +5,7 @@ import { Task, TaskStatus } from '@/components/kanban/KanbanBoard';
 import { Profile } from '@/components/kanban/AssigneeSelector';
 import { TaskDetailDialog } from '@/components/kanban/TaskDetailDialog';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight, CheckCircle2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, CheckCircle2, UserCircle } from 'lucide-react';
 import {
   startOfMonth,
   endOfMonth,
