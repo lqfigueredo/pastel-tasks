@@ -230,9 +230,30 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
-        <p className="text-sm text-muted-foreground">Calendário mensal de atividades</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
+          <p className="text-sm text-muted-foreground">Calendário mensal de atividades</p>
+        </div>
+        <div className="flex gap-1 rounded-lg border border-border bg-muted/50 p-1">
+          {([
+            { value: 'all' as TaskFilter, label: 'Todas' },
+            { value: 'created' as TaskFilter, label: 'Minhas tarefas' },
+            { value: 'assigned' as TaskFilter, label: 'Atribuídas a mim' },
+          ]).map((opt) => (
+            <button
+              key={opt.value}
+              onClick={() => setFilter(opt.value)}
+              className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
+                filter === opt.value
+                  ? 'bg-background text-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       <div className="rounded-xl border border-border bg-card shadow-sm">
