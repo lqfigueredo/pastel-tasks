@@ -14,9 +14,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onTaskCreated?: () => void;
 }
 
-export function CreateTaskDialog({ open, onOpenChange }: Props) {
+export function CreateTaskDialog({ open, onOpenChange, onTaskCreated }: Props) {
   const { user } = useAuth();
   const { toast } = useToast();
   const [title, setTitle] = useState('');
@@ -61,7 +62,7 @@ export function CreateTaskDialog({ open, onOpenChange }: Props) {
       setStartDate('');
       setEstimatedDate('');
       onOpenChange(false);
-      window.location.reload();
+      onTaskCreated?.();
     }
     setSaving(false);
   };
