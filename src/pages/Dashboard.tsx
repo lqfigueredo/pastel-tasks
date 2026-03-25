@@ -124,7 +124,13 @@ export default function Dashboard() {
     fetchData();
   }, [fetchData]);
 
-  const monthStart = startOfMonth(currentMonth);
+  const tasks = useMemo(() => {
+    if (!user) return allTasks;
+    if (filter === 'created') return allTasks.filter((t) => t.created_by === user.id);
+    if (filter === 'assigned') return allTasks.filter((t) => myAssignedIds.has(t.id));
+    return allTasks;
+  }, [allTasks, filter, user, myAssignedIds]);
+
   const monthEnd = endOfMonth(currentMonth);
   const calendarStart = startOfWeek(monthStart);
   const calendarEnd = endOfWeek(monthEnd);
