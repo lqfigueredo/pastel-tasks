@@ -1,75 +1,57 @@
 
 
-# Funcionalidade Completa de Equipe
+# Cadastro de Usuário pelo Admin (com Time)
 
-Implementar criação de time, convite de membros por email e visualização de tarefas da equipe na página Equipe.
+Criar uma página de administração onde admins podem cadastrar novos usuários e já associá-los a um time.
 
 ## Mudanças
 
-### 1. Migration — Corrigir RLS e adicionar políticas faltantes
+### 1. Edge Function `admin-create-user`
 
-A policy SELECT da tabela `teams` tem um bug (`team_members.id` em vez de `teams.id`). Corrigir e adicionar políticas para UPDATE/DELETE em `teams`, e policy SELECT em `team_members` e `task_assignees` para membros do time.
+Nova edge function que recebe `{ email, password, displayName, teamId? }` e:
+- Valida que o chamador tem role `admin` (via token JWT)
+- Usa `supabase.auth.admin.createUser()` com `email_confirm: true` (já confirmado)
+- O trigger `handle_new_user` já cria o profile e o role `user` automaticamente
+- Se `teamId` fornecido, insere em `team_members`
+- Retorna o `user_id` criado
 
-```text
-- DROP + CREATE policy "Members can view team" em teams (corrigir JOIN)
-- ADD policy "Creator can update team" em teams
-- ADD policy "Creator can delete team" em teams
+### 2. Página Admin (`src/pages/Admin.tsx`)
+
+Acessível apenas por admins. Contém:
+- **Formulário de cadastro**: campos Nome, Email, Senha, seletor de Time (opcional, dropdown com times existentes)
+- **Lista de usuários**: tabela com nome, email, time, data de criação
+- Verificação de role admin via `has_role` no carregamento — se não for admin, redireciona ou mostra mensagem de acesso negado
+
+### 3. Rota e Navegação
+
+- Adicionar rota `/admin` em `App.tsx`
+- Adicionar item "Administração" no sidebar (`AppSidebar.tsx`), visível apenas para admins
+- Usar `ShieldCheck` icon do lucide
+
+### 4. Migration — RLS para admin listar usuários
+
+Não é necessário migration extra: o edge function usa `service_role` para criar usuários, e a listagem de profiles já permite SELECT para todos autenticados. Para listar times, a policy existente já cobre membros — mas o admin precisa ver todos os times:
+
+```sql
+CREATE POLICY "Admins can view all teams" ON public.teams
+  FOR SELECT TO authenticated
+  USING (public.has_role(auth.uid(), 'admin'));
 ```
 
-### 2. Página Team (`src/pages/Team.tsx`) — Funcionalidade completa
-
-**Sem time criado:** Mostrar card com botão "Criar Time" + campo para nome do time.
-
-**Com time criado (criador):**
-- Nome do time com indicador de membros (X/5)
-- Lista de membros com avatar, nome e email
-- Botão remover membro (exceto o criador)
-- Campo para convidar por email (busca na tabela `profiles` por `user_id` via lookup no auth — como não temos acesso a `auth.users`, buscaremos pelo `display_name` ou criaremos uma abordagem de convite por user_id existente no sistema)
-- Seção "Tarefas da Equipe": Kanban simplificado ou lista de tarefas do time
-
-**Com time (membro):**
-- Visualizar membros e tarefas do time (somente leitura)
-
-### 3. Convite de membros
-
-Como não temos acesso à tabela `auth.users` pelo client, o convite funcionará assim:
-- O criador digita o email do membro
-- Buscamos na tabela `profiles` (precisamos adicionar campo `email` ou usar edge function)
-- Alternativa mais simples: criar uma edge function que busca o `user_id` pelo email em `auth.users` e retorna o `user_id` + `display_name`
-
-Usaremos uma **edge function** `lookup-user-by-email` que recebe o email, busca em `auth.users` com service role, e retorna `{ user_id, display_name }` se existir.
-
-### 4. Visualização de tarefas da equipe
-
-Na página Equipe, mostrar todas as tarefas onde `team_id` corresponde ao time do usuário. Isso requer que ao criar tarefas, o usuário possa opcionalmente associá-las ao time.
-
-- Adicionar campo opcional "Time" no `CreateTaskDialog` (se o usuário tem time)
-- Na página Equipe, listar tarefas com `team_id = <team do usuário>` em formato de lista/tabela simples com status, título, responsáveis e datas
-
-### 5. RLS para tarefas do time
-
-Atualizar a policy SELECT de `tasks` para permitir que membros do time vejam tarefas do time:
-
-```text
-- ADD policy "Team members can view team tasks" em tasks FOR SELECT
-  USING (team_id IN (SELECT team_id FROM team_members WHERE user_id = auth.uid()))
-```
-
-## Arquivos modificados
+## Arquivos
 
 | Arquivo | Alteração |
 |---|---|
-| Migration SQL | Fix teams RLS, add UPDATE/DELETE policies, add team tasks SELECT policy |
-| `supabase/functions/lookup-user-by-email/index.ts` | Nova edge function para buscar usuário por email |
-| `src/pages/Team.tsx` | Página completa: criar time, listar membros, convidar, ver tarefas |
-| `src/components/kanban/CreateTaskDialog.tsx` | Adicionar campo opcional de time |
-| `src/components/kanban/KanbanBoard.tsx` | Nenhuma mudança necessária |
+| `supabase/functions/admin-create-user/index.ts` | Nova edge function |
+| Migration SQL | Policy admin view all teams |
+| `src/pages/Admin.tsx` | Nova página de administração |
+| `src/App.tsx` | Adicionar rota `/admin` |
+| `src/components/AppSidebar.tsx` | Item "Administração" condicional para admins |
 
-## Fluxo do usuário
+## Fluxo
 
-1. Usuário acessa "Equipe" → vê botão "Criar Time"
-2. Cria time com nome → aparece painel de gerenciamento
-3. Digita email de colega → sistema busca via edge function → adiciona como membro (máx 5)
-4. Ao criar tarefa, pode associar ao time
-5. Na página Equipe, todos os membros veem as tarefas do time
+1. Admin acessa "Administração" no sidebar
+2. Preenche nome, email, senha e opcionalmente seleciona um time
+3. Clica "Cadastrar" → edge function cria o usuário (já confirmado) e adiciona ao time
+4. Usuário aparece na lista e pode fazer login imediatamente
 
