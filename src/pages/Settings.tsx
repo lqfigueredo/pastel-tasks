@@ -1,14 +1,15 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Trash2, Plus, Loader2, Pencil, Check, X, GripVertical, AlertTriangle } from 'lucide-react';
+import { Trash2, Plus, Loader2, Pencil, Check, X, GripVertical, AlertTriangle, RotateCcw, ChevronDown } from 'lucide-react';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 interface Status {
   id: string;
@@ -16,6 +17,7 @@ interface Status {
   color: string;
   position: number;
   is_default: boolean;
+  deleted_at: string | null;
 }
 
 const PASTEL_COLORS = [
@@ -29,10 +31,12 @@ const Settings = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [statuses, setStatuses] = useState<Status[]>([]);
+  const [archivedStatuses, setArchivedStatuses] = useState<Status[]>([]);
   const [newName, setNewName] = useState('');
   const [newColor, setNewColor] = useState(PASTEL_COLORS[0]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [archivedOpen, setArchivedOpen] = useState(false);
 
   // Edit state
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -50,7 +54,10 @@ const Settings = () => {
 
   const fetchStatuses = async () => {
     const { data } = await supabase.from('task_statuses').select('*').order('position');
-    if (data) setStatuses(data);
+    if (data) {
+      setStatuses(data.filter(s => !s.deleted_at));
+      setArchivedStatuses(data.filter(s => !!s.deleted_at));
+    }
     setLoading(false);
   };
 
@@ -80,7 +87,7 @@ const Settings = () => {
   const handleDeleteClick = async (status: Status) => {
     const fallback = getFallbackStatus();
     if (!fallback || fallback.id === status.id) {
-      toast({ title: 'Não é possível excluir o status padrão', variant: 'destructive' });
+      toast({ title: 'Não é possível arquivar o status padrão', variant: 'destructive' });
       return;
     }
 
@@ -94,12 +101,11 @@ const Settings = () => {
     if (taskCount > 0) {
       setDeleteTarget({ status, taskCount });
     } else {
-      // No tasks, delete directly
-      await executeDelete(status, 0);
+      await executeArchive(status, 0);
     }
   };
 
-  const executeDelete = async (status: Status, taskCount: number) => {
+  const executeArchive = async (status: Status, taskCount: number) => {
     const fallback = getFallbackStatus()!;
     setDeleting(true);
 
@@ -117,18 +123,37 @@ const Settings = () => {
       }
     }
 
-    const { error } = await supabase.from('task_statuses').delete().eq('id', status.id);
+    const { error } = await supabase
+      .from('task_statuses')
+      .update({ deleted_at: new Date().toISOString() })
+      .eq('id', status.id);
+
     if (error) {
-      toast({ title: 'Erro ao excluir', variant: 'destructive' });
+      toast({ title: 'Erro ao arquivar', variant: 'destructive' });
     } else {
       toast({
-        title: 'Status excluído',
+        title: 'Status arquivado',
         description: taskCount > 0 ? `${taskCount} tarefa(s) movida(s) para "${fallback.name}".` : undefined,
       });
       await fetchStatuses();
     }
     setDeleting(false);
     setDeleteTarget(null);
+  };
+
+  const handleRestore = async (status: Status) => {
+    const maxPos = statuses.length > 0 ? Math.max(...statuses.map(s => s.position)) : 0;
+    const { error } = await supabase
+      .from('task_statuses')
+      .update({ deleted_at: null, position: maxPos + 1 })
+      .eq('id', status.id);
+
+    if (error) {
+      toast({ title: 'Erro ao restaurar', variant: 'destructive' });
+    } else {
+      toast({ title: `Status "${status.name}" restaurado!` });
+      await fetchStatuses();
+    }
   };
 
   const startEdit = (status: Status) => {
@@ -181,13 +206,11 @@ const Settings = () => {
     const [moved] = reordered.splice(dragIdx, 1);
     reordered.splice(dragOverIdx, 0, moved);
 
-    // Update positions
     const updated = reordered.map((s, i) => ({ ...s, position: i }));
     setStatuses(updated);
     setDragIdx(null);
     setDragOverIdx(null);
 
-    // Persist all position changes
     const promises = updated.map((s) =>
       supabase.from('task_statuses').update({ position: s.position }).eq('id', s.id)
     );
@@ -318,6 +341,38 @@ const Settings = () => {
             </Button>
           </div>
         </div>
+
+        {/* Archived statuses */}
+        {archivedStatuses.length > 0 && (
+          <div className="pt-2 border-t border-border/50">
+            <Collapsible open={archivedOpen} onOpenChange={setArchivedOpen}>
+              <CollapsibleTrigger className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors w-full py-2">
+                <ChevronDown className={`h-4 w-4 transition-transform ${archivedOpen ? 'rotate-180' : ''}`} />
+                Status arquivados ({archivedStatuses.length})
+              </CollapsibleTrigger>
+              <CollapsibleContent className="space-y-1 pt-1">
+                {archivedStatuses.map((s) => (
+                  <div
+                    key={s.id}
+                    className="flex items-center gap-2 py-2 px-3 rounded-lg bg-muted/20 opacity-70"
+                  >
+                    <span className="h-4 w-4 rounded-full shrink-0" style={{ backgroundColor: s.color }} />
+                    <span className="text-sm text-foreground flex-1">{s.name}</span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 gap-1 text-xs"
+                      onClick={() => handleRestore(s)}
+                    >
+                      <RotateCcw className="h-3.5 w-3.5" />
+                      Restaurar
+                    </Button>
+                  </div>
+                ))}
+              </CollapsibleContent>
+            </Collapsible>
+          </div>
+        )}
       </div>
 
       {/* Delete confirmation dialog */}
@@ -326,7 +381,7 @@ const Settings = () => {
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2">
               <AlertTriangle className="h-5 w-5 text-destructive" />
-              Excluir status "{deleteTarget?.status.name}"?
+              Arquivar status "{deleteTarget?.status.name}"?
             </AlertDialogTitle>
             <AlertDialogDescription>
               {deleteTarget?.taskCount === 1
@@ -339,10 +394,10 @@ const Settings = () => {
             <AlertDialogAction
               disabled={deleting}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              onClick={() => deleteTarget && executeDelete(deleteTarget.status, deleteTarget.taskCount)}
+              onClick={() => deleteTarget && executeArchive(deleteTarget.status, deleteTarget.taskCount)}
             >
               {deleting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-              Excluir e migrar
+              Arquivar e migrar
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -33,7 +33,7 @@ export function CreateTaskDialog({ open, onOpenChange, onTaskCreated }: Props) {
 
   useEffect(() => {
     if (open) {
-      supabase.from('task_statuses').select('id, name').order('position').then(({ data }) => {
+      supabase.from('task_statuses').select('id, name').is('deleted_at', null).order('position').then(({ data }) => {
         if (data) {
           setStatuses(data);
           if (data.length > 0 && !statusId) setStatusId(data[0].id);
