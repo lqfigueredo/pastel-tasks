@@ -140,6 +140,7 @@ export function CreateTaskDialog({ open, onOpenChange, onTaskCreated }: Props) {
               </label>
             </div>
           )}
+          <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
               <Label>Data de Início</Label>
               <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
