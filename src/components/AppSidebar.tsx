@@ -17,6 +17,7 @@ import {
   useSidebar,
 } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
+import { ThemeToggle } from '@/components/ThemeToggle';
 
 const navItems = [
   { title: 'Dashboard', url: '/dashboard', icon: CalendarDays },
@@ -94,6 +95,7 @@ export function AppSidebar() {
         {!collapsed && user && (
           <p className="mb-2 truncate px-2 text-xs text-muted-foreground">{user.email}</p>
         )}
+        <ThemeToggle collapsed={collapsed} />
         <Button
           variant="ghost"
           size={collapsed ? 'icon' : 'sm'}
