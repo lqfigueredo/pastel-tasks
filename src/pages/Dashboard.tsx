@@ -83,17 +83,19 @@ export default function Dashboard() {
     tasks.filter((t) => {
       const start = t.start_date ? parseISO(t.start_date) : null;
       const end = t.end_date ? parseISO(t.end_date) : null;
+      const delivery = t.estimated_delivery_date ? parseISO(t.estimated_delivery_date) : null;
 
       if (start && end) {
         return isWithinInterval(day, { start, end });
       }
       if (start && !end) {
-        return isSameDay(day, start) || isAfter(day, start);
+        const effectiveEnd = delivery || start;
+        return isWithinInterval(day, { start, end: effectiveEnd });
       }
       if (!start && end) {
-        return isSameDay(day, end) || isBefore(day, end);
+        return isSameDay(day, end);
       }
-      return t.estimated_delivery_date && isSameDay(parseISO(t.estimated_delivery_date), day);
+      return delivery && isSameDay(day, delivery);
     });
 
   return (
