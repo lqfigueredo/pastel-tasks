@@ -192,19 +192,89 @@ export function CreateTaskDialog({ open, onOpenChange, onTaskCreated }: Props) {
               </label>
             </div>
           )}
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-2">
-              <Label>Data de Início</Label>
-              <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+
+          {/* Recurring task toggle */}
+          <div className="flex items-center justify-between rounded-lg border border-border/50 p-3">
+            <div className="flex items-center gap-2">
+              <Repeat className="h-4 w-4 text-muted-foreground" />
+              <Label htmlFor="recurring-toggle" className="cursor-pointer text-sm">Tarefa recorrente</Label>
             </div>
-            <div className="space-y-2">
-              <Label>Previsão de Entrega</Label>
-              <Input type="date" value={estimatedDate} onChange={(e) => setEstimatedDate(e.target.value)} />
-            </div>
+            <Switch id="recurring-toggle" checked={isRecurring} onCheckedChange={setIsRecurring} />
           </div>
+
+          {isRecurring ? (
+            <div className="space-y-3 rounded-lg border border-border/50 bg-muted/20 p-3">
+              <div className="space-y-2">
+                <Label>Frequência</Label>
+                <Select value={recurrenceType} onValueChange={(v) => { setRecurrenceType(v); setRecurrenceDay(v === 'weekly' ? 1 : 1); }}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="weekly">Semanal</SelectItem>
+                    <SelectItem value="monthly">Mensal</SelectItem>
+                    <SelectItem value="yearly">Anual</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                {recurrenceType === 'weekly' && (
+                  <>
+                    <Label>Dia da semana</Label>
+                    <Select value={String(recurrenceDay)} onValueChange={(v) => setRecurrenceDay(Number(v))}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'].map((d, i) => (
+                          <SelectItem key={i} value={String(i)}>{d}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </>
+                )}
+                {recurrenceType === 'monthly' && (
+                  <>
+                    <Label>Dia do mês</Label>
+                    <Select value={String(recurrenceDay)} onValueChange={(v) => setRecurrenceDay(Number(v))}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {Array.from({ length: 28 }, (_, i) => (
+                          <SelectItem key={i + 1} value={String(i + 1)}>Dia {i + 1}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </>
+                )}
+                {recurrenceType === 'yearly' && (
+                  <>
+                    <Label>Mês</Label>
+                    <Select value={String(recurrenceDay)} onValueChange={(v) => setRecurrenceDay(Number(v))}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'].map((m, i) => (
+                          <SelectItem key={i} value={String(i)}>{m}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </>
+                )}
+              </div>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label>Data de Início</Label>
+                <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <Label>Previsão de Entrega</Label>
+                <Input type="date" value={estimatedDate} onChange={(e) => setEstimatedDate(e.target.value)} />
+              </div>
+            </div>
+          )}
+
           <div className="flex justify-end gap-2 pt-2">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-            <Button type="submit" disabled={saving}>{saving ? 'Criando...' : 'Criar Tarefa'}</Button>
+            <Button type="submit" disabled={saving}>
+              {saving ? 'Criando...' : isRecurring ? 'Criar Recorrência' : 'Criar Tarefa'}
+            </Button>
           </div>
         </form>
       </div>
