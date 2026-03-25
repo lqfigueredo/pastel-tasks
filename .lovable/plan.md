@@ -1,23 +1,31 @@
 
 
-# Ajustar status padrão — apenas "Não Afiliado"
+# Minimizar Tasks no Kanban
 
-Atualmente todos os 4 status ativos estão com `is_default = true`. Precisamos corrigir para que apenas "Não Afiliado" seja o padrão, e colocá-lo na posição 0 (o código usa `is_default && position === 0` para identificar o fallback).
+Adicionar um botão em cada card para alternar entre visualização expandida (padrão) e minimizada (compacta — só título). O estado será persistido no banco para que sobreviva entre sessões.
 
-## Migration SQL
+## Mudanças
+
+### 1. Migration — coluna `is_minimized` na tabela `tasks`
 
 ```sql
--- Remove is_default de todos
-UPDATE public.task_statuses SET is_default = false WHERE is_default = true;
-
--- Define apenas "Não Afiliado" como default na posição 0
-UPDATE public.task_statuses SET is_default = true, position = 0 WHERE id = '59a735d6-ffa5-4b8b-be6e-43135fcc8806';
-
--- Reordenar os demais (mantendo ordem relativa)
-UPDATE public.task_statuses SET position = 1 WHERE id = 'ad7243eb-1903-4928-8fc2-ab54ae8937e9'; -- Em Desenvolvimento
-UPDATE public.task_statuses SET position = 2 WHERE id = '7d705bbd-b15f-4a12-a8f5-49d287cab243'; -- Backlog
-UPDATE public.task_statuses SET position = 3 WHERE id = '74431d84-4592-4f4a-9bc4-f2e4632f313b'; -- Concluída
+ALTER TABLE public.tasks ADD COLUMN is_minimized boolean NOT NULL DEFAULT false;
 ```
 
-Nenhuma alteração de código necessária — apenas dados.
+### 2. KanbanCard.tsx — botão de minimizar e renderização condicional
+
+- Adicionar ícone de minimizar/expandir (ChevronDown/ChevronUp) no canto superior direito do card
+- Clicar no ícone alterna `is_minimized` no banco via `supabase.from('tasks').update({ is_minimized: !task.is_minimized })`
+- Quando minimizado: mostrar apenas o título em uma linha, sem descrição, sem assignees, sem data
+- O clique no card (abrir detalhes) continua funcionando normalmente — o ícone de minimizar intercepta o evento com `stopPropagation`
+
+### 3. KanbanBoard.tsx — incluir `is_minimized` no tipo Task
+
+- Adicionar `is_minimized: boolean` à interface `Task`
+- O campo já vem no `select('*')`, então não precisa mudar a query
+
+### 4. Estilo visual
+
+- Card minimizado: padding reduzido, texto menor, fundo levemente diferenciado (opacity reduzida)
+- Transição suave ao alternar
 
