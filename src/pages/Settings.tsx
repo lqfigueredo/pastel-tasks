@@ -77,14 +77,13 @@ const Settings = () => {
     setSaving(false);
   };
 
-  const handleDelete = async (status: Status) => {
+  const handleDeleteClick = async (status: Status) => {
     const fallback = getFallbackStatus();
     if (!fallback || fallback.id === status.id) {
       toast({ title: 'Não é possível excluir o status padrão', variant: 'destructive' });
       return;
     }
 
-    // Check how many tasks use this status
     const { count } = await supabase
       .from('tasks')
       .select('id', { count: 'exact', head: true })
@@ -93,7 +92,18 @@ const Settings = () => {
     const taskCount = count || 0;
 
     if (taskCount > 0) {
-      // Migrate tasks to fallback status
+      setDeleteTarget({ status, taskCount });
+    } else {
+      // No tasks, delete directly
+      await executeDelete(status, 0);
+    }
+  };
+
+  const executeDelete = async (status: Status, taskCount: number) => {
+    const fallback = getFallbackStatus()!;
+    setDeleting(true);
+
+    if (taskCount > 0) {
       const { error: moveError } = await supabase
         .from('tasks')
         .update({ status_id: fallback.id })
@@ -101,6 +111,8 @@ const Settings = () => {
 
       if (moveError) {
         toast({ title: 'Erro ao migrar tarefas', variant: 'destructive' });
+        setDeleting(false);
+        setDeleteTarget(null);
         return;
       }
     }
@@ -114,6 +126,10 @@ const Settings = () => {
         description: taskCount > 0 ? `${taskCount} tarefa(s) movida(s) para "${fallback.name}".` : undefined,
       });
       await fetchStatuses();
+    }
+    setDeleting(false);
+    setDeleteTarget(null);
+  };
     }
   };
 
