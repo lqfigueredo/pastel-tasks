@@ -9,7 +9,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Users, Plus, Trash2, Loader2, Mail, Crown, Calendar, FileText, Save, ArrowLeft } from 'lucide-react';
+import { Users, Plus, Trash2, Loader2, Mail, Crown, Calendar, FileText, Save, ArrowLeft, AlertTriangle } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { TeamAttachments } from '@/components/team/TeamAttachments';
 
