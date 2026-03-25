@@ -61,12 +61,16 @@ function isMultiDay(t: Task): boolean {
   return differenceInDays(interval.end, interval.start) >= 1;
 }
 
+type TaskFilter = 'all' | 'created' | 'assigned';
+
 export default function Dashboard() {
   const { user } = useAuth();
   const [currentMonth, setCurrentMonth] = useState(new Date());
-  const [tasks, setTasks] = useState<Task[]>([]);
+  const [allTasks, setAllTasks] = useState<Task[]>([]);
+  const [myAssignedIds, setMyAssignedIds] = useState<Set<string>>(new Set());
   const [statuses, setStatuses] = useState<TaskStatus[]>([]);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [filter, setFilter] = useState<TaskFilter>('all');
 
   const fetchData = useCallback(async () => {
     if (!user) return;
