@@ -1,49 +1,37 @@
 
 
-# Múltiplos Times com Tela de Listagem
+# Soft Delete para Status do Kanban
 
-Atualmente a página de Equipe assume que o usuário pertence a apenas um time. Vamos reestruturar para suportar múltiplos times com uma tela de listagem.
-
-## Arquitetura
-
-A página `/equipe` passa a ter dois estados:
-1. **Lista de times** (padrão) -- mostra todos os times do usuário em cards + botão criar novo time
-2. **Detalhe do time** (`/equipe/:teamId`) -- a tela atual com membros, descrição, anexos e tarefas
+Adicionar coluna `deleted_at` na tabela `task_statuses` para permitir exclusão lógica (soft delete) dos status, mantendo o histórico e permitindo restauração futura.
 
 ## Mudanças
 
-### 1. Nova página `src/pages/TeamList.tsx`
+### 1. Migration — Coluna `deleted_at` em `task_statuses`
 
-Lista todos os times do usuário:
-- Busca `team_members` filtrado por `user_id` do usuário logado
-- Para cada `team_id`, carrega dados do time (nome, descrição, contagem de membros)
-- Exibe em cards com: nome do time, descrição truncada, badge com contagem de membros, badge "Criador" se aplicável
-- Botão "Criar Time" abre dialog inline (nome do time) -- reutiliza lógica existente
-- Clique no card navega para `/equipe/:teamId`
-
-### 2. Refatorar `src/pages/Team.tsx` para aceitar `teamId` via URL
-
-- Recebe `teamId` de `useParams()` ao invés de buscar automaticamente o primeiro time
-- Remove a lógica de "encontrar time do usuário" e usa o `teamId` direto da URL
-- Adiciona botão "Voltar" para `/equipe`
-- Mantém toda a lógica atual de membros, descrição, anexos e tarefas
-
-### 3. Atualizar rotas em `src/App.tsx`
-
-```
-<Route path="/equipe" element={<TeamList />} />
-<Route path="/equipe/:teamId" element={<Team />} />
+```sql
+ALTER TABLE public.task_statuses ADD COLUMN deleted_at timestamptz DEFAULT NULL;
 ```
 
-### 4. Nenhuma mudança no banco de dados
-
-O schema atual já suporta múltiplos times (um usuário pode ter múltiplas entradas em `team_members`). As RLS policies também já estão corretas.
-
-## Arquivos
+### 2. Ajustar queries para filtrar status ativos
 
 | Arquivo | Alteração |
 |---|---|
-| `src/pages/TeamList.tsx` | Nova página de listagem de times |
-| `src/pages/Team.tsx` | Refatorar para usar `teamId` da URL |
-| `src/App.tsx` | Adicionar rota `/equipe/:teamId` |
+| `src/pages/Settings.tsx` | Ao buscar statuses, filtrar `.is('deleted_at', null)`. Na exclusão, fazer `update({ deleted_at: new Date().toISOString() })` ao invés de `delete()`. Adicionar seção colapsável "Status arquivados" com opção de restaurar (setar `deleted_at = null`). |
+| `src/components/kanban/KanbanBoard.tsx` | Filtrar statuses com `.is('deleted_at', null)` na query de `task_statuses`. |
+| `src/components/kanban/CreateTaskDialog.tsx` | Verificar se já filtra statuses — garantir que use apenas ativos. |
+| `src/components/kanban/TaskDetailDialog.tsx` | Idem — garantir que dropdown de status mostre apenas ativos. |
+
+### 3. Lógica de exclusão no Settings
+
+Ao "excluir" um status:
+- Setar `deleted_at = now()` no status
+- Mover tarefas associadas para o status padrão (mesma lógica atual)
+- Status arquivado aparece em seção separada com botão "Restaurar"
+
+### 4. Restauração
+
+Na seção "Status arquivados" do Settings:
+- Listar status com `deleted_at IS NOT NULL`
+- Botão para restaurar: `update({ deleted_at: null })`
+- Status restaurado volta à última posição
 
