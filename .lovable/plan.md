@@ -1,80 +1,49 @@
 
 
-# Descritivo e Anexos do Time
+# Múltiplos Times com Tela de Listagem
 
-Adicionar descrição e anexos diretamente na página de Equipe existente, como uma nova seção/card dentro do time já criado.
+Atualmente a página de Equipe assume que o usuário pertence a apenas um time. Vamos reestruturar para suportar múltiplos times com uma tela de listagem.
+
+## Arquitetura
+
+A página `/equipe` passa a ter dois estados:
+1. **Lista de times** (padrão) -- mostra todos os times do usuário em cards + botão criar novo time
+2. **Detalhe do time** (`/equipe/:teamId`) -- a tela atual com membros, descrição, anexos e tarefas
 
 ## Mudanças
 
-### 1. Migration — Adicionar coluna `description` na tabela `teams` + tabela de anexos + bucket
+### 1. Nova página `src/pages/TeamList.tsx`
 
-```sql
--- Descrição do time
-ALTER TABLE public.teams ADD COLUMN description text;
+Lista todos os times do usuário:
+- Busca `team_members` filtrado por `user_id` do usuário logado
+- Para cada `team_id`, carrega dados do time (nome, descrição, contagem de membros)
+- Exibe em cards com: nome do time, descrição truncada, badge com contagem de membros, badge "Criador" se aplicável
+- Botão "Criar Time" abre dialog inline (nome do time) -- reutiliza lógica existente
+- Clique no card navega para `/equipe/:teamId`
 
--- Tabela de anexos do time
-CREATE TABLE public.team_attachments (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  team_id uuid NOT NULL REFERENCES public.teams(id) ON DELETE CASCADE,
-  uploaded_by uuid NOT NULL,
-  file_name text NOT NULL,
-  file_path text NOT NULL,
-  file_type text NOT NULL,
-  created_at timestamptz NOT NULL DEFAULT now()
-);
+### 2. Refatorar `src/pages/Team.tsx` para aceitar `teamId` via URL
 
-ALTER TABLE public.team_attachments ENABLE ROW LEVEL SECURITY;
+- Recebe `teamId` de `useParams()` ao invés de buscar automaticamente o primeiro time
+- Remove a lógica de "encontrar time do usuário" e usa o `teamId` direto da URL
+- Adiciona botão "Voltar" para `/equipe`
+- Mantém toda a lógica atual de membros, descrição, anexos e tarefas
 
--- Membros do time podem ver anexos
-CREATE POLICY "Team members can view attachments" ON public.team_attachments
-  FOR SELECT TO authenticated
-  USING (team_id IN (SELECT public.get_user_team_ids(auth.uid())));
+### 3. Atualizar rotas em `src/App.tsx`
 
--- Membros podem adicionar anexos
-CREATE POLICY "Team members can add attachments" ON public.team_attachments
-  FOR INSERT TO authenticated
-  WITH CHECK (team_id IN (SELECT public.get_user_team_ids(auth.uid())));
-
--- Criador do time ou quem fez upload pode deletar
-CREATE POLICY "Uploader can delete attachments" ON public.team_attachments
-  FOR DELETE TO authenticated
-  USING (uploaded_by = auth.uid());
-
--- Bucket de storage
-INSERT INTO storage.buckets (id, name, public) VALUES ('team-attachments', 'team-attachments', false);
-
-CREATE POLICY "Team members can upload" ON storage.objects
-  FOR INSERT TO authenticated WITH CHECK (bucket_id = 'team-attachments');
-
-CREATE POLICY "Team members can view" ON storage.objects
-  FOR SELECT TO authenticated USING (bucket_id = 'team-attachments');
-
-CREATE POLICY "Uploader can delete" ON storage.objects
-  FOR DELETE TO authenticated USING (bucket_id = 'team-attachments' AND auth.uid()::text = (storage.foldername(name))[1]);
+```
+<Route path="/equipe" element={<TeamList />} />
+<Route path="/equipe/:teamId" element={<Team />} />
 ```
 
-### 2. Componente `src/components/team/TeamAttachments.tsx`
+### 4. Nenhuma mudança no banco de dados
 
-Componente reutilizando o mesmo padrão de `TaskAttachments`, mas apontando para bucket `team-attachments` e tabela `team_attachments`, recebendo `teamId` como prop.
-
-### 3. Atualizar `src/pages/Team.tsx`
-
-Quando o time existe, adicionar dois novos cards na página:
-
-- **Card "Sobre o Time"**: campo de descrição editável (textarea) com botão salvar. Usa `supabase.from('teams').update({ description })`. Visível para todos os membros, editável apenas pelo criador.
-- **Card "Anexos do Time"**: usa o componente `TeamAttachments` para upload/download/exclusão de arquivos do time.
-
-### Fluxo
-
-1. Usuário acessa a página "Equipe" e vê seu time
-2. Abaixo dos membros, vê o card "Sobre o Time" com a descrição editável (se for criador) ou somente leitura
-3. Abaixo, o card "Anexos do Time" permite upload de arquivos associados ao time
+O schema atual já suporta múltiplos times (um usuário pode ter múltiplas entradas em `team_members`). As RLS policies também já estão corretas.
 
 ## Arquivos
 
 | Arquivo | Alteração |
 |---|---|
-| Migration SQL | Coluna description em teams, tabela team_attachments, bucket, RLS |
-| `src/components/team/TeamAttachments.tsx` | Novo componente de anexos do time |
-| `src/pages/Team.tsx` | Cards de descrição e anexos na view do time |
+| `src/pages/TeamList.tsx` | Nova página de listagem de times |
+| `src/pages/Team.tsx` | Refatorar para usar `teamId` da URL |
+| `src/App.tsx` | Adicionar rota `/equipe/:teamId` |
 
