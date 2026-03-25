@@ -1,27 +1,23 @@
 
 
-# Adicionar Responsáveis (Assignees) às Tarefas
+# Gerenciamento de Status Personalizados
 
-Atualmente, a tabela `task_assignees` já existe no banco de dados, mas a interface ainda não permite atribuir usuários a tarefas. Vamos implementar isso.
+Adicionar uma seção na página de **Configurações** para que o usuário possa criar, visualizar e excluir status personalizados do Kanban.
 
 ## O que será feito
 
-1. **Seção de Responsáveis no TaskDetailDialog** — Adicionar um seletor de membros abaixo do campo de status, mostrando avatares dos responsáveis atuais com botão para adicionar/remover.
+1. **Seção "Status do Kanban" na página Settings** — Lista os status existentes (nome + cor) com botão de excluir (apenas os não-default). Formulário inline para criar novo status com campo de nome e seletor de cor.
 
-2. **Buscar perfis disponíveis** — Listar todos os perfis cadastrados (a tabela `profiles` já permite SELECT para authenticated). O usuário poderá selecionar entre os perfis existentes.
+2. **Migration para permitir UPDATE e DELETE** — Atualmente a tabela `task_statuses` não permite UPDATE nem DELETE. Criar políticas RLS para que usuários autenticados possam deletar status que não sejam default (e que não tenham tarefas vinculadas).
 
-3. **Avatares nos cards do Kanban** — Exibir mini-avatares dos responsáveis em cada card do KanbanCard, buscando os assignees junto com as tasks.
+3. **Lógica de proteção** — Status default (Backlog, Em Desenvolvimento, Concluída) não podem ser excluídos. Ao excluir um status custom, verificar se há tarefas usando-o e avisar o usuário.
 
-4. **Seletor de responsáveis na criação** — Adicionar campo opcional de assignees no CreateTaskDialog.
+4. **Integração automática no Kanban** — Os novos status já aparecerão no board porque o `KanbanBoard` busca todos os status da tabela `task_statuses` ordenados por `position`.
 
 ## Detalhes técnicos
 
-- Buscar assignees via join: `task_assignees` + `profiles` (usando user_id)
-- No KanbanBoard, alterar a query de tasks para incluir assignees com seus perfis
-- Componente de seleção: dropdown multi-select com checkboxes mostrando nome/avatar dos perfis
-- Inserir/deletar registros em `task_assignees` ao salvar
-
-## Pré-requisito importante
-
-Para que existam outros usuários disponíveis para atribuir, é necessário que outras pessoas criem contas no sistema. Cada pessoa que fizer cadastro terá seu perfil criado automaticamente e ficará disponível como responsável.
+- Migration: adicionar RLS policy para DELETE em `task_statuses` onde `is_default = false`
+- Na Settings, usar `supabase.from('task_statuses').insert(...)` para criar e `.delete()` para remover
+- Seletor de cor: lista de cores pré-definidas (pastéis) como botões circulares
+- Position do novo status: `max(position) + 1`
 
