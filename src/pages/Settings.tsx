@@ -130,8 +130,6 @@ const Settings = () => {
     setDeleting(false);
     setDeleteTarget(null);
   };
-    }
-  };
 
   const startEdit = (status: Status) => {
     setEditingId(status.id);
