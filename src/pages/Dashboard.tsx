@@ -254,14 +254,18 @@ export default function Dashboard() {
             </button>
           ))}
         </div>
-        <div className="flex items-center gap-4 text-[11px] text-muted-foreground">
+        <div className="flex items-center gap-4 rounded-lg border border-border bg-muted/30 px-3 py-1.5 text-[11px] text-muted-foreground">
+          <span className="font-medium text-foreground/70">Legenda:</span>
           <div className="flex items-center gap-1.5">
-            <span className="inline-block h-4 w-6 rounded border-l-[3px] border-dashed border-primary bg-primary/20" />
-            <span>Atribuída a mim</span>
+            <span className="inline-block h-4 w-6 rounded border-l-[3px] border-solid border-primary bg-primary/20" />
+            <span>Tarefa criada por mim</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <UserCircle className="h-3.5 w-3.5 text-primary" />
-            <span>Criada por outro</span>
+            <span className="inline-flex items-center gap-0.5">
+              <span className="inline-block h-4 w-6 rounded border-l-[3px] border-dashed border-primary bg-primary/20" />
+              <UserCircle className="h-3 w-3 text-primary" />
+            </span>
+            <span>Atribuída a mim por outro</span>
           </div>
         </div>
       </div>
