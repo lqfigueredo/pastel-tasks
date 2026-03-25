@@ -1,23 +1,41 @@
 
 
-# Gerenciamento de Status Personalizados
+# Edição, Remoção de Status e Status Padrão "Não Afiliado"
 
-Adicionar uma seção na página de **Configurações** para que o usuário possa criar, visualizar e excluir status personalizados do Kanban.
+## Resumo
 
-## O que será feito
+Permitir editar nome/cor de status existentes, remover status (migrando tarefas para um status padrão fallback), e criar um status especial "Não Afiliado" que recebe automaticamente tarefas órfãs.
 
-1. **Seção "Status do Kanban" na página Settings** — Lista os status existentes (nome + cor) com botão de excluir (apenas os não-default). Formulário inline para criar novo status com campo de nome e seletor de cor.
+## Mudanças
 
-2. **Migration para permitir UPDATE e DELETE** — Atualmente a tabela `task_statuses` não permite UPDATE nem DELETE. Criar políticas RLS para que usuários autenticados possam deletar status que não sejam default (e que não tenham tarefas vinculadas).
+### 1. Migration — UPDATE policy + status padrão "Não Afiliado"
 
-3. **Lógica de proteção** — Status default (Backlog, Em Desenvolvimento, Concluída) não podem ser excluídos. Ao excluir um status custom, verificar se há tarefas usando-o e avisar o usuário.
+- Adicionar RLS policy para `UPDATE` em `task_statuses` (authenticated, `is_default = false` para nome/cor, ou sem restrição se quisermos editar todos).
+- Inserir um novo status default chamado **"Não Afiliado"** com `is_default = true`, position 0, cor cinza neutra (`#CFD8DC`). Este será o fallback.
 
-4. **Integração automática no Kanban** — Os novos status já aparecerão no board porque o `KanbanBoard` busca todos os status da tabela `task_statuses` ordenados por `position`.
+### 2. Remoção de status com migração de tarefas
 
-## Detalhes técnicos
+Alterar `handleDelete` em `Settings.tsx`:
+- Em vez de bloquear a exclusão quando há tarefas, **mover automaticamente** todas as tarefas do status removido para o status "Não Afiliado" (primeiro status com `is_default = true` e position mais baixo).
+- Exibir confirmação informando quantas tarefas serão migradas antes de excluir.
 
-- Migration: adicionar RLS policy para DELETE em `task_statuses` onde `is_default = false`
-- Na Settings, usar `supabase.from('task_statuses').insert(...)` para criar e `.delete()` para remover
-- Seletor de cor: lista de cores pré-definidas (pastéis) como botões circulares
-- Position do novo status: `max(position) + 1`
+### 3. Edição inline de status na Settings
+
+Adicionar modo de edição em cada item da lista de status:
+- Botão de editar (ícone lápis) ao lado do botão de excluir.
+- Ao clicar, o nome vira um `Input` editável e a cor mostra o seletor de cores.
+- Botões salvar/cancelar. Salvar faz `UPDATE` no `task_statuses`.
+- Status default também podem ter nome/cor editados.
+
+### 4. KanbanBoard — fallback para status inexistente
+
+No `KanbanBoard`, após carregar tasks e statuses, verificar se alguma task tem `status_id` que não existe nos statuses carregados. Se sim, movê-la automaticamente para o status "Não Afiliado".
+
+## Arquivos modificados
+
+| Arquivo | Alteração |
+|---|---|
+| Migration SQL | Policy UPDATE + insert "Não Afiliado" |
+| `src/pages/Settings.tsx` | Edição inline, remoção com migração de tarefas |
+| `src/components/kanban/KanbanBoard.tsx` | Fallback para tarefas com status inexistente |
 
