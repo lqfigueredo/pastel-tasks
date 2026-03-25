@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Task, TaskStatus } from '@/components/kanban/KanbanBoard';
 import { Profile } from '@/components/kanban/AssigneeSelector';
+import { TaskTooltip } from '@/components/dashboard/TaskTooltip';
 import { TaskDetailDialog } from '@/components/kanban/TaskDetailDialog';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight, CheckCircle2, UserCircle } from 'lucide-react';
@@ -138,6 +139,7 @@ export default function Dashboard() {
   const days = eachDayOfInterval({ start: calendarStart, end: calendarEnd });
 
   const statusColorMap = new Map(statuses.map((s) => [s.id, s.color]));
+  const statusNameMap = new Map(statuses.map((s) => [s.id, s.name]));
 
   // Group days into weeks (chunks of 7)
   const weeks = useMemo(() => {
@@ -335,18 +337,24 @@ export default function Dashboard() {
                       {singleTasks.map((task) => {
                         const isAssignedByOther = myAssignedIds.has(task.id) && task.created_by !== user?.id;
                         return (
-                          <button
+                          <TaskTooltip
                             key={task.id}
-                            onClick={() => setSelectedTask(task)}
-                            className="flex w-full items-center gap-1 rounded px-1.5 py-0.5 text-left text-[11px] leading-tight transition-colors hover:bg-accent/40"
+                            task={task}
+                            statusName={statusNameMap.get(task.status_id) || 'Sem status'}
+                            statusColor={statusColorMap.get(task.status_id) || 'hsl(var(--muted))'}
                           >
-                            <span
-                              className="mt-0.5 h-2 w-2 shrink-0 rounded-full"
-                              style={{ backgroundColor: statusColorMap.get(task.status_id) || 'hsl(var(--muted))' }}
-                            />
-                            {isAssignedByOther && <UserCircle className="h-2.5 w-2.5 shrink-0 text-primary" />}
-                            <span className="truncate text-foreground">{task.title}</span>
-                          </button>
+                            <button
+                              onClick={() => setSelectedTask(task)}
+                              className="flex w-full items-center gap-1 rounded px-1.5 py-0.5 text-left text-[11px] leading-tight transition-colors hover:bg-accent/40"
+                            >
+                              <span
+                                className="mt-0.5 h-2 w-2 shrink-0 rounded-full"
+                                style={{ backgroundColor: statusColorMap.get(task.status_id) || 'hsl(var(--muted))' }}
+                              />
+                              {isAssignedByOther && <UserCircle className="h-2.5 w-2.5 shrink-0 text-primary" />}
+                              <span className="truncate text-foreground">{task.title}</span>
+                            </button>
+                          </TaskTooltip>
                         );
                       })}
                       {overflowCount > 0 && (
@@ -356,16 +364,22 @@ export default function Dashboard() {
                         const color = statusColorMap.get(task.status_id) || 'hsl(var(--muted))';
                         const isAssignedByOther = myAssignedIds.has(task.id) && task.created_by !== user?.id;
                         return (
-                          <button
+                          <TaskTooltip
                             key={`done-${task.id}`}
-                            onClick={() => setSelectedTask(task)}
-                            className="flex w-full items-center gap-1 rounded px-1.5 py-0.5 text-left text-[11px] font-semibold leading-tight transition-colors hover:bg-accent/40"
-                            style={{ backgroundColor: color + '25' }}
+                            task={task}
+                            statusName={statusNameMap.get(task.status_id) || 'Sem status'}
+                            statusColor={color}
                           >
-                            <CheckCircle2 className="h-3 w-3 shrink-0" style={{ color }} />
-                            {isAssignedByOther && <UserCircle className="h-2.5 w-2.5 shrink-0 text-primary" />}
-                            <span className="truncate text-foreground">{task.title}</span>
-                          </button>
+                            <button
+                              onClick={() => setSelectedTask(task)}
+                              className="flex w-full items-center gap-1 rounded px-1.5 py-0.5 text-left text-[11px] font-semibold leading-tight transition-colors hover:bg-accent/40"
+                              style={{ backgroundColor: color + '25' }}
+                            >
+                              <CheckCircle2 className="h-3 w-3 shrink-0" style={{ color }} />
+                              {isAssignedByOther && <UserCircle className="h-2.5 w-2.5 shrink-0 text-primary" />}
+                              <span className="truncate text-foreground">{task.title}</span>
+                            </button>
+                          </TaskTooltip>
                         );
                       })}
                     </div>
