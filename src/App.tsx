@@ -9,6 +9,7 @@ import Auth from "@/pages/Auth";
 import Index from "@/pages/Index";
 import Team from "@/pages/Team";
 import Settings from "@/pages/Settings";
+import Admin from "@/pages/Admin";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -26,6 +27,7 @@ const App = () => (
               <Route path="/" element={<Index />} />
               <Route path="/equipe" element={<Team />} />
               <Route path="/configuracoes" element={<Settings />} />
+              <Route path="/admin" element={<Admin />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
