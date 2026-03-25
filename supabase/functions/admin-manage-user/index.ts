@@ -22,13 +22,12 @@ Deno.serve(async (req) => {
       { global: { headers: { Authorization: authHeader } } }
     )
 
-    const token = authHeader.replace('Bearer ', '')
-    const { data: claimsData, error: claimsError } = await supabaseAuth.auth.getClaims(token)
-    if (claimsError || !claimsData?.claims) {
+    const { data: { user: caller }, error: userError } = await supabaseAuth.auth.getUser()
+    if (userError || !caller) {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: corsHeaders })
     }
 
-    const callerUserId = claimsData.claims.sub
+    const callerUserId = caller.id
 
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL')!,
@@ -55,7 +54,7 @@ Deno.serve(async (req) => {
     switch (action) {
       case 'deactivate': {
         const { error } = await supabaseAdmin.auth.admin.updateUserById(targetUserId, {
-          ban_duration: '876000h', // ~100 years
+          ban_duration: '876000h',
         })
         if (error) {
           return new Response(JSON.stringify({ error: 'Erro ao inativar usuário' }), { status: 500, headers: corsHeaders })
@@ -78,7 +77,6 @@ Deno.serve(async (req) => {
       }
 
       case 'promote': {
-        // Check if already admin
         const { data: alreadyAdmin } = await supabaseAdmin.rpc('has_role', { _user_id: targetUserId, _role: 'admin' })
         if (alreadyAdmin) {
           return new Response(JSON.stringify({ error: 'Usuário já é administrador' }), { status: 400, headers: corsHeaders })
