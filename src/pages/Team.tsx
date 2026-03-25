@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -8,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Users, Plus, Trash2, Loader2, Mail, Crown, Calendar, FileText, Save } from 'lucide-react';
+import { Users, Plus, Trash2, Loader2, Mail, Crown, Calendar, FileText, Save, ArrowLeft } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { TeamAttachments } from '@/components/team/TeamAttachments';
 
@@ -37,6 +38,8 @@ interface TeamTask {
 }
 
 const Team = () => {
+  const { teamId } = useParams<{ teamId: string }>();
+  const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
 
@@ -44,9 +47,6 @@ const Team = () => {
   const [team, setTeam] = useState<TeamData | null>(null);
   const [members, setMembers] = useState<Member[]>([]);
   const [tasks, setTasks] = useState<TeamTask[]>([]);
-
-  const [creatingTeam, setCreatingTeam] = useState(false);
-  const [teamName, setTeamName] = useState('');
 
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviting, setInviting] = useState(false);
@@ -57,33 +57,18 @@ const Team = () => {
   const isCreator = team?.created_by === user?.id;
 
   const loadTeam = useCallback(async () => {
-    if (!user) return;
+    if (!user || !teamId) return;
     setLoading(true);
 
-    // Find user's team via team_members
-    const { data: membership } = await supabase
-      .from('team_members')
-      .select('team_id')
-      .eq('user_id', user.id)
-      .limit(1)
-      .maybeSingle();
-
-    if (!membership) {
-      setTeam(null);
-      setMembers([]);
-      setTasks([]);
-      setLoading(false);
-      return;
-    }
-
-    // Load team
+    // Load team directly by ID
     const { data: teamData } = await supabase
       .from('teams')
       .select('*')
-      .eq('id', membership.team_id)
+      .eq('id', teamId)
       .single();
 
     if (!teamData) {
+      setTeam(null);
       setLoading(false);
       return;
     }
@@ -113,6 +98,8 @@ const Team = () => {
         };
       });
       setMembers(merged);
+    } else {
+      setMembers([]);
     }
 
     // Load team tasks
@@ -123,14 +110,12 @@ const Team = () => {
       .order('created_at', { ascending: false });
 
     if (taskRows && taskRows.length > 0) {
-      // Get statuses
       const statusIds = [...new Set(taskRows.map(t => t.status_id))];
       const { data: statuses } = await supabase
         .from('task_statuses')
         .select('id, name, color')
         .in('id', statusIds);
 
-      // Get assignees
       const taskIds = taskRows.map(t => t.id);
       const { data: assigneeRows } = await supabase
         .from('task_assignees')
@@ -164,47 +149,20 @@ const Team = () => {
     }
 
     setLoading(false);
-  }, [user]);
+  }, [user, teamId]);
 
   useEffect(() => { loadTeam(); }, [loadTeam]);
-
-  const handleCreateTeam = async () => {
-    if (!user || !teamName.trim()) return;
-    setCreatingTeam(true);
-
-    const { data: newTeam, error } = await supabase
-      .from('teams')
-      .insert({ name: teamName.trim(), created_by: user.id })
-      .select()
-      .single();
-
-    if (error) {
-      toast({ title: 'Erro ao criar time', description: error.message, variant: 'destructive' });
-      setCreatingTeam(false);
-      return;
-    }
-
-    // Add creator as first member
-    await supabase.from('team_members').insert({ team_id: newTeam.id, user_id: user.id });
-    
-    toast({ title: 'Time criado com sucesso!' });
-    setTeamName('');
-    setCreatingTeam(false);
-    loadTeam();
-  };
 
   const handleInvite = async () => {
     if (!team || !inviteEmail.trim()) return;
     setInviting(true);
 
-    // Check member count
     if (members.length >= team.max_members) {
       toast({ title: 'Limite atingido', description: `O time já tem ${team.max_members} membros.`, variant: 'destructive' });
       setInviting(false);
       return;
     }
 
-    // Lookup user by email via edge function
     const { data, error } = await supabase.functions.invoke('lookup-user-by-email', {
       body: { email: inviteEmail.trim() },
     });
@@ -215,7 +173,6 @@ const Team = () => {
       return;
     }
 
-    // Check if already a member
     if (members.some(m => m.user_id === data.user_id)) {
       toast({ title: 'Já é membro', description: 'Este usuário já faz parte do time.', variant: 'destructive' });
       setInviting(false);
@@ -266,46 +223,29 @@ const Team = () => {
     );
   }
 
-  // No team yet
   if (!team) {
     return (
-      <div className="animate-fade-in">
-        <h1 className="font-display text-2xl font-bold text-foreground mb-2">Equipe</h1>
-        <p className="text-sm text-muted-foreground mb-6">Crie um time para colaborar com outros membros</p>
-
-        <Card className="max-w-md">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <Users className="h-5 w-5" />
-              Criar Time
-            </CardTitle>
-            <CardDescription>Comece criando um time e convidando membros por email.</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <Input
-              placeholder="Nome do time"
-              value={teamName}
-              onChange={e => setTeamName(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && handleCreateTeam()}
-            />
-            <Button onClick={handleCreateTeam} disabled={creatingTeam || !teamName.trim()} className="w-full">
-              {creatingTeam ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Plus className="h-4 w-4 mr-2" />}
-              Criar Time
-            </Button>
-          </CardContent>
-        </Card>
+      <div className="animate-fade-in text-center py-20">
+        <p className="text-muted-foreground">Time não encontrado.</p>
+        <Button variant="ghost" className="mt-4" onClick={() => navigate('/equipe')}>
+          <ArrowLeft className="h-4 w-4 mr-2" /> Voltar
+        </Button>
       </div>
     );
   }
 
-  // Team exists
   return (
     <div className="animate-fade-in space-y-6">
-      <div>
-        <h1 className="font-display text-2xl font-bold text-foreground mb-1">{team.name}</h1>
-        <p className="text-sm text-muted-foreground">
-          {members.length}/{team.max_members} membros
-        </p>
+      <div className="flex items-center gap-3">
+        <Button variant="ghost" size="icon" onClick={() => navigate('/equipe')}>
+          <ArrowLeft className="h-4 w-4" />
+        </Button>
+        <div>
+          <h1 className="font-display text-2xl font-bold text-foreground mb-1">{team.name}</h1>
+          <p className="text-sm text-muted-foreground">
+            {members.length}/{team.max_members} membros
+          </p>
+        </div>
       </div>
 
       {/* Members */}
@@ -344,7 +284,6 @@ const Team = () => {
             ))}
           </div>
 
-          {/* Invite */}
           {isCreator && members.length < team.max_members && (
             <div className="flex gap-2 pt-2">
               <div className="relative flex-1">
@@ -382,11 +321,7 @@ const Team = () => {
                 onChange={e => setDescription(e.target.value)}
                 rows={4}
               />
-              <Button
-                size="sm"
-                onClick={handleSaveDescription}
-                disabled={savingDescription}
-              >
+              <Button size="sm" onClick={handleSaveDescription} disabled={savingDescription}>
                 {savingDescription ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Save className="h-4 w-4 mr-1" />}
                 Salvar
               </Button>
