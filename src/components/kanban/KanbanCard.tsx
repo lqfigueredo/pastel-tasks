@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Calendar, Minimize2, Maximize2 } from 'lucide-react';
+import { Calendar, Minimize2, Maximize2, Repeat } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Task, TaskStatus } from './KanbanBoard';
 import { TaskDetailDialog } from './TaskDetailDialog';
@@ -43,12 +43,17 @@ export function KanbanCard({ task, allStatuses, onRefresh }: KanbanCardProps) {
       >
         <CardContent className={cn("p-3", minimized && "p-2")}>
           <div className="flex items-start justify-between gap-1">
-            <h4 className={cn(
-              "text-sm font-medium text-foreground leading-snug",
-              minimized && "text-xs truncate"
-            )}>
-              {task.title}
-            </h4>
+            <div className="flex items-center gap-1.5">
+              {task.recurring_task_id && (
+                <Repeat className="h-3 w-3 shrink-0 text-primary" title="Tarefa recorrente" />
+              )}
+              <h4 className={cn(
+                "text-sm font-medium text-foreground leading-snug",
+                minimized && "text-xs truncate"
+              )}>
+                {task.title}
+              </h4>
+            </div>
             <button
               onClick={toggleMinimize}
               className="shrink-0 rounded p-0.5 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
