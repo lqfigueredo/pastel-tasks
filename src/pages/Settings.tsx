@@ -40,6 +40,10 @@ const Settings = () => {
   const [editColor, setEditColor] = useState('');
   const [editSaving, setEditSaving] = useState(false);
 
+  // Drag state
+  const [dragIdx, setDragIdx] = useState<number | null>(null);
+  const [dragOverIdx, setDragOverIdx] = useState<number | null>(null);
+
   // Delete confirmation state
   const [deleteTarget, setDeleteTarget] = useState<{ status: Status; taskCount: number } | null>(null);
   const [deleting, setDeleting] = useState(false);
