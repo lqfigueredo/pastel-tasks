@@ -13,6 +13,7 @@ export interface Task {
   start_date: string | null;
   end_date: string | null;
   estimated_delivery_date: string | null;
+  is_minimized: boolean;
   created_by: string;
   team_id: string | null;
   created_at: string;

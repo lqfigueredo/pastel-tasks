@@ -227,6 +227,7 @@ export type Database = {
           end_date: string | null
           estimated_delivery_date: string | null
           id: string
+          is_minimized: boolean
           start_date: string | null
           status_id: string
           team_id: string | null
@@ -240,6 +241,7 @@ export type Database = {
           end_date?: string | null
           estimated_delivery_date?: string | null
           id?: string
+          is_minimized?: boolean
           start_date?: string | null
           status_id: string
           team_id?: string | null
@@ -253,6 +255,7 @@ export type Database = {
           end_date?: string | null
           estimated_delivery_date?: string | null
           id?: string
+          is_minimized?: boolean
           start_date?: string | null
           status_id?: string
           team_id?: string | null
