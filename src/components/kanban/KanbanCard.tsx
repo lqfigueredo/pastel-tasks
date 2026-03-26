@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Calendar, Minimize2, Maximize2, Repeat } from 'lucide-react';
+import { TaskChangeHistory } from './TaskChangeHistory';
 import { Card, CardContent } from '@/components/ui/card';
 import { Task, TaskStatus } from './KanbanBoard';
 import { TaskDetailDialog } from './TaskDetailDialog';
@@ -75,6 +76,9 @@ export function KanbanCard({ task, allStatuses, onRefresh }: KanbanCardProps) {
                     <span>{format(new Date(task.estimated_delivery_date), "dd MMM", { locale: ptBR })}</span>
                   </div>
                 )}
+              </div>
+              <div className="mt-2" onClick={(e) => e.stopPropagation()}>
+                <TaskChangeHistory taskId={task.id} />
               </div>
             </>
           )}
