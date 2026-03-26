@@ -264,6 +264,7 @@ export function TaskDetailDialog({ task, allStatuses, open, onOpenChange, onRefr
               <div className="space-y-2">
                 <Label>Fim Real</Label>
                 <Input type="date" value={actualEndDate} onChange={(e) => setActualEndDate(e.target.value)} />
+              </div>
             </div>
 
             <Separator />
