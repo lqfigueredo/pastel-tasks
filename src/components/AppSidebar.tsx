@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, Settings, LogOut, CheckSquare, ShieldCheck, CalendarDays, FileText } from 'lucide-react';
+import { LayoutDashboard, Users, Settings, LogOut, CheckSquare, ShieldCheck, CalendarDays, FileText, TrendingUp } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import { useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -32,11 +32,15 @@ export function AppSidebar() {
   const location = useLocation();
   const { signOut, user } = useAuth();
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isSolutionAdmin, setIsSolutionAdmin] = useState(false);
 
   useEffect(() => {
     if (!user) return;
     supabase.rpc('has_role', { _user_id: user.id, _role: 'admin' }).then(({ data }) => {
       setIsAdmin(!!data);
+    });
+    supabase.rpc('has_role', { _user_id: user.id, _role: 'solution_admin' }).then(({ data }) => {
+      setIsSolutionAdmin(!!data);
     });
   }, [user]);
 
@@ -99,6 +103,20 @@ export function AppSidebar() {
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 </>
+              )}
+              {isSolutionAdmin && (
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild>
+                    <NavLink
+                      to="/financeiro"
+                      className="hover:bg-sidebar-accent/60"
+                      activeClassName="bg-sidebar-accent text-primary font-medium"
+                    >
+                      <TrendingUp className="mr-2 h-4 w-4" />
+                      {!collapsed && <span>Financeiro</span>}
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
               )}
             </SidebarMenu>
           </SidebarGroupContent>
