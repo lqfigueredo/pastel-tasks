@@ -108,6 +108,10 @@ export const KanbanBoard = forwardRef<KanbanBoardRef>((_props, ref) => {
   }, [fetchData]);
 
   const moveTask = async (taskId: string, newStatusId: string) => {
+    const task = tasks.find((t) => t.id === taskId);
+    const oldStatusName = statuses.find((s) => s.id === task?.status_id)?.name || '';
+    const newStatusName = statuses.find((s) => s.id === newStatusId)?.name || '';
+
     setTasks((prev) =>
       prev.map((t) => (t.id === taskId ? { ...t, status_id: newStatusId } : t))
     );
@@ -120,6 +124,14 @@ export const KanbanBoard = forwardRef<KanbanBoardRef>((_props, ref) => {
     if (error) {
       toast({ title: 'Erro ao mover tarefa', variant: 'destructive' });
       fetchData();
+    } else if (user && oldStatusName !== newStatusName) {
+      await supabase.from('task_change_logs').insert({
+        task_id: taskId,
+        user_id: user.id,
+        field_name: 'status',
+        old_value: oldStatusName,
+        new_value: newStatusName,
+      });
     }
   };
 
