@@ -49,6 +49,103 @@ export type Database = {
           },
         ]
       }
+      meeting_minutes: {
+        Row: {
+          created_at: string
+          created_by: string
+          description: string
+          id: string
+          meeting_date: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          description: string
+          id?: string
+          meeting_date: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          description?: string
+          id?: string
+          meeting_date?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      meeting_participants: {
+        Row: {
+          added_at: string
+          id: string
+          meeting_id: string
+          user_id: string
+        }
+        Insert: {
+          added_at?: string
+          id?: string
+          meeting_id: string
+          user_id: string
+        }
+        Update: {
+          added_at?: string
+          id?: string
+          meeting_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meeting_participants_meeting_id_fkey"
+            columns: ["meeting_id"]
+            isOneToOne: false
+            referencedRelation: "meeting_minutes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      meeting_pendencies: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          description: string
+          due_date: string | null
+          id: string
+          is_completed: boolean
+          meeting_id: string
+          responsible_user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          description: string
+          due_date?: string | null
+          id?: string
+          is_completed?: boolean
+          meeting_id: string
+          responsible_user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          description?: string
+          due_date?: string | null
+          id?: string
+          is_completed?: boolean
+          meeting_id?: string
+          responsible_user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meeting_pendencies_meeting_id_fkey"
+            columns: ["meeting_id"]
+            isOneToOne: false
+            referencedRelation: "meeting_minutes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -475,6 +572,10 @@ export type Database = {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
+        Returns: boolean
+      }
+      is_meeting_participant: {
+        Args: { _meeting_id: string; _user_id: string }
         Returns: boolean
       }
       is_team_member: {
