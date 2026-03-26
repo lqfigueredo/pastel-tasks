@@ -23,7 +23,6 @@ const navItems = [
   { title: 'Dashboard', url: '/dashboard', icon: CalendarDays },
   { title: 'Minhas Tarefas', url: '/', icon: LayoutDashboard },
   { title: 'Equipe', url: '/equipe', icon: Users },
-  { title: 'Configurações', url: '/configuracoes', icon: Settings },
 ];
 
 export function AppSidebar() {
@@ -73,18 +72,32 @@ export function AppSidebar() {
                 </SidebarMenuItem>
               ))}
               {isAdmin && (
-                <SidebarMenuItem>
-                  <SidebarMenuButton asChild>
-                    <NavLink
-                      to="/admin"
-                      className="hover:bg-sidebar-accent/60"
-                      activeClassName="bg-sidebar-accent text-primary font-medium"
-                    >
-                      <ShieldCheck className="mr-2 h-4 w-4" />
-                      {!collapsed && <span>Administração</span>}
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
+                <>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild>
+                      <NavLink
+                        to="/configuracoes"
+                        className="hover:bg-sidebar-accent/60"
+                        activeClassName="bg-sidebar-accent text-primary font-medium"
+                      >
+                        <Settings className="mr-2 h-4 w-4" />
+                        {!collapsed && <span>Configurações</span>}
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild>
+                      <NavLink
+                        to="/admin"
+                        className="hover:bg-sidebar-accent/60"
+                        activeClassName="bg-sidebar-accent text-primary font-medium"
+                      >
+                        <ShieldCheck className="mr-2 h-4 w-4" />
+                        {!collapsed && <span>Administração</span>}
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                </>
               )}
             </SidebarMenu>
           </SidebarGroupContent>
