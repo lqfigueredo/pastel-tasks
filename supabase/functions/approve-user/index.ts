@@ -38,13 +38,13 @@ Deno.serve(async (req) => {
     // Check solution_admin role
     const { data: isSolutionAdmin } = await supabaseAdmin.rpc('has_role', { _user_id: callerUserId, _role: 'solution_admin' })
     if (!isSolutionAdmin) {
-      return new Response(JSON.stringify({ error: 'Apenas usuários financeiros podem aprovar' }), { status: 403, headers: corsHeaders })
+      return new Response(JSON.stringify({ error: 'Apenas usuários financeiros podem gerenciar aprovações' }), { status: 403, headers: corsHeaders })
     }
 
-    const { userId, action } = await req.json()
+    const { userId, action, licenseDays, licenseExpiresAt } = await req.json()
 
-    if (!userId || !['approve', 'reject'].includes(action)) {
-      return new Response(JSON.stringify({ error: 'userId e action (approve/reject) são obrigatórios' }), { status: 400, headers: corsHeaders })
+    if (!userId || !['approve', 'reject', 'deactivate', 'update-license'].includes(action)) {
+      return new Response(JSON.stringify({ error: 'userId e action são obrigatórios' }), { status: 400, headers: corsHeaders })
     }
 
     if (action === 'approve') {
@@ -53,16 +53,80 @@ Deno.serve(async (req) => {
         ban_duration: 'none',
       })
 
-      // Update approval status
+      // Calculate license expiration (default 30 days)
+      const days = licenseDays || 30
+      const expiresAt = new Date()
+      expiresAt.setDate(expiresAt.getDate() + days)
+
+      // Update approval status with license expiry
       await supabaseAdmin
         .from('user_approvals')
-        .update({ status: 'approved', reviewed_at: new Date().toISOString(), reviewed_by: callerUserId })
+        .update({
+          status: 'approved',
+          reviewed_at: new Date().toISOString(),
+          reviewed_by: callerUserId,
+          license_expires_at: expiresAt.toISOString(),
+        })
         .eq('user_id', userId)
-    } else {
+
+    } else if (action === 'reject') {
       // Keep banned, mark as rejected
       await supabaseAdmin
         .from('user_approvals')
         .update({ status: 'rejected', reviewed_at: new Date().toISOString(), reviewed_by: callerUserId })
+        .eq('user_id', userId)
+
+    } else if (action === 'deactivate') {
+      // Ban the admin
+      await supabaseAdmin.auth.admin.updateUserById(userId, {
+        ban_duration: '876000h',
+      })
+
+      // Ban all members of teams created by this admin
+      const { data: teams } = await supabaseAdmin
+        .from('teams')
+        .select('id')
+        .eq('created_by', userId)
+
+      if (teams && teams.length > 0) {
+        const teamIds = teams.map(t => t.id)
+        const { data: members } = await supabaseAdmin
+          .from('team_members')
+          .select('user_id')
+          .in('team_id', teamIds)
+
+        if (members) {
+          const uniqueUserIds = [...new Set(members.map(m => m.user_id).filter(id => id !== userId))]
+          for (const memberId of uniqueUserIds) {
+            await supabaseAdmin.auth.admin.updateUserById(memberId, {
+              ban_duration: '876000h',
+            })
+          }
+        }
+      }
+
+      // Update status to deactivated
+      await supabaseAdmin
+        .from('user_approvals')
+        .update({
+          status: 'deactivated',
+          reviewed_at: new Date().toISOString(),
+          reviewed_by: callerUserId,
+        })
+        .eq('user_id', userId)
+
+    } else if (action === 'update-license') {
+      if (!licenseExpiresAt) {
+        return new Response(JSON.stringify({ error: 'licenseExpiresAt é obrigatório para update-license' }), { status: 400, headers: corsHeaders })
+      }
+
+      await supabaseAdmin
+        .from('user_approvals')
+        .update({
+          license_expires_at: licenseExpiresAt,
+          reviewed_at: new Date().toISOString(),
+          reviewed_by: callerUserId,
+        })
         .eq('user_id', userId)
     }
 
