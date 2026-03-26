@@ -68,6 +68,16 @@ Deno.serve(async (req) => {
 
     const newUserId = userData.user.id
 
+    // Ban user until financial approval
+    await supabaseAdmin.auth.admin.updateUserById(newUserId, {
+      ban_duration: '876000h',
+    })
+
+    // Insert pending approval record
+    await supabaseAdmin
+      .from('user_approvals')
+      .insert({ user_id: newUserId, status: 'pending' })
+
     // Add to team if specified
     if (teamId) {
       // Check team member count
