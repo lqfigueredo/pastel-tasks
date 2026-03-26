@@ -128,8 +128,6 @@ Deno.serve(async (req) => {
           reviewed_by: callerUserId,
         })
         .eq('user_id', userId)
-    }
-
     } else if (action === 'reactivate') {
       // Unban the user
       await supabaseAdmin.auth.admin.updateUserById(userId, {
