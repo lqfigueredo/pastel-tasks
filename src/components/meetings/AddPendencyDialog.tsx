@@ -44,13 +44,14 @@ export function AddPendencyDialog({ open, onOpenChange, meetingId, participants,
     setSaving(true);
 
     // Check if the value is a user_id (internal) or external name
-    const isInternal = participants.some((p) => p.user_id === responsibleValue);
+    const isExternal = responsibleValue.startsWith('ext:');
+    const externalName = isExternal ? responsibleValue.slice(4) : null;
 
     const { error } = await supabase.from('meeting_pendencies').insert({
       meeting_id: meetingId,
       description: description.trim(),
-      responsible_user_id: isInternal ? responsibleValue : null,
-      responsible_external_name: isInternal ? null : responsibleValue,
+      responsible_user_id: isExternal ? null : responsibleValue,
+      responsible_external_name: externalName,
       due_date: dueDate ? format(dueDate, 'yyyy-MM-dd') : null,
     });
 
