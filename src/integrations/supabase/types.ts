@@ -54,6 +54,7 @@ export type Database = {
           created_at: string
           created_by: string
           description: string
+          external_participants: string[]
           id: string
           meeting_date: string
           updated_at: string
@@ -62,6 +63,7 @@ export type Database = {
           created_at?: string
           created_by: string
           description: string
+          external_participants?: string[]
           id?: string
           meeting_date: string
           updated_at?: string
@@ -70,6 +72,7 @@ export type Database = {
           created_at?: string
           created_by?: string
           description?: string
+          external_participants?: string[]
           id?: string
           meeting_date?: string
           updated_at?: string
@@ -114,7 +117,8 @@ export type Database = {
           id: string
           is_completed: boolean
           meeting_id: string
-          responsible_user_id: string
+          responsible_external_name: string | null
+          responsible_user_id: string | null
         }
         Insert: {
           completed_at?: string | null
@@ -124,7 +128,8 @@ export type Database = {
           id?: string
           is_completed?: boolean
           meeting_id: string
-          responsible_user_id: string
+          responsible_external_name?: string | null
+          responsible_user_id?: string | null
         }
         Update: {
           completed_at?: string | null
@@ -134,7 +139,8 @@ export type Database = {
           id?: string
           is_completed?: boolean
           meeting_id?: string
-          responsible_user_id?: string
+          responsible_external_name?: string | null
+          responsible_user_id?: string | null
         }
         Relationships: [
           {
