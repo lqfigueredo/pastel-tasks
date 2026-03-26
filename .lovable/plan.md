@@ -1,123 +1,58 @@
 
 
-# Ata de Reunião — Novo Módulo
+# Participantes Externos nas Atas de Reunião
 
 ## Resumo
 
-Criar um módulo de Atas de Reunião acessível a todos os usuários autenticados, com visibilidade restrita: cada usuário vê apenas atas que criou ou nas quais é participante. Cada ata possui pendências com controle de conclusão.
+Adicionar campo de participantes externos (nomes em texto livre) nas atas de reunião. Serão armazenados como array de texto na tabela `meeting_minutes`.
 
 ## Banco de Dados
 
-### Tabela `meeting_minutes`
+### Migration: adicionar coluna em `meeting_minutes`
 
 ```sql
-CREATE TABLE public.meeting_minutes (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  meeting_date date NOT NULL,
-  description text NOT NULL,
-  created_by uuid NOT NULL,
-  created_at timestamptz NOT NULL DEFAULT now(),
-  updated_at timestamptz NOT NULL DEFAULT now()
-);
-
-ALTER TABLE public.meeting_minutes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.meeting_minutes
+  ADD COLUMN external_participants text[] NOT NULL DEFAULT '{}';
 ```
 
-RLS: SELECT/INSERT/UPDATE/DELETE — usuário é `created_by` **ou** é participante (via `meeting_participants`).
-
-### Tabela `meeting_participants`
-
-```sql
-CREATE TABLE public.meeting_participants (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  meeting_id uuid NOT NULL REFERENCES public.meeting_minutes(id) ON DELETE CASCADE,
-  user_id uuid NOT NULL,
-  added_at timestamptz NOT NULL DEFAULT now(),
-  UNIQUE(meeting_id, user_id)
-);
-
-ALTER TABLE public.meeting_participants ENABLE ROW LEVEL SECURITY;
-```
-
-RLS: mesma lógica — criador da ata ou participante pode ver/gerenciar.
-
-### Tabela `meeting_pendencies`
-
-```sql
-CREATE TABLE public.meeting_pendencies (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  meeting_id uuid NOT NULL REFERENCES public.meeting_minutes(id) ON DELETE CASCADE,
-  description text NOT NULL,
-  responsible_user_id uuid NOT NULL,
-  due_date date,
-  is_completed boolean NOT NULL DEFAULT false,
-  completed_at timestamptz,
-  created_at timestamptz NOT NULL DEFAULT now()
-);
-
-ALTER TABLE public.meeting_pendencies ENABLE ROW LEVEL SECURITY;
-```
-
-RLS: criador da ata ou participante pode CRUD; responsável pode marcar como concluída.
-
-### Função auxiliar
-
-```sql
-CREATE FUNCTION public.is_meeting_participant(_user_id uuid, _meeting_id uuid)
-RETURNS boolean LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public AS $$
-  SELECT EXISTS (
-    SELECT 1 FROM meeting_participants WHERE user_id = _user_id AND meeting_id = _meeting_id
-  ) OR EXISTS (
-    SELECT 1 FROM meeting_minutes WHERE id = _meeting_id AND created_by = _user_id
-  )
-$$;
-```
+Sem necessidade de novas tabelas ou RLS — a coluna segue as políticas já existentes da tabela.
 
 ## UI
 
-### Nova página `src/pages/MeetingMinutes.tsx`
+### `CreateMeetingDialog.tsx`
 
-- Lista de atas com data, descrição resumida e número de pendências
-- Botão "Nova Ata" abre dialog de criação
-- Clique na ata abre detalhe
+- Novo campo "Participantes Externos" abaixo da lista de participantes internos
+- Input de texto + botão "Adicionar" para inserir nomes um a um
+- Cada nome aparece como badge removível (X para excluir)
+- Salvar o array na coluna `external_participants`
 
-### Nova página `src/pages/MeetingMinuteDetail.tsx`
+### `MeetingMinuteDetail.tsx`
 
-- Cabeçalho: data da reunião, descrição, participantes (avatares)
-- Seção de pendências em tabela:
-  - Descrição | Responsável | Data conclusão | Status
-  - Botão para marcar como encerrada → texto fica `line-through text-muted-foreground`
-  - Botão "Adicionar pendência"
-- Edição inline de campos
+- Na seção "Participantes", exibir os externos após os internos
+- Usar avatar com ícone diferente (ex: `UserRound`) e badge "Externo" para distinguir
 
-### Dialog de criação `src/components/meetings/CreateMeetingDialog.tsx`
+### `AddPendencyDialog.tsx`
 
-- Campos: Data (datepicker), Participantes (multi-select de profiles), Descrição (textarea)
-- Ao salvar, insere em `meeting_minutes` + `meeting_participants`
+- No select de responsável, incluir os nomes externos como opções
+- Quando o responsável é externo, salvar o nome no campo `responsible_user_id`? Não — melhor adicionar coluna `responsible_external_name` na tabela `meeting_pendencies`
 
-### Dialog de pendência `src/components/meetings/AddPendencyDialog.tsx`
+### Migration adicional: `meeting_pendencies`
 
-- Campos: Descrição, Responsável (select de participantes), Data de conclusão (datepicker)
+```sql
+ALTER TABLE public.meeting_pendencies
+  ADD COLUMN responsible_external_name text;
+ALTER TABLE public.meeting_pendencies
+  ALTER COLUMN responsible_user_id DROP NOT NULL;
+```
 
-## Navegação
+Permite que uma pendência tenha **ou** `responsible_user_id` **ou** `responsible_external_name`.
 
-### `src/components/AppSidebar.tsx`
+## Arquivos modificados
 
-- Adicionar item "Atas de Reunião" com ícone `FileText` visível para todos (fora do bloco `isAdmin`)
-
-### `src/App.tsx`
-
-- Adicionar rotas `/atas` e `/atas/:meetingId`
-
-## Arquivos
-
-| Arquivo | Ação |
+| Arquivo | Mudança |
 |---|---|
-| Migration SQL | 3 tabelas + função + RLS |
-| `src/pages/MeetingMinutes.tsx` | Nova — listagem |
-| `src/pages/MeetingMinuteDetail.tsx` | Nova — detalhe |
-| `src/components/meetings/CreateMeetingDialog.tsx` | Nova |
-| `src/components/meetings/AddPendencyDialog.tsx` | Nova |
-| `src/components/AppSidebar.tsx` | Novo item de menu |
-| `src/App.tsx` | Novas rotas |
+| Migration SQL | Adicionar `external_participants` em `meeting_minutes`, `responsible_external_name` em `meeting_pendencies` |
+| `CreateMeetingDialog.tsx` | Campo de input para nomes externos com badges |
+| `MeetingMinuteDetail.tsx` | Exibir participantes externos na seção de participantes |
+| `AddPendencyDialog.tsx` | Incluir externos no select de responsável |
 
