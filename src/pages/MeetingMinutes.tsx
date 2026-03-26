@@ -1,12 +1,16 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Plus, FileText, CalendarDays, Users, AlertCircle } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Plus, FileText, CalendarDays, Users, AlertCircle, Search, X, CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { cn } from '@/lib/utils';
 import { CreateMeetingDialog } from '@/components/meetings/CreateMeetingDialog';
 
 interface MeetingRow {
@@ -25,6 +29,9 @@ export default function MeetingMinutes() {
   const [meetings, setMeetings] = useState<MeetingRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [search, setSearch] = useState('');
+  const [dateFrom, setDateFrom] = useState<Date | undefined>();
+  const [dateTo, setDateTo] = useState<Date | undefined>();
 
   const fetchMeetings = async () => {
     if (!user) return;
@@ -41,7 +48,6 @@ export default function MeetingMinutes() {
       return;
     }
 
-    // Fetch counts
     const enriched = await Promise.all(
       (data || []).map(async (m) => {
         const [{ count: pCount }, { count: penCount }] = await Promise.all([
@@ -60,6 +66,23 @@ export default function MeetingMinutes() {
     fetchMeetings();
   }, [user]);
 
+  const filteredMeetings = useMemo(() => {
+    return meetings.filter((m) => {
+      if (search && !m.description.toLowerCase().includes(search.toLowerCase())) return false;
+      if (dateFrom && m.meeting_date < format(dateFrom, 'yyyy-MM-dd')) return false;
+      if (dateTo && m.meeting_date > format(dateTo, 'yyyy-MM-dd')) return false;
+      return true;
+    });
+  }, [meetings, search, dateFrom, dateTo]);
+
+  const hasFilters = search || dateFrom || dateTo;
+
+  const clearFilters = () => {
+    setSearch('');
+    setDateFrom(undefined);
+    setDateTo(undefined);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -72,21 +95,63 @@ export default function MeetingMinutes() {
         </Button>
       </div>
 
+      {/* Filtros */}
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="relative flex-1 min-w-[200px] max-w-sm">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Buscar por descrição..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-9"
+          />
+        </div>
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button variant="outline" className={cn("justify-start text-left font-normal", !dateFrom && "text-muted-foreground")}>
+              <CalendarIcon className="mr-2 h-4 w-4" />
+              {dateFrom ? format(dateFrom, "dd/MM/yyyy") : "Data início"}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0" align="start">
+            <Calendar mode="single" selected={dateFrom} onSelect={setDateFrom} initialFocus className="p-3 pointer-events-auto" locale={ptBR} />
+          </PopoverContent>
+        </Popover>
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button variant="outline" className={cn("justify-start text-left font-normal", !dateTo && "text-muted-foreground")}>
+              <CalendarIcon className="mr-2 h-4 w-4" />
+              {dateTo ? format(dateTo, "dd/MM/yyyy") : "Data fim"}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0" align="start">
+            <Calendar mode="single" selected={dateTo} onSelect={setDateTo} initialFocus className="p-3 pointer-events-auto" locale={ptBR} />
+          </PopoverContent>
+        </Popover>
+        {hasFilters && (
+          <Button variant="ghost" size="sm" onClick={clearFilters}>
+            <X className="mr-1 h-4 w-4" /> Limpar
+          </Button>
+        )}
+      </div>
+
       {loading ? (
         <p className="text-muted-foreground">Carregando...</p>
-      ) : meetings.length === 0 ? (
+      ) : filteredMeetings.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12 text-center">
             <FileText className="mb-4 h-12 w-12 text-muted-foreground/50" />
-            <p className="text-muted-foreground">Nenhuma ata encontrada</p>
-            <Button variant="outline" className="mt-4" onClick={() => setDialogOpen(true)}>
-              Criar primeira ata
-            </Button>
+            <p className="text-muted-foreground">{hasFilters ? 'Nenhuma ata encontrada com os filtros aplicados' : 'Nenhuma ata encontrada'}</p>
+            {!hasFilters && (
+              <Button variant="outline" className="mt-4" onClick={() => setDialogOpen(true)}>
+                Criar primeira ata
+              </Button>
+            )}
           </CardContent>
         </Card>
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {meetings.map((m) => (
+          {filteredMeetings.map((m) => (
             <Card
               key={m.id}
               className="cursor-pointer transition-shadow hover:shadow-md"
