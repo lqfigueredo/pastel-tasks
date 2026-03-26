@@ -203,6 +203,69 @@ export function CreateTaskDialog({ open, onOpenChange, onTaskCreated }: Props) {
             </div>
           )}
 
+          {/* Meeting origin toggle */}
+          <div className="flex items-center justify-between rounded-lg border border-border/50 p-3">
+            <div className="flex items-center gap-2">
+              <FileText className="h-4 w-4 text-muted-foreground" />
+              <Label htmlFor="meeting-toggle" className="cursor-pointer text-sm">Originada de reunião</Label>
+            </div>
+            <Switch id="meeting-toggle" checked={fromMeeting} onCheckedChange={(checked) => {
+              setFromMeeting(checked);
+              if (checked && meetings.length === 0 && user) {
+                supabase.from('meeting_minutes').select('id, description, meeting_date').eq('created_by', user.id).order('meeting_date', { ascending: false }).then(({ data }) => {
+                  if (data) setMeetings(data);
+                });
+              }
+              if (!checked) {
+                setSelectedMeetingId('');
+                setPendencies([]);
+                setSelectedPendencyId('');
+              }
+            }} />
+          </div>
+
+          {fromMeeting && (
+            <div className="space-y-3 rounded-lg border border-border/50 bg-muted/20 p-3">
+              <div className="space-y-2">
+                <Label>Ata de Reunião</Label>
+                <Select value={selectedMeetingId} onValueChange={(v) => {
+                  setSelectedMeetingId(v);
+                  setSelectedPendencyId('');
+                  supabase.from('meeting_pendencies').select('id, description').eq('meeting_id', v).then(({ data }) => {
+                    setPendencies(data || []);
+                  });
+                }}>
+                  <SelectTrigger><SelectValue placeholder="Selecione uma ata..." /></SelectTrigger>
+                  <SelectContent>
+                    {meetings.map((m) => (
+                      <SelectItem key={m.id} value={m.id}>
+                        {m.meeting_date} — {m.description.length > 40 ? m.description.slice(0, 40) + '…' : m.description}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              {selectedMeetingId && pendencies.length > 0 && (
+                <div className="space-y-2">
+                  <Label>Pendência</Label>
+                  <Select value={selectedPendencyId} onValueChange={setSelectedPendencyId}>
+                    <SelectTrigger><SelectValue placeholder="Selecione uma pendência..." /></SelectTrigger>
+                    <SelectContent>
+                      {pendencies.map((p) => (
+                        <SelectItem key={p.id} value={p.id}>
+                          {p.description.length > 50 ? p.description.slice(0, 50) + '…' : p.description}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+              {selectedMeetingId && pendencies.length === 0 && (
+                <p className="text-xs text-muted-foreground">Nenhuma pendência nesta ata.</p>
+              )}
+            </div>
+          )}
+
           {/* Recurring task toggle */}
           <div className="flex items-center justify-between rounded-lg border border-border/50 p-3">
             <div className="flex items-center gap-2">
