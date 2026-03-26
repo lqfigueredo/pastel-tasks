@@ -621,6 +621,7 @@ export type Database = {
       user_approvals: {
         Row: {
           id: string
+          license_expires_at: string | null
           requested_at: string
           reviewed_at: string | null
           reviewed_by: string | null
@@ -629,6 +630,7 @@ export type Database = {
         }
         Insert: {
           id?: string
+          license_expires_at?: string | null
           requested_at?: string
           reviewed_at?: string | null
           reviewed_by?: string | null
@@ -637,6 +639,7 @@ export type Database = {
         }
         Update: {
           id?: string
+          license_expires_at?: string | null
           requested_at?: string
           reviewed_at?: string | null
           reviewed_by?: string | null
