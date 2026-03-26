@@ -64,6 +64,13 @@ const Settings = () => {
     setLoading(false);
   };
 
+  useEffect(() => {
+    if (!user) return;
+    supabase.rpc('has_role', { _user_id: user.id, _role: 'admin' }).then(({ data }) => {
+      setIsAdmin(!!data);
+    });
+  }, [user]);
+
   useEffect(() => { fetchStatuses(); }, []);
 
   const getFallbackStatus = () => statuses.find(s => s.is_default && s.position === 0) || statuses.find(s => s.is_default);
