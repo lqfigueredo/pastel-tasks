@@ -430,6 +430,7 @@ export type Database = {
           estimated_delivery_date: string | null
           id: string
           is_minimized: boolean
+          meeting_pendency_id: string | null
           recurring_task_id: string | null
           start_date: string | null
           status_id: string
@@ -446,6 +447,7 @@ export type Database = {
           estimated_delivery_date?: string | null
           id?: string
           is_minimized?: boolean
+          meeting_pendency_id?: string | null
           recurring_task_id?: string | null
           start_date?: string | null
           status_id: string
@@ -462,6 +464,7 @@ export type Database = {
           estimated_delivery_date?: string | null
           id?: string
           is_minimized?: boolean
+          meeting_pendency_id?: string | null
           recurring_task_id?: string | null
           start_date?: string | null
           status_id?: string
@@ -470,6 +473,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "tasks_meeting_pendency_id_fkey"
+            columns: ["meeting_pendency_id"]
+            isOneToOne: false
+            referencedRelation: "meeting_pendencies"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "tasks_recurring_task_id_fkey"
             columns: ["recurring_task_id"]

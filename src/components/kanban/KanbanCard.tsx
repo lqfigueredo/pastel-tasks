@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Calendar, Minimize2, Maximize2, Repeat } from 'lucide-react';
+import { Calendar, Minimize2, Maximize2, Repeat, FileText } from 'lucide-react';
 import { TaskChangeHistory } from './TaskChangeHistory';
 import { Card, CardContent } from '@/components/ui/card';
 import { Task, TaskStatus } from './KanbanBoard';
@@ -47,6 +47,9 @@ export function KanbanCard({ task, allStatuses, onRefresh }: KanbanCardProps) {
             <div className="flex items-center gap-1.5">
               {task.recurring_task_id && (
                 <Repeat className="h-3 w-3 shrink-0 text-primary" />
+              )}
+              {task.meeting_pendency_id && (
+                <FileText className="h-3 w-3 shrink-0 text-primary" />
               )}
               <h4 className={cn(
                 "text-sm font-medium text-foreground leading-snug",

@@ -12,7 +12,7 @@ import { Separator } from '@/components/ui/separator';
 import { AssigneeSelector } from './AssigneeSelector';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { MessageSquare, Send, AlertTriangle, X } from 'lucide-react';
+import { MessageSquare, Send, AlertTriangle, X, FileText } from 'lucide-react';
 import { TaskAttachments } from './TaskAttachments';
 import { TaskChangeHistory } from './TaskChangeHistory';
 
@@ -46,6 +46,7 @@ export function TaskDetailDialog({ task, allStatuses, open, onOpenChange, onRefr
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState('');
   const [saving, setSaving] = useState(false);
+  const [pendencyText, setPendencyText] = useState<string | null>(null);
 
   const [justifyOpen, setJustifyOpen] = useState(false);
   const [justification, setJustification] = useState('');
@@ -62,6 +63,14 @@ export function TaskDetailDialog({ task, allStatuses, open, onOpenChange, onRefr
       setActualEndDate(task.actual_end_date || '');
       setAssigneeIds(task.assignees.map((a) => a.user_id));
       fetchComments();
+      // Fetch linked pendency text
+      if (task.meeting_pendency_id) {
+        supabase.from('meeting_pendencies').select('description').eq('id', task.meeting_pendency_id).single().then(({ data }) => {
+          setPendencyText(data?.description || null);
+        });
+      } else {
+        setPendencyText(null);
+      }
     }
   }, [open, task]);
 
@@ -232,6 +241,16 @@ export function TaskDetailDialog({ task, allStatuses, open, onOpenChange, onRefr
               <Label>Responsáveis</Label>
               <AssigneeSelector selectedIds={assigneeIds} onChange={setAssigneeIds} />
             </div>
+
+            {pendencyText && (
+              <div className="flex items-start gap-2 rounded-lg border border-primary/20 bg-primary/5 p-3">
+                <FileText className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+                <div>
+                  <p className="text-xs font-medium text-primary mb-1">Origem: Reunião</p>
+                  <p className="text-sm text-foreground">{pendencyText}</p>
+                </div>
+              </div>
+            )}
 
             <div className="grid grid-cols-3 gap-3">
               <div className="space-y-2">
