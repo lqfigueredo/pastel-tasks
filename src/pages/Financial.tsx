@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Check, X, Ban, CalendarIcon } from 'lucide-react';
+import { Check, X, Ban, CalendarIcon, RotateCcw } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import {
@@ -115,6 +115,7 @@ const Financial = () => {
         reject: 'Usuário rejeitado.',
         deactivate: 'Licença inativada com sucesso.',
         'update-license': 'Validade da licença atualizada.',
+        reactivate: 'Licença reativada com sucesso!',
       };
       toast.success(messages[action] || 'Ação realizada.');
       await loadData();
@@ -298,6 +299,18 @@ const Financial = () => {
                                 </AlertDialogFooter>
                               </AlertDialogContent>
                             </AlertDialog>
+                          )}
+                          {(approval.status === 'deactivated' || approval.status === 'expired') && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="text-green-600 hover:bg-green-50"
+                              disabled={actionLoading === approval.user_id}
+                              onClick={() => handleAction(approval.user_id, 'reactivate')}
+                            >
+                              <RotateCcw className="h-4 w-4 mr-1" />
+                              Reativar
+                            </Button>
                           )}
                         </div>
                       </TableCell>
