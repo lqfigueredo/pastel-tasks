@@ -18,6 +18,7 @@ import MeetingMinuteDetail from "@/pages/MeetingMinuteDetail";
 import NotFound from "@/pages/NotFound";
 import Landing from "@/pages/Landing";
 import Financial from "@/pages/Financial";
+import FinancialRegister from "@/pages/FinancialRegister";
 
 const queryClient = new QueryClient();
 
@@ -32,6 +33,7 @@ const App = () => (
             <Routes>
               <Route path="/landing" element={<Landing />} />
               <Route path="/auth" element={<Auth />} />
+              <Route path="/financeiro/cadastro" element={<FinancialRegister />} />
               <Route element={<AppLayout />}>
                 <Route path="/" element={<Index />} />
                 <Route path="/dashboard" element={<Dashboard />} />
