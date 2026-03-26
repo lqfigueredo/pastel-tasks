@@ -16,6 +16,8 @@ import Dashboard from "@/pages/Dashboard";
 import MeetingMinutes from "@/pages/MeetingMinutes";
 import MeetingMinuteDetail from "@/pages/MeetingMinuteDetail";
 import NotFound from "@/pages/NotFound";
+import Landing from "@/pages/Landing";
+import Financial from "@/pages/Financial";
 
 const queryClient = new QueryClient();
 
@@ -28,6 +30,7 @@ const App = () => (
         <BrowserRouter>
           <AuthProvider>
             <Routes>
+              <Route path="/landing" element={<Landing />} />
               <Route path="/auth" element={<Auth />} />
               <Route element={<AppLayout />}>
                 <Route path="/" element={<Index />} />
@@ -38,6 +41,7 @@ const App = () => (
                 <Route path="/atas/:meetingId" element={<MeetingMinuteDetail />} />
                 <Route path="/configuracoes" element={<Settings />} />
                 <Route path="/admin" element={<Admin />} />
+                <Route path="/financeiro" element={<Financial />} />
               </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>
