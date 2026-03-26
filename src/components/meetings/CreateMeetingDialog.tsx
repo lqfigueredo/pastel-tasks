@@ -6,14 +6,16 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { CalendarIcon } from 'lucide-react';
+import { CalendarIcon, Plus, X } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 
 interface Props {
@@ -33,6 +35,8 @@ export function CreateMeetingDialog({ open, onOpenChange, onCreated }: Props) {
   const [description, setDescription] = useState('');
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
+  const [externalParticipants, setExternalParticipants] = useState<string[]>([]);
+  const [externalName, setExternalName] = useState('');
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -46,6 +50,23 @@ export function CreateMeetingDialog({ open, onOpenChange, onCreated }: Props) {
     setDate(undefined);
     setDescription('');
     setSelectedUsers([]);
+    setExternalParticipants([]);
+    setExternalName('');
+  };
+
+  const addExternal = () => {
+    const name = externalName.trim();
+    if (!name) return;
+    if (externalParticipants.includes(name)) {
+      toast.error('Nome já adicionado');
+      return;
+    }
+    setExternalParticipants((prev) => [...prev, name]);
+    setExternalName('');
+  };
+
+  const removeExternal = (name: string) => {
+    setExternalParticipants((prev) => prev.filter((n) => n !== name));
   };
 
   const handleSave = async () => {
@@ -61,6 +82,7 @@ export function CreateMeetingDialog({ open, onOpenChange, onCreated }: Props) {
         meeting_date: format(date, 'yyyy-MM-dd'),
         description: description.trim(),
         created_by: user.id,
+        external_participants: externalParticipants,
       })
       .select('id')
       .single();
@@ -71,12 +93,10 @@ export function CreateMeetingDialog({ open, onOpenChange, onCreated }: Props) {
       return;
     }
 
-    // Insert participants (creator is implicit via RLS function, but add selected)
     if (selectedUsers.length > 0) {
       const rows = selectedUsers.map((uid) => ({ meeting_id: meeting.id, user_id: uid }));
       await supabase.from('meeting_participants').insert(rows);
     }
-    // Also add the creator as participant for easy querying
     await supabase.from('meeting_participants').insert({ meeting_id: meeting.id, user_id: user.id });
 
     toast.success('Ata criada com sucesso');
@@ -150,6 +170,33 @@ export function CreateMeetingDialog({ open, onOpenChange, onCreated }: Props) {
                 ))
               )}
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Participantes Externos</Label>
+            <div className="flex gap-2">
+              <Input
+                placeholder="Nome do participante externo"
+                value={externalName}
+                onChange={(e) => setExternalName(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addExternal(); } }}
+              />
+              <Button type="button" size="sm" variant="outline" onClick={addExternal}>
+                <Plus className="h-4 w-4" />
+              </Button>
+            </div>
+            {externalParticipants.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 mt-1">
+                {externalParticipants.map((name) => (
+                  <Badge key={name} variant="secondary" className="gap-1">
+                    {name}
+                    <button type="button" onClick={() => removeExternal(name)} className="ml-0.5 hover:text-destructive">
+                      <X className="h-3 w-3" />
+                    </button>
+                  </Badge>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 

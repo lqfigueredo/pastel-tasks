@@ -20,32 +20,37 @@ interface Props {
   onOpenChange: (open: boolean) => void;
   meetingId: string;
   participants: { user_id: string; display_name: string }[];
+  externalParticipants: string[];
   onCreated: () => void;
 }
 
-export function AddPendencyDialog({ open, onOpenChange, meetingId, participants, onCreated }: Props) {
+export function AddPendencyDialog({ open, onOpenChange, meetingId, participants, externalParticipants, onCreated }: Props) {
   const [description, setDescription] = useState('');
-  const [responsibleUserId, setResponsibleUserId] = useState('');
+  const [responsibleValue, setResponsibleValue] = useState('');
   const [dueDate, setDueDate] = useState<Date>();
   const [saving, setSaving] = useState(false);
 
   const reset = () => {
     setDescription('');
-    setResponsibleUserId('');
+    setResponsibleValue('');
     setDueDate(undefined);
   };
 
   const handleSave = async () => {
-    if (!description.trim() || !responsibleUserId) {
+    if (!description.trim() || !responsibleValue) {
       toast.error('Preencha descrição e responsável');
       return;
     }
     setSaving(true);
 
+    // Check if the value is a user_id (internal) or external name
+    const isInternal = participants.some((p) => p.user_id === responsibleValue);
+
     const { error } = await supabase.from('meeting_pendencies').insert({
       meeting_id: meetingId,
       description: description.trim(),
-      responsible_user_id: responsibleUserId,
+      responsible_user_id: isInternal ? responsibleValue : null,
+      responsible_external_name: isInternal ? null : responsibleValue,
       due_date: dueDate ? format(dueDate, 'yyyy-MM-dd') : null,
     });
 
@@ -83,7 +88,7 @@ export function AddPendencyDialog({ open, onOpenChange, meetingId, participants,
 
           <div className="space-y-2">
             <Label>Responsável *</Label>
-            <Select value={responsibleUserId} onValueChange={setResponsibleUserId}>
+            <Select value={responsibleValue} onValueChange={setResponsibleValue}>
               <SelectTrigger>
                 <SelectValue placeholder="Selecione o responsável" />
               </SelectTrigger>
@@ -93,6 +98,16 @@ export function AddPendencyDialog({ open, onOpenChange, meetingId, participants,
                     {p.display_name}
                   </SelectItem>
                 ))}
+                {externalParticipants.length > 0 && (
+                  <>
+                    <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground">Externos</div>
+                    {externalParticipants.map((name) => (
+                      <SelectItem key={`ext-${name}`} value={`ext:${name}`}>
+                        {name} (Externo)
+                      </SelectItem>
+                    ))}
+                  </>
+                )}
               </SelectContent>
             </Select>
           </div>
