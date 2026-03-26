@@ -1,0 +1,1 @@
+ALTER TABLE public.tasks ADD COLUMN meeting_pendency_id uuid REFERENCES public.meeting_pendencies(id) ON DELETE SET NULL;
