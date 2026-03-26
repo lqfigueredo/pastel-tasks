@@ -33,6 +33,7 @@ export function AppSidebar() {
   const { signOut, user } = useAuth();
   const [isAdmin, setIsAdmin] = useState(false);
   const [isSolutionAdmin, setIsSolutionAdmin] = useState(false);
+  const [isRegularUser, setIsRegularUser] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -42,7 +43,12 @@ export function AppSidebar() {
     supabase.rpc('has_role', { _user_id: user.id, _role: 'solution_admin' }).then(({ data }) => {
       setIsSolutionAdmin(!!data);
     });
+    supabase.rpc('has_role', { _user_id: user.id, _role: 'user' }).then(({ data }) => {
+      setIsRegularUser(!!data);
+    });
   }, [user]);
+
+  const isOnlySolutionAdmin = isSolutionAdmin && !isAdmin && !isRegularUser;
 
   return (
     <Sidebar collapsible="icon">
@@ -61,7 +67,7 @@ export function AppSidebar() {
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
-              {navItems.map((item) => (
+              {!isOnlySolutionAdmin && navItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
                     <NavLink
