@@ -1,38 +1,21 @@
 
 
-# Tela de Cadastro de Usuários Financeiros (solution_admin)
+# Sidebar condicional para usuário financeiro (solution_admin)
 
-## Resumo
+## Mudança
 
-Criar uma página dedicada de cadastro para usuários financeiros (`solution_admin`). O formulário pede e-mail, senha e um token fixo (`445`). Ao validar o token, cria o usuário via edge function e atribui o role `solution_admin`.
+No `AppSidebar.tsx`, quando o usuário tem apenas o role `solution_admin` (e não é `admin` nem usuário regular de tarefas), exibir **somente** o menu "Financeiro" — escondendo Dashboard, Minhas Tarefas, Equipe, Atas de Reunião, Configurações e Administração.
 
-## Edge Function: `register-financial-user`
+## Lógica
 
-Nova edge function que:
-1. Recebe `{ email, password, token }`
-2. Valida que `token === "445"` — rejeita se inválido
-3. Usa `SUPABASE_SERVICE_ROLE_KEY` para criar o usuário com `auth.admin.createUser` (email confirmado)
-4. Insere role `solution_admin` na tabela `user_roles`
-5. Retorna sucesso ou erro
+Adicionar um check: também verificar se o usuário tem role `user` ou `admin`. Se o usuário é **apenas** `solution_admin` (sem `admin` e sem `user`), renderizar apenas o item Financeiro no menu. Caso contrário, manter o comportamento atual.
 
-## Nova Página: `src/pages/FinancialRegister.tsx`
-
-- Rota pública `/financeiro/cadastro` (fora do AppLayout)
-- Card com campos: E-mail, Senha, Token de Acesso
-- Valida token `445` client-side antes de enviar
-- Chama a edge function `register-financial-user`
-- Sucesso → toast + redireciona para `/auth`
-- Link "Já tem conta? Entrar"
-
-## Rota em `App.tsx`
-
-Adicionar `/financeiro/cadastro` como rota pública (fora do AppLayout, junto com `/landing` e `/auth`).
+Também ajustar a rota padrão: quando um `solution_admin` puro faz login e vai para `/`, redirecionar para `/financeiro`.
 
 ## Arquivos
 
 | Arquivo | Mudança |
 |---|---|
-| `supabase/functions/register-financial-user/index.ts` | Nova edge function |
-| `src/pages/FinancialRegister.tsx` | Nova página de cadastro |
-| `src/App.tsx` | Adicionar rota `/financeiro/cadastro` |
+| `src/components/AppSidebar.tsx` | Checar role `user`, condicionar `navItems` — se só `solution_admin`, mostrar apenas Financeiro |
+| `src/pages/Index.tsx` | Redirecionar `solution_admin` puro para `/financeiro` |
 
