@@ -1,58 +1,63 @@
 
 
-# Participantes Externos nas Atas de Reunião
+# Log de Alterações nas Tarefas
 
 ## Resumo
 
-Adicionar campo de participantes externos (nomes em texto livre) nas atas de reunião. Serão armazenados como array de texto na tabela `meeting_minutes`.
+Criar uma tabela de auditoria que registre automaticamente cada alteração feita em uma tarefa, incluindo campo alterado, valor anterior, valor novo, usuário e data.
 
 ## Banco de Dados
 
-### Migration: adicionar coluna em `meeting_minutes`
+### Tabela `task_change_logs`
 
 ```sql
-ALTER TABLE public.meeting_minutes
-  ADD COLUMN external_participants text[] NOT NULL DEFAULT '{}';
+CREATE TABLE public.task_change_logs (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  task_id uuid NOT NULL,
+  user_id uuid NOT NULL,
+  field_name text NOT NULL,
+  old_value text,
+  new_value text,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+
+ALTER TABLE public.task_change_logs ENABLE ROW LEVEL SECURITY;
 ```
 
-Sem necessidade de novas tabelas ou RLS — a coluna segue as políticas já existentes da tabela.
+RLS: criador da tarefa pode visualizar; usuário autenticado pode inserir (com `user_id = auth.uid()`).
 
-## UI
+## Lógica de registro (front-end)
 
-### `CreateMeetingDialog.tsx`
+### `TaskDetailDialog.tsx`
 
-- Novo campo "Participantes Externos" abaixo da lista de participantes internos
-- Input de texto + botão "Adicionar" para inserir nomes um a um
-- Cada nome aparece como badge removível (X para excluir)
-- Salvar o array na coluna `external_participants`
+No `handleSave`, antes do update, comparar cada campo com o valor original da `task` e inserir um registro para cada campo alterado:
 
-### `MeetingMinuteDetail.tsx`
+| Campo | `field_name` |
+|---|---|
+| Título | `title` |
+| Descrição | `description` |
+| Status | `status` (salvar nome do status) |
+| Data início | `start_date` |
+| Data fim real | `actual_end_date` |
+| Previsão entrega | `estimated_delivery_date` |
 
-- Na seção "Participantes", exibir os externos após os internos
-- Usar avatar com ícone diferente (ex: `UserRound`) e badge "Externo" para distinguir
+Também registrar mudanças de responsáveis (adições/remoções).
 
-### `AddPendencyDialog.tsx`
+### Drag-and-drop (status change)
 
-- No select de responsável, incluir os nomes externos como opções
-- Quando o responsável é externo, salvar o nome no campo `responsible_user_id`? Não — melhor adicionar coluna `responsible_external_name` na tabela `meeting_pendencies`
+No `KanbanBoard.tsx` / `KanbanColumn.tsx`, ao mover card entre colunas, inserir log de mudança de status.
 
-### Migration adicional: `meeting_pendencies`
+## UI — Seção "Histórico" no `TaskDetailDialog`
 
-```sql
-ALTER TABLE public.meeting_pendencies
-  ADD COLUMN responsible_external_name text;
-ALTER TABLE public.meeting_pendencies
-  ALTER COLUMN responsible_user_id DROP NOT NULL;
-```
-
-Permite que uma pendência tenha **ou** `responsible_user_id` **ou** `responsible_external_name`.
+- Nova seção abaixo dos comentários com ícone `History`
+- Lista cronológica mostrando: campo, valor anterior → novo, usuário e data
+- Expandível/colapsável para não poluir a tela
 
 ## Arquivos modificados
 
 | Arquivo | Mudança |
 |---|---|
-| Migration SQL | Adicionar `external_participants` em `meeting_minutes`, `responsible_external_name` em `meeting_pendencies` |
-| `CreateMeetingDialog.tsx` | Campo de input para nomes externos com badges |
-| `MeetingMinuteDetail.tsx` | Exibir participantes externos na seção de participantes |
-| `AddPendencyDialog.tsx` | Incluir externos no select de responsável |
+| Migration SQL | Criar `task_change_logs` + RLS |
+| `TaskDetailDialog.tsx` | Lógica de diff + inserção de logs + seção "Histórico" |
+| `KanbanBoard.tsx` ou `KanbanColumn.tsx` | Log ao mudar status via drag |
 
