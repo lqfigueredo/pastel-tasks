@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, Settings, LogOut, CheckSquare, ShieldCheck, CalendarDays } from 'lucide-react';
+import { LayoutDashboard, Users, Settings, LogOut, CheckSquare, ShieldCheck, CalendarDays, FileText } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import { useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -23,6 +23,7 @@ const navItems = [
   { title: 'Dashboard', url: '/dashboard', icon: CalendarDays },
   { title: 'Minhas Tarefas', url: '/', icon: LayoutDashboard },
   { title: 'Equipe', url: '/equipe', icon: Users },
+  { title: 'Atas de Reunião', url: '/atas', icon: FileText },
 ];
 
 export function AppSidebar() {

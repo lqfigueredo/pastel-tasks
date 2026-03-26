@@ -13,6 +13,8 @@ import TeamList from "@/pages/TeamList";
 import Settings from "@/pages/Settings";
 import Admin from "@/pages/Admin";
 import Dashboard from "@/pages/Dashboard";
+import MeetingMinutes from "@/pages/MeetingMinutes";
+import MeetingMinuteDetail from "@/pages/MeetingMinuteDetail";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -32,6 +34,8 @@ const App = () => (
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/equipe" element={<TeamList />} />
                 <Route path="/equipe/:teamId" element={<Team />} />
+                <Route path="/atas" element={<MeetingMinutes />} />
+                <Route path="/atas/:meetingId" element={<MeetingMinuteDetail />} />
                 <Route path="/configuracoes" element={<Settings />} />
                 <Route path="/admin" element={<Admin />} />
               </Route>
