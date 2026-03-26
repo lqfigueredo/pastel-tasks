@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { Switch } from '@/components/ui/switch';
 import { AssigneeSelector } from './AssigneeSelector';
-import { X, Users, Repeat } from 'lucide-react';
+import { X, Users, Repeat, FileText } from 'lucide-react';
 
 interface Props {
   open: boolean;
@@ -34,6 +34,11 @@ export function CreateTaskDialog({ open, onOpenChange, onTaskCreated }: Props) {
   const [isRecurring, setIsRecurring] = useState(false);
   const [recurrenceType, setRecurrenceType] = useState('weekly');
   const [recurrenceDay, setRecurrenceDay] = useState<number>(1);
+  const [fromMeeting, setFromMeeting] = useState(false);
+  const [meetings, setMeetings] = useState<{ id: string; description: string; meeting_date: string }[]>([]);
+  const [selectedMeetingId, setSelectedMeetingId] = useState('');
+  const [pendencies, setPendencies] = useState<{ id: string; description: string }[]>([]);
+  const [selectedPendencyId, setSelectedPendencyId] = useState('');
 
   useEffect(() => {
     if (open) {
@@ -110,6 +115,7 @@ export function CreateTaskDialog({ open, onOpenChange, onTaskCreated }: Props) {
         estimated_delivery_date: estimatedDate || null,
         created_by: user.id,
         team_id: teamId,
+        meeting_pendency_id: selectedPendencyId || null,
       }).select('id').single();
 
       if (error) {
@@ -139,6 +145,10 @@ export function CreateTaskDialog({ open, onOpenChange, onTaskCreated }: Props) {
     setIsRecurring(false);
     setRecurrenceType('weekly');
     setRecurrenceDay(1);
+    setFromMeeting(false);
+    setSelectedMeetingId('');
+    setPendencies([]);
+    setSelectedPendencyId('');
   };
 
   if (!open) return null;
