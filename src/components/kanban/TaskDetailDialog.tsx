@@ -14,6 +14,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { MessageSquare, Send, AlertTriangle, X } from 'lucide-react';
 import { TaskAttachments } from './TaskAttachments';
+import { TaskChangeHistory } from './TaskChangeHistory';
 
 interface Comment {
   id: string;
@@ -127,6 +128,20 @@ export function TaskDetailDialog({ task, allStatuses, open, onOpenChange, onRefr
 
   const handleSave = async () => {
     setSaving(true);
+
+    // Build change logs
+    const changes: { field_name: string; old_value: string | null; new_value: string | null }[] = [];
+    if (title !== task.title) changes.push({ field_name: 'title', old_value: task.title, new_value: title });
+    if ((description || '') !== (task.description || '')) changes.push({ field_name: 'description', old_value: task.description || '', new_value: description || '' });
+    if (statusId !== task.status_id) {
+      const oldName = allStatuses.find(s => s.id === task.status_id)?.name || '';
+      const newName = allStatuses.find(s => s.id === statusId)?.name || '';
+      changes.push({ field_name: 'status', old_value: oldName, new_value: newName });
+    }
+    if ((startDate || '') !== (task.start_date || '')) changes.push({ field_name: 'start_date', old_value: task.start_date || null, new_value: startDate || null });
+    if ((estimatedDate || '') !== (task.estimated_delivery_date || '')) changes.push({ field_name: 'estimated_delivery_date', old_value: task.estimated_delivery_date || null, new_value: estimatedDate || null });
+    if ((actualEndDate || '') !== (task.actual_end_date || '')) changes.push({ field_name: 'actual_end_date', old_value: task.actual_end_date || null, new_value: actualEndDate || null });
+
     const { error } = await supabase.from('tasks').update({
       title,
       description: description || null,
@@ -141,6 +156,20 @@ export function TaskDetailDialog({ task, allStatuses, open, onOpenChange, onRefr
       toast({ title: 'Erro ao salvar', variant: 'destructive' });
     } else {
       await saveAssignees();
+
+      // Log assignee changes
+      const currentIds = task.assignees.map(a => a.user_id);
+      const added = assigneeIds.filter(id => !currentIds.includes(id));
+      const removed = currentIds.filter(id => !assigneeIds.includes(id));
+      for (const id of added) changes.push({ field_name: 'assignee_added', old_value: null, new_value: id });
+      for (const id of removed) changes.push({ field_name: 'assignee_removed', old_value: id, new_value: null });
+
+      if (changes.length > 0 && user) {
+        await supabase.from('task_change_logs').insert(
+          changes.map(c => ({ task_id: task.id, user_id: user.id, ...c }))
+        );
+      }
+
       toast({ title: 'Tarefa atualizada!' });
       onRefresh();
       onOpenChange(false);
