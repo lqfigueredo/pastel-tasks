@@ -1,28 +1,21 @@
 
 
-# Modo Escuro
-
-O projeto já tem variáveis CSS para `.dark` definidas em `index.css` e `darkMode: ["class"]` no Tailwind. Falta apenas o mecanismo de alternância.
+# Restringir Configurações a Administradores
 
 ## Mudanças
 
-### 1. Criar hook `src/hooks/use-theme.tsx`
+### 1. `src/components/AppSidebar.tsx`
+- Mover o item "Configurações" para dentro do bloco condicional `{isAdmin && ...}`, junto com "Administração".
 
-- Context + Provider que gerencia `"light" | "dark" | "system"`
-- Persiste preferência em `localStorage` (chave `theme`)
-- Aplica/remove classe `dark` no `<html>`
-- Respeita `prefers-color-scheme` quando em modo "system"
+### 2. `src/pages/Settings.tsx`
+- Adicionar verificação de role admin no início da página.
+- Se não for admin, redirecionar para `/` com `<Navigate>`.
+- Usar a mesma lógica de `supabase.rpc('has_role', ...)` já usada no sidebar.
 
-### 2. Criar botão `src/components/ThemeToggle.tsx`
-
-- Ícone Sol/Lua que alterna entre light e dark
-- Usa o hook `useTheme`
-
-### 3. Integrar
+### Arquivos modificados
 
 | Arquivo | Mudança |
 |---|---|
-| `src/App.tsx` | Envolver app com `ThemeProvider` |
-| `src/components/AppSidebar.tsx` | Adicionar `ThemeToggle` no footer, acima do botão Sair |
-| `src/pages/Auth.tsx` | Adicionar `ThemeToggle` no canto superior direito |
+| `src/components/AppSidebar.tsx` | Esconder link "Configurações" para não-admins |
+| `src/pages/Settings.tsx` | Guardar rota — redirecionar não-admins |
 
