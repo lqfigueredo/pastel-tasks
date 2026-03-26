@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Calendar, Minimize2, Maximize2, Repeat } from 'lucide-react';
+import { Calendar, Minimize2, Maximize2, Repeat, FileText } from 'lucide-react';
 import { TaskChangeHistory } from './TaskChangeHistory';
 import { Card, CardContent } from '@/components/ui/card';
 import { Task, TaskStatus } from './KanbanBoard';

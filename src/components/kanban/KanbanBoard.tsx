@@ -16,6 +16,7 @@ export interface Task {
   actual_end_date: string | null;
   is_minimized: boolean;
   recurring_task_id: string | null;
+  meeting_pendency_id: string | null;
   created_by: string;
   team_id: string | null;
   created_at: string;
