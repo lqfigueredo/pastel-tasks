@@ -48,7 +48,7 @@ const Auth = () => {
       if (error) {
         toast({ title: 'Erro ao cadastrar', description: error.message, variant: 'destructive' });
       } else {
-        toast({ title: 'Conta criada!', description: 'Verifique seu e-mail para confirmar.' });
+        toast({ title: 'Conta criada!', description: 'Aguarde aprovação do financeiro para acessar o sistema.' });
       }
     }
     setSubmitting(false);
