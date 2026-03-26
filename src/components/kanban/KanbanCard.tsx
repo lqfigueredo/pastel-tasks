@@ -48,6 +48,9 @@ export function KanbanCard({ task, allStatuses, onRefresh }: KanbanCardProps) {
               {task.recurring_task_id && (
                 <Repeat className="h-3 w-3 shrink-0 text-primary" />
               )}
+              {task.meeting_pendency_id && (
+                <FileText className="h-3 w-3 shrink-0 text-primary" title="Originada de reunião" />
+              )}
               <h4 className={cn(
                 "text-sm font-medium text-foreground leading-snug",
                 minimized && "text-xs truncate"
