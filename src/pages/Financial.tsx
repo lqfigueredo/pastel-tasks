@@ -1,13 +1,16 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { format } from 'date-fns';
+import { format, isPast } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Check, X } from 'lucide-react';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Check, X, Ban, CalendarIcon } from 'lucide-react';
 import { toast } from 'sonner';
+import { cn } from '@/lib/utils';
 import {
   Table,
   TableBody,
@@ -16,6 +19,17 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 
 interface Lead {
   id: string;
@@ -30,6 +44,7 @@ interface UserApproval {
   status: string;
   requested_at: string;
   reviewed_at: string | null;
+  license_expires_at: string | null;
   display_name: string;
   email: string;
 }
@@ -64,7 +79,6 @@ const Financial = () => {
 
     setLeads((leadsRes.data as Lead[]) || []);
 
-    // Enrich approvals with profile data
     const rawApprovals = (approvalsRes.data || []) as any[];
     if (rawApprovals.length > 0) {
       const userIds = rawApprovals.map(a => a.user_id);
@@ -87,22 +101,33 @@ const Financial = () => {
     setLoading(false);
   };
 
-  const handleApproval = async (userId: string, action: 'approve' | 'reject') => {
+  const handleAction = async (userId: string, action: string, extra?: Record<string, any>) => {
     setActionLoading(userId);
     try {
       const { data, error } = await supabase.functions.invoke('approve-user', {
-        body: { userId, action },
+        body: { userId, action, ...extra },
       });
 
       if (error) throw error;
 
-      toast.success(action === 'approve' ? 'Usuário aprovado!' : 'Usuário rejeitado.');
+      const messages: Record<string, string> = {
+        approve: 'Usuário aprovado!',
+        reject: 'Usuário rejeitado.',
+        deactivate: 'Licença inativada com sucesso.',
+        'update-license': 'Validade da licença atualizada.',
+      };
+      toast.success(messages[action] || 'Ação realizada.');
       await loadData();
     } catch (err: any) {
-      toast.error(err.message || 'Erro ao processar aprovação');
+      toast.error(err.message || 'Erro ao processar ação');
     } finally {
       setActionLoading(null);
     }
+  };
+
+  const handleLicenseDateChange = async (userId: string, date: Date | undefined) => {
+    if (!date) return;
+    await handleAction(userId, 'update-license', { licenseExpiresAt: date.toISOString() });
   };
 
   if (loading) {
@@ -126,8 +151,18 @@ const Financial = () => {
       case 'pending': return <Badge variant="outline" className="text-yellow-600 border-yellow-400">Pendente</Badge>;
       case 'approved': return <Badge className="bg-green-600">Aprovado</Badge>;
       case 'rejected': return <Badge variant="destructive">Rejeitado</Badge>;
+      case 'expired': return <Badge variant="outline" className="text-orange-600 border-orange-400">Expirado</Badge>;
+      case 'deactivated': return <Badge variant="destructive">Inativado</Badge>;
       default: return <Badge variant="outline">{status}</Badge>;
     }
+  };
+
+  const licenseBadge = (expiresAt: string | null, status: string) => {
+    if (!expiresAt || !['approved'].includes(status)) return null;
+    const expired = isPast(new Date(expiresAt));
+    return expired
+      ? <Badge variant="outline" className="text-red-600 border-red-400">Expirada</Badge>
+      : <Badge variant="outline" className="text-green-600 border-green-400">Vigente</Badge>;
   };
 
   return (
@@ -154,12 +189,13 @@ const Financial = () => {
           {approvals.length === 0 ? (
             <p className="text-muted-foreground py-10 text-center">Nenhuma solicitação de aprovação.</p>
           ) : (
-            <div className="rounded-lg border border-border">
+            <div className="rounded-lg border border-border overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead>Nome</TableHead>
                     <TableHead>Status</TableHead>
+                    <TableHead>Validade da Licença</TableHead>
                     <TableHead>Data da Solicitação</TableHead>
                     <TableHead className="text-right">Ações</TableHead>
                   </TableRow>
@@ -170,33 +206,100 @@ const Financial = () => {
                       <TableCell className="font-medium">{approval.display_name}</TableCell>
                       <TableCell>{statusBadge(approval.status)}</TableCell>
                       <TableCell>
+                        <div className="flex items-center gap-2">
+                          {approval.license_expires_at ? (
+                            <>
+                              <span className="text-sm">
+                                {format(new Date(approval.license_expires_at), 'dd/MM/yyyy', { locale: ptBR })}
+                              </span>
+                              {licenseBadge(approval.license_expires_at, approval.status)}
+                            </>
+                          ) : (
+                            <span className="text-muted-foreground text-sm">—</span>
+                          )}
+                          {approval.status === 'approved' && (
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-7 w-7" disabled={actionLoading === approval.user_id}>
+                                  <CalendarIcon className="h-3.5 w-3.5" />
+                                </Button>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-auto p-0" align="start">
+                                <Calendar
+                                  mode="single"
+                                  selected={approval.license_expires_at ? new Date(approval.license_expires_at) : undefined}
+                                  onSelect={(date) => handleLicenseDateChange(approval.user_id, date)}
+                                  disabled={(date) => date < new Date()}
+                                  initialFocus
+                                  className={cn("p-3 pointer-events-auto")}
+                                />
+                              </PopoverContent>
+                            </Popover>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>
                         {format(new Date(approval.requested_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
                       </TableCell>
                       <TableCell className="text-right">
-                        {approval.status === 'pending' && (
-                          <div className="flex gap-2 justify-end">
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="text-green-600 hover:bg-green-50"
-                              disabled={actionLoading === approval.user_id}
-                              onClick={() => handleApproval(approval.user_id, 'approve')}
-                            >
-                              <Check className="h-4 w-4 mr-1" />
-                              Aprovar
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="text-destructive hover:bg-destructive/10"
-                              disabled={actionLoading === approval.user_id}
-                              onClick={() => handleApproval(approval.user_id, 'reject')}
-                            >
-                              <X className="h-4 w-4 mr-1" />
-                              Rejeitar
-                            </Button>
-                          </div>
-                        )}
+                        <div className="flex gap-2 justify-end">
+                          {approval.status === 'pending' && (
+                            <>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="text-green-600 hover:bg-green-50"
+                                disabled={actionLoading === approval.user_id}
+                                onClick={() => handleAction(approval.user_id, 'approve')}
+                              >
+                                <Check className="h-4 w-4 mr-1" />
+                                Aprovar
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="text-destructive hover:bg-destructive/10"
+                                disabled={actionLoading === approval.user_id}
+                                onClick={() => handleAction(approval.user_id, 'reject')}
+                              >
+                                <X className="h-4 w-4 mr-1" />
+                                Rejeitar
+                              </Button>
+                            </>
+                          )}
+                          {approval.status === 'approved' && (
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="text-destructive hover:bg-destructive/10"
+                                  disabled={actionLoading === approval.user_id}
+                                >
+                                  <Ban className="h-4 w-4 mr-1" />
+                                  Inativar
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Inativar licença</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Isso irá inativar o admin <strong>{approval.display_name}</strong> e todos os usuários dos times criados por ele. Deseja continuar?
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                  <AlertDialogAction
+                                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                    onClick={() => handleAction(approval.user_id, 'deactivate')}
+                                  >
+                                    Inativar
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          )}
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
