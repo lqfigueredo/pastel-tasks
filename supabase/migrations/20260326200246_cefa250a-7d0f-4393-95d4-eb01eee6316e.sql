@@ -1,0 +1,1 @@
+ALTER TABLE public.user_approvals ADD COLUMN license_expires_at timestamptz;
