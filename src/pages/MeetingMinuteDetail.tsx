@@ -5,7 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, CalendarDays, Plus, CheckCircle2, Circle } from 'lucide-react';
+import { ArrowLeft, CalendarDays, Plus, CheckCircle2, Circle, UserRound } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { AddPendencyDialog } from '@/components/meetings/AddPendencyDialog';
@@ -17,7 +17,8 @@ import { toast } from 'sonner';
 interface Pendency {
   id: string;
   description: string;
-  responsible_user_id: string;
+  responsible_user_id: string | null;
+  responsible_external_name: string | null;
   due_date: string | null;
   is_completed: boolean;
   completed_at: string | null;
@@ -35,6 +36,7 @@ export default function MeetingMinuteDetail() {
   const { user } = useAuth();
   const [meeting, setMeeting] = useState<any>(null);
   const [participants, setParticipants] = useState<Participant[]>([]);
+  const [externalParticipants, setExternalParticipants] = useState<string[]>([]);
   const [pendencies, setPendencies] = useState<Pendency[]>([]);
   const [loading, setLoading] = useState(true);
   const [pendencyDialogOpen, setPendencyDialogOpen] = useState(false);
@@ -50,11 +52,11 @@ export default function MeetingMinuteDetail() {
     ]);
 
     setMeeting(meetingData);
+    setExternalParticipants((meetingData as any)?.external_participants || []);
 
     // Fetch participant profiles
     if (partData && partData.length > 0) {
       const userIds = partData.map((p) => p.user_id);
-      // Also include creator
       if (meetingData?.created_by && !userIds.includes(meetingData.created_by)) {
         userIds.push(meetingData.created_by);
       }
@@ -66,10 +68,18 @@ export default function MeetingMinuteDetail() {
 
     // Enrich pendencies with responsible name
     if (pendData && pendData.length > 0) {
-      const responsibleIds = [...new Set(pendData.map((p) => p.responsible_user_id))];
-      const { data: profiles } = await supabase.from('profiles').select('user_id, display_name').in('user_id', responsibleIds);
-      const profileMap = Object.fromEntries((profiles || []).map((p) => [p.user_id, p.display_name || 'Sem nome']));
-      setPendencies(pendData.map((p) => ({ ...p, responsible_name: profileMap[p.responsible_user_id] || 'Desconhecido' })));
+      const responsibleIds = [...new Set(pendData.filter((p) => p.responsible_user_id).map((p) => p.responsible_user_id!))];
+      let profileMap: Record<string, string> = {};
+      if (responsibleIds.length > 0) {
+        const { data: profiles } = await supabase.from('profiles').select('user_id, display_name').in('user_id', responsibleIds);
+        profileMap = Object.fromEntries((profiles || []).map((p) => [p.user_id, p.display_name || 'Sem nome']));
+      }
+      setPendencies(pendData.map((p) => ({
+        ...p,
+        responsible_name: p.responsible_user_id
+          ? (profileMap[p.responsible_user_id] || 'Desconhecido')
+          : (p.responsible_external_name ? `${p.responsible_external_name} (Externo)` : 'Não definido'),
+      })));
     } else {
       setPendencies([]);
     }
@@ -143,6 +153,17 @@ export default function MeetingMinuteDetail() {
                   <span className="text-xs text-foreground">{p.display_name}</span>
                 </div>
               ))}
+              {externalParticipants.map((name) => (
+                <div key={`ext-${name}`} className="flex items-center gap-1.5">
+                  <Avatar className="h-6 w-6">
+                    <AvatarFallback className="text-[10px] bg-muted">
+                      <UserRound className="h-3 w-3" />
+                    </AvatarFallback>
+                  </Avatar>
+                  <span className="text-xs text-foreground">{name}</span>
+                  <Badge variant="outline" className="text-[10px] px-1 py-0">Externo</Badge>
+                </div>
+              ))}
             </div>
           </div>
         </CardContent>
@@ -210,6 +231,7 @@ export default function MeetingMinuteDetail() {
         onOpenChange={setPendencyDialogOpen}
         meetingId={meetingId!}
         participants={participants}
+        externalParticipants={externalParticipants}
         onCreated={fetchAll}
       />
     </div>
