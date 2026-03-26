@@ -1,76 +1,38 @@
 
 
-# Landing Page + Captação de Leads (com role `solution_admin`)
+# Tela de Cadastro de Usuários Financeiros (solution_admin)
 
 ## Resumo
 
-Criar um novo papel `solution_admin` separado do `admin` existente. O `solution_admin` é o administrador comercial que gerencia leads captados pela landing page. O `admin` atual continua apenas para gestão do sistema (usuários, configurações).
+Criar uma página dedicada de cadastro para usuários financeiros (`solution_admin`). O formulário pede e-mail, senha e um token fixo (`445`). Ao validar o token, cria o usuário via edge function e atribui o role `solution_admin`.
 
-## Banco de Dados
+## Edge Function: `register-financial-user`
 
-### 1. Atualizar o enum `app_role`
+Nova edge function que:
+1. Recebe `{ email, password, token }`
+2. Valida que `token === "445"` — rejeita se inválido
+3. Usa `SUPABASE_SERVICE_ROLE_KEY` para criar o usuário com `auth.admin.createUser` (email confirmado)
+4. Insere role `solution_admin` na tabela `user_roles`
+5. Retorna sucesso ou erro
 
-```sql
-ALTER TYPE public.app_role ADD VALUE 'solution_admin';
-```
+## Nova Página: `src/pages/FinancialRegister.tsx`
 
-### 2. Tabela `leads`
+- Rota pública `/financeiro/cadastro` (fora do AppLayout)
+- Card com campos: E-mail, Senha, Token de Acesso
+- Valida token `445` client-side antes de enviar
+- Chama a edge function `register-financial-user`
+- Sucesso → toast + redireciona para `/auth`
+- Link "Já tem conta? Entrar"
 
-```sql
-CREATE TABLE public.leads (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  name text NOT NULL,
-  email text NOT NULL,
-  created_at timestamptz NOT NULL DEFAULT now()
-);
+## Rota em `App.tsx`
 
-ALTER TABLE public.leads ENABLE ROW LEVEL SECURITY;
-
--- Qualquer pessoa (anon) pode inserir
-CREATE POLICY "Anyone can insert leads"
-  ON public.leads FOR INSERT
-  TO anon, authenticated
-  WITH CHECK (true);
-
--- Apenas solution_admin pode visualizar
-CREATE POLICY "Solution admins can view leads"
-  ON public.leads FOR SELECT
-  TO authenticated
-  USING (public.has_role(auth.uid(), 'solution_admin'));
-```
-
-## Front-end
-
-### Landing Page (`/landing`) — rota pública, fora do AppLayout
-
-- Hero section apresentando o SimpleTask
-- Seções de features (gestão de tarefas, equipes, atas)
-- Botão "Tenho Interesse" → dialog com campos Nome e E-mail
-- Insere na tabela `leads` usando o client anon (sem autenticação)
-- Link "Já tenho conta" → `/auth`
-
-### Tela Financeiro (`/financeiro`) — dentro do AppLayout, só para `solution_admin`
-
-- Tabela listando leads: Nome, E-mail, Data de contato
-- Verificação de role `solution_admin` no carregamento
-
-### Sidebar — link "Financeiro" visível apenas para `solution_admin`
-
-- Novo check `isSolutionAdmin` separado do `isAdmin`
-- Ícone `DollarSign` ou `TrendingUp`
-
-### Rotas (`App.tsx`)
-
-- `/landing` fora do `<Route element={<AppLayout />}>` (pública, sem auth)
-- `/financeiro` dentro do AppLayout (protegida)
+Adicionar `/financeiro/cadastro` como rota pública (fora do AppLayout, junto com `/landing` e `/auth`).
 
 ## Arquivos
 
 | Arquivo | Mudança |
 |---|---|
-| Migration SQL | Adicionar `solution_admin` ao enum + criar tabela `leads` com RLS |
-| `src/pages/Landing.tsx` | Nova página pública |
-| `src/pages/Financial.tsx` | Nova página de leads (solution_admin) |
-| `src/App.tsx` | Rotas `/landing` e `/financeiro` |
-| `src/components/AppSidebar.tsx` | Link "Financeiro" para solution_admin |
+| `supabase/functions/register-financial-user/index.ts` | Nova edge function |
+| `src/pages/FinancialRegister.tsx` | Nova página de cadastro |
+| `src/App.tsx` | Adicionar rota `/financeiro/cadastro` |
 
