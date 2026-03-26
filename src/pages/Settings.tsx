@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -30,6 +31,7 @@ const PASTEL_COLORS = [
 
 const Settings = () => {
   const { user } = useAuth();
+  const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const { toast } = useToast();
   const [statuses, setStatuses] = useState<Status[]>([]);
   const [archivedStatuses, setArchivedStatuses] = useState<Status[]>([]);
