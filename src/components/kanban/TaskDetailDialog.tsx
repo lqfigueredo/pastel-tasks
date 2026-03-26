@@ -242,6 +242,16 @@ export function TaskDetailDialog({ task, allStatuses, open, onOpenChange, onRefr
               <AssigneeSelector selectedIds={assigneeIds} onChange={setAssigneeIds} />
             </div>
 
+            {pendencyText && (
+              <div className="flex items-start gap-2 rounded-lg border border-primary/20 bg-primary/5 p-3">
+                <FileText className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+                <div>
+                  <p className="text-xs font-medium text-primary mb-1">Origem: Reunião</p>
+                  <p className="text-sm text-foreground">{pendencyText}</p>
+                </div>
+              </div>
+            )}
+
             <div className="grid grid-cols-3 gap-3">
               <div className="space-y-2">
                 <Label>Início</Label>
