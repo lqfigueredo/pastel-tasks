@@ -75,6 +75,13 @@ const Settings = () => {
 
   const getFallbackStatus = () => statuses.find(s => s.is_default && s.position === 0) || statuses.find(s => s.is_default);
 
+  if (isAdmin === null) {
+    return <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>;
+  }
+  if (!isAdmin) {
+    return <Navigate to="/" replace />;
+  }
+
   const handleCreate = async () => {
     if (!newName.trim()) return;
     setSaving(true);
