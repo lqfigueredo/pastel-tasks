@@ -43,7 +43,7 @@ Deno.serve(async (req) => {
 
     const { userId, action, licenseDays, licenseExpiresAt } = await req.json()
 
-    if (!userId || !['approve', 'reject', 'deactivate', 'update-license'].includes(action)) {
+    if (!userId || !['approve', 'reject', 'deactivate', 'update-license', 'reactivate'].includes(action)) {
       return new Response(JSON.stringify({ error: 'userId e action são obrigatórios' }), { status: 400, headers: corsHeaders })
     }
 
@@ -128,6 +128,50 @@ Deno.serve(async (req) => {
           reviewed_by: callerUserId,
         })
         .eq('user_id', userId)
+    }
+
+    } else if (action === 'reactivate') {
+      // Unban the user
+      await supabaseAdmin.auth.admin.updateUserById(userId, {
+        ban_duration: 'none',
+      })
+
+      // Set new 30-day license
+      const expiresAt = new Date()
+      expiresAt.setDate(expiresAt.getDate() + 30)
+
+      await supabaseAdmin
+        .from('user_approvals')
+        .update({
+          status: 'approved',
+          license_expires_at: expiresAt.toISOString(),
+          reviewed_at: new Date().toISOString(),
+          reviewed_by: callerUserId,
+        })
+        .eq('user_id', userId)
+
+      // Unban all members of teams created by this admin
+      const { data: teams } = await supabaseAdmin
+        .from('teams')
+        .select('id')
+        .eq('created_by', userId)
+
+      if (teams && teams.length > 0) {
+        const teamIds = teams.map(t => t.id)
+        const { data: members } = await supabaseAdmin
+          .from('team_members')
+          .select('user_id')
+          .in('team_id', teamIds)
+
+        if (members) {
+          const uniqueUserIds = [...new Set(members.map(m => m.user_id).filter(id => id !== userId))]
+          for (const memberId of uniqueUserIds) {
+            await supabaseAdmin.auth.admin.updateUserById(memberId, {
+              ban_duration: 'none',
+            })
+          }
+        }
+      }
     }
 
     return new Response(JSON.stringify({ success: true, action }), {
