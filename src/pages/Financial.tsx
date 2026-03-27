@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Check, X, Ban, CalendarIcon, RotateCcw } from 'lucide-react';
+import { Check, X, Ban, CalendarIcon, RotateCcw, MailCheck } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import {
@@ -116,6 +116,7 @@ const Financial = () => {
         deactivate: 'Licença inativada com sucesso.',
         'update-license': 'Validade da licença atualizada.',
         reactivate: 'Licença reativada com sucesso!',
+        'confirm-email': 'E-mail confirmado com sucesso!',
       };
       toast.success(messages[action] || 'Ação realizada.');
       await loadData();
@@ -312,6 +313,17 @@ const Financial = () => {
                               Reativar
                             </Button>
                           )}
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="text-blue-600 hover:bg-blue-50"
+                            disabled={actionLoading === approval.user_id}
+                            onClick={() => handleAction(approval.user_id, 'confirm-email')}
+                            title="Confirmar e-mail manualmente"
+                          >
+                            <MailCheck className="h-4 w-4 mr-1" />
+                            Confirmar E-mail
+                          </Button>
                         </div>
                       </TableCell>
                     </TableRow>

@@ -43,7 +43,7 @@ Deno.serve(async (req) => {
 
     const { userId, action, licenseDays, licenseExpiresAt } = await req.json()
 
-    if (!userId || !['approve', 'reject', 'deactivate', 'update-license', 'reactivate'].includes(action)) {
+    if (!userId || !['approve', 'reject', 'deactivate', 'update-license', 'reactivate', 'confirm-email'].includes(action)) {
       return new Response(JSON.stringify({ error: 'userId e action são obrigatórios' }), { status: 400, headers: corsHeaders })
     }
 
@@ -51,6 +51,7 @@ Deno.serve(async (req) => {
       // Unban the user
       await supabaseAdmin.auth.admin.updateUserById(userId, {
         ban_duration: 'none',
+        email_confirm: true,
       })
 
       // Calculate license expiration (default 30 days)
@@ -128,6 +129,11 @@ Deno.serve(async (req) => {
           reviewed_by: callerUserId,
         })
         .eq('user_id', userId)
+    } else if (action === 'confirm-email') {
+      await supabaseAdmin.auth.admin.updateUserById(userId, {
+        email_confirm: true,
+      })
+
     } else if (action === 'reactivate') {
       // Unban the user
       await supabaseAdmin.auth.admin.updateUserById(userId, {
