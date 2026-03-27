@@ -1,36 +1,44 @@
 
 
-# Correção: RLS impede criação de time
+# Restringir visibilidade de usuários ao admin que os criou
 
 ## Problema
-
-O código faz `.insert().select().single()` na tabela `teams`. A INSERT policy (`auth.uid() = created_by`) passa, mas o `.select()` encadeado precisa de uma SELECT policy que também passe. As SELECT policies existentes são:
-
-1. **"Admins can view all teams"** — requer role `admin` (usuário não tem)
-2. **"Members can view team"** — checa `get_user_team_ids()`, que consulta `team_members` — mas o usuário ainda não foi adicionado como membro (isso acontece na linha seguinte do código)
-
-Resultado: o PostgREST rejeita a operação porque não consegue retornar a row inserida via SELECT.
+Na página Admin, qualquer admin vê **todos** os perfis do sistema. O correto é que cada admin veja apenas seu próprio cadastro e os usuários que ele mesmo criou.
 
 ## Solução
 
-### 1. Adicionar SELECT policy para criadores
+### 1. Adicionar coluna `created_by_admin` na tabela `user_approvals`
+Nova coluna `uuid` nullable que armazena o ID do admin que criou o usuário. Será `null` para auto-cadastros (fluxo público).
 
-Migration SQL:
 ```sql
-CREATE POLICY "Creator can view own team"
-ON public.teams
-FOR SELECT
-TO authenticated
-USING (created_by = auth.uid());
+ALTER TABLE public.user_approvals ADD COLUMN created_by_admin uuid;
 ```
 
-Isso é semanticamente correto — o criador do time sempre deve poder vê-lo, independente de estar na tabela `team_members`.
+### 2. Atualizar edge function `admin-create-user`
+Gravar `created_by_admin = callerUserId` no registro de `user_approvals` ao criar o usuário.
+
+### 3. Filtrar dados na página Admin (`src/pages/Admin.tsx`)
+Em vez de carregar todos os profiles, carregar apenas:
+- O próprio perfil do admin
+- Perfis de usuários cujo `user_approvals.created_by_admin` é o admin logado
+
+Consulta: buscar `user_approvals` onde `created_by_admin = user.id`, extrair os `user_id`s, e filtrar os profiles por esses IDs + o próprio ID.
+
+### 4. Adicionar RLS policy para admin ver approvals que criou
+```sql
+CREATE POLICY "Admins can view own created approvals"
+ON public.user_approvals
+FOR SELECT TO authenticated
+USING (created_by_admin = auth.uid());
+```
 
 ### Resultado
-- Qualquer usuário autenticado poderá criar times (como já era a intenção)
-- O `.insert().select().single()` funcionará porque a nova SELECT policy cobre o caso
+- Admin só vê e gerencia usuários que ele próprio cadastrou
+- Solution_admin (financeiro) continua vendo todos
+- Auto-cadastros (`created_by_admin = null`) ficam visíveis apenas para solution_admin
 
 ## Detalhes técnicos
-- Arquivo afetado: apenas uma migration SQL
-- Nenhuma alteração de código no frontend necessária
+- Migration: 1 coluna nova + 1 RLS policy
+- Edge function: `admin-create-user` (gravar `created_by_admin`)
+- Frontend: `Admin.tsx` (filtrar por vínculo)
 
