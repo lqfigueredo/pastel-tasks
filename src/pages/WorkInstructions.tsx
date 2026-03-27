@@ -69,6 +69,11 @@ export default function WorkInstructions() {
     if (filterTeam !== 'all' && i.team_id !== filterTeam) return false;
     if (filterStatus === 'active' && !i.is_active) return false;
     if (filterStatus === 'inactive' && i.is_active) return false;
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      const tName = teamName(i.team_id).toLowerCase();
+      if (!i.title.toLowerCase().includes(q) && !tName.includes(q)) return false;
+    }
     return true;
   });
 
