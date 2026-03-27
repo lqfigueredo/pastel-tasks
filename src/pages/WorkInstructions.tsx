@@ -40,6 +40,7 @@ export default function WorkInstructions() {
   const [loading, setLoading] = useState(true);
   const [filterTeam, setFilterTeam] = useState<string>('all');
   const [filterStatus, setFilterStatus] = useState<string>('all');
+  const [searchQuery, setSearchQuery] = useState('');
   const [createOpen, setCreateOpen] = useState(false);
   const [editInstruction, setEditInstruction] = useState<WorkInstruction | null>(null);
   const [updateDocInstruction, setUpdateDocInstruction] = useState<WorkInstruction | null>(null);
