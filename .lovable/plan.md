@@ -1,29 +1,41 @@
 
 
-# Restringir visibilidade de status do Kanban por admin
+# Filtrar perfis no AssigneeSelector para mostrar apenas usuários do admin
 
 ## Problema
-A tabela `task_statuses` não tem coluna `created_by`, e a RLS de SELECT permite que todos vejam todos os status (`USING (true)`). Cada admin deveria ver apenas os status que ele criou.
+O `AssigneeSelector` (usado ao criar/editar tarefas) busca **todos** os perfis do sistema com `supabase.from('profiles').select(...)` sem filtro. Isso permite que um admin veja e aloque usuários que pertencem a outros admins.
 
 ## Solução
 
-### 1. Migration: adicionar `created_by` à tabela `task_statuses`
-- Adicionar coluna `created_by uuid` nullable (para não quebrar registros existentes)
-- Atualizar a RLS de SELECT: trocar `USING (true)` por `USING (created_by = auth.uid())`, mantendo acesso para statuses com `team_id` via `is_team_member` e statuses default
-- Política final de SELECT:
-  ```sql
-  (created_by = auth.uid())
-  OR (team_id IS NOT NULL AND is_team_member(auth.uid(), team_id))
-  OR is_default = true
-  ```
+### Alterar `src/components/kanban/AssigneeSelector.tsx`
+Em vez de buscar todos os perfis, filtrar apenas os usuários vinculados ao admin logado usando a tabela `user_approvals`:
 
-### 2. Migration: vincular status existentes aos admins corretos
-- Consultar os status existentes e atribuir o `created_by` correto com base nos dados conhecidos (lqfigueredo e luciano@institutototum)
+1. Importar `useAuth` do contexto de autenticação
+2. Buscar os `user_id`s da tabela `user_approvals` onde `created_by_admin = user.id`
+3. Incluir o próprio admin na lista
+4. Filtrar os perfis usando `.in('user_id', visibleUserIds)`
 
-### 3. Frontend: gravar `created_by` ao criar status
-- `src/pages/Settings.tsx`: adicionar `created_by: user!.id` no insert de `task_statuses`
+```typescript
+// De:
+supabase.from('profiles').select('user_id, display_name, avatar_url')
+
+// Para:
+// 1. Buscar user_ids vinculados ao admin
+const { data: approvals } = await supabase
+  .from('user_approvals')
+  .select('user_id')
+  .eq('created_by_admin', user.id);
+
+const visibleIds = [...new Set([user.id, ...(approvals?.map(a => a.user_id) || [])])];
+
+// 2. Buscar perfis filtrados
+const { data } = await supabase
+  .from('profiles')
+  .select('user_id, display_name, avatar_url')
+  .in('user_id', visibleIds);
+```
 
 ### Resultado
-- Cada admin vê apenas seus próprios status e os status default
-- Status de equipe continuam visíveis para membros do time
+- Admin só vê e aloca seus próprios usuários nas tarefas
+- Nenhuma alteração em banco de dados necessária
 
