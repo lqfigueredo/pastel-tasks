@@ -41,10 +41,20 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: 'Apenas usuários financeiros podem gerenciar aprovações' }), { status: 403, headers: corsHeaders })
     }
 
-    const { userId, action, licenseDays, licenseExpiresAt } = await req.json()
+    const { userId, action, licenseDays, licenseExpiresAt, displayName, email, role } = await req.json()
 
-    if (!userId || !['approve', 'reject', 'deactivate', 'update-license', 'reactivate', 'confirm-email'].includes(action)) {
+    if (!userId || !['approve', 'reject', 'deactivate', 'update-license', 'reactivate', 'confirm-email', 'update-profile', 'get-user-info'].includes(action)) {
       return new Response(JSON.stringify({ error: 'userId e action são obrigatórios' }), { status: 400, headers: corsHeaders })
+    }
+
+    if (action === 'get-user-info') {
+      const { data: userData, error: userError } = await supabaseAdmin.auth.admin.getUserById(userId)
+      if (userError || !userData?.user) {
+        return new Response(JSON.stringify({ error: 'Usuário não encontrado' }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+      }
+      return new Response(JSON.stringify({ email: userData.user.email }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
     }
 
     if (action === 'approve') {
@@ -133,6 +143,39 @@ Deno.serve(async (req) => {
       await supabaseAdmin.auth.admin.updateUserById(userId, {
         email_confirm: true,
       })
+
+    } else if (action === 'update-profile') {
+      // Update display name in profiles
+      if (displayName && typeof displayName === 'string' && displayName.trim().length > 0 && displayName.trim().length <= 100) {
+        await supabaseAdmin
+          .from('profiles')
+          .update({ display_name: displayName.trim() })
+          .eq('user_id', userId)
+      }
+
+      // Update email in auth
+      if (email && typeof email === 'string' && email.includes('@') && email.length <= 255) {
+        const { error: emailError } = await supabaseAdmin.auth.admin.updateUserById(userId, {
+          email: email.trim(),
+          email_confirm: true,
+        })
+        if (emailError) {
+          return new Response(JSON.stringify({ error: 'Erro ao atualizar e-mail: ' + emailError.message }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+        }
+      }
+
+      // Update role
+      if (role && ['admin', 'user'].includes(role)) {
+        // Remove existing admin role if demoting
+        if (role === 'user') {
+          await supabaseAdmin.from('user_roles').delete().eq('user_id', userId).eq('role', 'admin')
+        } else if (role === 'admin') {
+          const { data: alreadyAdmin } = await supabaseAdmin.rpc('has_role', { _user_id: userId, _role: 'admin' })
+          if (!alreadyAdmin) {
+            await supabaseAdmin.from('user_roles').insert({ user_id: userId, role: 'admin' })
+          }
+        }
+      }
 
     } else if (action === 'reactivate') {
       // Unban the user
