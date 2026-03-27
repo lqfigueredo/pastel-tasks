@@ -43,8 +43,18 @@ Deno.serve(async (req) => {
 
     const { userId, action, licenseDays, licenseExpiresAt, displayName, email, role } = await req.json()
 
-    if (!userId || !['approve', 'reject', 'deactivate', 'update-license', 'reactivate', 'confirm-email', 'update-profile'].includes(action)) {
+    if (!userId || !['approve', 'reject', 'deactivate', 'update-license', 'reactivate', 'confirm-email', 'update-profile', 'get-user-info'].includes(action)) {
       return new Response(JSON.stringify({ error: 'userId e action são obrigatórios' }), { status: 400, headers: corsHeaders })
+    }
+
+    if (action === 'get-user-info') {
+      const { data: userData, error: userError } = await supabaseAdmin.auth.admin.getUserById(userId)
+      if (userError || !userData?.user) {
+        return new Response(JSON.stringify({ error: 'Usuário não encontrado' }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+      }
+      return new Response(JSON.stringify({ email: userData.user.email }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
     }
 
     if (action === 'approve') {
