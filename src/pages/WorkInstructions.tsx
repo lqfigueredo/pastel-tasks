@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, FileText, Filter } from 'lucide-react';
+import { Plus, FileText, Filter, Search } from 'lucide-react';
+import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -39,6 +40,7 @@ export default function WorkInstructions() {
   const [loading, setLoading] = useState(true);
   const [filterTeam, setFilterTeam] = useState<string>('all');
   const [filterStatus, setFilterStatus] = useState<string>('all');
+  const [searchQuery, setSearchQuery] = useState('');
   const [createOpen, setCreateOpen] = useState(false);
   const [editInstruction, setEditInstruction] = useState<WorkInstruction | null>(null);
   const [updateDocInstruction, setUpdateDocInstruction] = useState<WorkInstruction | null>(null);
@@ -67,6 +69,11 @@ export default function WorkInstructions() {
     if (filterTeam !== 'all' && i.team_id !== filterTeam) return false;
     if (filterStatus === 'active' && !i.is_active) return false;
     if (filterStatus === 'inactive' && i.is_active) return false;
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      const tName = teamName(i.team_id).toLowerCase();
+      if (!i.title.toLowerCase().includes(q) && !tName.includes(q)) return false;
+    }
     return true;
   });
 
@@ -130,7 +137,16 @@ export default function WorkInstructions() {
         </Button>
       </div>
 
-      <div className="flex gap-3">
+      <div className="flex gap-3 flex-wrap">
+        <div className="relative w-[260px]">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Buscar por título ou equipe..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-9"
+          />
+        </div>
         <Select value={filterTeam} onValueChange={setFilterTeam}>
           <SelectTrigger className="w-[200px]">
             <Filter className="mr-2 h-4 w-4" />
