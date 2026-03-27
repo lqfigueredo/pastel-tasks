@@ -1,28 +1,36 @@
 
 
-# Auto-confirmar e-mail no cadastro + botão reenviar confirmação
+# Correção: RLS impede criação de time
 
 ## Problema
-A função `register-user` cria usuários com `email_confirm: false`, causando erro "Email not confirmed" no login — mesmo após aprovação financeira.
+
+O código faz `.insert().select().single()` na tabela `teams`. A INSERT policy (`auth.uid() = created_by`) passa, mas o `.select()` encadeado precisa de uma SELECT policy que também passe. As SELECT policies existentes são:
+
+1. **"Admins can view all teams"** — requer role `admin` (usuário não tem)
+2. **"Members can view team"** — checa `get_user_team_ids()`, que consulta `team_members` — mas o usuário ainda não foi adicionado como membro (isso acontece na linha seguinte do código)
+
+Resultado: o PostgREST rejeita a operação porque não consegue retornar a row inserida via SELECT.
 
 ## Solução
 
-### 1. Alterar `register-user` edge function
-Mudar `email_confirm: false` para `email_confirm: true` na criação do usuário. Como já existe o fluxo de aprovação financeira (ban/unban), a confirmação de e-mail é redundante.
+### 1. Adicionar SELECT policy para criadores
 
-**Arquivo:** `supabase/functions/register-user/index.ts` — linha 39
-
-### 2. Alterar `approve-user` edge function
-Na ação `approve`, também confirmar o e-mail do usuário (caso existam usuários antigos com e-mail não confirmado):
+Migration SQL:
+```sql
+CREATE POLICY "Creator can view own team"
+ON public.teams
+FOR SELECT
+TO authenticated
+USING (created_by = auth.uid());
 ```
-email_confirm: true
-```
-no `updateUserById` da aprovação.
 
-### 3. Botão "Reenviar confirmação" na página Financeiro
-Adicionar um botão na tabela de aprovações pendentes que chama `approve-user` com uma nova ação `confirm-email`, que faz `updateUserById` com `email_confirm: true` para resolver casos legados.
+Isso é semanticamente correto — o criador do time sempre deve poder vê-lo, independente de estar na tabela `team_members`.
 
 ### Resultado
-- Novos cadastros já terão e-mail confirmado automaticamente
-- Financeiro pode forçar confirmação de e-mail para usuários existentes
+- Qualquer usuário autenticado poderá criar times (como já era a intenção)
+- O `.insert().select().single()` funcionará porque a nova SELECT policy cobre o caso
+
+## Detalhes técnicos
+- Arquivo afetado: apenas uma migration SQL
+- Nenhuma alteração de código no frontend necessária
 
