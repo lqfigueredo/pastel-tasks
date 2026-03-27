@@ -40,10 +40,26 @@ export function CreateMeetingDialog({ open, onOpenChange, onCreated }: Props) {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    if (!open) return;
-    supabase.from('profiles').select('user_id, display_name').then(({ data }) => {
-      setProfiles((data || []).filter((p) => p.user_id !== user?.id));
-    });
+    if (!open || !user) return;
+    const fetchProfiles = async () => {
+      const { data: approvals } = await supabase
+        .from('user_approvals')
+        .select('user_id')
+        .eq('created_by_admin', user.id);
+
+      const visibleIds = (approvals || []).map(a => a.user_id).filter(id => id !== user.id);
+
+      if (visibleIds.length > 0) {
+        const { data } = await supabase
+          .from('profiles')
+          .select('user_id, display_name')
+          .in('user_id', visibleIds);
+        setProfiles(data || []);
+      } else {
+        setProfiles([]);
+      }
+    };
+    fetchProfiles();
   }, [open, user]);
 
   const reset = () => {
