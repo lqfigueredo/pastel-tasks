@@ -137,7 +137,16 @@ export default function WorkInstructions() {
         </Button>
       </div>
 
-      <div className="flex gap-3">
+      <div className="flex gap-3 flex-wrap">
+        <div className="relative w-[260px]">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Buscar por título ou equipe..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-9"
+          />
+        </div>
         <Select value={filterTeam} onValueChange={setFilterTeam}>
           <SelectTrigger className="w-[200px]">
             <Filter className="mr-2 h-4 w-4" />
