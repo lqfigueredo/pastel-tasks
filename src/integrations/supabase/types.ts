@@ -404,6 +404,7 @@ export type Database = {
         Row: {
           color: string
           created_at: string
+          created_by: string | null
           deleted_at: string | null
           id: string
           is_default: boolean
@@ -414,6 +415,7 @@ export type Database = {
         Insert: {
           color?: string
           created_at?: string
+          created_by?: string | null
           deleted_at?: string | null
           id?: string
           is_default?: boolean
@@ -424,6 +426,7 @@ export type Database = {
         Update: {
           color?: string
           created_at?: string
+          created_by?: string | null
           deleted_at?: string | null
           id?: string
           is_default?: boolean
