@@ -8,7 +8,8 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Check, X, Ban, CalendarIcon, RotateCcw, MailCheck } from 'lucide-react';
+import { Check, X, Ban, CalendarIcon, RotateCcw, MailCheck, Pencil } from 'lucide-react';
+import EditUserProfileDialog from '@/components/financial/EditUserProfileDialog';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import {
@@ -56,7 +57,7 @@ const Financial = () => {
   const [loading, setLoading] = useState(true);
   const [isSolutionAdmin, setIsSolutionAdmin] = useState(false);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
-
+  const [editingUser, setEditingUser] = useState<UserApproval | null>(null);
   const pendingCount = approvals.filter(a => a.status === 'pending').length;
 
   useEffect(() => {
@@ -324,6 +325,15 @@ const Financial = () => {
                             <MailCheck className="h-4 w-4 mr-1" />
                             Confirmar E-mail
                           </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => setEditingUser(approval)}
+                            title="Editar perfil do usuário"
+                          >
+                            <Pencil className="h-4 w-4 mr-1" />
+                            Editar
+                          </Button>
                         </div>
                       </TableCell>
                     </TableRow>
@@ -363,6 +373,16 @@ const Financial = () => {
           )}
         </TabsContent>
       </Tabs>
+
+      {editingUser && (
+        <EditUserProfileDialog
+          open={!!editingUser}
+          onOpenChange={(open) => !open && setEditingUser(null)}
+          userId={editingUser.user_id}
+          currentDisplayName={editingUser.display_name}
+          onSaved={loadData}
+        />
+      )}
     </div>
   );
 };
