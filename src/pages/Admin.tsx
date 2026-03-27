@@ -75,8 +75,18 @@ export default function Admin() {
   };
 
   const loadData = async () => {
+    // First, get user_ids of users created by this admin
+    const { data: approvalsData } = await supabase
+      .from('user_approvals')
+      .select('user_id')
+      .eq('created_by_admin', user!.id);
+
+    const createdUserIds = approvalsData?.map(a => a.user_id) || [];
+    // Include the admin's own ID
+    const visibleUserIds = [...new Set([user!.id, ...createdUserIds])];
+
     const [profilesRes, teamsRes, membersRes, rolesRes] = await Promise.all([
-      supabase.from('profiles').select('user_id, display_name, created_at').order('created_at', { ascending: false }),
+      supabase.from('profiles').select('user_id, display_name, created_at').in('user_id', visibleUserIds).order('created_at', { ascending: false }),
       supabase.from('teams').select('id, name'),
       supabase.from('team_members').select('user_id, team_id, teams(name)'),
       supabase.from('user_roles').select('user_id, role').eq('role', 'admin'),

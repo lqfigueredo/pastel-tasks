@@ -73,10 +73,10 @@ Deno.serve(async (req) => {
       ban_duration: '876000h',
     })
 
-    // Insert pending approval record
+    // Insert pending approval record with creator reference
     await supabaseAdmin
       .from('user_approvals')
-      .insert({ user_id: newUserId, status: 'pending' })
+      .insert({ user_id: newUserId, status: 'pending', created_by_admin: callerUserId })
 
     // Add to team if specified
     if (teamId) {

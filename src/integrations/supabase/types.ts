@@ -620,6 +620,7 @@ export type Database = {
       }
       user_approvals: {
         Row: {
+          created_by_admin: string | null
           id: string
           license_expires_at: string | null
           requested_at: string
@@ -629,6 +630,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          created_by_admin?: string | null
           id?: string
           license_expires_at?: string | null
           requested_at?: string
@@ -638,6 +640,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          created_by_admin?: string | null
           id?: string
           license_expires_at?: string | null
           requested_at?: string
