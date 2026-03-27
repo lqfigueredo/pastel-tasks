@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -20,13 +21,27 @@ export function AssigneeSelector({ selectedIds, onChange }: AssigneeSelectorProp
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const { user } = useAuth();
 
   useEffect(() => {
-    supabase.from('profiles').select('user_id, display_name, avatar_url').then(({ data }) => {
-      if (data) setProfiles(data);
-    });
-  }, []);
+    if (!user) return;
+    const fetchProfiles = async () => {
+      const { data: approvals } = await supabase
+        .from('user_approvals')
+        .select('user_id')
+        .eq('created_by_admin', user.id);
 
+      const visibleIds = [...new Set([user.id, ...(approvals?.map(a => a.user_id) || [])])];
+
+      const { data } = await supabase
+        .from('profiles')
+        .select('user_id, display_name, avatar_url')
+        .in('user_id', visibleIds);
+
+      if (data) setProfiles(data);
+    };
+    fetchProfiles();
+  }, [user]);
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
