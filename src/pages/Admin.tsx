@@ -87,7 +87,7 @@ export default function Admin() {
 
     const [profilesRes, teamsRes, membersRes, rolesRes] = await Promise.all([
       supabase.from('profiles').select('user_id, display_name, created_at').in('user_id', visibleUserIds).order('created_at', { ascending: false }),
-      supabase.from('teams').select('id, name'),
+      supabase.from('teams').select('id, name').eq('created_by', user!.id),
       supabase.from('team_members').select('user_id, team_id, teams(name)'),
       supabase.from('user_roles').select('user_id, role').eq('role', 'admin'),
     ]);
