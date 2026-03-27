@@ -666,6 +666,129 @@ export type Database = {
         }
         Relationships: []
       }
+      work_instruction_logs: {
+        Row: {
+          action: string
+          created_at: string
+          details: string | null
+          id: string
+          instruction_id: string
+          user_id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          details?: string | null
+          id?: string
+          instruction_id: string
+          user_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          details?: string | null
+          id?: string
+          instruction_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "work_instruction_logs_instruction_id_fkey"
+            columns: ["instruction_id"]
+            isOneToOne: false
+            referencedRelation: "work_instructions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      work_instruction_versions: {
+        Row: {
+          change_reason: string
+          changed_by: string
+          created_at: string
+          file_name: string
+          file_path: string
+          id: string
+          instruction_id: string
+          version_number: number
+        }
+        Insert: {
+          change_reason: string
+          changed_by: string
+          created_at?: string
+          file_name: string
+          file_path: string
+          id?: string
+          instruction_id: string
+          version_number: number
+        }
+        Update: {
+          change_reason?: string
+          changed_by?: string
+          created_at?: string
+          file_name?: string
+          file_path?: string
+          id?: string
+          instruction_id?: string
+          version_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "work_instruction_versions_instruction_id_fkey"
+            columns: ["instruction_id"]
+            isOneToOne: false
+            referencedRelation: "work_instructions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      work_instructions: {
+        Row: {
+          created_at: string
+          created_by: string
+          current_file_name: string
+          current_file_path: string
+          description: string | null
+          id: string
+          is_active: boolean
+          team_id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          current_file_name: string
+          current_file_path: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          team_id: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          current_file_name?: string
+          current_file_path?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          team_id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "work_instructions_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
