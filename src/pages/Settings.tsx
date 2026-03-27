@@ -90,6 +90,7 @@ const Settings = () => {
       name: newName.trim(),
       color: newColor,
       position: maxPos + 1,
+      created_by: user!.id,
     });
     if (error) {
       toast({ title: 'Erro ao criar status', variant: 'destructive' });
