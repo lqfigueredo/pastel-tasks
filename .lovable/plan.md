@@ -1,25 +1,29 @@
 
 
-# Filtrar times na página Admin para mostrar apenas os do admin logado
+# Restringir visibilidade de status do Kanban por admin
 
 ## Problema
-Na página Admin, ao cadastrar um novo usuário, o dropdown de "Time" mostra **todos** os times do sistema, incluindo os criados por outros admins. Isso ocorre porque a query de times não tem filtro: `supabase.from('teams').select('id, name')`.
+A tabela `task_statuses` não tem coluna `created_by`, e a RLS de SELECT permite que todos vejam todos os status (`USING (true)`). Cada admin deveria ver apenas os status que ele criou.
 
 ## Solução
 
-### Alterar a query de times em `src/pages/Admin.tsx`
-Adicionar filtro `.eq('created_by', user!.id)` na consulta de times para que o admin veja apenas os times que ele criou.
+### 1. Migration: adicionar `created_by` à tabela `task_statuses`
+- Adicionar coluna `created_by uuid` nullable (para não quebrar registros existentes)
+- Atualizar a RLS de SELECT: trocar `USING (true)` por `USING (created_by = auth.uid())`, mantendo acesso para statuses com `team_id` via `is_team_member` e statuses default
+- Política final de SELECT:
+  ```sql
+  (created_by = auth.uid())
+  OR (team_id IS NOT NULL AND is_team_member(auth.uid(), team_id))
+  OR is_default = true
+  ```
 
-Linha ~90, de:
-```typescript
-supabase.from('teams').select('id, name'),
-```
-Para:
-```typescript
-supabase.from('teams').select('id, name').eq('created_by', user!.id),
-```
+### 2. Migration: vincular status existentes aos admins corretos
+- Consultar os status existentes e atribuir o `created_by` correto com base nos dados conhecidos (lqfigueredo e luciano@institutototum)
+
+### 3. Frontend: gravar `created_by` ao criar status
+- `src/pages/Settings.tsx`: adicionar `created_by: user!.id` no insert de `task_statuses`
 
 ### Resultado
-- Admin só vê seus próprios times no dropdown de cadastro
-- Nenhuma alteração em banco de dados necessária (RLS de teams já permite que o criador veja seus times)
+- Cada admin vê apenas seus próprios status e os status default
+- Status de equipe continuam visíveis para membros do time
 
