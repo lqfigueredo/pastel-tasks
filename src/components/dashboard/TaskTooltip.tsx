@@ -7,7 +7,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { Calendar, Flag, Users } from 'lucide-react';
+import { Calendar, Flag, Users, AlertTriangle } from 'lucide-react';
 
 interface TaskTooltipProps {
   task: Task;
@@ -42,6 +42,13 @@ export function TaskTooltip({ task, statusName, statusColor, children }: TaskToo
           className="max-w-[240px] space-y-1.5 p-3 text-xs"
         >
           <p className="font-semibold text-foreground leading-tight">{task.title}</p>
+
+          {task.is_critical && (
+            <div className="flex items-center gap-1.5 text-destructive">
+              <AlertTriangle className="h-3 w-3 shrink-0" />
+              <span className="font-semibold text-xs">Crítica</span>
+            </div>
+          )}
 
           <div className="flex items-center gap-1.5">
             <span

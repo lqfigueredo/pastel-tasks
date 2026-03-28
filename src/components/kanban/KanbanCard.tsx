@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Calendar, Minimize2, Maximize2, Repeat, FileText } from 'lucide-react';
+import { Calendar, Minimize2, Maximize2, Repeat, FileText, AlertTriangle } from 'lucide-react';
 import { TaskChangeHistory } from './TaskChangeHistory';
 import { Card, CardContent } from '@/components/ui/card';
 import { Task, TaskStatus } from './KanbanBoard';
@@ -39,7 +39,8 @@ export function KanbanCard({ task, allStatuses, onRefresh }: KanbanCardProps) {
         onClick={() => setDetailOpen(true)}
         className={cn(
           "cursor-pointer border-border/30 bg-card shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5 active:cursor-grabbing",
-          minimized && "opacity-70"
+          minimized && "opacity-70",
+          task.is_critical && "border-l-4 border-l-destructive"
         )}
       >
         <CardContent className={cn("p-3", minimized && "p-2")}>
@@ -47,6 +48,9 @@ export function KanbanCard({ task, allStatuses, onRefresh }: KanbanCardProps) {
             <div className="flex items-center gap-1.5">
               {task.recurring_task_id && (
                 <Repeat className="h-3 w-3 shrink-0 text-primary" />
+              )}
+              {task.is_critical && (
+                <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-destructive animate-pulse" />
               )}
               {task.meeting_pendency_id && (
                 <FileText className="h-3 w-3 shrink-0 text-primary" />

@@ -17,6 +17,7 @@ export interface Task {
   is_minimized: boolean;
   recurring_task_id: string | null;
   meeting_pendency_id: string | null;
+  is_critical: boolean;
   created_by: string;
   team_id: string | null;
   created_at: string;
