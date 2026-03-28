@@ -5,10 +5,11 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, CalendarDays, Plus, CheckCircle2, Circle, UserRound } from 'lucide-react';
+import { ArrowLeft, CalendarDays, Plus, CheckCircle2, Circle, UserRound, Pencil } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { AddPendencyDialog } from '@/components/meetings/AddPendencyDialog';
+import { EditMeetingDialog } from '@/components/meetings/EditMeetingDialog';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { cn } from '@/lib/utils';
@@ -40,6 +41,7 @@ export default function MeetingMinuteDetail() {
   const [pendencies, setPendencies] = useState<Pendency[]>([]);
   const [loading, setLoading] = useState(true);
   const [pendencyDialogOpen, setPendencyDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
 
   const fetchAll = async () => {
     if (!meetingId) return;
@@ -132,12 +134,19 @@ export default function MeetingMinuteDetail() {
       </Button>
 
       <Card>
-        <CardHeader>
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <CalendarDays className="h-4 w-4" />
-            {format(new Date(meeting.meeting_date + 'T00:00:00'), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
+        <CardHeader className="flex flex-row items-start justify-between">
+          <div>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <CalendarDays className="h-4 w-4" />
+              {format(new Date(meeting.meeting_date + 'T00:00:00'), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
+            </div>
+            <CardTitle className="text-lg mt-1">Descrição da Reunião</CardTitle>
           </div>
-          <CardTitle className="text-lg">Descrição da Reunião</CardTitle>
+          {meeting.created_by === user?.id && (
+            <Button size="sm" variant="outline" onClick={() => setEditDialogOpen(true)}>
+              <Pencil className="mr-2 h-4 w-4" /> Editar
+            </Button>
+          )}
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="whitespace-pre-wrap text-sm text-foreground">{meeting.description}</p>
@@ -234,6 +243,16 @@ export default function MeetingMinuteDetail() {
         externalParticipants={externalParticipants}
         onCreated={fetchAll}
       />
+
+      {meeting && (
+        <EditMeetingDialog
+          open={editDialogOpen}
+          onOpenChange={setEditDialogOpen}
+          onUpdated={fetchAll}
+          meeting={meeting}
+          currentParticipantIds={participants.map(p => p.user_id)}
+        />
+      )}
     </div>
   );
 }
