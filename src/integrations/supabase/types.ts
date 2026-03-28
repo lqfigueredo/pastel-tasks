@@ -14,6 +14,88 @@ export type Database = {
   }
   public: {
     Tables: {
+      calendar_event_participants: {
+        Row: {
+          added_at: string
+          event_id: string
+          external_name: string | null
+          id: string
+          user_id: string | null
+        }
+        Insert: {
+          added_at?: string
+          event_id: string
+          external_name?: string | null
+          id?: string
+          user_id?: string | null
+        }
+        Update: {
+          added_at?: string
+          event_id?: string
+          external_name?: string | null
+          id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "calendar_event_participants_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "calendar_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      calendar_events: {
+        Row: {
+          created_at: string
+          created_by: string
+          description: string | null
+          end_time: string | null
+          event_date: string
+          id: string
+          location: string | null
+          meeting_id: string | null
+          start_time: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          description?: string | null
+          end_time?: string | null
+          event_date: string
+          id?: string
+          location?: string | null
+          meeting_id?: string | null
+          start_time?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          end_time?: string | null
+          event_date?: string
+          id?: string
+          location?: string | null
+          meeting_id?: string | null
+          start_time?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "calendar_events_meeting_id_fkey"
+            columns: ["meeting_id"]
+            isOneToOne: false
+            referencedRelation: "meeting_minutes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       delivery_date_logs: {
         Row: {
           changed_by: string
