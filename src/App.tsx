@@ -20,6 +20,7 @@ import Landing from "@/pages/Landing";
 import Financial from "@/pages/Financial";
 import FinancialRegister from "@/pages/FinancialRegister";
 import WorkInstructions from "@/pages/WorkInstructions";
+import PersonalCalendar from "@/pages/PersonalCalendar";
 
 const queryClient = new QueryClient();
 
@@ -46,6 +47,7 @@ const App = () => (
                 <Route path="/admin" element={<Admin />} />
                 <Route path="/financeiro" element={<Financial />} />
                 <Route path="/instrucoes" element={<WorkInstructions />} />
+                <Route path="/agenda" element={<PersonalCalendar />} />
               </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>
