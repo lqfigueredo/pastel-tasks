@@ -166,6 +166,19 @@ export function TaskDetailDialog({ task, allStatuses, open, onOpenChange, onRefr
     } else {
       await saveAssignees();
 
+      // Sync meeting pendency completion status
+      if (task.meeting_pendency_id && actualEndDate && !task.actual_end_date) {
+        await supabase.from('meeting_pendencies').update({
+          is_completed: true,
+          completed_at: new Date().toISOString(),
+        }).eq('id', task.meeting_pendency_id);
+      } else if (task.meeting_pendency_id && !actualEndDate && task.actual_end_date) {
+        await supabase.from('meeting_pendencies').update({
+          is_completed: false,
+          completed_at: null,
+        }).eq('id', task.meeting_pendency_id);
+      }
+
       // Log assignee changes
       const currentIds = task.assignees.map(a => a.user_id);
       const added = assigneeIds.filter(id => !currentIds.includes(id));
