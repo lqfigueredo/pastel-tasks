@@ -538,6 +538,7 @@ export type Database = {
           end_date: string | null
           estimated_delivery_date: string | null
           id: string
+          is_critical: boolean
           is_minimized: boolean
           meeting_pendency_id: string | null
           recurring_task_id: string | null
@@ -555,6 +556,7 @@ export type Database = {
           end_date?: string | null
           estimated_delivery_date?: string | null
           id?: string
+          is_critical?: boolean
           is_minimized?: boolean
           meeting_pendency_id?: string | null
           recurring_task_id?: string | null
@@ -572,6 +574,7 @@ export type Database = {
           end_date?: string | null
           estimated_delivery_date?: string | null
           id?: string
+          is_critical?: boolean
           is_minimized?: boolean
           meeting_pendency_id?: string | null
           recurring_task_id?: string | null
