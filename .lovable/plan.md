@@ -1,47 +1,39 @@
 
 
-# Filtrar participantes de ata de reunião por admin
+# Marcar pendência de reunião como concluída ao concluir tarefa
 
 ## Problema
-No `CreateMeetingDialog`, a lista de participantes busca **todos** os perfis do sistema (linha 44: `supabase.from('profiles').select('user_id, display_name')`), mostrando usuários de outros admins.
-
-O mesmo problema existe no `AddPendencyDialog`, que recebe a lista de participantes do `MeetingMinuteDetail` — mas ali os participantes já são os da reunião específica, então o problema principal está na criação.
+Quando uma tarefa vinculada a uma pendência de reunião (`meeting_pendency_id`) recebe uma data de conclusão (`actual_end_date`), a pendência correspondente na tabela `meeting_pendencies` não é marcada como concluída automaticamente.
 
 ## Solução
 
-### Alterar `src/components/meetings/CreateMeetingDialog.tsx`
-Aplicar o mesmo padrão usado no `AssigneeSelector`: buscar `user_id`s da tabela `user_approvals` onde `created_by_admin = user.id`, e filtrar os perfis por esses IDs.
+### Alterar `src/components/kanban/TaskDetailDialog.tsx`
+Após salvar a tarefa com sucesso (linha ~166), verificar se:
+1. A tarefa tem `meeting_pendency_id`
+2. O `actual_end_date` foi preenchido (e antes estava vazio)
 
-De:
+Se ambas condições forem verdadeiras, atualizar a pendência correspondente:
+
 ```typescript
-supabase.from('profiles').select('user_id, display_name').then(({ data }) => {
-  setProfiles((data || []).filter((p) => p.user_id !== user?.id));
-});
-```
+// Após o update da tarefa ser bem-sucedido (~linha 167)
+if (task.meeting_pendency_id && actualEndDate && !task.actual_end_date) {
+  await supabase.from('meeting_pendencies').update({
+    is_completed: true,
+    completed_at: new Date().toISOString(),
+  }).eq('id', task.meeting_pendency_id);
+}
 
-Para:
-```typescript
-// 1. Buscar user_ids vinculados ao admin
-const { data: approvals } = await supabase
-  .from('user_approvals')
-  .select('user_id')
-  .eq('created_by_admin', user.id);
-
-const visibleIds = (approvals || []).map(a => a.user_id).filter(id => id !== user.id);
-
-// 2. Buscar perfis filtrados
-if (visibleIds.length > 0) {
-  const { data } = await supabase
-    .from('profiles')
-    .select('user_id, display_name')
-    .in('user_id', visibleIds);
-  setProfiles(data || []);
-} else {
-  setProfiles([]);
+// Caso contrário, se removeu a data de conclusão, desmarcar a pendência
+if (task.meeting_pendency_id && !actualEndDate && task.actual_end_date) {
+  await supabase.from('meeting_pendencies').update({
+    is_completed: false,
+    completed_at: null,
+  }).eq('id', task.meeting_pendency_id);
 }
 ```
 
 ### Resultado
-- Admin só vê seus próprios usuários cadastrados na lista de participantes ao criar uma ata
-- Nenhuma alteração em banco de dados necessária
+- Ao definir `actual_end_date` numa tarefa com pendência vinculada, a pendência é marcada como concluída
+- Ao remover a data de conclusão, a pendência volta a ficar pendente
+- Nenhuma alteração em banco de dados necessária (RLS já permite update por participantes/criador)
 
