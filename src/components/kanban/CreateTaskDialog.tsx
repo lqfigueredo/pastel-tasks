@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { Switch } from '@/components/ui/switch';
 import { AssigneeSelector } from './AssigneeSelector';
-import { X, Users, Repeat, FileText } from 'lucide-react';
+import { X, Users, Repeat, FileText, AlertTriangle } from 'lucide-react';
 
 interface Props {
   open: boolean;
@@ -39,6 +39,7 @@ export function CreateTaskDialog({ open, onOpenChange, onTaskCreated }: Props) {
   const [selectedMeetingId, setSelectedMeetingId] = useState('');
   const [pendencies, setPendencies] = useState<{ id: string; description: string }[]>([]);
   const [selectedPendencyId, setSelectedPendencyId] = useState('');
+  const [isCritical, setIsCritical] = useState(false);
 
   useEffect(() => {
     if (open) {
@@ -116,6 +117,7 @@ export function CreateTaskDialog({ open, onOpenChange, onTaskCreated }: Props) {
         created_by: user.id,
         team_id: teamId,
         meeting_pendency_id: selectedPendencyId || null,
+        is_critical: isCritical,
       }).select('id').single();
 
       if (error) {
@@ -149,6 +151,7 @@ export function CreateTaskDialog({ open, onOpenChange, onTaskCreated }: Props) {
     setSelectedMeetingId('');
     setPendencies([]);
     setSelectedPendencyId('');
+    setIsCritical(false);
   };
 
   if (!open) return null;
@@ -202,6 +205,15 @@ export function CreateTaskDialog({ open, onOpenChange, onTaskCreated }: Props) {
               </label>
             </div>
           )}
+
+          {/* Critical task toggle */}
+          <div className="flex items-center justify-between rounded-lg border border-destructive/30 p-3">
+            <div className="flex items-center gap-2">
+              <AlertTriangle className="h-4 w-4 text-destructive" />
+              <Label htmlFor="critical-toggle" className="cursor-pointer text-sm">Tarefa Crítica</Label>
+            </div>
+            <Switch id="critical-toggle" checked={isCritical} onCheckedChange={setIsCritical} />
+          </div>
 
           {/* Meeting origin toggle */}
           <div className="flex items-center justify-between rounded-lg border border-border/50 p-3">

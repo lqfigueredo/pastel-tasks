@@ -13,6 +13,7 @@ import { AssigneeSelector } from './AssigneeSelector';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { MessageSquare, Send, AlertTriangle, X, FileText } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
 import { TaskAttachments } from './TaskAttachments';
 import { TaskChangeHistory } from './TaskChangeHistory';
 
@@ -45,6 +46,7 @@ export function TaskDetailDialog({ task, allStatuses, open, onOpenChange, onRefr
   const [assigneeIds, setAssigneeIds] = useState<string[]>(task.assignees.map((a) => a.user_id));
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState('');
+  const [isCritical, setIsCritical] = useState(task.is_critical);
   const [saving, setSaving] = useState(false);
   const [pendencyText, setPendencyText] = useState<string | null>(null);
 
@@ -61,6 +63,7 @@ export function TaskDetailDialog({ task, allStatuses, open, onOpenChange, onRefr
       setEndDate(task.end_date || '');
       setEstimatedDate(task.estimated_delivery_date || '');
       setActualEndDate(task.actual_end_date || '');
+      setIsCritical(task.is_critical);
       setAssigneeIds(task.assignees.map((a) => a.user_id));
       fetchComments();
       // Fetch linked pendency text
@@ -150,6 +153,7 @@ export function TaskDetailDialog({ task, allStatuses, open, onOpenChange, onRefr
     if ((startDate || '') !== (task.start_date || '')) changes.push({ field_name: 'start_date', old_value: task.start_date || null, new_value: startDate || null });
     if ((estimatedDate || '') !== (task.estimated_delivery_date || '')) changes.push({ field_name: 'estimated_delivery_date', old_value: task.estimated_delivery_date || null, new_value: estimatedDate || null });
     if ((actualEndDate || '') !== (task.actual_end_date || '')) changes.push({ field_name: 'actual_end_date', old_value: task.actual_end_date || null, new_value: actualEndDate || null });
+    if (isCritical !== task.is_critical) changes.push({ field_name: 'is_critical', old_value: String(task.is_critical), new_value: String(isCritical) });
 
     const { error } = await supabase.from('tasks').update({
       title,
@@ -159,6 +163,7 @@ export function TaskDetailDialog({ task, allStatuses, open, onOpenChange, onRefr
       end_date: endDate || null,
       estimated_delivery_date: estimatedDate || null,
       actual_end_date: actualEndDate || null,
+      is_critical: isCritical,
     }).eq('id', task.id);
 
     if (error) {
@@ -264,6 +269,15 @@ export function TaskDetailDialog({ task, allStatuses, open, onOpenChange, onRefr
                 </div>
               </div>
             )}
+
+            {/* Critical task toggle */}
+            <div className="flex items-center justify-between rounded-lg border border-destructive/30 p-3">
+              <div className="flex items-center gap-2">
+                <AlertTriangle className="h-4 w-4 text-destructive" />
+                <Label htmlFor="critical-detail-toggle" className="cursor-pointer text-sm font-medium">Tarefa Crítica</Label>
+              </div>
+              <Switch id="critical-detail-toggle" checked={isCritical} onCheckedChange={setIsCritical} />
+            </div>
 
             <div className="grid grid-cols-3 gap-3">
               <div className="space-y-2">
