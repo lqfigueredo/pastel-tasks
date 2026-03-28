@@ -893,6 +893,14 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_calendar_event_owner: {
+        Args: { _event_id: string; _user_id: string }
+        Returns: boolean
+      }
+      is_calendar_event_participant: {
+        Args: { _event_id: string; _user_id: string }
+        Returns: boolean
+      }
       is_meeting_participant: {
         Args: { _meeting_id: string; _user_id: string }
         Returns: boolean
