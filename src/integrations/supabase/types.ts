@@ -131,6 +131,33 @@ export type Database = {
           },
         ]
       }
+      help_texts: {
+        Row: {
+          id: string
+          page_key: string
+          sections: Json
+          title: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          id?: string
+          page_key: string
+          sections?: Json
+          title: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          id?: string
+          page_key?: string
+          sections?: Json
+          title?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       leads: {
         Row: {
           created_at: string
