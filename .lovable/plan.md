@@ -1,61 +1,30 @@
 
 
-# Gerenciamento de Textos de Ajuda pelo Financeiro
+# Melhorias na movimentação de tarefas no Kanban
 
-## Visão Geral
-Adicionar uma nova aba "Textos de Ajuda" na tela do Financeiro, onde o `solution_admin` pode editar os textos de ajuda exibidos pelo botão `?` em cada página do sistema. Os textos são armazenados no banco e carregados dinamicamente pelo componente `HelpButton`.
+## Situação atual
+O drag-and-drop já está implementado via HTML5 nativo (`draggable`, `onDragStart`, `onDragOver`, `onDrop`). Funciona em desktop com mouse.
 
-## Banco de Dados
+## Problema
+- Em dispositivos touch (mobile/tablet), o drag-and-drop HTML5 nativo não funciona
+- Não há indicação visual clara de que os cards são arrastáveis
+- Não existe alternativa de botões para mover tarefas
 
-### Nova tabela `help_texts`
-```sql
-CREATE TABLE public.help_texts (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  page_key text NOT NULL UNIQUE,  -- ex: 'tasks', 'dashboard', 'meetings', etc.
-  title text NOT NULL,
-  sections jsonb NOT NULL DEFAULT '[]',  -- [{label, text}]
-  updated_at timestamptz NOT NULL DEFAULT now(),
-  updated_by uuid
-);
+## Proposta de melhorias
 
-ALTER TABLE public.help_texts ENABLE ROW LEVEL SECURITY;
+### 1. Adicionar botões de seta para mover tarefas entre colunas
+- No `KanbanCard`, adicionar botões `←` e `→` (setas) que aparecem no hover ou sempre visíveis em mobile
+- Ao clicar, move a tarefa para o status anterior/próximo (baseado na `position` do status)
+- Solução simples que funciona em qualquer dispositivo
 
--- Todos autenticados podem ler
-CREATE POLICY "Authenticated can read help_texts" ON public.help_texts
-  FOR SELECT TO authenticated USING (true);
+### 2. Melhorar feedback visual do drag-and-drop
+- Adicionar `cursor-grab` no card e `cursor-grabbing` durante o arraste
+- Destacar a coluna de destino com borda colorida durante o drag
 
--- Apenas solution_admin pode inserir/atualizar
-CREATE POLICY "Solution admins can manage help_texts" ON public.help_texts
-  FOR ALL TO authenticated
-  USING (public.has_role(auth.uid(), 'solution_admin'))
-  WITH CHECK (public.has_role(auth.uid(), 'solution_admin'));
-```
+### Arquivos editados
+- `src/components/kanban/KanbanCard.tsx` — adicionar botões de seta e melhorar cursor
+- `src/components/kanban/KanbanColumn.tsx` — melhorar feedback visual da coluna destino
 
-Pré-popular com valores padrão para cada página (tasks, dashboard, meetings, work-instructions, calendar, settings, admin, financial, team).
-
-## Frontend
-
-### 1. Novo componente `src/components/financial/HelpTextsManager.tsx`
-- Lista todas as páginas com seus textos de ajuda
-- Para cada página: título editável + seções (label + texto) editáveis
-- Botões para adicionar/remover seções e salvar alterações
-- Interface tipo accordion — cada página expande para editar
-
-### 2. Nova aba na página `Financial.tsx`
-- Adicionar `<TabsTrigger value="help-texts">Textos de Ajuda</TabsTrigger>`
-- `<TabsContent>` renderiza `<HelpTextsManager />`
-
-### 3. Componente `src/components/HelpButton.tsx`
-- Recebe `pageKey: string` como prop
-- Busca título e seções da tabela `help_texts` pelo `page_key`
-- Exibe Dialog com o conteúdo carregado do banco
-- Fallback para texto padrão hardcoded caso não exista registro no banco
-
-### 4. Integrar `HelpButton` em cada página
-- Adicionar ao lado do título em: Index, Dashboard, MeetingMinutes, WorkInstructions, PersonalCalendar, Settings, Admin, Financial, TeamList
-
-## Fluxo
-1. Solution_admin acessa Financeiro → aba "Textos de Ajuda"
-2. Edita título e seções de qualquer página
-3. Usuários veem o conteúdo atualizado ao clicar no botão `?`
+## Resultado
+Usuários poderão mover tarefas tanto arrastando (desktop) quanto clicando nos botões de seta (qualquer dispositivo).
 
