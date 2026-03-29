@@ -15,18 +15,20 @@ interface KanbanColumnProps {
 export function KanbanColumn({ status, tasks, allStatuses, onMoveTask, onRefresh }: KanbanColumnProps) {
   const [collapsed, setCollapsed] = useState(false);
 
+  const [dragOver, setDragOver] = useState(false);
+
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
-    e.currentTarget.classList.add('bg-primary/5');
+    setDragOver(true);
   };
 
   const handleDragLeave = (e: React.DragEvent) => {
-    e.currentTarget.classList.remove('bg-primary/5');
+    setDragOver(false);
   };
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
-    e.currentTarget.classList.remove('bg-primary/5');
+    setDragOver(false);
     const taskId = e.dataTransfer.getData('taskId');
     if (taskId) onMoveTask(taskId, status.id);
   };
@@ -57,7 +59,10 @@ export function KanbanColumn({ status, tasks, allStatuses, onMoveTask, onRefresh
 
   return (
     <div
-      className="min-w-[280px] flex-1 rounded-xl border border-border/50 bg-muted/30 p-3 transition-colors"
+      className={cn(
+        "min-w-[280px] flex-1 rounded-xl border bg-muted/30 p-3 transition-all",
+        dragOver ? "border-primary border-2 bg-primary/5" : "border-border/50"
+      )}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
@@ -81,7 +86,7 @@ export function KanbanColumn({ status, tasks, allStatuses, onMoveTask, onRefresh
       </div>
       <div className="space-y-2">
         {tasks.map((task) => (
-          <KanbanCard key={task.id} task={task} allStatuses={allStatuses} onRefresh={onRefresh} />
+          <KanbanCard key={task.id} task={task} allStatuses={allStatuses} onRefresh={onRefresh} onMoveTask={onMoveTask} />
         ))}
         {tasks.length === 0 && (
           <p className="py-8 text-center text-xs text-muted-foreground">Nenhuma tarefa</p>
