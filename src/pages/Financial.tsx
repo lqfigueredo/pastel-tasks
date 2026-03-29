@@ -12,6 +12,7 @@ import { Check, X, Ban, CalendarIcon, RotateCcw, MailCheck, Pencil } from 'lucid
 import EditUserProfileDialog from '@/components/financial/EditUserProfileDialog';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import SupportTicketList from '@/components/support/SupportTicketList';
 import {
   Table,
   TableBody,
@@ -186,6 +187,7 @@ const Financial = () => {
             )}
           </TabsTrigger>
           <TabsTrigger value="leads">Leads</TabsTrigger>
+          <TabsTrigger value="support">Chamados</TabsTrigger>
         </TabsList>
 
         <TabsContent value="approvals">
@@ -371,6 +373,10 @@ const Financial = () => {
               </Table>
             </div>
           )}
+        </TabsContent>
+
+        <TabsContent value="support">
+          <SupportTicketList role="solution_admin" />
         </TabsContent>
       </Tabs>
 
