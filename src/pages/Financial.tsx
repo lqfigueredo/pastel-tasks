@@ -12,6 +12,7 @@ import { Check, X, Ban, CalendarIcon, RotateCcw, MailCheck, Pencil } from 'lucid
 import EditUserProfileDialog from '@/components/financial/EditUserProfileDialog';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import SupportTicketList from '@/components/support/SupportTicketList';
 import {
   Table,
   TableBody,
