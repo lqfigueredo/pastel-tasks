@@ -11,6 +11,7 @@ import {
 import { ptBR } from 'date-fns/locale';
 import { CreateEventDialog } from '@/components/calendar/CreateEventDialog';
 import { EventDetailDialog } from '@/components/calendar/EventDetailDialog';
+import { HelpButton } from '@/components/HelpButton';
 
 const WEEKDAYS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 
@@ -85,7 +86,10 @@ export default function PersonalCalendar() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Agenda</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-bold text-foreground">Agenda</h1>
+            <HelpButton pageKey="calendar" />
+          </div>
           <p className="text-sm text-muted-foreground">Seus compromissos e reuniões</p>
         </div>
         <Button onClick={() => { setSelectedDate(undefined); setCreateDialogOpen(true); }}>

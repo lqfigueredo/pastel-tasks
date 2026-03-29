@@ -12,6 +12,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { CreateMeetingDialog } from '@/components/meetings/CreateMeetingDialog';
+import { HelpButton } from '@/components/HelpButton';
 
 interface MeetingRow {
   id: string;
@@ -87,7 +88,10 @@ export default function MeetingMinutes() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Atas de Reunião</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-bold text-foreground">Atas de Reunião</h1>
+            <HelpButton pageKey="meetings" />
+          </div>
           <p className="text-sm text-muted-foreground">Gerencie suas atas e pendências</p>
         </div>
         <Button onClick={() => setDialogOpen(true)}>

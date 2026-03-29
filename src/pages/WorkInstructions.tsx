@@ -13,6 +13,7 @@ import { EditInstructionDialog } from '@/components/work-instructions/EditInstru
 import { UpdateDocumentDialog } from '@/components/work-instructions/UpdateDocumentDialog';
 import { VersionHistory } from '@/components/work-instructions/VersionHistory';
 import { InstructionLogs } from '@/components/work-instructions/InstructionLogs';
+import { HelpButton } from '@/components/HelpButton';
 
 interface WorkInstruction {
   id: string;
@@ -129,7 +130,10 @@ export default function WorkInstructions() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Instruções de Trabalho</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-bold text-foreground">Instruções de Trabalho</h1>
+            <HelpButton pageKey="work-instructions" />
+          </div>
           <p className="text-muted-foreground">Gerencie documentos e procedimentos da equipe</p>
         </div>
         <Button onClick={() => setCreateOpen(true)}>

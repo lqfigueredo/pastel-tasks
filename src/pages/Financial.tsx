@@ -13,6 +13,8 @@ import EditUserProfileDialog from '@/components/financial/EditUserProfileDialog'
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import SupportTicketList from '@/components/support/SupportTicketList';
+import HelpTextsManager from '@/components/financial/HelpTextsManager';
+import { HelpButton } from '@/components/HelpButton';
 import {
   Table,
   TableBody,
@@ -172,7 +174,10 @@ const Financial = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Financeiro</h1>
+        <div className="flex items-center gap-2">
+          <h1 className="text-2xl font-bold">Financeiro</h1>
+          <HelpButton pageKey="financial" />
+        </div>
         <p className="text-muted-foreground">Gerencie leads e aprovações de usuários.</p>
       </div>
 
@@ -188,6 +193,7 @@ const Financial = () => {
           </TabsTrigger>
           <TabsTrigger value="leads">Leads</TabsTrigger>
           <TabsTrigger value="support">Chamados</TabsTrigger>
+          <TabsTrigger value="help-texts">Textos de Ajuda</TabsTrigger>
         </TabsList>
 
         <TabsContent value="approvals">
@@ -377,6 +383,10 @@ const Financial = () => {
 
         <TabsContent value="support">
           <SupportTicketList role="solution_admin" />
+        </TabsContent>
+
+        <TabsContent value="help-texts">
+          <HelpTextsManager />
         </TabsContent>
       </Tabs>
 

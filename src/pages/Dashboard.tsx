@@ -7,6 +7,7 @@ import { TaskTooltip } from '@/components/dashboard/TaskTooltip';
 import { TaskDetailDialog } from '@/components/kanban/TaskDetailDialog';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight, CheckCircle2, UserCircle } from 'lucide-react';
+import { HelpButton } from '@/components/HelpButton';
 import {
   startOfMonth,
   endOfMonth,
@@ -234,7 +235,10 @@ export default function Dashboard() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
+            <HelpButton pageKey="dashboard" />
+          </div>
           <p className="text-sm text-muted-foreground">Calendário mensal de atividades</p>
         </div>
         <div className="flex gap-1 rounded-lg border border-border bg-muted/50 p-1">
