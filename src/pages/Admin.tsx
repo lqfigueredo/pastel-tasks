@@ -10,6 +10,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { ShieldX, UserPlus, Loader2, ShieldCheck, ShieldOff, UserX, UserCheck } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import SupportTicketList from '@/components/support/SupportTicketList';
 import {
   Tooltip,
   TooltipContent,
@@ -223,6 +225,14 @@ export default function Admin() {
         <p className="text-sm text-muted-foreground">Cadastre novos usuários e gerencie o sistema.</p>
       </div>
 
+      <Tabs defaultValue="users">
+        <TabsList>
+          <TabsTrigger value="users">Usuários</TabsTrigger>
+          <TabsTrigger value="support">Suporte</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="users" className="space-y-8">
+
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -384,6 +394,13 @@ export default function Admin() {
           </Table>
         </CardContent>
       </Card>
+
+        </TabsContent>
+
+        <TabsContent value="support">
+          <SupportTicketList role="admin" />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

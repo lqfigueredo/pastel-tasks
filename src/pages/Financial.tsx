@@ -186,6 +186,7 @@ const Financial = () => {
             )}
           </TabsTrigger>
           <TabsTrigger value="leads">Leads</TabsTrigger>
+          <TabsTrigger value="support">Chamados</TabsTrigger>
         </TabsList>
 
         <TabsContent value="approvals">
@@ -371,6 +372,10 @@ const Financial = () => {
               </Table>
             </div>
           )}
+        </TabsContent>
+
+        <TabsContent value="support">
+          <SupportTicketList role="solution_admin" />
         </TabsContent>
       </Tabs>
 
