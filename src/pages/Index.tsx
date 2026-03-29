@@ -6,6 +6,7 @@ import { KanbanBoard, KanbanBoardRef } from '@/components/kanban/KanbanBoard';
 import { CreateTaskDialog } from '@/components/kanban/CreateTaskDialog';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { HelpButton } from '@/components/HelpButton';
 
 const Index = () => {
   const [createOpen, setCreateOpen] = useState(false);
@@ -36,7 +37,10 @@ const Index = () => {
     <div className="animate-fade-in">
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h1 className="font-display text-2xl font-bold text-foreground">Minhas Tarefas</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="font-display text-2xl font-bold text-foreground">Minhas Tarefas</h1>
+            <HelpButton pageKey="tasks" />
+          </div>
           <p className="text-sm text-muted-foreground">Gerencie suas atividades no quadro Kanban</p>
         </div>
         <Button onClick={() => setCreateOpen(true)} className="gap-2">

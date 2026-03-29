@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Users, Plus, Loader2, Crown, ChevronRight } from 'lucide-react';
+import { HelpButton } from '@/components/HelpButton';
 import {
   Dialog,
   DialogContent,
@@ -125,7 +126,10 @@ const TeamList = () => {
     <div className="animate-fade-in">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="font-display text-2xl font-bold text-foreground mb-1">Equipes</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="font-display text-2xl font-bold text-foreground mb-1">Equipes</h1>
+            <HelpButton pageKey="team" />
+          </div>
           <p className="text-sm text-muted-foreground">Gerencie seus times e colabore com outros membros</p>
         </div>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>

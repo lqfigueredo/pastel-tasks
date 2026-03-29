@@ -12,6 +12,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { HelpButton } from '@/components/HelpButton';
 
 interface Status {
   id: string;
@@ -242,7 +243,10 @@ const Settings = () => {
   return (
     <div className="animate-fade-in max-w-2xl space-y-8">
       <div>
-        <h1 className="font-display text-2xl font-bold text-foreground mb-2">Configurações</h1>
+        <div className="flex items-center gap-2">
+          <h1 className="font-display text-2xl font-bold text-foreground mb-2">Configurações</h1>
+          <HelpButton pageKey="settings" />
+        </div>
         <p className="text-sm text-muted-foreground mb-6">Gerencie seu perfil e preferências</p>
       </div>
 

@@ -12,6 +12,7 @@ import { toast } from 'sonner';
 import { ShieldX, UserPlus, Loader2, ShieldCheck, ShieldOff, UserX, UserCheck } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import SupportTicketList from '@/components/support/SupportTicketList';
+import { HelpButton } from '@/components/HelpButton';
 import {
   Tooltip,
   TooltipContent,
@@ -221,7 +222,10 @@ export default function Admin() {
   return (
     <div className="mx-auto max-w-5xl space-y-8 p-6">
       <div>
-        <h1 className="font-display text-2xl font-bold text-foreground">Administração</h1>
+        <div className="flex items-center gap-2">
+          <h1 className="font-display text-2xl font-bold text-foreground">Administração</h1>
+          <HelpButton pageKey="admin" />
+        </div>
         <p className="text-sm text-muted-foreground">Cadastre novos usuários e gerencie o sistema.</p>
       </div>
 
