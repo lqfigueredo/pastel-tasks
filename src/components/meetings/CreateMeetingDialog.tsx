@@ -234,9 +234,38 @@ export function CreateMeetingDialog({ open, onOpenChange, onCreated }: Props) {
               </div>
             )}
           </div>
-        </div>
 
-        <DialogFooter>
+          <div className="space-y-2">
+            <Label>Anexos</Label>
+            <input
+              ref={fileRef}
+              type="file"
+              multiple
+              className="hidden"
+              onChange={(e) => {
+                if (e.target.files) {
+                  setSelectedFiles(prev => [...prev, ...Array.from(e.target.files!)]);
+                }
+              }}
+            />
+            <Button type="button" variant="outline" size="sm" className="gap-1 text-xs w-full" onClick={() => fileRef.current?.click()}>
+              <Upload className="h-3 w-3" /> Selecionar arquivos
+            </Button>
+            {selectedFiles.length > 0 && (
+              <div className="space-y-1">
+                {selectedFiles.map((f, i) => (
+                  <div key={i} className="flex items-center gap-2 text-xs bg-muted/50 rounded p-1.5">
+                    <FileText className="h-3 w-3 text-primary shrink-0" />
+                    <span className="truncate flex-1">{f.name}</span>
+                    <button type="button" onClick={() => setSelectedFiles(prev => prev.filter((_, idx) => idx !== i))} className="hover:text-destructive">
+                      <X className="h-3 w-3" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancelar
           </Button>
