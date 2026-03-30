@@ -1,47 +1,49 @@
 
+# Anexos nas Atas de Reunião
 
-# Ordem personalizada das colunas do Kanban por usuário
+## Visão Geral
+Adicionar suporte a upload e visualização de anexos nas atas de reunião, tanto na criação quanto na tela de detalhes. Seguir o mesmo padrão já usado em `TeamAttachments` e `TaskAttachments`.
 
-## Problema
-A tabela `task_statuses` tem um campo `position` global. Se um usuário reordenar, afeta todos. Queremos que cada usuário tenha sua própria ordem.
+## Banco de Dados
 
-## Solução
-
-### Banco de Dados — Nova tabela `user_column_order`
+### Storage bucket `meeting-attachments`
 ```sql
-CREATE TABLE public.user_column_order (
+INSERT INTO storage.buckets (id, name, public) VALUES ('meeting-attachments', 'meeting-attachments', false);
+```
+RLS no `storage.objects` para que participantes e criador possam fazer upload/download, e criador possa deletar.
+
+### Nova tabela `meeting_attachments`
+```sql
+CREATE TABLE public.meeting_attachments (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id uuid NOT NULL,
-  status_ids_order uuid[] NOT NULL DEFAULT '{}',
-  updated_at timestamptz NOT NULL DEFAULT now(),
-  UNIQUE(user_id)
+  meeting_id uuid NOT NULL,
+  uploaded_by uuid NOT NULL,
+  file_name text NOT NULL,
+  file_path text NOT NULL,
+  file_type text NOT NULL,
+  created_at timestamptz NOT NULL DEFAULT now()
 );
 ```
-- `status_ids_order`: array ordenado de IDs dos status, representando a ordem preferida do usuário
-- RLS: cada usuário lê/escreve apenas seu próprio registro
+- RLS: participantes/criador podem ver e inserir; criador e quem fez upload podem deletar
 
-### Frontend
+## Frontend
 
-#### `KanbanBoard.tsx`
-- Após carregar `statuses`, buscar `user_column_order` do usuário
-- Se existir, reordenar `statuses` conforme o array `status_ids_order`
-- Se não existir, usar a ordem padrão (`position`)
-- Expor funções `onColumnReorder(fromIdx, toIdx)` que salvam a nova ordem no banco (upsert)
+### 1. Novo componente `src/components/meetings/MeetingAttachments.tsx`
+- Baseado no padrão de `TeamAttachments`
+- Recebe `meetingId` e `canUpload` (boolean)
+- Lista anexos, permite upload e download
+- Criador ou quem fez upload pode excluir
 
-#### `KanbanColumn.tsx`
-- Adicionar ícone `GripVertical` no header como handle de arraste
-- Header com `draggable` no handle
-- Distinguir drag de coluna vs drag de card via `dataTransfer`
-- Feedback visual na coluna durante drag-over
+### 2. Integrar na criação (`CreateMeetingDialog.tsx`)
+- Após criar a ata com sucesso, permitir upload dos arquivos selecionados
+- Adicionar campo de seleção de arquivos no formulário
 
-### Fluxo
-1. Usuário arrasta o header de uma coluna para reposicionar
-2. Nova ordem é salva em `user_column_order` (upsert)
-3. Outros usuários não são afetados — cada um mantém sua ordem
-4. Status novos (que não estão no array) aparecem no final
+### 3. Integrar na visualização (`MeetingMinuteDetail.tsx`)
+- Adicionar um novo Card "Anexos" abaixo das pendências
+- Renderizar `<MeetingAttachments meetingId={meetingId} canUpload={isCreatorOrParticipant} />`
 
-### Arquivos editados
-- Nova migration (tabela + RLS)
-- `src/components/kanban/KanbanBoard.tsx` — buscar/salvar ordem personalizada
-- `src/components/kanban/KanbanColumn.tsx` — drag handle no header da coluna
-
+## Arquivos editados
+- Nova migration (tabela + bucket + RLS)
+- `src/components/meetings/MeetingAttachments.tsx` (novo)
+- `src/components/meetings/CreateMeetingDialog.tsx` (campo de anexos)
+- `src/pages/MeetingMinuteDetail.tsx` (seção de anexos)
