@@ -119,6 +119,22 @@ export function CreateMeetingDialog({ open, onOpenChange, onCreated }: Props) {
     }
     await supabase.from('meeting_participants').insert({ meeting_id: meeting.id, user_id: user.id });
 
+    // Upload attachments
+    for (const file of selectedFiles) {
+      const ext = file.name.split('.').pop();
+      const path = `${user.id}/${meeting.id}/${crypto.randomUUID()}.${ext}`;
+      const { error: uploadError } = await supabase.storage.from('meeting-attachments').upload(path, file);
+      if (!uploadError) {
+        await supabase.from('meeting_attachments').insert({
+          meeting_id: meeting.id,
+          file_name: file.name,
+          file_path: path,
+          file_type: file.type,
+          uploaded_by: user.id,
+        });
+      }
+    }
+
     toast.success('Ata criada com sucesso');
     reset();
     onOpenChange(false);
