@@ -38,7 +38,9 @@ export function CreateMeetingDialog({ open, onOpenChange, onCreated }: Props) {
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
   const [externalParticipants, setExternalParticipants] = useState<string[]>([]);
   const [externalName, setExternalName] = useState('');
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [saving, setSaving] = useState(false);
+  const fileRef = React.useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!open || !user) return;
