@@ -1,49 +1,55 @@
 
-# Anexos nas Atas de Reunião
 
-## Visão Geral
-Adicionar suporte a upload e visualização de anexos nas atas de reunião, tanto na criação quanto na tela de detalhes. Seguir o mesmo padrão já usado em `TeamAttachments` e `TaskAttachments`.
+# Por que francisco@institutototum.com.br nao ve as tarefas do admin
 
-## Banco de Dados
+## Causa raiz
 
-### Storage bucket `meeting-attachments`
-```sql
-INSERT INTO storage.buckets (id, name, public) VALUES ('meeting-attachments', 'meeting-attachments', false);
+A query do `KanbanBoard.tsx` (linha 52) filtra tarefas apenas por `created_by = user.id`:
+
+```typescript
+supabase.from('tasks').select('*').eq('created_by', user.id)
 ```
-RLS no `storage.objects` para que participantes e criador possam fazer upload/download, e criador possa deletar.
 
-### Nova tabela `meeting_attachments`
+Isso significa que cada usuario so ve tarefas que **ele proprio criou**. Se o admin criou uma tarefa e atribuiu francisco como responsavel, francisco nao a vera porque nao e o `created_by`.
+
+## Solucao
+
+### 1. Alterar a query de tarefas no `KanbanBoard.tsx`
+
+Buscar tarefas onde o usuario e criador **OU** e assignee:
+
+- Primeiro, buscar os `task_id`s da tabela `task_assignees` onde `user_id = user.id`
+- Depois, buscar tasks com filtro `or(created_by.eq.{userId}, id.in.({assignedTaskIds}))`
+- Alternativa mais simples: usar duas queries paralelas e fazer merge/dedupe no frontend
+
+### 2. Verificar RLS na tabela `tasks`
+
+A RLS ja tem uma policy "Users can view own tasks" (`created_by = auth.uid()`) mas **nao tem** uma policy para assignees verem tarefas atribuidas a eles. Precisamos adicionar:
+
 ```sql
-CREATE TABLE public.meeting_attachments (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  meeting_id uuid NOT NULL,
-  uploaded_by uuid NOT NULL,
-  file_name text NOT NULL,
-  file_path text NOT NULL,
-  file_type text NOT NULL,
-  created_at timestamptz NOT NULL DEFAULT now()
+CREATE POLICY "Assignees can view assigned tasks"
+ON public.tasks FOR SELECT
+TO authenticated
+USING (
+  EXISTS (
+    SELECT 1 FROM public.task_assignees
+    WHERE task_assignees.task_id = tasks.id
+    AND task_assignees.user_id = auth.uid()
+  )
 );
 ```
-- RLS: participantes/criador podem ver e inserir; criador e quem fez upload podem deletar
 
-## Frontend
+### 3. Atualizar a query no frontend
 
-### 1. Novo componente `src/components/meetings/MeetingAttachments.tsx`
-- Baseado no padrão de `TeamAttachments`
-- Recebe `meetingId` e `canUpload` (boolean)
-- Lista anexos, permite upload e download
-- Criador ou quem fez upload pode excluir
+Remover o filtro `.eq('created_by', user.id)` e confiar nas policies RLS para filtrar os resultados corretos. A query ficaria:
 
-### 2. Integrar na criação (`CreateMeetingDialog.tsx`)
-- Após criar a ata com sucesso, permitir upload dos arquivos selecionados
-- Adicionar campo de seleção de arquivos no formulário
+```typescript
+supabase.from('tasks').select('*').order('created_at', { ascending: false })
+```
 
-### 3. Integrar na visualização (`MeetingMinuteDetail.tsx`)
-- Adicionar um novo Card "Anexos" abaixo das pendências
-- Renderizar `<MeetingAttachments meetingId={meetingId} canUpload={isCreatorOrParticipant} />`
+A RLS ja garante que o usuario so vera: tasks proprias, tasks do time, e (com a nova policy) tasks onde e assignee.
 
-## Arquivos editados
-- Nova migration (tabela + bucket + RLS)
-- `src/components/meetings/MeetingAttachments.tsx` (novo)
-- `src/components/meetings/CreateMeetingDialog.tsx` (campo de anexos)
-- `src/pages/MeetingMinuteDetail.tsx` (seção de anexos)
+### Arquivos editados
+- Nova migration SQL (policy RLS para assignees)
+- `src/components/kanban/KanbanBoard.tsx` (remover filtro `created_by`)
+
