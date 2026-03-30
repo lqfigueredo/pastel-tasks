@@ -834,6 +834,27 @@ export type Database = {
         }
         Relationships: []
       }
+      user_column_order: {
+        Row: {
+          id: string
+          status_ids_order: string[]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          status_ids_order?: string[]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          status_ids_order?: string[]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           id: string
