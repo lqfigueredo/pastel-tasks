@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ChevronDown, ChevronRight } from 'lucide-react';
+import { ChevronDown, ChevronRight, GripVertical } from 'lucide-react';
 import { Task, TaskStatus } from './KanbanBoard';
 import { KanbanCard } from './KanbanCard';
 import { cn } from '@/lib/utils';
@@ -10,19 +10,31 @@ interface KanbanColumnProps {
   allStatuses: TaskStatus[];
   onMoveTask: (taskId: string, newStatusId: string) => void;
   onRefresh: () => void;
+  columnIndex: number;
+  dragColIdx: number | null;
+  dragOverColIdx: number | null;
+  onColumnDragStart: (idx: number) => void;
+  onColumnDragEnter: (idx: number) => void;
+  onColumnDragEnd: (fromIdx: number) => void;
 }
 
-export function KanbanColumn({ status, tasks, allStatuses, onMoveTask, onRefresh }: KanbanColumnProps) {
+export function KanbanColumn({
+  status, tasks, allStatuses, onMoveTask, onRefresh,
+  columnIndex, dragColIdx, dragOverColIdx,
+  onColumnDragStart, onColumnDragEnter, onColumnDragEnd,
+}: KanbanColumnProps) {
   const [collapsed, setCollapsed] = useState(false);
-
   const [dragOver, setDragOver] = useState(false);
+
+  const isColumnDragging = dragColIdx === columnIndex;
+  const isColumnDragOver = dragOverColIdx === columnIndex && dragColIdx !== null && dragColIdx !== columnIndex;
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
     setDragOver(true);
   };
 
-  const handleDragLeave = (e: React.DragEvent) => {
+  const handleDragLeave = () => {
     setDragOver(false);
   };
 
@@ -33,6 +45,23 @@ export function KanbanColumn({ status, tasks, allStatuses, onMoveTask, onRefresh
     if (taskId) onMoveTask(taskId, status.id);
   };
 
+  const handleColumnHeaderDragStart = (e: React.DragEvent) => {
+    e.dataTransfer.setData('columnIdx', String(columnIndex));
+    e.dataTransfer.effectAllowed = 'move';
+    onColumnDragStart(columnIndex);
+  };
+
+  const handleColumnHeaderDragEnd = () => {
+    onColumnDragEnd(columnIndex);
+  };
+
+  const handleColumnDragEnter = (e: React.DragEvent) => {
+    e.preventDefault();
+    if (dragColIdx !== null) {
+      onColumnDragEnter(columnIndex);
+    }
+  };
+
   if (collapsed) {
     return (
       <div
@@ -41,6 +70,7 @@ export function KanbanColumn({ status, tasks, allStatuses, onMoveTask, onRefresh
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
+        onDragEnter={handleColumnDragEnter}
       >
         <ChevronRight className="h-4 w-4 text-muted-foreground mb-2" />
         <div
@@ -61,13 +91,25 @@ export function KanbanColumn({ status, tasks, allStatuses, onMoveTask, onRefresh
     <div
       className={cn(
         "min-w-[280px] flex-1 rounded-xl border bg-muted/30 p-3 transition-all",
-        dragOver ? "border-primary border-2 bg-primary/5" : "border-border/50"
+        dragOver && dragColIdx === null ? "border-primary border-2 bg-primary/5" : "border-border/50",
+        isColumnDragOver && "border-primary border-2 border-dashed bg-primary/5",
+        isColumnDragging && "opacity-50"
       )}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
+      onDragEnter={handleColumnDragEnter}
     >
       <div className="mb-3 flex items-center gap-2 px-1">
+        <div
+          draggable
+          onDragStart={handleColumnHeaderDragStart}
+          onDragEnd={handleColumnHeaderDragEnd}
+          className="shrink-0 cursor-grab active:cursor-grabbing rounded p-0.5 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+          title="Arrastar para reordenar"
+        >
+          <GripVertical className="h-4 w-4" />
+        </div>
         <button
           onClick={() => setCollapsed(true)}
           className="shrink-0 rounded p-0.5 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"

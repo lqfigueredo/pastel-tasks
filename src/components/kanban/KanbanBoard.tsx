@@ -41,18 +41,19 @@ export const KanbanBoard = forwardRef<KanbanBoardRef>((_props, ref) => {
   const [statuses, setStatuses] = useState<TaskStatus[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
+  const [dragColIdx, setDragColIdx] = useState<number | null>(null);
+  const [dragOverColIdx, setDragOverColIdx] = useState<number | null>(null);
 
   const fetchData = useCallback(async () => {
     if (!user) return;
 
-    const [statusRes, taskRes, assigneeRes, profileRes] = await Promise.all([
+    const [statusRes, taskRes, assigneeRes, profileRes, columnOrderRes] = await Promise.all([
       supabase.from('task_statuses').select('*').is('deleted_at', null).order('position'),
       supabase.from('tasks').select('*').eq('created_by', user.id).order('created_at', { ascending: false }),
       supabase.from('task_assignees').select('task_id, user_id').order('assigned_at'),
       supabase.from('profiles').select('user_id, display_name, avatar_url'),
+      supabase.from('user_column_order').select('status_ids_order').eq('user_id', user.id).maybeSingle(),
     ]);
-
-    if (statusRes.data) setStatuses(statusRes.data);
 
     // Build profile lookup
     const profileMap = new Map<string, Profile>();
@@ -74,6 +75,29 @@ export const KanbanBoard = forwardRef<KanbanBoardRef>((_props, ref) => {
     }
 
     const loadedStatuses = statusRes.data || [];
+
+    // Apply user-specific column order
+    const userOrder: string[] | null = columnOrderRes.data?.status_ids_order || null;
+    let orderedStatuses: TaskStatus[];
+    if (userOrder && userOrder.length > 0) {
+      const statusMap = new Map(loadedStatuses.map(s => [s.id, s]));
+      const ordered: TaskStatus[] = [];
+      for (const id of userOrder) {
+        const s = statusMap.get(id);
+        if (s) {
+          ordered.push(s);
+          statusMap.delete(id);
+        }
+      }
+      // Append any new statuses not in the user's saved order
+      const remaining = [...statusMap.values()].sort((a, b) => a.position - b.position);
+      orderedStatuses = [...ordered, ...remaining];
+    } else {
+      orderedStatuses = loadedStatuses.sort((a, b) => a.position - b.position);
+    }
+
+    setStatuses(orderedStatuses);
+
     const statusIds = new Set(loadedStatuses.map(s => s.id));
     const fallbackStatus = loadedStatuses.find(s => (s as any).is_default && s.position === 0) || loadedStatuses.find(s => (s as any).is_default);
 
@@ -137,6 +161,20 @@ export const KanbanBoard = forwardRef<KanbanBoardRef>((_props, ref) => {
     }
   };
 
+  const handleColumnReorder = useCallback(async (fromIdx: number, toIdx: number) => {
+    if (!user || fromIdx === toIdx) return;
+    const newStatuses = [...statuses];
+    const [moved] = newStatuses.splice(fromIdx, 1);
+    newStatuses.splice(toIdx, 0, moved);
+    setStatuses(newStatuses);
+
+    const newOrder = newStatuses.map(s => s.id);
+    await supabase.from('user_column_order').upsert(
+      { user_id: user.id, status_ids_order: newOrder, updated_at: new Date().toISOString() },
+      { onConflict: 'user_id' }
+    );
+  }, [user, statuses]);
+
   if (loading) {
     return (
       <div className="flex gap-4">
@@ -149,7 +187,7 @@ export const KanbanBoard = forwardRef<KanbanBoardRef>((_props, ref) => {
 
   return (
     <div className="flex gap-4 overflow-x-auto pb-4">
-      {statuses.map((status) => (
+      {statuses.map((status, idx) => (
         <KanbanColumn
           key={status.id}
           status={status}
@@ -157,6 +195,18 @@ export const KanbanBoard = forwardRef<KanbanBoardRef>((_props, ref) => {
           allStatuses={statuses}
           onMoveTask={moveTask}
           onRefresh={fetchData}
+          columnIndex={idx}
+          dragColIdx={dragColIdx}
+          dragOverColIdx={dragOverColIdx}
+          onColumnDragStart={(i) => setDragColIdx(i)}
+          onColumnDragEnter={(i) => setDragOverColIdx(i)}
+          onColumnDragEnd={(fromIdx) => {
+            if (dragOverColIdx !== null && dragOverColIdx !== fromIdx) {
+              handleColumnReorder(fromIdx, dragOverColIdx);
+            }
+            setDragColIdx(null);
+            setDragOverColIdx(null);
+          }}
         />
       ))}
     </div>
