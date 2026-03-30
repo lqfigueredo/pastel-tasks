@@ -49,7 +49,7 @@ export const KanbanBoard = forwardRef<KanbanBoardRef>((_props, ref) => {
 
     const [statusRes, taskRes, assigneeRes, profileRes, columnOrderRes] = await Promise.all([
       supabase.from('task_statuses').select('*').is('deleted_at', null).order('position'),
-      supabase.from('tasks').select('*').eq('created_by', user.id).order('created_at', { ascending: false }),
+      supabase.from('tasks').select('*').order('created_at', { ascending: false }),
       supabase.from('task_assignees').select('task_id, user_id').order('assigned_at'),
       supabase.from('profiles').select('user_id, display_name, avatar_url'),
       supabase.from('user_column_order').select('status_ids_order').eq('user_id', user.id).maybeSingle(),
