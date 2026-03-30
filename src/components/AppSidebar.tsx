@@ -1,9 +1,7 @@
 import { LayoutDashboard, Users, Settings, LogOut, CheckSquare, ShieldCheck, CalendarDays, FileText, TrendingUp, BookOpen, Calendar } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
-import { useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { useEffect, useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { useUserRoles } from '@/hooks/useUserRoles';
 import {
   Sidebar,
   SidebarContent,
@@ -31,24 +29,8 @@ const navItems = [
 export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === 'collapsed';
-  const location = useLocation();
   const { signOut, user } = useAuth();
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [isSolutionAdmin, setIsSolutionAdmin] = useState(false);
-  const [isRegularUser, setIsRegularUser] = useState(false);
-
-  useEffect(() => {
-    if (!user) return;
-    supabase.rpc('has_role', { _user_id: user.id, _role: 'admin' }).then(({ data }) => {
-      setIsAdmin(!!data);
-    });
-    supabase.rpc('has_role', { _user_id: user.id, _role: 'solution_admin' }).then(({ data }) => {
-      setIsSolutionAdmin(!!data);
-    });
-    supabase.rpc('has_role', { _user_id: user.id, _role: 'user' }).then(({ data }) => {
-      setIsRegularUser(!!data);
-    });
-  }, [user]);
+  const { isAdmin, isSolutionAdmin, isRegularUser } = useUserRoles();
 
   const isOnlySolutionAdmin = isSolutionAdmin && !isAdmin && !isRegularUser;
 

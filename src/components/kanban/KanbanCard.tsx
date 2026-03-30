@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Calendar, Minimize2, Maximize2, Repeat, FileText, AlertTriangle, ChevronLeft, ChevronRight } from 'lucide-react';
-import { TaskChangeHistory } from './TaskChangeHistory';
+
 import { Card, CardContent } from '@/components/ui/card';
 import { Task, TaskStatus } from './KanbanBoard';
 import { TaskDetailDialog } from './TaskDetailDialog';
@@ -97,9 +97,6 @@ export function KanbanCard({ task, allStatuses, onRefresh, onMoveTask }: KanbanC
                     <span>{format(new Date(task.estimated_delivery_date), "dd MMM", { locale: ptBR })}</span>
                   </div>
                 )}
-              </div>
-              <div className="mt-2" onClick={(e) => e.stopPropagation()}>
-                <TaskChangeHistory taskId={task.id} />
               </div>
               {onMoveTask && (
                 <div className="mt-2 flex items-center justify-between opacity-0 group-hover/card:opacity-100 transition-opacity md:opacity-0 max-md:opacity-100">

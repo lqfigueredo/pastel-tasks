@@ -4,30 +4,20 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { KanbanBoard, KanbanBoardRef } from '@/components/kanban/KanbanBoard';
 import { CreateTaskDialog } from '@/components/kanban/CreateTaskDialog';
-import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
+import { useUserRoles } from '@/hooks/useUserRoles';
 import { HelpButton } from '@/components/HelpButton';
 
 const Index = () => {
   const [createOpen, setCreateOpen] = useState(false);
   const boardRef = useRef<KanbanBoardRef>(null);
-  const { user } = useAuth();
+  const { isSolutionAdmin, isAdmin, isRegularUser } = useUserRoles();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!user) return;
-    const checkRole = async () => {
-      const [{ data: isAdmin }, { data: isRegular }, { data: isSolution }] = await Promise.all([
-        supabase.rpc('has_role', { _user_id: user.id, _role: 'admin' }),
-        supabase.rpc('has_role', { _user_id: user.id, _role: 'user' }),
-        supabase.rpc('has_role', { _user_id: user.id, _role: 'solution_admin' }),
-      ]);
-      if (isSolution && !isAdmin && !isRegular) {
-        navigate('/financeiro', { replace: true });
-      }
-    };
-    checkRole();
-  }, [user, navigate]);
+    if (isSolutionAdmin && !isAdmin && !isRegularUser) {
+      navigate('/financeiro', { replace: true });
+    }
+  }, [isSolutionAdmin, isAdmin, isRegularUser, navigate]);
 
   const handleTaskCreated = () => {
     boardRef.current?.refresh();
