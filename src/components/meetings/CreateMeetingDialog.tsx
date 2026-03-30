@@ -71,6 +71,7 @@ export function CreateMeetingDialog({ open, onOpenChange, onCreated }: Props) {
     setSelectedUsers([]);
     setExternalParticipants([]);
     setExternalName('');
+    setSelectedFiles([]);
   };
 
   const addExternal = () => {
