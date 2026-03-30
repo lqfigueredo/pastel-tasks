@@ -98,9 +98,6 @@ export function KanbanCard({ task, allStatuses, onRefresh, onMoveTask }: KanbanC
                   </div>
                 )}
               </div>
-              <div className="mt-2" onClick={(e) => e.stopPropagation()}>
-                <TaskChangeHistory taskId={task.id} />
-              </div>
               {onMoveTask && (
                 <div className="mt-2 flex items-center justify-between opacity-0 group-hover/card:opacity-100 transition-opacity md:opacity-0 max-md:opacity-100">
                   <button
