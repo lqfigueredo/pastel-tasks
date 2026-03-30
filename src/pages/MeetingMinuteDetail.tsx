@@ -236,6 +236,21 @@ export default function MeetingMinuteDetail() {
         </CardContent>
       </Card>
 
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg flex items-center gap-2">
+            <Paperclip className="h-4 w-4" /> Anexos
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <MeetingAttachments
+            meetingId={meetingId!}
+            canUpload={meeting.created_by === user?.id || participants.some(p => p.user_id === user?.id)}
+            createdBy={meeting.created_by}
+          />
+        </CardContent>
+      </Card>
+
       <AddPendencyDialog
         open={pendencyDialogOpen}
         onOpenChange={setPendencyDialogOpen}
