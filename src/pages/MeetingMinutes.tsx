@@ -40,7 +40,7 @@ export default function MeetingMinutes() {
 
     const { data, error } = await supabase
       .from('meeting_minutes')
-      .select('*')
+      .select('*, meeting_participants(count), meeting_pendencies(count)')
       .order('meeting_date', { ascending: false });
 
     if (error) {
@@ -49,15 +49,11 @@ export default function MeetingMinutes() {
       return;
     }
 
-    const enriched = await Promise.all(
-      (data || []).map(async (m) => {
-        const [{ count: pCount }, { count: penCount }] = await Promise.all([
-          supabase.from('meeting_participants').select('*', { count: 'exact', head: true }).eq('meeting_id', m.id),
-          supabase.from('meeting_pendencies').select('*', { count: 'exact', head: true }).eq('meeting_id', m.id),
-        ]);
-        return { ...m, participant_count: pCount ?? 0, pendency_count: penCount ?? 0 };
-      })
-    );
+    const enriched = (data || []).map((m: any) => ({
+      ...m,
+      participant_count: m.meeting_participants?.[0]?.count ?? 0,
+      pendency_count: m.meeting_pendencies?.[0]?.count ?? 0,
+    }));
 
     setMeetings(enriched);
     setLoading(false);
