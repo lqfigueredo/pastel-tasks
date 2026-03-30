@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import {
@@ -17,6 +17,7 @@ import { cn } from '@/lib/utils';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
+import { Upload, FileText } from 'lucide-react';
 
 interface Props {
   open: boolean;
@@ -37,7 +38,9 @@ export function CreateMeetingDialog({ open, onOpenChange, onCreated }: Props) {
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
   const [externalParticipants, setExternalParticipants] = useState<string[]>([]);
   const [externalName, setExternalName] = useState('');
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [saving, setSaving] = useState(false);
+  const fileRef = React.useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!open || !user) return;
@@ -68,6 +71,7 @@ export function CreateMeetingDialog({ open, onOpenChange, onCreated }: Props) {
     setSelectedUsers([]);
     setExternalParticipants([]);
     setExternalName('');
+    setSelectedFiles([]);
   };
 
   const addExternal = () => {
@@ -114,6 +118,22 @@ export function CreateMeetingDialog({ open, onOpenChange, onCreated }: Props) {
       await supabase.from('meeting_participants').insert(rows);
     }
     await supabase.from('meeting_participants').insert({ meeting_id: meeting.id, user_id: user.id });
+
+    // Upload attachments
+    for (const file of selectedFiles) {
+      const ext = file.name.split('.').pop();
+      const path = `${user.id}/${meeting.id}/${crypto.randomUUID()}.${ext}`;
+      const { error: uploadError } = await supabase.storage.from('meeting-attachments').upload(path, file);
+      if (!uploadError) {
+        await supabase.from('meeting_attachments').insert({
+          meeting_id: meeting.id,
+          file_name: file.name,
+          file_path: path,
+          file_type: file.type,
+          uploaded_by: user.id,
+        });
+      }
+    }
 
     toast.success('Ata criada com sucesso');
     reset();
@@ -210,6 +230,37 @@ export function CreateMeetingDialog({ open, onOpenChange, onCreated }: Props) {
                       <X className="h-3 w-3" />
                     </button>
                   </Badge>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <Label>Anexos</Label>
+            <input
+              ref={fileRef}
+              type="file"
+              multiple
+              className="hidden"
+              onChange={(e) => {
+                if (e.target.files) {
+                  setSelectedFiles(prev => [...prev, ...Array.from(e.target.files!)]);
+                }
+              }}
+            />
+            <Button type="button" variant="outline" size="sm" className="gap-1 text-xs w-full" onClick={() => fileRef.current?.click()}>
+              <Upload className="h-3 w-3" /> Selecionar arquivos
+            </Button>
+            {selectedFiles.length > 0 && (
+              <div className="space-y-1">
+                {selectedFiles.map((f, i) => (
+                  <div key={i} className="flex items-center gap-2 text-xs bg-muted/50 rounded p-1.5">
+                    <FileText className="h-3 w-3 text-primary shrink-0" />
+                    <span className="truncate flex-1">{f.name}</span>
+                    <button type="button" onClick={() => setSelectedFiles(prev => prev.filter((_, idx) => idx !== i))} className="hover:text-destructive">
+                      <X className="h-3 w-3" />
+                    </button>
+                  </div>
                 ))}
               </div>
             )}

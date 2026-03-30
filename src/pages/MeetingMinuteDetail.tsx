@@ -5,11 +5,12 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, CalendarDays, Plus, CheckCircle2, Circle, UserRound, Pencil } from 'lucide-react';
+import { ArrowLeft, CalendarDays, Plus, CheckCircle2, Circle, UserRound, Pencil, Paperclip } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { AddPendencyDialog } from '@/components/meetings/AddPendencyDialog';
 import { EditMeetingDialog } from '@/components/meetings/EditMeetingDialog';
+import { MeetingAttachments } from '@/components/meetings/MeetingAttachments';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { cn } from '@/lib/utils';
@@ -232,6 +233,21 @@ export default function MeetingMinuteDetail() {
               </TableBody>
             </Table>
           )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg flex items-center gap-2">
+            <Paperclip className="h-4 w-4" /> Anexos
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <MeetingAttachments
+            meetingId={meetingId!}
+            canUpload={meeting.created_by === user?.id || participants.some(p => p.user_id === user?.id)}
+            createdBy={meeting.created_by}
+          />
         </CardContent>
       </Card>
 
