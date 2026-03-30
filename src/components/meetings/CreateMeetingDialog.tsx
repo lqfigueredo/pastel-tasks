@@ -266,6 +266,8 @@ export function CreateMeetingDialog({ open, onOpenChange, onCreated }: Props) {
             )}
           </div>
         </div>
+
+        <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancelar
           </Button>
