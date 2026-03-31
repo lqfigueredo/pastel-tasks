@@ -70,9 +70,10 @@ export default function MeetingMinutes() {
       if (search && !m.description.toLowerCase().includes(search.toLowerCase())) return false;
       if (dateFrom && m.meeting_date < format(dateFrom, 'yyyy-MM-dd')) return false;
       if (dateTo && m.meeting_date > format(dateTo, 'yyyy-MM-dd')) return false;
+      if (onlyWithPendencies && (!m.pendency_count || m.pendency_count === 0)) return false;
       return true;
     });
-  }, [meetings, search, dateFrom, dateTo]);
+  }, [meetings, search, dateFrom, dateTo, onlyWithPendencies]);
 
   const hasFilters = search || dateFrom || dateTo;
 
