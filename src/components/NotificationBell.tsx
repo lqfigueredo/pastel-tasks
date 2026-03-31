@@ -84,7 +84,7 @@ export const NotificationBell = () => {
     if (n.type === 'task_deadline' && n.reference_id) {
       navigate('/');
     } else if (n.type === 'pendency_deadline' && n.reference_id) {
-      navigate(`/meeting-minutes/${n.reference_id}`);
+      navigate(`/atas/${n.reference_id}`);
     }
   };
 
