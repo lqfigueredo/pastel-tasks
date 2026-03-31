@@ -2,6 +2,7 @@ import { Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/AppSidebar';
+import { NotificationBell } from '@/components/NotificationBell';
 
 const AppLayout = () => {
   const { user, loading } = useAuth();
@@ -24,6 +25,7 @@ const AppLayout = () => {
           <header className="h-14 flex items-center border-b border-border/50 px-4 bg-background/80 backdrop-blur-sm">
             <SidebarTrigger className="mr-4" />
             <div className="flex-1" />
+            <NotificationBell />
           </header>
           <main className="flex-1 overflow-auto p-6">
             <Outlet />
