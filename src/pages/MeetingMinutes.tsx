@@ -75,12 +75,13 @@ export default function MeetingMinutes() {
     });
   }, [meetings, search, dateFrom, dateTo, onlyWithPendencies]);
 
-  const hasFilters = search || dateFrom || dateTo;
+  const hasFilters = search || dateFrom || dateTo || onlyWithPendencies;
 
   const clearFilters = () => {
     setSearch('');
     setDateFrom(undefined);
     setDateTo(undefined);
+    setOnlyWithPendencies(false);
   };
 
   return (
