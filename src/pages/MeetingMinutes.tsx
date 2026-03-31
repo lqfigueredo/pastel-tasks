@@ -132,6 +132,15 @@ export default function MeetingMinutes() {
             <Calendar mode="single" selected={dateTo} onSelect={setDateTo} initialFocus className="p-3 pointer-events-auto" locale={ptBR} />
           </PopoverContent>
         </Popover>
+        <Button
+          variant={onlyWithPendencies ? "default" : "outline"}
+          size="sm"
+          onClick={() => setOnlyWithPendencies(!onlyWithPendencies)}
+          className="gap-1"
+        >
+          <AlertCircle className="h-4 w-4" />
+          Com pendências
+        </Button>
         {hasFilters && (
           <Button variant="ghost" size="sm" onClick={clearFilters}>
             <X className="mr-1 h-4 w-4" /> Limpar
