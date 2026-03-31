@@ -43,7 +43,7 @@ export default function MeetingMinutes() {
     const { data, error } = await supabase
       .from('meeting_minutes')
       .select('*, meeting_participants(count), meeting_pendencies(count)')
-      .order('meeting_date', { ascending: false });
+      .order('created_at', { ascending: false });
 
     if (error) {
       console.error(error);
