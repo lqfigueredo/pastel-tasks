@@ -34,6 +34,7 @@ export default function MeetingMinutes() {
   const [search, setSearch] = useState('');
   const [dateFrom, setDateFrom] = useState<Date | undefined>();
   const [dateTo, setDateTo] = useState<Date | undefined>();
+  const [onlyWithPendencies, setOnlyWithPendencies] = useState(false);
 
   const fetchMeetings = async () => {
     if (!user) return;
