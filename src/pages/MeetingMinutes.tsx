@@ -167,22 +167,34 @@ export default function MeetingMinutes() {
           {filteredMeetings.map((m) => (
             <Card
               key={m.id}
-              className="cursor-pointer transition-shadow hover:shadow-md"
+              className={cn(
+                "cursor-pointer transition-shadow hover:shadow-md",
+                m.pendency_count && m.pendency_count > 0 && "border-l-4 border-l-orange-500"
+              )}
               onClick={() => navigate(`/atas/${m.id}`)}
             >
               <CardContent className="p-5 space-y-3">
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <CalendarDays className="h-4 w-4" />
-                  {format(new Date(m.meeting_date + 'T00:00:00'), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <CalendarDays className="h-4 w-4" />
+                    {format(new Date(m.meeting_date + 'T00:00:00'), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
+                  </div>
+                  {m.pendency_count !== undefined && m.pendency_count > 0 && (
+                    <Badge variant="destructive" className="bg-orange-500 hover:bg-orange-600">
+                      {m.pendency_count} pendência(s)
+                    </Badge>
+                  )}
                 </div>
                 <p className="line-clamp-2 text-sm text-foreground">{m.description}</p>
                 <div className="flex items-center gap-4 text-xs text-muted-foreground">
                   <span className="flex items-center gap-1">
                     <Users className="h-3.5 w-3.5" /> {m.participant_count} participante(s)
                   </span>
-                  <span className="flex items-center gap-1">
-                    <AlertCircle className="h-3.5 w-3.5" /> {m.pendency_count} pendência(s)
-                  </span>
+                  {(!m.pendency_count || m.pendency_count === 0) && (
+                    <span className="flex items-center gap-1">
+                      <AlertCircle className="h-3.5 w-3.5" /> Sem pendências
+                    </span>
+                  )}
                 </div>
               </CardContent>
             </Card>
