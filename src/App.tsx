@@ -6,11 +6,11 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ThemeProvider } from "@/hooks/use-theme";
-import AppLayout from "@/components/AppLayout";
-import Auth from "@/pages/Auth";
-import Index from "@/pages/Index";
-import NotFound from "@/pages/NotFound";
-import Landing from "@/pages/Landing";
+const AppLayout = lazy(() => import("@/components/AppLayout"));
+const Auth = lazy(() => import("@/pages/Auth"));
+const Index = lazy(() => import("@/pages/Index"));
+const NotFound = lazy(() => import("@/pages/NotFound"));
+const Landing = lazy(() => import("@/pages/Landing"));
 
 const Team = lazy(() => import("@/pages/Team"));
 const TeamList = lazy(() => import("@/pages/TeamList"));
