@@ -4,7 +4,7 @@ import { Calendar, Minimize2, Maximize2, Repeat, FileText, AlertTriangle, Chevro
 import { Card, CardContent } from '@/components/ui/card';
 import { Task, TaskStatus } from './KanbanBoard';
 import { TaskDetailDialog } from './TaskDetailDialog';
-import { AssigneeAvatars } from './AssigneeSelector';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { supabase } from '@/integrations/supabase/client';
