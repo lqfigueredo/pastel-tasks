@@ -1,17 +1,32 @@
 
 
-# Correção: Notificação navegando para rota errada (404)
+# Correção: Responsáveis não aparecem para membros do time
 
 ## Problema
-No `NotificationBell.tsx`, o clique em notificações de pendência navega para `/meeting-minutes/${id}`, mas a rota correta definida no `App.tsx` é `/atas/${id}`.
+A tabela `task_assignees` tem políticas RLS que só permitem visualização para:
+1. O próprio assignee (`user_id = auth.uid()`)
+2. O dono da tarefa (`is_task_owner`)
 
-## Correção
-No arquivo `src/components/NotificationBell.tsx`, linha 87, alterar:
-- **De:** `navigate(\`/meeting-minutes/${n.reference_id}\`)`
-- **Para:** `navigate(\`/atas/${n.reference_id}\`)`
+Usuários que veem a tarefa via **membership de time** conseguem ver a tarefa, mas **não conseguem ler os registros de `task_assignees`**, resultando na lista de responsáveis vazia.
 
-Além disso, verificar se o `reference_id` salvo nas notificações de pendência corresponde ao `meeting_id` da pendência (necessário para a rota `/atas/:meetingId`), já que a edge function pode estar salvando o ID da pendência em vez do ID da ata.
+## Solução
+Adicionar uma nova política RLS SELECT na tabela `task_assignees` para permitir que membros do time vejam os assignees das tarefas do time:
+
+```sql
+CREATE POLICY "Team members can view task assignees"
+  ON public.task_assignees
+  FOR SELECT
+  TO authenticated
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.tasks t
+      WHERE t.id = task_assignees.task_id
+        AND t.team_id IS NOT NULL
+        AND is_team_member(auth.uid(), t.team_id)
+    )
+  );
+```
 
 ## Arquivo editado
-- `src/components/NotificationBell.tsx`
+- Nova migration SQL (política RLS em `task_assignees`)
 
