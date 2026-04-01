@@ -1,32 +1,34 @@
 
 
-# Correção: Responsáveis não aparecem para membros do time
+# Mostrar nomes dos responsáveis no card do Kanban (somente leitura)
 
 ## Problema
-A tabela `task_assignees` tem políticas RLS que só permitem visualização para:
-1. O próprio assignee (`user_id = auth.uid()`)
-2. O dono da tarefa (`is_task_owner`)
-
-Usuários que veem a tarefa via **membership de time** conseguem ver a tarefa, mas **não conseguem ler os registros de `task_assignees`**, resultando na lista de responsáveis vazia.
+Atualmente o `KanbanCard` exibe apenas avatares pequenos (círculos com iniciais) dos responsáveis, sem mostrar os nomes.
 
 ## Solução
-Adicionar uma nova política RLS SELECT na tabela `task_assignees` para permitir que membros do time vejam os assignees das tarefas do time:
+Substituir o componente `AssigneeAvatars` no `KanbanCard` por uma exibição que mostre avatar + nome de cada responsável, sem possibilidade de edição.
 
-```sql
-CREATE POLICY "Team members can view task assignees"
-  ON public.task_assignees
-  FOR SELECT
-  TO authenticated
-  USING (
-    EXISTS (
-      SELECT 1 FROM public.tasks t
-      WHERE t.id = task_assignees.task_id
-        AND t.team_id IS NOT NULL
-        AND is_team_member(auth.uid(), t.team_id)
-    )
-  );
+## Alteração
+
+**Arquivo: `src/components/kanban/KanbanCard.tsx`**
+
+Na seção onde `AssigneeAvatars` é renderizado (dentro do bloco `!minimized`), substituir por uma lista compacta que mostra avatar + `display_name` de cada assignee:
+
+```tsx
+<div className="mt-2 flex flex-wrap items-center gap-1.5">
+  {task.assignees.map((a) => (
+    <span key={a.user_id} className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-xs text-foreground">
+      <Avatar className="h-4 w-4">
+        {a.avatar_url && <AvatarImage src={a.avatar_url} />}
+        <AvatarFallback className="text-[8px]">{a.display_name.slice(0,2).toUpperCase()}</AvatarFallback>
+      </Avatar>
+      {a.display_name}
+    </span>
+  ))}
+</div>
 ```
 
-## Arquivo editado
-- Nova migration SQL (política RLS em `task_assignees`)
+- Quando minimizado, mantém o comportamento atual (sem mostrar responsáveis)
+- Sem botões de remoção ou adição — somente leitura
+- Importar `Avatar, AvatarFallback, AvatarImage` no arquivo
 
