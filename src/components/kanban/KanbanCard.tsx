@@ -4,7 +4,7 @@ import { Calendar, Minimize2, Maximize2, Repeat, FileText, AlertTriangle, Chevro
 import { Card, CardContent } from '@/components/ui/card';
 import { Task, TaskStatus } from './KanbanBoard';
 import { TaskDetailDialog } from './TaskDetailDialog';
-import { AssigneeAvatars } from './AssigneeSelector';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { supabase } from '@/integrations/supabase/client';
@@ -89,8 +89,20 @@ export function KanbanCard({ task, allStatuses, onRefresh, onMoveTask }: KanbanC
               {task.description && (
                 <p className="mt-1 text-xs text-muted-foreground line-clamp-2">{task.description}</p>
               )}
-              <div className="mt-2 flex items-center justify-between">
-                <AssigneeAvatars assignees={task.assignees} />
+              {task.assignees && task.assignees.length > 0 && (
+                <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                  {task.assignees.map((a) => (
+                    <span key={a.user_id} className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-xs text-foreground">
+                      <Avatar className="h-4 w-4">
+                        {a.avatar_url && <AvatarImage src={a.avatar_url} />}
+                        <AvatarFallback className="text-[8px]">{a.display_name?.slice(0, 2).toUpperCase()}</AvatarFallback>
+                      </Avatar>
+                      {a.display_name}
+                    </span>
+                  ))}
+                </div>
+              )}
+              <div className="mt-2 flex items-center justify-end">
                 {task.estimated_delivery_date && (
                   <div className="flex items-center gap-1 text-xs text-muted-foreground">
                     <Calendar className="h-3 w-3" />
