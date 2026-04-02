@@ -158,7 +158,7 @@ const Landing = () => {
 
       {/* Footer */}
       <footer className="border-t border-border/50 py-8 text-center text-sm text-muted-foreground">
-        © {new Date().getFullYear()} SimpleTask. Todos os direitos reservados.
+        © {new Date().getFullYear()} NEVVOH. Todos os direitos reservados.
       </footer>
     </div>
   );
