@@ -103,6 +103,20 @@ export function EditIdeaDialog({ idea, open, onOpenChange, onUpdated }: Props) {
             <Switch checked={isImplemented} onCheckedChange={setIsImplemented} disabled={!isOwner} />
             <Label>Ideia implementada</Label>
           </div>
+          <div>
+            <Label>Equipe</Label>
+            <Select value={teamId} onValueChange={setTeamId} disabled={!isOwner}>
+              <SelectTrigger>
+                <SelectValue placeholder="Sem equipe" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">Sem equipe</SelectItem>
+                {teams.map((t) => (
+                  <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
           <IdeaAttachments ideaId={idea.id} />
         </div>
         {isOwner && (
