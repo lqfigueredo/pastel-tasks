@@ -1,8 +1,12 @@
 import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Clock, ChevronDown, ChevronRight, Users, ListTodo } from 'lucide-react';
+import { Clock, ChevronDown, ChevronRight, Users, ListTodo, Download, CalendarIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { format } from 'date-fns';
+import { cn } from '@/lib/utils';
 
 interface TimeEntry {
   id: string;
@@ -34,12 +38,30 @@ function getDuration(entry: TimeEntry): number {
   return (new Date(entry.ended_at).getTime() - new Date(entry.started_at).getTime()) / 1000;
 }
 
+function DateFilter({ label, date, onSelect }: { label: string; date: Date | undefined; onSelect: (d: Date | undefined) => void }) {
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button variant="outline" size="sm" className={cn("gap-1.5 text-xs", !date && "text-muted-foreground")}>
+          <CalendarIcon className="h-3.5 w-3.5" />
+          {date ? format(date, 'dd/MM/yyyy') : label}
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-auto p-0" align="start">
+        <Calendar mode="single" selected={date} onSelect={onSelect} initialFocus className="p-3 pointer-events-auto" />
+      </PopoverContent>
+    </Popover>
+  );
+}
+
 export function TimeReport() {
   const [entries, setEntries] = useState<TimeEntry[]>([]);
   const [tasks, setTasks] = useState<Map<string, TaskInfo>>(new Map());
   const [profiles, setProfiles] = useState<Map<string, ProfileInfo>>(new Map());
   const [loading, setLoading] = useState(true);
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
+  const [startDate, setStartDate] = useState<Date | undefined>();
+  const [endDate, setEndDate] = useState<Date | undefined>();
 
   useEffect(() => {
     fetchData();
@@ -51,12 +73,20 @@ export function TimeReport() {
       supabase.from('tasks').select('id, title'),
       supabase.from('profiles').select('user_id, display_name'),
     ]);
-
     if (entriesRes.data) setEntries(entriesRes.data);
     if (tasksRes.data) setTasks(new Map(tasksRes.data.map((t) => [t.id, t])));
     if (profilesRes.data) setProfiles(new Map(profilesRes.data.map((p) => [p.user_id, p])));
     setLoading(false);
   };
+
+  const filteredEntries = useMemo(() => {
+    return entries.filter((e) => {
+      const d = new Date(e.started_at);
+      if (startDate && d < new Date(startDate.setHours(0, 0, 0, 0))) return false;
+      if (endDate && d > new Date(new Date(endDate).setHours(23, 59, 59, 999))) return false;
+      return true;
+    });
+  }, [entries, startDate, endDate]);
 
   const toggleExpand = (key: string) => {
     setExpandedRows((prev) => {
@@ -67,47 +97,58 @@ export function TimeReport() {
     });
   };
 
-  // Group by task
   const byTask = useMemo(() => {
     const map = new Map<string, { taskTitle: string; totalSeconds: number; users: Map<string, { name: string; totalSeconds: number }> }>();
-    for (const e of entries) {
+    for (const e of filteredEntries) {
       const dur = getDuration(e);
-      if (!map.has(e.task_id)) {
-        map.set(e.task_id, { taskTitle: tasks.get(e.task_id)?.title || 'Tarefa removida', totalSeconds: 0, users: new Map() });
-      }
+      if (!map.has(e.task_id)) map.set(e.task_id, { taskTitle: tasks.get(e.task_id)?.title || 'Tarefa removida', totalSeconds: 0, users: new Map() });
       const group = map.get(e.task_id)!;
       group.totalSeconds += dur;
-      if (!group.users.has(e.user_id)) {
-        group.users.set(e.user_id, { name: profiles.get(e.user_id)?.display_name || 'Usuário', totalSeconds: 0 });
-      }
+      if (!group.users.has(e.user_id)) group.users.set(e.user_id, { name: profiles.get(e.user_id)?.display_name || 'Usuário', totalSeconds: 0 });
       group.users.get(e.user_id)!.totalSeconds += dur;
     }
     return Array.from(map.entries())
       .map(([id, data]) => ({ id, ...data, userList: Array.from(data.users.entries()).map(([uid, d]) => ({ uid, ...d })) }))
       .sort((a, b) => b.totalSeconds - a.totalSeconds);
-  }, [entries, tasks, profiles]);
+  }, [filteredEntries, tasks, profiles]);
 
-  // Group by user
   const byUser = useMemo(() => {
     const map = new Map<string, { userName: string; totalSeconds: number; tasks: Map<string, { title: string; totalSeconds: number }> }>();
-    for (const e of entries) {
+    for (const e of filteredEntries) {
       const dur = getDuration(e);
-      if (!map.has(e.user_id)) {
-        map.set(e.user_id, { userName: profiles.get(e.user_id)?.display_name || 'Usuário', totalSeconds: 0, tasks: new Map() });
-      }
+      if (!map.has(e.user_id)) map.set(e.user_id, { userName: profiles.get(e.user_id)?.display_name || 'Usuário', totalSeconds: 0, tasks: new Map() });
       const group = map.get(e.user_id)!;
       group.totalSeconds += dur;
-      if (!group.tasks.has(e.task_id)) {
-        group.tasks.set(e.task_id, { title: tasks.get(e.task_id)?.title || 'Tarefa removida', totalSeconds: 0 });
-      }
+      if (!group.tasks.has(e.task_id)) group.tasks.set(e.task_id, { title: tasks.get(e.task_id)?.title || 'Tarefa removida', totalSeconds: 0 });
       group.tasks.get(e.task_id)!.totalSeconds += dur;
     }
     return Array.from(map.entries())
       .map(([id, data]) => ({ id, ...data, taskList: Array.from(data.tasks.entries()).map(([tid, d]) => ({ tid, ...d })) }))
       .sort((a, b) => b.totalSeconds - a.totalSeconds);
-  }, [entries, tasks, profiles]);
+  }, [filteredEntries, tasks, profiles]);
 
-  const grandTotal = useMemo(() => entries.reduce((sum, e) => sum + getDuration(e), 0), [entries]);
+  const grandTotal = useMemo(() => filteredEntries.reduce((sum, e) => sum + getDuration(e), 0), [filteredEntries]);
+
+  const exportCSV = () => {
+    const rows = [['Usuário', 'Tarefa', 'Início', 'Fim', 'Duração (hh:mm:ss)']];
+    for (const e of filteredEntries) {
+      rows.push([
+        profiles.get(e.user_id)?.display_name || 'Usuário',
+        tasks.get(e.task_id)?.title || 'Tarefa removida',
+        format(new Date(e.started_at), 'dd/MM/yyyy HH:mm:ss'),
+        e.ended_at ? format(new Date(e.ended_at), 'dd/MM/yyyy HH:mm:ss') : '',
+        formatDuration(getDuration(e)),
+      ]);
+    }
+    const csv = rows.map((r) => r.map((c) => `"${c.replace(/"/g, '""')}"`).join(',')).join('\n');
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `relatorio-horas${startDate ? '-de-' + format(startDate, 'yyyy-MM-dd') : ''}${endDate ? '-ate-' + format(endDate, 'yyyy-MM-dd') : ''}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
 
   if (loading) {
     return (
@@ -130,13 +171,25 @@ export function TimeReport() {
 
   return (
     <div className="rounded-xl border border-border bg-card shadow-sm">
-      <div className="flex items-center justify-between border-b border-border px-6 py-4">
+      <div className="flex flex-col gap-3 border-b border-border px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
         <h3 className="flex items-center gap-2 text-lg font-semibold text-foreground">
           <Clock className="h-5 w-5" /> Relatório de Horas
         </h3>
-        <div className="flex items-center gap-2 rounded-lg border border-border bg-muted/30 px-3 py-1.5 text-sm">
-          <span className="text-muted-foreground">Total Geral:</span>
-          <span className="font-mono font-semibold text-foreground">{formatDuration(grandTotal)}</span>
+        <div className="flex flex-wrap items-center gap-2">
+          <DateFilter label="Data Início" date={startDate} onSelect={setStartDate} />
+          <DateFilter label="Data Fim" date={endDate} onSelect={setEndDate} />
+          {(startDate || endDate) && (
+            <Button variant="ghost" size="sm" className="text-xs" onClick={() => { setStartDate(undefined); setEndDate(undefined); }}>
+              Limpar
+            </Button>
+          )}
+          <div className="flex items-center gap-2 rounded-lg border border-border bg-muted/30 px-3 py-1.5 text-sm">
+            <span className="text-muted-foreground">Total:</span>
+            <span className="font-mono font-semibold text-foreground">{formatDuration(grandTotal)}</span>
+          </div>
+          <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={exportCSV}>
+            <Download className="h-3.5 w-3.5" /> CSV
+          </Button>
         </div>
       </div>
 
@@ -154,16 +207,9 @@ export function TimeReport() {
           <div className="space-y-1">
             {byTask.map((group) => (
               <div key={group.id} className="rounded-lg border border-border overflow-hidden">
-                <button
-                  onClick={() => toggleExpand(`task-${group.id}`)}
-                  className="flex w-full items-center justify-between px-4 py-3 text-sm hover:bg-muted/50 transition-colors"
-                >
+                <button onClick={() => toggleExpand(`task-${group.id}`)} className="flex w-full items-center justify-between px-4 py-3 text-sm hover:bg-muted/50 transition-colors">
                   <div className="flex items-center gap-2">
-                    {expandedRows.has(`task-${group.id}`) ? (
-                      <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                    ) : (
-                      <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                    )}
+                    {expandedRows.has(`task-${group.id}`) ? <ChevronDown className="h-4 w-4 text-muted-foreground" /> : <ChevronRight className="h-4 w-4 text-muted-foreground" />}
                     <span className="font-medium text-foreground truncate max-w-[400px]">{group.taskTitle}</span>
                     <span className="text-xs text-muted-foreground">({group.userList.length} usuário{group.userList.length !== 1 ? 's' : ''})</span>
                   </div>
@@ -181,6 +227,7 @@ export function TimeReport() {
                 )}
               </div>
             ))}
+            {byTask.length === 0 && <p className="text-sm text-muted-foreground text-center py-4">Nenhum registro no período selecionado.</p>}
           </div>
         </TabsContent>
 
@@ -188,16 +235,9 @@ export function TimeReport() {
           <div className="space-y-1">
             {byUser.map((group) => (
               <div key={group.id} className="rounded-lg border border-border overflow-hidden">
-                <button
-                  onClick={() => toggleExpand(`user-${group.id}`)}
-                  className="flex w-full items-center justify-between px-4 py-3 text-sm hover:bg-muted/50 transition-colors"
-                >
+                <button onClick={() => toggleExpand(`user-${group.id}`)} className="flex w-full items-center justify-between px-4 py-3 text-sm hover:bg-muted/50 transition-colors">
                   <div className="flex items-center gap-2">
-                    {expandedRows.has(`user-${group.id}`) ? (
-                      <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                    ) : (
-                      <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                    )}
+                    {expandedRows.has(`user-${group.id}`) ? <ChevronDown className="h-4 w-4 text-muted-foreground" /> : <ChevronRight className="h-4 w-4 text-muted-foreground" />}
                     <span className="font-medium text-foreground">{group.userName}</span>
                     <span className="text-xs text-muted-foreground">({group.taskList.length} tarefa{group.taskList.length !== 1 ? 's' : ''})</span>
                   </div>
@@ -215,6 +255,7 @@ export function TimeReport() {
                 )}
               </div>
             ))}
+            {byUser.length === 0 && <p className="text-sm text-muted-foreground text-center py-4">Nenhum registro no período selecionado.</p>}
           </div>
         </TabsContent>
       </Tabs>
