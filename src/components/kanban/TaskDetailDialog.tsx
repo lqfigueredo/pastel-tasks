@@ -16,6 +16,7 @@ import { MessageSquare, Send, AlertTriangle, X, FileText } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { TaskAttachments } from './TaskAttachments';
 import { TaskChangeHistory } from './TaskChangeHistory';
+import { TaskTimer } from './TaskTimer';
 
 interface Comment {
   id: string;
