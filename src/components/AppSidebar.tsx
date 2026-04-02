@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, Settings, LogOut, CheckSquare, ShieldCheck, CalendarDays, FileText, TrendingUp, BookOpen, Calendar } from 'lucide-react';
+import { LayoutDashboard, Users, Settings, LogOut, CheckSquare, ShieldCheck, CalendarDays, FileText, TrendingUp, BookOpen, Calendar, Lightbulb } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserRoles } from '@/hooks/useUserRoles';
@@ -24,6 +24,7 @@ const navItems = [
   { title: 'Atas de Reunião', url: '/atas', icon: FileText },
   { title: 'Instruções de Trabalho', url: '/instrucoes', icon: BookOpen },
   { title: 'Agenda', url: '/agenda', icon: Calendar },
+  { title: 'Registro de Ideias', url: '/ideias', icon: Lightbulb },
 ];
 
 export function AppSidebar() {

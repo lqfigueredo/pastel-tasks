@@ -158,6 +158,74 @@ export type Database = {
         }
         Relationships: []
       }
+      idea_attachments: {
+        Row: {
+          created_at: string
+          file_name: string
+          file_path: string
+          file_type: string
+          id: string
+          idea_id: string
+          uploaded_by: string
+        }
+        Insert: {
+          created_at?: string
+          file_name: string
+          file_path: string
+          file_type: string
+          id?: string
+          idea_id: string
+          uploaded_by: string
+        }
+        Update: {
+          created_at?: string
+          file_name?: string
+          file_path?: string
+          file_type?: string
+          id?: string
+          idea_id?: string
+          uploaded_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "idea_attachments_idea_id_fkey"
+            columns: ["idea_id"]
+            isOneToOne: false
+            referencedRelation: "ideas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ideas: {
+        Row: {
+          created_at: string
+          created_by: string
+          description: string | null
+          id: string
+          is_implemented: boolean
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          description?: string | null
+          id?: string
+          is_implemented?: boolean
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          id?: string
+          is_implemented?: boolean
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       leads: {
         Row: {
           created_at: string

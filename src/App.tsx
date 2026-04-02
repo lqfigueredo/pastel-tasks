@@ -23,6 +23,7 @@ const Financial = lazy(() => import("@/pages/Financial"));
 const FinancialRegister = lazy(() => import("@/pages/FinancialRegister"));
 const WorkInstructions = lazy(() => import("@/pages/WorkInstructions"));
 const PersonalCalendar = lazy(() => import("@/pages/PersonalCalendar"));
+const Ideas = lazy(() => import("@/pages/Ideas"));
 
 const queryClient = new QueryClient();
 
@@ -57,6 +58,7 @@ const App = () => (
                   <Route path="/financeiro" element={<Financial />} />
                   <Route path="/instrucoes" element={<WorkInstructions />} />
                   <Route path="/agenda" element={<PersonalCalendar />} />
+                  <Route path="/ideias" element={<Ideas />} />
                 </Route>
                 <Route path="*" element={<NotFound />} />
               </Routes>
