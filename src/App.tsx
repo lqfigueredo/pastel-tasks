@@ -25,7 +25,14 @@ const WorkInstructions = lazy(() => import("@/pages/WorkInstructions"));
 const PersonalCalendar = lazy(() => import("@/pages/PersonalCalendar"));
 const Ideas = lazy(() => import("@/pages/Ideas"));
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 30_000,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 const LazyFallback = () => (
   <div className="flex h-64 items-center justify-center">

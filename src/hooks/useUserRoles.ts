@@ -32,19 +32,21 @@ export function useUserRoles(): UserRoles {
       return;
     }
 
-    Promise.all([
-      supabase.rpc('has_role', { _user_id: user.id, _role: 'admin' }),
-      supabase.rpc('has_role', { _user_id: user.id, _role: 'user' }),
-      supabase.rpc('has_role', { _user_id: user.id, _role: 'solution_admin' }),
-    ]).then(([adminRes, userRes, solutionRes]) => {
-      const result = {
-        isAdmin: !!adminRes.data,
-        isRegularUser: !!userRes.data,
-        isSolutionAdmin: !!solutionRes.data,
-      };
-      cachedRoles = { userId: user.id, roles: result };
-      setRoles({ ...result, loading: false });
-    });
+    // Single query instead of 3 RPC calls
+    supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', user.id)
+      .then(({ data }) => {
+        const roleSet = new Set((data || []).map((r) => r.role));
+        const result = {
+          isAdmin: roleSet.has('admin'),
+          isRegularUser: roleSet.has('user'),
+          isSolutionAdmin: roleSet.has('solution_admin'),
+        };
+        cachedRoles = { userId: user.id, roles: result };
+        setRoles({ ...result, loading: false });
+      });
   }, [user]);
 
   return roles;

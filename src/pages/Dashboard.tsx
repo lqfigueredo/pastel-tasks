@@ -1,8 +1,8 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { useState, useCallback, useMemo } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { Task, TaskStatus } from '@/components/kanban/KanbanBoard';
-import { Profile } from '@/components/kanban/AssigneeSelector';
+import { useTasksQuery, useInvalidateTasks } from '@/hooks/useTasksQuery';
+import { useStatusesQuery } from '@/hooks/useStatusesQuery';
+import { Task } from '@/components/kanban/KanbanBoard';
 import { TaskTooltip } from '@/components/dashboard/TaskTooltip';
 import { TaskDetailDialog } from '@/components/kanban/TaskDetailDialog';
 import { Button } from '@/components/ui/button';
@@ -18,7 +18,6 @@ import {
   isSameMonth,
   isSameDay,
   isToday,
-  isWithinInterval,
   isBefore,
   isAfter,
   format,
@@ -35,7 +34,7 @@ const WEEKDAYS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 const MAX_BAR_SLOTS = 3;
 const BAR_HEIGHT = 22;
 const BAR_GAP = 2;
-const TOP_OFFSET = 28; // space for day number
+const TOP_OFFSET = 28;
 
 interface BarSegment {
   task: Task;
@@ -69,52 +68,22 @@ type TaskFilter = 'all' | 'created' | 'assigned';
 export default function Dashboard() {
   const { user } = useAuth();
   const [currentMonth, setCurrentMonth] = useState(new Date());
-  const [allTasks, setAllTasks] = useState<Task[]>([]);
-  const [myAssignedIds, setMyAssignedIds] = useState<Set<string>>(new Set());
-  const [statuses, setStatuses] = useState<TaskStatus[]>([]);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [filter, setFilter] = useState<TaskFilter>('all');
 
-  const fetchData = useCallback(async () => {
-    if (!user) return;
+  const { data: tasksData } = useTasksQuery();
+  const { data: statuses = [] } = useStatusesQuery();
+  const invalidateTasks = useInvalidateTasks();
 
-    const [statusRes, taskRes, assigneeRes, profileRes] = await Promise.all([
-      supabase.from('task_statuses').select('*').is('deleted_at', null).order('position'),
-      supabase.from('tasks').select('*'),
-      supabase.from('task_assignees').select('task_id, user_id'),
-      supabase.from('profiles').select('user_id, display_name, avatar_url'),
-    ]);
-
-    if (statusRes.data) setStatuses(statusRes.data);
-
-    const profileMap = new Map<string, Profile>();
-    if (profileRes.data) {
-      for (const p of profileRes.data) profileMap.set(p.user_id, p);
-    }
-
-    const assigneeMap = new Map<string, Profile[]>();
-    if (assigneeRes.data) {
-      for (const row of assigneeRes.data) {
-        const profile = profileMap.get(row.user_id);
-        if (!profile) continue;
-        if (!assigneeMap.has(row.task_id)) assigneeMap.set(row.task_id, []);
-        assigneeMap.get(row.task_id)!.push(profile);
-      }
-    }
-
-    const allTasksData = taskRes.data || [];
-    const assignedIdSet = new Set(
-      (assigneeRes.data || [])
+  const allTasks: Task[] = tasksData?.tasks || [];
+  const myAssignedIds = useMemo(() => {
+    if (!user || !tasksData) return new Set<string>();
+    return new Set(
+      tasksData.assigneeRes
         .filter((r) => r.user_id === user.id)
         .map((r) => r.task_id)
     );
-    setMyAssignedIds(assignedIdSet);
-    setAllTasks(allTasksData.map((t) => ({ ...t, assignees: assigneeMap.get(t.id) || [] })));
-  }, [user]);
-
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+  }, [tasksData, user]);
 
   const tasks = useMemo(() => {
     if (!user) return allTasks;
@@ -132,7 +101,6 @@ export default function Dashboard() {
   const statusColorMap = new Map(statuses.map((s) => [s.id, s.color]));
   const statusNameMap = new Map(statuses.map((s) => [s.id, s.name]));
 
-  // Group days into weeks (chunks of 7)
   const weeks = useMemo(() => {
     const result: Date[][] = [];
     for (let i = 0; i < days.length; i += 7) {
@@ -141,54 +109,43 @@ export default function Dashboard() {
     return result;
   }, [days]);
 
-  // For a given week, compute bar segments for multi-day tasks
   const computeBarsForWeek = useCallback(
     (weekDays: Date[]): { bars: BarSegment[]; overflow: Map<number, number> } => {
       const weekStart = weekDays[0];
       const weekEnd = weekDays[6];
 
-      // Find multi-day tasks that overlap this week
       const candidates: { task: Task; startCol: number; endCol: number; isStart: boolean; isEnd: boolean; span: number }[] = [];
 
       for (const task of tasks) {
         if (!isMultiDay(task)) continue;
         const interval = getTaskInterval(task);
         if (!interval) continue;
-
-        // Check overlap with week
         if (isAfter(interval.start, weekEnd) || isBefore(interval.end, weekStart)) continue;
 
         const clampedStart = dateMax([interval.start, weekStart]);
         const clampedEnd = dateMin([interval.end, weekEnd]);
-
         const startCol = differenceInDays(clampedStart, weekStart);
         const endCol = differenceInDays(clampedEnd, weekStart);
 
         candidates.push({
-          task,
-          startCol,
-          endCol,
+          task, startCol, endCol,
           isStart: isSameDay(clampedStart, interval.start),
           isEnd: isSameDay(clampedEnd, interval.end),
           span: endCol - startCol + 1,
         });
       }
 
-      // Sort by span descending (longer tasks get priority)
       candidates.sort((a, b) => b.span - a.span);
 
-      // Allocate slots
       const bars: BarSegment[] = [];
-      const overflow = new Map<number, number>(); // col -> count of hidden bars
-      const slots: { startCol: number; endCol: number }[][] = []; // slots[row] = occupied ranges
+      const overflow = new Map<number, number>();
+      const slots: { startCol: number; endCol: number }[][] = [];
 
       for (const c of candidates) {
         let placed = false;
         for (let row = 0; row < MAX_BAR_SLOTS; row++) {
           if (!slots[row]) slots[row] = [];
-          const conflict = slots[row].some(
-            (s) => c.startCol <= s.endCol && c.endCol >= s.startCol
-          );
+          const conflict = slots[row].some((s) => c.startCol <= s.endCol && c.endCol >= s.startCol);
           if (!conflict) {
             slots[row].push({ startCol: c.startCol, endCol: c.endCol });
             bars.push({ task: c.task, startCol: c.startCol, endCol: c.endCol, row, isStart: c.isStart, isEnd: c.isEnd });
@@ -197,7 +154,6 @@ export default function Dashboard() {
           }
         }
         if (!placed) {
-          // Count overflow per column
           for (let col = c.startCol; col <= c.endCol; col++) {
             overflow.set(col, (overflow.get(col) || 0) + 1);
           }
@@ -209,7 +165,6 @@ export default function Dashboard() {
     [tasks]
   );
 
-  // Get single-day tasks for a specific day
   const getSingleDayTasks = useCallback(
     (day: Date) =>
       tasks.filter((t) => {
@@ -267,7 +222,6 @@ export default function Dashboard() {
       </div>
 
       <div className="rounded-xl border border-border bg-card shadow-sm">
-        {/* Header */}
         <div className="flex items-center justify-between border-b border-border px-6 py-4">
           <Button variant="ghost" size="icon" onClick={() => setCurrentMonth((m) => subMonths(m, 1))}>
             <ChevronLeft className="h-5 w-5" />
@@ -280,7 +234,6 @@ export default function Dashboard() {
           </Button>
         </div>
 
-        {/* Weekday headers */}
         <div className="grid grid-cols-7 border-b border-border">
           {WEEKDAYS.map((d) => (
             <div key={d} className="px-2 py-2 text-center text-xs font-medium text-muted-foreground">
@@ -289,16 +242,14 @@ export default function Dashboard() {
           ))}
         </div>
 
-        {/* Weeks */}
         {weeks.map((weekDays, wi) => {
           const { bars, overflow } = computeBarsForWeek(weekDays);
           const maxRow = bars.length > 0 ? Math.max(...bars.map((b) => b.row)) : -1;
           const barsAreaHeight = (maxRow + 1) * (BAR_HEIGHT + BAR_GAP);
-          const cellMinHeight = TOP_OFFSET + barsAreaHeight + 30; // 30px for single-day tasks
+          const cellMinHeight = TOP_OFFSET + barsAreaHeight + 30;
 
           return (
             <div key={wi} className="relative grid grid-cols-7">
-              {/* Day cells (background + day numbers + single-day tasks) */}
               {weekDays.map((day, di) => {
                 const inMonth = isSameMonth(day, currentMonth);
                 const today = isToday(day);
@@ -309,42 +260,24 @@ export default function Dashboard() {
                 return (
                   <div
                     key={di}
-                    className={`border-b border-r border-border p-1.5 ${
-                      !inMonth ? 'bg-muted/30' : ''
-                    } ${today ? 'bg-accent/20' : ''}`}
+                    className={`border-b border-r border-border p-1.5 ${!inMonth ? 'bg-muted/30' : ''} ${today ? 'bg-accent/20' : ''}`}
                     style={{ minHeight: `${cellMinHeight}px` }}
                   >
                     <span
                       className={`mb-1 inline-flex h-6 w-6 items-center justify-center rounded-full text-xs font-medium ${
-                        today
-                          ? 'bg-primary text-primary-foreground'
-                          : inMonth
-                            ? 'text-foreground'
-                            : 'text-muted-foreground/50'
+                        today ? 'bg-primary text-primary-foreground' : inMonth ? 'text-foreground' : 'text-muted-foreground/50'
                       }`}
                     >
                       {format(day, 'd')}
                     </span>
 
-                    {/* Single-day tasks rendered below bars area */}
                     <div style={{ marginTop: `${barsAreaHeight}px` }} className="space-y-0.5">
                       {singleTasks.map((task) => {
                         const isAssignedByOther = myAssignedIds.has(task.id) && task.created_by !== user?.id;
                         return (
-                          <TaskTooltip
-                            key={task.id}
-                            task={task}
-                            statusName={statusNameMap.get(task.status_id) || 'Sem status'}
-                            statusColor={statusColorMap.get(task.status_id) || 'hsl(var(--muted))'}
-                          >
-                            <button
-                              onClick={() => setSelectedTask(task)}
-                              className="flex w-full items-center gap-1 rounded px-1.5 py-0.5 text-left text-[11px] leading-tight transition-colors hover:bg-accent/40"
-                            >
-                              <span
-                                className="mt-0.5 h-2 w-2 shrink-0 rounded-full"
-                                style={{ backgroundColor: statusColorMap.get(task.status_id) || 'hsl(var(--muted))' }}
-                              />
+                          <TaskTooltip key={task.id} task={task} statusName={statusNameMap.get(task.status_id) || 'Sem status'} statusColor={statusColorMap.get(task.status_id) || 'hsl(var(--muted))'}>
+                            <button onClick={() => setSelectedTask(task)} className="flex w-full items-center gap-1 rounded px-1.5 py-0.5 text-left text-[11px] leading-tight transition-colors hover:bg-accent/40">
+                              <span className="mt-0.5 h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: statusColorMap.get(task.status_id) || 'hsl(var(--muted))' }} />
                               {isAssignedByOther && <UserCircle className="h-2.5 w-2.5 shrink-0 text-primary" />}
                               <span className="truncate text-foreground">{task.title}</span>
                             </button>
@@ -358,17 +291,8 @@ export default function Dashboard() {
                         const color = statusColorMap.get(task.status_id) || 'hsl(var(--muted))';
                         const isAssignedByOther = myAssignedIds.has(task.id) && task.created_by !== user?.id;
                         return (
-                          <TaskTooltip
-                            key={`done-${task.id}`}
-                            task={task}
-                            statusName={statusNameMap.get(task.status_id) || 'Sem status'}
-                            statusColor={color}
-                          >
-                            <button
-                              onClick={() => setSelectedTask(task)}
-                              className="flex w-full items-center gap-1 rounded px-1.5 py-0.5 text-left text-[11px] font-semibold leading-tight transition-colors hover:bg-accent/40"
-                              style={{ backgroundColor: color + '25' }}
-                            >
+                          <TaskTooltip key={`done-${task.id}`} task={task} statusName={statusNameMap.get(task.status_id) || 'Sem status'} statusColor={color}>
+                            <button onClick={() => setSelectedTask(task)} className="flex w-full items-center gap-1 rounded px-1.5 py-0.5 text-left text-[11px] font-semibold leading-tight transition-colors hover:bg-accent/40" style={{ backgroundColor: color + '25' }}>
                               <CheckCircle2 className="h-3 w-3 shrink-0" style={{ color }} />
                               {isAssignedByOther && <UserCircle className="h-2.5 w-2.5 shrink-0 text-primary" />}
                               <span className="truncate text-foreground">{task.title}</span>
@@ -381,7 +305,6 @@ export default function Dashboard() {
                 );
               })}
 
-              {/* Multi-day bars (absolute positioned over the week row) */}
               {bars.map((bar, bi) => {
                 const color = statusColorMap.get(bar.task.status_id) || 'hsl(var(--muted))';
                 const isAssignedByOther = myAssignedIds.has(bar.task.id) && bar.task.created_by !== user?.id;
@@ -390,20 +313,12 @@ export default function Dashboard() {
                 const top = TOP_OFFSET + bar.row * (BAR_HEIGHT + BAR_GAP);
 
                 return (
-                  <TaskTooltip
-                    key={`${bar.task.id}-${bi}`}
-                    task={bar.task}
-                    statusName={statusNameMap.get(bar.task.status_id) || 'Sem status'}
-                    statusColor={color}
-                  >
+                  <TaskTooltip key={`${bar.task.id}-${bi}`} task={bar.task} statusName={statusNameMap.get(bar.task.status_id) || 'Sem status'} statusColor={color}>
                     <button
                       onClick={() => setSelectedTask(bar.task)}
                       className="absolute z-10 flex items-center overflow-hidden px-2 text-[11px] font-medium leading-tight transition-opacity hover:opacity-80"
                       style={{
-                        left,
-                        width,
-                        top: `${top}px`,
-                        height: `${BAR_HEIGHT}px`,
+                        left, width, top: `${top}px`, height: `${BAR_HEIGHT}px`,
                         backgroundColor: color + '30',
                         borderLeft: `3px ${isAssignedByOther ? 'dashed' : 'solid'} ${color}`,
                         borderRadius: `${bar.isStart ? '6px' : '0'} ${bar.isEnd ? '6px' : '0'} ${bar.isEnd ? '6px' : '0'} ${bar.isStart ? '6px' : '0'}`,
@@ -428,7 +343,7 @@ export default function Dashboard() {
           allStatuses={statuses}
           open={!!selectedTask}
           onOpenChange={(open) => { if (!open) setSelectedTask(null); }}
-          onRefresh={fetchData}
+          onRefresh={invalidateTasks}
         />
       )}
     </div>

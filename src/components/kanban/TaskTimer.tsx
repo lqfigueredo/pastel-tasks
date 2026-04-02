@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useProfilesQuery } from '@/hooks/useProfilesQuery';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Play, Square, Clock, BarChart3 } from 'lucide-react';
@@ -35,6 +36,7 @@ function formatDuration(seconds: number): string {
 export function TaskTimer({ taskId }: Props) {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { data: profilesMap } = useProfilesQuery();
   const [entries, setEntries] = useState<TimeEntry[]>([]);
   const [activeEntry, setActiveEntry] = useState<TimeEntry | null>(null);
   const [elapsed, setElapsed] = useState(0);
@@ -106,10 +108,7 @@ export function TaskTimer({ taskId }: Props) {
     }
   };
 
-  const handleConsolidate = async () => {
-    const { data: profiles } = await supabase.from('profiles').select('user_id, display_name');
-    const profileMap = new Map(profiles?.map((p) => [p.user_id, p.display_name]) || []);
-
+  const handleConsolidate = () => {
     const userTotals = new Map<string, number>();
     for (const entry of entries) {
       if (!entry.ended_at) continue;
@@ -119,7 +118,7 @@ export function TaskTimer({ taskId }: Props) {
 
     const summary: UserSummary[] = Array.from(userTotals.entries()).map(([uid, secs]) => ({
       user_id: uid,
-      display_name: profileMap.get(uid) || 'Usuário',
+      display_name: profilesMap?.get(uid)?.display_name || 'Usuário',
       total_seconds: secs,
     }));
 

@@ -1,5 +1,9 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+import { useTasksQuery } from '@/hooks/useTasksQuery';
+import { useProfilesQuery } from '@/hooks/useProfilesQuery';
 import { Clock, ChevronDown, ChevronRight, Users, ListTodo, Download, CalendarIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
@@ -14,16 +18,6 @@ interface TimeEntry {
   user_id: string;
   started_at: string;
   ended_at: string | null;
-}
-
-interface TaskInfo {
-  id: string;
-  title: string;
-}
-
-interface ProfileInfo {
-  user_id: string;
-  display_name: string;
 }
 
 function formatDuration(seconds: number): string {
@@ -55,35 +49,59 @@ function DateFilter({ label, date, onSelect }: { label: string; date: Date | und
 }
 
 export function TimeReport() {
-  const [entries, setEntries] = useState<TimeEntry[]>([]);
-  const [tasks, setTasks] = useState<Map<string, TaskInfo>>(new Map());
-  const [profiles, setProfiles] = useState<Map<string, ProfileInfo>>(new Map());
-  const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
   const [startDate, setStartDate] = useState<Date | undefined>();
   const [endDate, setEndDate] = useState<Date | undefined>();
 
-  useEffect(() => {
-    fetchData();
-  }, []);
+  // Use shared hooks instead of independent fetches
+  const { data: tasksData } = useTasksQuery();
+  const { data: profilesMap } = useProfilesQuery();
 
-  const fetchData = async () => {
-    const [entriesRes, tasksRes, profilesRes] = await Promise.all([
-      supabase.from('task_time_entries').select('*').not('ended_at', 'is', null).order('started_at', { ascending: false }),
-      supabase.from('tasks').select('id, title'),
-      supabase.from('profiles').select('user_id, display_name'),
-    ]);
-    if (entriesRes.data) setEntries(entriesRes.data);
-    if (tasksRes.data) setTasks(new Map(tasksRes.data.map((t) => [t.id, t])));
-    if (profilesRes.data) setProfiles(new Map(profilesRes.data.map((p) => [p.user_id, p])));
-    setLoading(false);
-  };
+  const tasksMap = useMemo(() => {
+    const map = new Map<string, { id: string; title: string }>();
+    if (tasksData) {
+      for (const t of tasksData.tasks) map.set(t.id, { id: t.id, title: t.title });
+    }
+    return map;
+  }, [tasksData]);
+
+  const profilesLookup = useMemo(() => {
+    const map = new Map<string, { user_id: string; display_name: string }>();
+    if (profilesMap) {
+      for (const [uid, p] of profilesMap) map.set(uid, { user_id: p.user_id, display_name: p.display_name });
+    }
+    return map;
+  }, [profilesMap]);
+
+  // Only fetch time entries independently (unique to this component)
+  const { data: entries = [], isLoading } = useQuery({
+    queryKey: ['task-time-entries'],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('task_time_entries')
+        .select('*')
+        .not('ended_at', 'is', null)
+        .order('started_at', { ascending: false });
+      return (data || []) as TimeEntry[];
+    },
+    enabled: !!user,
+    staleTime: 30_000,
+  });
 
   const filteredEntries = useMemo(() => {
     return entries.filter((e) => {
       const d = new Date(e.started_at);
-      if (startDate && d < new Date(startDate.setHours(0, 0, 0, 0))) return false;
-      if (endDate && d > new Date(new Date(endDate).setHours(23, 59, 59, 999))) return false;
+      if (startDate) {
+        const start = new Date(startDate);
+        start.setHours(0, 0, 0, 0);
+        if (d < start) return false;
+      }
+      if (endDate) {
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+        if (d > end) return false;
+      }
       return true;
     });
   }, [entries, startDate, endDate]);
@@ -101,31 +119,31 @@ export function TimeReport() {
     const map = new Map<string, { taskTitle: string; totalSeconds: number; users: Map<string, { name: string; totalSeconds: number }> }>();
     for (const e of filteredEntries) {
       const dur = getDuration(e);
-      if (!map.has(e.task_id)) map.set(e.task_id, { taskTitle: tasks.get(e.task_id)?.title || 'Tarefa removida', totalSeconds: 0, users: new Map() });
+      if (!map.has(e.task_id)) map.set(e.task_id, { taskTitle: tasksMap.get(e.task_id)?.title || 'Tarefa removida', totalSeconds: 0, users: new Map() });
       const group = map.get(e.task_id)!;
       group.totalSeconds += dur;
-      if (!group.users.has(e.user_id)) group.users.set(e.user_id, { name: profiles.get(e.user_id)?.display_name || 'Usuário', totalSeconds: 0 });
+      if (!group.users.has(e.user_id)) group.users.set(e.user_id, { name: profilesLookup.get(e.user_id)?.display_name || 'Usuário', totalSeconds: 0 });
       group.users.get(e.user_id)!.totalSeconds += dur;
     }
     return Array.from(map.entries())
       .map(([id, data]) => ({ id, ...data, userList: Array.from(data.users.entries()).map(([uid, d]) => ({ uid, ...d })) }))
       .sort((a, b) => b.totalSeconds - a.totalSeconds);
-  }, [filteredEntries, tasks, profiles]);
+  }, [filteredEntries, tasksMap, profilesLookup]);
 
   const byUser = useMemo(() => {
     const map = new Map<string, { userName: string; totalSeconds: number; tasks: Map<string, { title: string; totalSeconds: number }> }>();
     for (const e of filteredEntries) {
       const dur = getDuration(e);
-      if (!map.has(e.user_id)) map.set(e.user_id, { userName: profiles.get(e.user_id)?.display_name || 'Usuário', totalSeconds: 0, tasks: new Map() });
+      if (!map.has(e.user_id)) map.set(e.user_id, { userName: profilesLookup.get(e.user_id)?.display_name || 'Usuário', totalSeconds: 0, tasks: new Map() });
       const group = map.get(e.user_id)!;
       group.totalSeconds += dur;
-      if (!group.tasks.has(e.task_id)) group.tasks.set(e.task_id, { title: tasks.get(e.task_id)?.title || 'Tarefa removida', totalSeconds: 0 });
+      if (!group.tasks.has(e.task_id)) group.tasks.set(e.task_id, { title: tasksMap.get(e.task_id)?.title || 'Tarefa removida', totalSeconds: 0 });
       group.tasks.get(e.task_id)!.totalSeconds += dur;
     }
     return Array.from(map.entries())
       .map(([id, data]) => ({ id, ...data, taskList: Array.from(data.tasks.entries()).map(([tid, d]) => ({ tid, ...d })) }))
       .sort((a, b) => b.totalSeconds - a.totalSeconds);
-  }, [filteredEntries, tasks, profiles]);
+  }, [filteredEntries, tasksMap, profilesLookup]);
 
   const grandTotal = useMemo(() => filteredEntries.reduce((sum, e) => sum + getDuration(e), 0), [filteredEntries]);
 
@@ -133,8 +151,8 @@ export function TimeReport() {
     const rows = [['Usuário', 'Tarefa', 'Início', 'Fim', 'Duração (hh:mm:ss)']];
     for (const e of filteredEntries) {
       rows.push([
-        profiles.get(e.user_id)?.display_name || 'Usuário',
-        tasks.get(e.task_id)?.title || 'Tarefa removida',
+        profilesLookup.get(e.user_id)?.display_name || 'Usuário',
+        tasksMap.get(e.task_id)?.title || 'Tarefa removida',
         format(new Date(e.started_at), 'dd/MM/yyyy HH:mm:ss'),
         e.ended_at ? format(new Date(e.ended_at), 'dd/MM/yyyy HH:mm:ss') : '',
         formatDuration(getDuration(e)),
@@ -150,7 +168,7 @@ export function TimeReport() {
     URL.revokeObjectURL(url);
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
         <p className="text-sm text-muted-foreground">Carregando relatório...</p>
