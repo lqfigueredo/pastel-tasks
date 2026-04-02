@@ -1,33 +1,39 @@
 
 
-# Renomear SimpleTask para NEVVOH
+# Substituir logo do NEVVOH
+
+## Resumo
+Substituir o ícone atual (CheckSquare do Lucide) pelo novo logo enviado em todos os locais do app, e usá-lo também como favicon.
 
 ## Locais identificados
 
-| Arquivo | Ocorrências |
+| Arquivo | O que mudar |
 |---------|------------|
-| `index.html` | `<title>`, `og:title`, `twitter:title` — "Simple Task" → "NEVVOH" |
-| `src/components/AppSidebar.tsx` | Logo text na sidebar |
-| `src/pages/Landing.tsx` | Header, texto hero, dialog description, footer |
-| `src/pages/Auth.tsx` | Título na tela de login |
-
-Total: **4 arquivos**, ~9 substituições de texto.
+| `src/components/AppSidebar.tsx` | Ícone na sidebar header |
+| `src/pages/Auth.tsx` | Ícone na tela de login |
+| `src/pages/Landing.tsx` | Ícone no header da landing |
+| `index.html` | Adicionar favicon com o novo logo |
 
 ## Alterações
 
-### 1. `index.html`
-- `<title>Simple Task</title>` → `<title>NEVVOH</title>`
-- `og:title` e `twitter:title` → `"NEVVOH"`
+### 1. Copiar o logo para o projeto
+- Copiar `user-uploads://Sem_nome_Logotipo_animado.png` para `src/assets/logo.png` (para uso em componentes React)
+- Copiar também para `public/favicon.png` (para favicon)
 
-### 2. `src/components/AppSidebar.tsx`
-- `"SimpleTask"` → `"NEVVOH"`
+### 2. Atualizar favicon (`index.html`)
+- Adicionar `<link rel="icon" href="/favicon.png" type="image/png">`
+- Remover `public/favicon.ico` se existir
 
-### 3. `src/pages/Auth.tsx`
-- `"SimpleTask"` → `"NEVVOH"`
+### 3. Substituir ícone nos 3 componentes
+Em cada arquivo, trocar o bloco com `CheckSquare` dentro de um `div` colorido por uma tag `<img>` com o logo importado:
 
-### 4. `src/pages/Landing.tsx`
-- Header: `"SimpleTask"` → `"NEVVOH"`
-- Hero text: `"O SimpleTask foi criado para..."` → `"O NEVVOH foi criado para..."`
-- Dialog: `"...apresentar o SimpleTask."` → `"...apresentar o NEVVOH."`
-- Footer: `"SimpleTask. Todos os direitos..."` → `"NEVVOH. Todos os direitos..."`
+- **AppSidebar.tsx**: remover import do `CheckSquare`, importar logo de `@/assets/logo.png`, substituir o `div` com ícone por `<img src={logo} alt="NEVVOH" className="h-9 w-9 rounded-xl" />`
+- **Auth.tsx**: mesmo padrão, `<img src={logo} alt="NEVVOH" className="h-14 w-14 rounded-2xl" />`
+- **Landing.tsx**: mesmo padrão, `<img src={logo} alt="NEVVOH" className="h-9 w-9 rounded-xl" />`
+
+### Arquivos
+- `index.html` — adicionar favicon
+- `src/components/AppSidebar.tsx` — trocar ícone
+- `src/pages/Auth.tsx` — trocar ícone
+- `src/pages/Landing.tsx` — trocar ícone
 
