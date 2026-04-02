@@ -22,8 +22,18 @@ export function CreateIdeaDialog({ open, onOpenChange, onCreated }: Props) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [files, setFiles] = useState<File[]>([]);
+  const [teamId, setTeamId] = useState<string>('none');
+  const [teams, setTeams] = useState<{ id: string; name: string }[]>([]);
   const [saving, setSaving] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const fetchTeams = async () => {
+      const { data } = await supabase.from('teams').select('id, name').order('name');
+      if (data) setTeams(data);
+    };
+    fetchTeams();
+  }, []);
 
   const handleSubmit = async () => {
     if (!title.trim() || !user) return;
