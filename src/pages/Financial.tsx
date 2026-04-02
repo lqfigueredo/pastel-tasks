@@ -179,6 +179,27 @@ const Financial = () => {
     await handleAction(userId, 'update-license', { licenseExpiresAt: date.toISOString() });
   };
 
+  const handleSaveLimit = async (adminUserId: string, maxUsers: number) => {
+    if (!maxUsers || maxUsers < 1) {
+      toast.error('Limite deve ser pelo menos 1');
+      return;
+    }
+    setActionLoading(adminUserId);
+    try {
+      const { error } = await supabase
+        .from('admin_settings')
+        .upsert({ admin_user_id: adminUserId, max_users: maxUsers }, { onConflict: 'admin_user_id' });
+      if (error) throw error;
+      toast.success('Limite atualizado com sucesso!');
+      setEditingLimit(null);
+      await loadData();
+    } catch (err: any) {
+      toast.error(err.message || 'Erro ao salvar limite');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
