@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { CheckSquare, LayoutDashboard, Users, FileText, CalendarDays, Send } from 'lucide-react';
+import { LayoutDashboard, Users, FileText, CalendarDays, Send } from 'lucide-react';
+import logo from '@/assets/logo.png';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
