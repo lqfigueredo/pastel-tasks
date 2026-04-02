@@ -420,6 +420,8 @@ export default function Dashboard() {
         })}
       </div>
 
+      <TimeReport />
+
       {selectedTask && (
         <TaskDetailDialog
           task={selectedTask}
