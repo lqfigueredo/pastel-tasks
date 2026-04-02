@@ -1,40 +1,60 @@
 
 
-# Sincronizar Pendência da Ata com Tarefa no Kanban
+# Vincular Ideias a Tarefas (relação muitos-para-muitos)
 
-## Problema
-A sincronização entre pendências e tarefas funciona apenas em **uma direção**: quando o usuário conclui uma tarefa no Kanban (define `actual_end_date`), o sistema marca a pendência como encerrada. Porém, o **caminho inverso não existe** — quando o usuário marca uma pendência como encerrada na tela de Atas, a tarefa vinculada no Kanban continua aberta (sem `actual_end_date`).
+## Resumo
+Criar uma tabela de junção `idea_tasks` para vincular ideias a tarefas. Exibir as tarefas vinculadas dentro do dialog da ideia e as ideias vinculadas dentro do dialog da tarefa.
 
-## Causa raiz
-O método `togglePendency` em `MeetingMinuteDetail.tsx` (linha 97) atualiza apenas a tabela `meeting_pendencies`, sem verificar se existe uma tarefa vinculada via `meeting_pendency_id` na tabela `tasks`.
+## Banco de dados
 
-## Solução
-Após atualizar a pendência, buscar se existe uma tarefa com `meeting_pendency_id = pendency.id` e atualizar seu `actual_end_date`:
-- Se pendência **encerrada** → definir `actual_end_date = hoje`
-- Se pendência **reaberta** → limpar `actual_end_date = null`
+Nova tabela `idea_tasks`:
+```sql
+CREATE TABLE public.idea_tasks (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  idea_id uuid NOT NULL,
+  task_id uuid NOT NULL,
+  linked_by uuid NOT NULL,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  UNIQUE(idea_id, task_id)
+);
 
-## Alteração
+ALTER TABLE public.idea_tasks ENABLE ROW LEVEL SECURITY;
 
-### `src/pages/MeetingMinuteDetail.tsx` — método `togglePendency`
-Após o update na `meeting_pendencies` (linha 105), adicionar:
+-- Todos autenticados podem ver os vínculos
+CREATE POLICY "Authenticated can view idea_tasks"
+  ON public.idea_tasks FOR SELECT TO authenticated
+  USING (true);
 
-```typescript
-// Sync linked task in Kanban
-const { data: linkedTask } = await supabase
-  .from('tasks')
-  .select('id, actual_end_date')
-  .eq('meeting_pendency_id', pendency.id)
-  .maybeSingle();
-
-if (linkedTask) {
-  await supabase.from('tasks').update({
-    actual_end_date: newCompleted ? new Date().toISOString().split('T')[0] : null,
-  }).eq('id', linkedTask.id);
-}
+-- Criador da ideia pode gerenciar vínculos
+CREATE POLICY "Idea owner can manage links"
+  ON public.idea_tasks FOR ALL TO authenticated
+  USING (
+    EXISTS (SELECT 1 FROM ideas WHERE id = idea_tasks.idea_id AND created_by = auth.uid())
+  )
+  WITH CHECK (
+    EXISTS (SELECT 1 FROM ideas WHERE id = idea_tasks.idea_id AND created_by = auth.uid())
+  );
 ```
 
-Isso garante a sincronização bidirecional: Atas ↔ Kanban.
+## Componentes
 
-### Arquivos editados
-- `src/pages/MeetingMinuteDetail.tsx` — ~8 linhas adicionadas no `togglePendency`
+### 1. Novo componente `IdeaLinkedTasks` (src/components/ideas/IdeaLinkedTasks.tsx)
+- Exibido no `EditIdeaDialog`, mostra lista de tarefas vinculadas (título + status)
+- Se o usuário for dono da ideia, mostra um seletor para buscar e vincular tarefas existentes
+- Botao para desvincular tarefa
+
+### 2. Novo componente `TaskLinkedIdeas` (src/components/kanban/TaskLinkedIdeas.tsx)
+- Exibido no `TaskDetailDialog`, mostra lista de ideias vinculadas (título + badge implementada/pendente)
+- Somente leitura (vínculo é gerenciado pela ideia)
+
+### 3. Alterações em arquivos existentes
+- **EditIdeaDialog.tsx**: adicionar `<IdeaLinkedTasks ideaId={idea.id} isOwner={isOwner} />` abaixo dos anexos
+- **TaskDetailDialog.tsx**: adicionar `<TaskLinkedIdeas taskId={task.id} />` na seção de detalhes
+
+## Arquivos
+- `supabase/migrations/` — nova migration para `idea_tasks`
+- `src/components/ideas/IdeaLinkedTasks.tsx` (novo)
+- `src/components/kanban/TaskLinkedIdeas.tsx` (novo)
+- `src/components/ideas/EditIdeaDialog.tsx` — adicionar componente
+- `src/components/kanban/TaskDetailDialog.tsx` — adicionar componente
 
