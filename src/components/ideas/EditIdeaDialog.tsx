@@ -61,7 +61,7 @@ export function EditIdeaDialog({ idea, open, onOpenChange, onUpdated }: Props) {
     setSaving(true);
     const { error } = await supabase
       .from('ideas')
-      .update({ title: title.trim(), description: description.trim() || null, is_implemented: isImplemented })
+      .update({ title: title.trim(), description: description.trim() || null, is_implemented: isImplemented, team_id: teamId !== 'none' ? teamId : null })
       .eq('id', idea.id);
 
     setSaving(false);
