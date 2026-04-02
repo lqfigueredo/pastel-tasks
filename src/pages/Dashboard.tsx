@@ -8,6 +8,7 @@ import { TaskDetailDialog } from '@/components/kanban/TaskDetailDialog';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight, CheckCircle2, UserCircle } from 'lucide-react';
 import { HelpButton } from '@/components/HelpButton';
+import { TimeReport } from '@/components/dashboard/TimeReport';
 import {
   startOfMonth,
   endOfMonth,
