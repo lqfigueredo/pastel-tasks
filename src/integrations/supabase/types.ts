@@ -196,6 +196,45 @@ export type Database = {
           },
         ]
       }
+      idea_tasks: {
+        Row: {
+          created_at: string
+          id: string
+          idea_id: string
+          linked_by: string
+          task_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          idea_id: string
+          linked_by: string
+          task_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          idea_id?: string
+          linked_by?: string
+          task_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "idea_tasks_idea_id_fkey"
+            columns: ["idea_id"]
+            isOneToOne: false
+            referencedRelation: "ideas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "idea_tasks_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ideas: {
         Row: {
           created_at: string
