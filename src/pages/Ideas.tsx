@@ -18,7 +18,9 @@ interface Idea {
   is_implemented: boolean;
   created_by: string;
   created_at: string;
+  team_id: string | null;
   profiles?: { display_name: string } | null;
+  teams?: { name: string } | null;
 }
 
 export default function Ideas() {
@@ -50,17 +52,23 @@ export default function Ideas() {
     if (!data) return;
 
     const userIds = [...new Set(data.map((i) => i.created_by))];
-    const { data: profiles } = await supabase
-      .from('profiles')
-      .select('user_id, display_name')
-      .in('user_id', userIds);
+    const teamIds = [...new Set(data.map((i) => i.team_id).filter(Boolean))] as string[];
+
+    const [{ data: profiles }, { data: teamsData }] = await Promise.all([
+      supabase.from('profiles').select('user_id, display_name').in('user_id', userIds),
+      teamIds.length > 0
+        ? supabase.from('teams').select('id, name').in('id', teamIds)
+        : Promise.resolve({ data: [] as { id: string; name: string }[] }),
+    ]);
 
     const profileMap = new Map(profiles?.map((p) => [p.user_id, p.display_name]) || []);
+    const teamMap = new Map(teamsData?.map((t) => [t.id, t.name]) || []);
 
     setIdeas(
       data.map((i) => ({
         ...i,
         profiles: { display_name: profileMap.get(i.created_by) || 'Usuário' },
+        teams: i.team_id ? { name: teamMap.get(i.team_id) || '' } : null,
       }))
     );
   };
@@ -118,11 +126,12 @@ export default function Ideas() {
       ) : (
         <div className="rounded-lg border">
           <Table>
-            <TableHeader>
+             <TableHeader>
               <TableRow>
                 <TableHead>Título</TableHead>
                 <TableHead className="hidden md:table-cell">Descrição</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead className="hidden sm:table-cell">Equipe</TableHead>
                 <TableHead className="hidden sm:table-cell">Autor</TableHead>
                 <TableHead className="hidden sm:table-cell">Data</TableHead>
               </TableRow>
@@ -142,6 +151,9 @@ export default function Ideas() {
                     <Badge variant={idea.is_implemented ? 'default' : 'secondary'}>
                       {idea.is_implemented ? 'Implementada' : 'Pendente'}
                     </Badge>
+                  </TableCell>
+                  <TableCell className="hidden sm:table-cell text-muted-foreground">
+                    {idea.teams?.name || '—'}
                   </TableCell>
                   <TableCell className="hidden sm:table-cell text-muted-foreground">
                     {idea.profiles?.display_name || 'Usuário'}

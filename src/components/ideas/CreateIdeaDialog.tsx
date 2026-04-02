@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Upload } from 'lucide-react';
 
 interface Props {
@@ -21,8 +22,18 @@ export function CreateIdeaDialog({ open, onOpenChange, onCreated }: Props) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [files, setFiles] = useState<File[]>([]);
+  const [teamId, setTeamId] = useState<string>('none');
+  const [teams, setTeams] = useState<{ id: string; name: string }[]>([]);
   const [saving, setSaving] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const fetchTeams = async () => {
+      const { data } = await supabase.from('teams').select('id, name').order('name');
+      if (data) setTeams(data);
+    };
+    fetchTeams();
+  }, []);
 
   const handleSubmit = async () => {
     if (!title.trim() || !user) return;
@@ -30,7 +41,7 @@ export function CreateIdeaDialog({ open, onOpenChange, onCreated }: Props) {
 
     const { data: idea, error } = await supabase
       .from('ideas')
-      .insert({ title: title.trim(), description: description.trim() || null, created_by: user.id })
+      .insert({ title: title.trim(), description: description.trim() || null, created_by: user.id, team_id: teamId !== 'none' ? teamId : null })
       .select('id')
       .single();
 
@@ -59,6 +70,7 @@ export function CreateIdeaDialog({ open, onOpenChange, onCreated }: Props) {
     setTitle('');
     setDescription('');
     setFiles([]);
+    setTeamId('none');
     onOpenChange(false);
     onCreated();
     toast({ title: 'Ideia registrada!' });
@@ -78,6 +90,20 @@ export function CreateIdeaDialog({ open, onOpenChange, onCreated }: Props) {
           <div>
             <Label htmlFor="idea-desc">Descrição</Label>
             <Textarea id="idea-desc" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Descreva a ideia..." rows={4} />
+          </div>
+          <div>
+            <Label>Equipe (opcional)</Label>
+            <Select value={teamId} onValueChange={setTeamId}>
+              <SelectTrigger>
+                <SelectValue placeholder="Sem equipe" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">Sem equipe</SelectItem>
+                {teams.map((t) => (
+                  <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <div>
             <Label>Anexos</Label>

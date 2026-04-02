@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { IdeaAttachments } from './IdeaAttachments';
 
 interface Idea {
@@ -16,6 +17,7 @@ interface Idea {
   description: string | null;
   is_implemented: boolean;
   created_by: string;
+  team_id: string | null;
 }
 
 interface Props {
@@ -31,7 +33,17 @@ export function EditIdeaDialog({ idea, open, onOpenChange, onUpdated }: Props) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [isImplemented, setIsImplemented] = useState(false);
+  const [teamId, setTeamId] = useState<string>('none');
+  const [teams, setTeams] = useState<{ id: string; name: string }[]>([]);
   const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    const fetchTeams = async () => {
+      const { data } = await supabase.from('teams').select('id, name').order('name');
+      if (data) setTeams(data);
+    };
+    fetchTeams();
+  }, []);
 
   const isOwner = user?.id === idea?.created_by;
 
@@ -40,6 +52,7 @@ export function EditIdeaDialog({ idea, open, onOpenChange, onUpdated }: Props) {
       setTitle(idea.title);
       setDescription(idea.description || '');
       setIsImplemented(idea.is_implemented);
+      setTeamId(idea.team_id || 'none');
     }
   }, [idea]);
 
@@ -48,7 +61,7 @@ export function EditIdeaDialog({ idea, open, onOpenChange, onUpdated }: Props) {
     setSaving(true);
     const { error } = await supabase
       .from('ideas')
-      .update({ title: title.trim(), description: description.trim() || null, is_implemented: isImplemented })
+      .update({ title: title.trim(), description: description.trim() || null, is_implemented: isImplemented, team_id: teamId !== 'none' ? teamId : null })
       .eq('id', idea.id);
 
     setSaving(false);
@@ -89,6 +102,20 @@ export function EditIdeaDialog({ idea, open, onOpenChange, onUpdated }: Props) {
           <div className="flex items-center gap-3">
             <Switch checked={isImplemented} onCheckedChange={setIsImplemented} disabled={!isOwner} />
             <Label>Ideia implementada</Label>
+          </div>
+          <div>
+            <Label>Equipe</Label>
+            <Select value={teamId} onValueChange={setTeamId} disabled={!isOwner}>
+              <SelectTrigger>
+                <SelectValue placeholder="Sem equipe" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">Sem equipe</SelectItem>
+                {teams.map((t) => (
+                  <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <IdeaAttachments ideaId={idea.id} />
         </div>
