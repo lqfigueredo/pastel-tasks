@@ -70,9 +70,7 @@ const Landing = () => {
       <header className="border-b border-border/50 bg-background/80 backdrop-blur-sm sticky top-0 z-10">
         <div className="mx-auto max-w-6xl flex items-center justify-between px-6 py-4">
           <div className="flex items-center gap-2">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary">
-              <CheckSquare className="h-5 w-5 text-primary-foreground" />
-            </div>
+            <img src={logo} alt="NEVVOH" className="h-9 w-9 rounded-xl" />
             <span className="text-lg font-bold">NEVVOH</span>
           </div>
           <Link to="/auth">

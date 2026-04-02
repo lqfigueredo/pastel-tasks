@@ -40,9 +40,7 @@ export function AppSidebar() {
     <Sidebar collapsible="icon">
       <SidebarHeader className="p-4">
         <div className="flex items-center gap-2">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary">
-            <CheckSquare className="h-5 w-5 text-primary-foreground" />
-          </div>
+          <img src={logo} alt="NEVVOH" className="h-9 w-9 shrink-0 rounded-xl" />
           {!collapsed && (
             <span className="font-display text-lg font-bold text-foreground">NEVVOH</span>
           )}
