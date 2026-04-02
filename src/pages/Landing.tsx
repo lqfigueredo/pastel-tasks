@@ -72,7 +72,7 @@ const Landing = () => {
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary">
               <CheckSquare className="h-5 w-5 text-primary-foreground" />
             </div>
-            <span className="text-lg font-bold">SimpleTask</span>
+            <span className="text-lg font-bold">NEVVOH</span>
           </div>
           <Link to="/auth">
             <Button variant="outline" size="sm">Já tenho conta</Button>
