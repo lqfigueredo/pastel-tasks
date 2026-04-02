@@ -126,11 +126,12 @@ export default function Ideas() {
       ) : (
         <div className="rounded-lg border">
           <Table>
-            <TableHeader>
+             <TableHeader>
               <TableRow>
                 <TableHead>Título</TableHead>
                 <TableHead className="hidden md:table-cell">Descrição</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead className="hidden sm:table-cell">Equipe</TableHead>
                 <TableHead className="hidden sm:table-cell">Autor</TableHead>
                 <TableHead className="hidden sm:table-cell">Data</TableHead>
               </TableRow>
