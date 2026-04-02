@@ -17,6 +17,7 @@ import { Switch } from '@/components/ui/switch';
 import { TaskAttachments } from './TaskAttachments';
 import { TaskChangeHistory } from './TaskChangeHistory';
 import { TaskTimer } from './TaskTimer';
+import { TaskLinkedIdeas } from './TaskLinkedIdeas';
 
 interface Comment {
   id: string;
