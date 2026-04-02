@@ -1,4 +1,5 @@
-import { LayoutDashboard, Users, Settings, LogOut, CheckSquare, ShieldCheck, CalendarDays, FileText, TrendingUp, BookOpen, Calendar, Lightbulb } from 'lucide-react';
+import { LayoutDashboard, Users, Settings, LogOut, ShieldCheck, CalendarDays, FileText, TrendingUp, BookOpen, Calendar, Lightbulb } from 'lucide-react';
+import logo from '@/assets/logo.png';
 import { NavLink } from '@/components/NavLink';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserRoles } from '@/hooks/useUserRoles';
