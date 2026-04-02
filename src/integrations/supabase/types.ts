@@ -203,6 +203,7 @@ export type Database = {
           description: string | null
           id: string
           is_implemented: boolean
+          team_id: string | null
           title: string
           updated_at: string
         }
@@ -212,6 +213,7 @@ export type Database = {
           description?: string | null
           id?: string
           is_implemented?: boolean
+          team_id?: string | null
           title: string
           updated_at?: string
         }
@@ -221,10 +223,19 @@ export type Database = {
           description?: string | null
           id?: string
           is_implemented?: boolean
+          team_id?: string | null
           title?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "ideas_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       leads: {
         Row: {
