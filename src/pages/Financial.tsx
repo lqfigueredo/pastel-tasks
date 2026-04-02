@@ -427,6 +427,89 @@ const Financial = () => {
           )}
         </TabsContent>
 
+        <TabsContent value="limits">
+          {adminLimits.length === 0 ? (
+            <p className="text-muted-foreground py-10 text-center">Nenhum administrador encontrado.</p>
+          ) : (
+            <div className="rounded-lg border border-border overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Administrador</TableHead>
+                    <TableHead>Usuários</TableHead>
+                    <TableHead>Limite</TableHead>
+                    <TableHead className="text-right">Ações</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {adminLimits.map((admin) => {
+                    const pct = admin.max_users > 0 ? (admin.current_users / admin.max_users) * 100 : 0;
+                    const isEditing = editingLimit?.adminId === admin.admin_user_id;
+                    return (
+                      <TableRow key={admin.admin_user_id}>
+                        <TableCell className="font-medium">{admin.display_name}</TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-3 min-w-[160px]">
+                            <Progress value={pct} className="h-2 flex-1" />
+                            <span className="text-sm text-muted-foreground whitespace-nowrap">
+                              {admin.current_users}/{admin.max_users}
+                            </span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          {isEditing ? (
+                            <Input
+                              type="number"
+                              min={1}
+                              className="w-20 h-8"
+                              value={editingLimit.value}
+                              onChange={(e) => setEditingLimit({ adminId: admin.admin_user_id, value: e.target.value })}
+                              autoFocus
+                            />
+                          ) : (
+                            <span>{admin.max_users}</span>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          {isEditing ? (
+                            <div className="flex gap-1 justify-end">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="text-green-600"
+                                disabled={actionLoading === admin.admin_user_id}
+                                onClick={() => handleSaveLimit(admin.admin_user_id, parseInt(editingLimit.value))}
+                              >
+                                <Check className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => setEditingLimit(null)}
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          ) : (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => setEditingLimit({ adminId: admin.admin_user_id, value: String(admin.max_users) })}
+                            >
+                              <Pencil className="h-4 w-4 mr-1" />
+                              Editar
+                            </Button>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </TabsContent>
+
         <TabsContent value="support">
           <SupportTicketList role="solution_admin" />
         </TabsContent>
