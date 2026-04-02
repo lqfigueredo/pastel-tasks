@@ -68,19 +68,37 @@ const EditUserProfileDialog = ({
   }, [open, userId, currentDisplayName]);
 
   const handleSave = async () => {
+    const trimmedEmail = email.trim();
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (trimmedEmail && !emailRegex.test(trimmedEmail)) {
+      toast.error('Formato de e-mail inválido');
+      return;
+    }
+
     setLoading(true);
     try {
-      const { error } = await supabase.functions.invoke('approve-user', {
+      const { data, error } = await supabase.functions.invoke('approve-user', {
         body: {
           userId,
           action: 'update-profile',
           displayName: displayName.trim(),
-          email: email.trim(),
+          email: trimmedEmail,
           role,
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        let msg = 'Erro ao atualizar perfil';
+        try {
+          const errBody = await (error as any).context?.json?.();
+          if (errBody?.error) msg = errBody.error;
+        } catch {
+          if (data?.error) msg = data.error;
+        }
+        toast.error(msg);
+        return;
+      }
+
       toast.success('Perfil atualizado com sucesso!');
       onSaved();
       onOpenChange(false);
