@@ -1,73 +1,40 @@
 
 
-# Otimização de Velocidade da Aplicação
+# Sincronizar Pendência da Ata com Tarefa no Kanban
 
-## Problemas Identificados
+## Problema
+A sincronização entre pendências e tarefas funciona apenas em **uma direção**: quando o usuário conclui uma tarefa no Kanban (define `actual_end_date`), o sistema marca a pendência como encerrada. Porém, o **caminho inverso não existe** — quando o usuário marca uma pendência como encerrada na tela de Atas, a tarefa vinculada no Kanban continua aberta (sem `actual_end_date`).
 
-### 1. Consultas duplicadas ao banco de dados
-- **Dashboard.tsx** busca `tasks`, `profiles`, `task_assignees` e `task_statuses` — exatamente as mesmas tabelas que o **KanbanBoard.tsx** já busca. Quando o usuário navega entre as páginas, as mesmas queries são refeitas sem cache.
-- **TimeReport.tsx** (dentro do Dashboard) faz **mais 3 queries** (`task_time_entries`, `tasks`, `profiles`) — `tasks` e `profiles` já foram buscados pelo componente pai.
-- **useUserRoles** faz 3 RPCs `has_role` separadas em vez de uma única query ao `user_roles`.
+## Causa raiz
+O método `togglePendency` em `MeetingMinuteDetail.tsx` (linha 97) atualiza apenas a tabela `meeting_pendencies`, sem verificar se existe uma tarefa vinculada via `meeting_pendency_id` na tabela `tasks`.
 
-### 2. Falta de React Query para cache e deduplicação
-- Todas as queries usam `supabase.from(...).select()` diretamente em `useEffect`, sem cache. Ao reabrir uma página, tudo é buscado novamente.
-- Não há `staleTime` configurado no `QueryClient`.
+## Solução
+Após atualizar a pendência, buscar se existe uma tarefa com `meeting_pendency_id = pendency.id` e atualizar seu `actual_end_date`:
+- Se pendência **encerrada** → definir `actual_end_date = hoje`
+- Se pendência **reaberta** → limpar `actual_end_date = null`
 
-### 3. TimeReport filtra datas com mutação
-- Linha 85 de `TimeReport.tsx`: `new Date(startDate.setHours(...))` **muda o objeto Date original**, causando bugs sutis e re-renders desnecessários.
+## Alteração
 
-### 4. Dashboard renderiza todos os dias sem virtualização
-- Aceitável para calendário mensal (max ~42 cells), mas `computeBarsForWeek` roda para cada semana a cada render e `getSingleDayTasks` filtra todas as tasks para cada dia.
+### `src/pages/MeetingMinuteDetail.tsx` — método `togglePendency`
+Após o update na `meeting_pendencies` (linha 105), adicionar:
 
-### 5. NotificationBell sem polling/refetch
-- Busca notificações apenas 1 vez (mount). Tudo bem graças ao realtime, mas a query inicial não tem cache.
+```typescript
+// Sync linked task in Kanban
+const { data: linkedTask } = await supabase
+  .from('tasks')
+  .select('id, actual_end_date')
+  .eq('meeting_pendency_id', pendency.id)
+  .maybeSingle();
 
----
-
-## Plano de Otimização
-
-### Etapa 1 — Migrar queries principais para React Query (maior impacto)
-Criar hooks reutilizáveis com `useQuery` para as entidades mais acessadas:
-
-- **`useTasksQuery()`** — busca `tasks`, `task_assignees`, `profiles`, retorna tasks com assignees já mapeados. `staleTime: 30s`.
-- **`useStatusesQuery()`** — busca `task_statuses`. `staleTime: 60s`.
-- **`useProfilesQuery()`** — busca `profiles`. `staleTime: 120s`.
-
-Isso elimina queries duplicadas entre Dashboard, KanbanBoard e TimeReport. Componentes que modificam dados chamam `queryClient.invalidateQueries()`.
-
-Configurar `QueryClient` com `defaultOptions.queries.staleTime = 30_000`.
-
-### Etapa 2 — Otimizar `useUserRoles`
-Substituir 3 chamadas RPC por uma única query:
-```sql
-SELECT role FROM user_roles WHERE user_id = $1
-```
-Reduz de 3 round-trips para 1.
-
-### Etapa 3 — Corrigir bug de mutação de Date no TimeReport
-Trocar `new Date(startDate.setHours(...))` por:
-```ts
-const start = new Date(startDate);
-start.setHours(0, 0, 0, 0);
+if (linkedTask) {
+  await supabase.from('tasks').update({
+    actual_end_date: newCompleted ? new Date().toISOString().split('T')[0] : null,
+  }).eq('id', linkedTask.id);
+}
 ```
 
-### Etapa 4 — Passar dados do Dashboard para TimeReport via props
-Em vez do TimeReport fazer suas próprias queries, receber `tasks` e `profiles` do Dashboard (que já os tem via React Query), buscando apenas `task_time_entries`.
+Isso garante a sincronização bidirecional: Atas ↔ Kanban.
 
-### Etapa 5 — Memoizar filtros do Dashboard
-`getSingleDayTasks` e `computeBarsForWeek` já usam `useCallback`/`useMemo`, mas os `tasks` filtrados por `useMemo` dependem de `allTasks` que muda de referência a cada fetch. Com React Query, a referência será estável quando os dados não mudam.
-
----
-
-## Arquivos criados/editados
-
-- `src/hooks/useTasksQuery.ts` (novo) — hook com React Query para tasks + assignees
-- `src/hooks/useStatusesQuery.ts` (novo) — hook com React Query para statuses
-- `src/hooks/useProfilesQuery.ts` (novo) — hook com React Query para profiles
-- `src/hooks/useUserRoles.ts` — 3 RPCs → 1 query
-- `src/App.tsx` — configurar `staleTime` no QueryClient
-- `src/pages/Dashboard.tsx` — usar os novos hooks
-- `src/components/kanban/KanbanBoard.tsx` — usar os novos hooks
-- `src/components/dashboard/TimeReport.tsx` — receber props, corrigir bug de Date
-- `src/components/kanban/TaskTimer.tsx` — usar `useProfilesQuery` em vez de fetch próprio
+### Arquivos editados
+- `src/pages/MeetingMinuteDetail.tsx` — ~8 linhas adicionadas no `togglePendency`
 
