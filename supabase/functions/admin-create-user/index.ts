@@ -51,6 +51,23 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: 'A senha deve ter pelo menos 6 caracteres' }), { status: 400, headers: corsHeaders })
     }
 
+    // Check user limit for this admin
+    const { count: currentCount } = await supabaseAdmin
+      .from('user_approvals')
+      .select('*', { count: 'exact', head: true })
+      .eq('created_by_admin', callerUserId)
+
+    const { data: adminSettings } = await supabaseAdmin
+      .from('admin_settings')
+      .select('max_users')
+      .eq('admin_user_id', callerUserId)
+      .single()
+
+    const maxUsers = adminSettings?.max_users ?? 10
+    if (currentCount !== null && currentCount >= maxUsers) {
+      return new Response(JSON.stringify({ error: `Limite de usuários atingido (${currentCount}/${maxUsers})` }), { status: 403, headers: corsHeaders })
+    }
+
     // Create user with email already confirmed
     const { data: userData, error: createError } = await supabaseAdmin.auth.admin.createUser({
       email,

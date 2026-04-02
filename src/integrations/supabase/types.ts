@@ -14,6 +14,30 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_settings: {
+        Row: {
+          admin_user_id: string
+          created_at: string
+          id: string
+          max_users: number
+          updated_at: string
+        }
+        Insert: {
+          admin_user_id: string
+          created_at?: string
+          id?: string
+          max_users?: number
+          updated_at?: string
+        }
+        Update: {
+          admin_user_id?: string
+          created_at?: string
+          id?: string
+          max_users?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       calendar_event_participants: {
         Row: {
           added_at: string

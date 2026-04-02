@@ -8,7 +8,8 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Check, X, Ban, CalendarIcon, RotateCcw, MailCheck, Pencil } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Check, X, Ban, CalendarIcon, RotateCcw, MailCheck, Pencil, Users } from 'lucide-react';
 import EditUserProfileDialog from '@/components/financial/EditUserProfileDialog';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -34,6 +35,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
+import { Progress } from '@/components/ui/progress';
 
 interface Lead {
   id: string;
@@ -51,16 +53,26 @@ interface UserApproval {
   license_expires_at: string | null;
   display_name: string;
   email: string;
+  created_by_admin: string | null;
+}
+
+interface AdminLimit {
+  admin_user_id: string;
+  display_name: string;
+  max_users: number;
+  current_users: number;
 }
 
 const Financial = () => {
   const { user } = useAuth();
   const [leads, setLeads] = useState<Lead[]>([]);
   const [approvals, setApprovals] = useState<UserApproval[]>([]);
+  const [adminLimits, setAdminLimits] = useState<AdminLimit[]>([]);
   const [loading, setLoading] = useState(true);
   const [isSolutionAdmin, setIsSolutionAdmin] = useState(false);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [editingUser, setEditingUser] = useState<UserApproval | null>(null);
+  const [editingLimit, setEditingLimit] = useState<{ adminId: string; value: string } | null>(null);
   const pendingCount = approvals.filter(a => a.status === 'pending').length;
 
   useEffect(() => {
@@ -76,9 +88,10 @@ const Financial = () => {
   }, [user]);
 
   const loadData = async () => {
-    const [leadsRes, approvalsRes] = await Promise.all([
+    const [leadsRes, approvalsRes, adminSettingsRes] = await Promise.all([
       supabase.from('leads').select('*').order('created_at', { ascending: false }),
       supabase.from('user_approvals').select('*').order('requested_at', { ascending: false }),
+      supabase.from('admin_settings').select('*'),
     ]);
 
     setLeads((leadsRes.data as Lead[]) || []);
@@ -98,8 +111,38 @@ const Financial = () => {
         display_name: profileMap.get(a.user_id) || 'Sem nome',
         email: '',
       })));
+
+      // Build admin limits
+      const { data: adminRoles } = await supabase
+        .from('user_roles')
+        .select('user_id')
+        .eq('role', 'admin');
+
+      const adminUserIds = (adminRoles || []).map(r => r.user_id);
+      const settingsMap = new Map((adminSettingsRes.data || []).map((s: any) => [s.admin_user_id, s.max_users]));
+
+      // Get admin profiles
+      const adminProfileIds = adminUserIds.filter(id => !profileMap.has(id));
+      let fullProfileMap = new Map(profileMap);
+      if (adminProfileIds.length > 0) {
+        const { data: adminProfiles } = await supabase
+          .from('profiles')
+          .select('user_id, display_name')
+          .in('user_id', adminProfileIds);
+        (adminProfiles || []).forEach(p => fullProfileMap.set(p.user_id, p.display_name));
+      }
+
+      const limits: AdminLimit[] = adminUserIds.map(adminId => ({
+        admin_user_id: adminId,
+        display_name: fullProfileMap.get(adminId) || 'Sem nome',
+        max_users: settingsMap.get(adminId) ?? 10,
+        current_users: rawApprovals.filter(a => a.created_by_admin === adminId).length,
+      }));
+
+      setAdminLimits(limits);
     } else {
       setApprovals([]);
+      setAdminLimits([]);
     }
 
     setLoading(false);
@@ -134,6 +177,27 @@ const Financial = () => {
   const handleLicenseDateChange = async (userId: string, date: Date | undefined) => {
     if (!date) return;
     await handleAction(userId, 'update-license', { licenseExpiresAt: date.toISOString() });
+  };
+
+  const handleSaveLimit = async (adminUserId: string, maxUsers: number) => {
+    if (!maxUsers || maxUsers < 1) {
+      toast.error('Limite deve ser pelo menos 1');
+      return;
+    }
+    setActionLoading(adminUserId);
+    try {
+      const { error } = await supabase
+        .from('admin_settings')
+        .upsert({ admin_user_id: adminUserId, max_users: maxUsers }, { onConflict: 'admin_user_id' });
+      if (error) throw error;
+      toast.success('Limite atualizado com sucesso!');
+      setEditingLimit(null);
+      await loadData();
+    } catch (err: any) {
+      toast.error(err.message || 'Erro ao salvar limite');
+    } finally {
+      setActionLoading(null);
+    }
   };
 
   if (loading) {
@@ -192,6 +256,10 @@ const Financial = () => {
             )}
           </TabsTrigger>
           <TabsTrigger value="leads">Leads</TabsTrigger>
+          <TabsTrigger value="limits">
+            <Users className="h-4 w-4 mr-1" />
+            Limites
+          </TabsTrigger>
           <TabsTrigger value="support">Chamados</TabsTrigger>
           <TabsTrigger value="help-texts">Textos de Ajuda</TabsTrigger>
         </TabsList>
@@ -375,6 +443,89 @@ const Financial = () => {
                       </TableCell>
                     </TableRow>
                   ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </TabsContent>
+
+        <TabsContent value="limits">
+          {adminLimits.length === 0 ? (
+            <p className="text-muted-foreground py-10 text-center">Nenhum administrador encontrado.</p>
+          ) : (
+            <div className="rounded-lg border border-border overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Administrador</TableHead>
+                    <TableHead>Usuários</TableHead>
+                    <TableHead>Limite</TableHead>
+                    <TableHead className="text-right">Ações</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {adminLimits.map((admin) => {
+                    const pct = admin.max_users > 0 ? (admin.current_users / admin.max_users) * 100 : 0;
+                    const isEditing = editingLimit?.adminId === admin.admin_user_id;
+                    return (
+                      <TableRow key={admin.admin_user_id}>
+                        <TableCell className="font-medium">{admin.display_name}</TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-3 min-w-[160px]">
+                            <Progress value={pct} className="h-2 flex-1" />
+                            <span className="text-sm text-muted-foreground whitespace-nowrap">
+                              {admin.current_users}/{admin.max_users}
+                            </span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          {isEditing ? (
+                            <Input
+                              type="number"
+                              min={1}
+                              className="w-20 h-8"
+                              value={editingLimit.value}
+                              onChange={(e) => setEditingLimit({ adminId: admin.admin_user_id, value: e.target.value })}
+                              autoFocus
+                            />
+                          ) : (
+                            <span>{admin.max_users}</span>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          {isEditing ? (
+                            <div className="flex gap-1 justify-end">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="text-green-600"
+                                disabled={actionLoading === admin.admin_user_id}
+                                onClick={() => handleSaveLimit(admin.admin_user_id, parseInt(editingLimit.value))}
+                              >
+                                <Check className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => setEditingLimit(null)}
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          ) : (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => setEditingLimit({ adminId: admin.admin_user_id, value: String(admin.max_users) })}
+                            >
+                              <Pencil className="h-4 w-4 mr-1" />
+                              Editar
+                            </Button>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
                 </TableBody>
               </Table>
             </div>

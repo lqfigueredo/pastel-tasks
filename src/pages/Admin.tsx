@@ -57,6 +57,7 @@ export default function Admin() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [userLimit, setUserLimit] = useState<{ current: number; max: number } | null>(null);
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -78,28 +79,29 @@ export default function Admin() {
   };
 
   const loadData = async () => {
-    // First, get user_ids of users created by this admin
     const { data: approvalsData } = await supabase
       .from('user_approvals')
       .select('user_id')
       .eq('created_by_admin', user!.id);
 
     const createdUserIds = approvalsData?.map(a => a.user_id) || [];
-    // Include the admin's own ID
     const visibleUserIds = [...new Set([user!.id, ...createdUserIds])];
 
-    const [profilesRes, teamsRes, membersRes, rolesRes] = await Promise.all([
+    const [profilesRes, teamsRes, membersRes, rolesRes, settingsRes] = await Promise.all([
       supabase.from('profiles').select('user_id, display_name, created_at').in('user_id', visibleUserIds).order('created_at', { ascending: false }),
       supabase.from('teams').select('id, name').eq('created_by', user!.id),
       supabase.from('team_members').select('user_id, team_id, teams(name)'),
       supabase.from('user_roles').select('user_id, role').eq('role', 'admin'),
+      supabase.from('admin_settings').select('max_users').eq('admin_user_id', user!.id).maybeSingle(),
     ]);
     if (profilesRes.data) setProfiles(profilesRes.data);
     if (teamsRes.data) setTeams(teamsRes.data);
     if (membersRes.data) setTeamMembers(membersRes.data as unknown as TeamMember[]);
     if (rolesRes.data) setAdminRoles(new Set(rolesRes.data.map((r: UserRole) => r.user_id)));
 
-    // Fetch banned status via edge function for all users
+    const maxUsers = settingsRes.data?.max_users ?? 10;
+    setUserLimit({ current: createdUserIds.length, max: maxUsers });
+
     await loadBannedStatus(profilesRes.data || []);
   };
 
@@ -250,7 +252,14 @@ export default function Admin() {
             <UserPlus className="h-5 w-5" />
             Cadastrar Usuário
           </CardTitle>
-          <CardDescription>O usuário poderá fazer login imediatamente após o cadastro.</CardDescription>
+          <CardDescription>
+            O usuário poderá fazer login imediatamente após o cadastro.
+            {userLimit && (
+              <span className="ml-2 font-medium">
+                ({userLimit.current}/{userLimit.max} usuários utilizados)
+              </span>
+            )}
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="grid gap-4 sm:grid-cols-2">
