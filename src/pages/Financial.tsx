@@ -34,6 +34,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
+import { Progress } from '@/components/ui/progress';
 
 interface Lead {
   id: string;
@@ -51,16 +52,26 @@ interface UserApproval {
   license_expires_at: string | null;
   display_name: string;
   email: string;
+  created_by_admin: string | null;
+}
+
+interface AdminLimit {
+  admin_user_id: string;
+  display_name: string;
+  max_users: number;
+  current_users: number;
 }
 
 const Financial = () => {
   const { user } = useAuth();
   const [leads, setLeads] = useState<Lead[]>([]);
   const [approvals, setApprovals] = useState<UserApproval[]>([]);
+  const [adminLimits, setAdminLimits] = useState<AdminLimit[]>([]);
   const [loading, setLoading] = useState(true);
   const [isSolutionAdmin, setIsSolutionAdmin] = useState(false);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [editingUser, setEditingUser] = useState<UserApproval | null>(null);
+  const [editingLimit, setEditingLimit] = useState<{ adminId: string; value: string } | null>(null);
   const pendingCount = approvals.filter(a => a.status === 'pending').length;
 
   useEffect(() => {
