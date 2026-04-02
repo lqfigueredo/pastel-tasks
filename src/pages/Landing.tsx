@@ -72,7 +72,7 @@ const Landing = () => {
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary">
               <CheckSquare className="h-5 w-5 text-primary-foreground" />
             </div>
-            <span className="text-lg font-bold">SimpleTask</span>
+            <span className="text-lg font-bold">NEVVOH</span>
           </div>
           <Link to="/auth">
             <Button variant="outline" size="sm">Já tenho conta</Button>
@@ -88,7 +88,7 @@ const Landing = () => {
         </h1>
         <p className="mx-auto mt-6 max-w-2xl text-lg text-muted-foreground">
           Organize projetos, gerencie equipes e acompanhe reuniões em um único lugar.
-          O SimpleTask foi criado para times que querem produtividade sem complexidade.
+          O NEVVOH foi criado para times que querem produtividade sem complexidade.
         </p>
         <div className="mt-10">
           <Dialog open={open} onOpenChange={setOpen}>
@@ -102,7 +102,7 @@ const Landing = () => {
               <DialogHeader>
                 <DialogTitle>Demonstre seu interesse</DialogTitle>
                 <DialogDescription>
-                  Preencha seus dados e entraremos em contato para apresentar o SimpleTask.
+                  Preencha seus dados e entraremos em contato para apresentar o NEVVOH.
                 </DialogDescription>
               </DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-4">
@@ -158,7 +158,7 @@ const Landing = () => {
 
       {/* Footer */}
       <footer className="border-t border-border/50 py-8 text-center text-sm text-muted-foreground">
-        © {new Date().getFullYear()} SimpleTask. Todos os direitos reservados.
+        © {new Date().getFullYear()} NEVVOH. Todos os direitos reservados.
       </footer>
     </div>
   );

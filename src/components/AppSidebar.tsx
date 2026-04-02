@@ -43,7 +43,7 @@ export function AppSidebar() {
             <CheckSquare className="h-5 w-5 text-primary-foreground" />
           </div>
           {!collapsed && (
-            <span className="font-display text-lg font-bold text-foreground">SimpleTask</span>
+            <span className="font-display text-lg font-bold text-foreground">NEVVOH</span>
           )}
         </div>
       </SidebarHeader>
