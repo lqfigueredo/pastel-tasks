@@ -1,30 +1,79 @@
 
 
-# Corrigir logo deformado ao minimizar menu lateral
+# Limite de usuários por administrador (definido pelo Financeiro)
 
-## Problema
-Quando o menu lateral é minimizado (`collapsible="icon"`), a largura colapsa para `3rem` (48px). O logo tem `h-9 w-9` (36px) mas o `SidebarHeader` tem `p-4` (16px de padding em cada lado), totalizando 36+32 = 68px necessários — muito mais que os 48px disponíveis. O logo é comprimido horizontalmente.
+## Contexto
+Atualmente, administradores podem criar usuários sem limite. O financeiro (solution_admin) precisa poder definir o máximo de usuários que cada administrador pode cadastrar. O vínculo admin→usuários já existe via `user_approvals.created_by_admin`.
 
-## Solução
+## Alterações
 
-### 1. Aumentar largura do sidebar colapsado
-Em `src/components/ui/sidebar.tsx`, alterar `SIDEBAR_WIDTH_ICON` de `"3rem"` para `"3.5rem"` (56px), acomodando o logo de 36px com algum padding.
+### 1. Nova coluna na tabela `user_approvals`
+Adicionar `max_users` na tabela `user_approvals` para armazenar o limite por admin. Como cada admin tem um registro próprio em `user_approvals`, usaremos esse registro para guardar o limite.
 
-### 2. Ajustar padding do header quando colapsado
-Em `src/components/AppSidebar.tsx`, usar padding menor quando colapsado e garantir que o logo não distorça com `object-contain`:
+**Problema**: `user_approvals` tem um registro por usuário, não por admin. Precisamos de outra abordagem.
 
-```tsx
-<SidebarHeader className={collapsed ? "p-2" : "p-4"}>
-  <div className="flex items-center gap-2 justify-center">
-    <img src={logo} alt="NEVVOH" className="h-9 w-9 shrink-0 rounded-xl object-contain" />
-    {!collapsed && (
-      <span className="font-display text-lg font-bold text-foreground">NEVVOH</span>
-    )}
-  </div>
-</SidebarHeader>
+**Solução**: Criar uma nova tabela `admin_settings` para configurações por admin.
+
+```sql
+CREATE TABLE public.admin_settings (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  admin_user_id uuid NOT NULL UNIQUE,
+  max_users integer NOT NULL DEFAULT 10,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+
+ALTER TABLE public.admin_settings ENABLE ROW LEVEL SECURITY;
+
+-- Solution admins podem ver e editar
+CREATE POLICY "Solution admins can manage admin_settings"
+  ON public.admin_settings FOR ALL TO authenticated
+  USING (has_role(auth.uid(), 'solution_admin'))
+  WITH CHECK (has_role(auth.uid(), 'solution_admin'));
+
+-- Admin pode ver suas próprias configurações
+CREATE POLICY "Admin can view own settings"
+  ON public.admin_settings FOR SELECT TO authenticated
+  USING (admin_user_id = auth.uid());
 ```
 
-### Arquivos
-- `src/components/ui/sidebar.tsx` — ajustar `SIDEBAR_WIDTH_ICON`
-- `src/components/AppSidebar.tsx` — ajustar padding e centralizar logo
+### 2. UI no Financeiro (`Financial.tsx`)
+Na tabela de aprovações, agrupar a visão por admin (aqueles com role `admin`). Para cada admin, mostrar:
+- Nome do admin
+- Quantidade atual de usuários criados (count de `user_approvals` onde `created_by_admin = admin_id`)
+- Campo editável com o limite máximo (`max_users`)
+- Botão para salvar o limite
+
+Isso será uma nova aba "Limites" ou integrado na aba de Aprovações com uma coluna extra mostrando "Usuários: 3/10" e botão para editar o limite.
+
+### 3. Validação na Edge Function `admin-create-user`
+Antes de criar um novo usuário, verificar:
+```typescript
+// Contar usuários já criados por este admin
+const { count } = await supabaseAdmin
+  .from('user_approvals')
+  .select('*', { count: 'exact', head: true })
+  .eq('created_by_admin', callerUserId)
+
+// Buscar limite
+const { data: settings } = await supabaseAdmin
+  .from('admin_settings')
+  .select('max_users')
+  .eq('admin_user_id', callerUserId)
+  .single()
+
+const maxUsers = settings?.max_users ?? 10
+if (count !== null && count >= maxUsers) {
+  return error 403: "Limite de usuários atingido"
+}
+```
+
+### 4. Exibir limite no painel Admin (`Admin.tsx`)
+Mostrar ao admin quantos usuários ele ainda pode criar: "Usuários: 3/10".
+
+## Arquivos modificados
+- **Migração SQL**: criar tabela `admin_settings`
+- **`supabase/functions/admin-create-user/index.ts`**: adicionar validação de limite
+- **`src/pages/Financial.tsx`**: adicionar UI para definir limite por admin
+- **`src/pages/Admin.tsx`**: exibir limite atual do admin
 
