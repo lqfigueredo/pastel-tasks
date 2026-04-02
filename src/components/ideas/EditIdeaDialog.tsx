@@ -119,6 +119,7 @@ export function EditIdeaDialog({ idea, open, onOpenChange, onUpdated }: Props) {
             </Select>
           </div>
           <IdeaAttachments ideaId={idea.id} />
+          <IdeaLinkedTasks ideaId={idea.id} isOwner={isOwner} />
         </div>
         {isOwner && (
           <DialogFooter className="flex-col sm:flex-row gap-2">
