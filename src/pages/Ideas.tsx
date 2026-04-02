@@ -52,17 +52,23 @@ export default function Ideas() {
     if (!data) return;
 
     const userIds = [...new Set(data.map((i) => i.created_by))];
-    const { data: profiles } = await supabase
-      .from('profiles')
-      .select('user_id, display_name')
-      .in('user_id', userIds);
+    const teamIds = [...new Set(data.map((i) => i.team_id).filter(Boolean))] as string[];
+
+    const [{ data: profiles }, { data: teamsData }] = await Promise.all([
+      supabase.from('profiles').select('user_id, display_name').in('user_id', userIds),
+      teamIds.length > 0
+        ? supabase.from('teams').select('id, name').in('id', teamIds)
+        : Promise.resolve({ data: [] as { id: string; name: string }[] }),
+    ]);
 
     const profileMap = new Map(profiles?.map((p) => [p.user_id, p.display_name]) || []);
+    const teamMap = new Map(teamsData?.map((t) => [t.id, t.name]) || []);
 
     setIdeas(
       data.map((i) => ({
         ...i,
         profiles: { display_name: profileMap.get(i.created_by) || 'Usuário' },
+        teams: i.team_id ? { name: teamMap.get(i.team_id) || '' } : null,
       }))
     );
   };
