@@ -153,6 +153,9 @@ export default function Ideas() {
                     </Badge>
                   </TableCell>
                   <TableCell className="hidden sm:table-cell text-muted-foreground">
+                    {idea.teams?.name || '—'}
+                  </TableCell>
+                  <TableCell className="hidden sm:table-cell text-muted-foreground">
                     {idea.profiles?.display_name || 'Usuário'}
                   </TableCell>
                   <TableCell className="hidden sm:table-cell text-muted-foreground">
