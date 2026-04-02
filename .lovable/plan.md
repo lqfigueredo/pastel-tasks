@@ -1,76 +1,42 @@
 
 
-# Timer de Horas por Tarefa
+# Melhorar tratamento de erros no cadastro de usuários (Admin)
 
-## Resumo
-Adicionar um cronômetro (timer) nas tarefas que permite ao usuário registrar sessões de trabalho com início/fim, visualizar o histórico de sessões e consolidar o total de horas gastas.
+## Problema identificado
+Quando a edge function `admin-create-user` retorna um erro HTTP (ex: 400 com "Este email já está cadastrado"), o `supabase.functions.invoke` coloca o erro no objeto `error` mas `data` fica `null`. O código atual tenta ler `data?.error`, que é `null`, e exibe a mensagem genérica "Erro ao cadastrar usuário" — sem mostrar o motivo real.
 
-## 1. Banco de Dados
+O usuário Sidnei foi cadastrado com sucesso na primeira tentativa (confirmado nos logs de auth com status 200), mas ao tentar novamente recebeu o erro 422 "already registered" sem uma mensagem clara na tela.
 
-### Nova tabela `task_time_entries`
-```sql
-CREATE TABLE public.task_time_entries (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  task_id uuid NOT NULL REFERENCES public.tasks(id) ON DELETE CASCADE,
-  user_id uuid NOT NULL,
-  started_at timestamptz NOT NULL DEFAULT now(),
-  ended_at timestamptz,
-  created_at timestamptz NOT NULL DEFAULT now()
-);
+## Solução
+Ajustar o tratamento de erros em `Admin.tsx` (handleSubmit) para extrair a mensagem do corpo da resposta HTTP quando `error` é um `FunctionsHttpError`.
 
-ALTER TABLE public.task_time_entries ENABLE ROW LEVEL SECURITY;
+## Alterações
 
--- Quem pode ver: dono da tarefa, assignees, membros do time
-CREATE POLICY "Task owner can view time entries" ON public.task_time_entries
-  FOR SELECT TO authenticated
-  USING (is_task_owner(task_id, auth.uid()));
+### `src/pages/Admin.tsx` — handleSubmit (linhas 124-155)
+Quando `error` existe, tentar extrair o JSON do response body:
 
-CREATE POLICY "Assignees can view time entries" ON public.task_time_entries
-  FOR SELECT TO authenticated
-  USING (is_task_assignee(task_id, auth.uid()));
+```typescript
+const { data, error } = await supabase.functions.invoke('admin-create-user', {
+  body: { ... },
+});
 
-CREATE POLICY "Team members can view time entries" ON public.task_time_entries
-  FOR SELECT TO authenticated
-  USING (EXISTS (
-    SELECT 1 FROM tasks t
-    WHERE t.id = task_time_entries.task_id
-      AND t.team_id IS NOT NULL
-      AND is_team_member(auth.uid(), t.team_id)
-  ));
-
--- Usuário pode gerenciar seus próprios registros
-CREATE POLICY "Users can manage own time entries" ON public.task_time_entries
-  FOR ALL TO authenticated
-  USING (user_id = auth.uid())
-  WITH CHECK (user_id = auth.uid());
-
-CREATE INDEX idx_task_time_entries_task ON public.task_time_entries(task_id);
-CREATE INDEX idx_task_time_entries_user ON public.task_time_entries(user_id);
+if (error) {
+  // Tenta extrair mensagem do corpo da resposta
+  let msg = 'Erro ao cadastrar usuário';
+  try {
+    const errBody = await error.context?.json?.();
+    if (errBody?.error) msg = errBody.error;
+  } catch {
+    if (data?.error) msg = data.error;
+  }
+  toast.error(msg);
+  setSubmitting(false);
+  return;
+}
 ```
 
-## 2. Componente `TaskTimer.tsx`
-Novo componente `src/components/kanban/TaskTimer.tsx`:
-- Botão "Iniciar" que cria um registro com `started_at = now()` e `ended_at = null`
-- Enquanto ativo, mostra cronômetro em tempo real (hh:mm:ss)
-- Botão "Parar" que atualiza `ended_at = now()` no registro aberto
-- Lista de sessões anteriores com data/hora início, fim e duração
-- Botão "Consolidar Horas" que calcula e exibe o total por usuário
-- Apenas o próprio usuário pode iniciar/parar seu timer
+Isso garante que mensagens como "Este email já está cadastrado" ou "Time já atingiu o limite de membros" sejam exibidas corretamente ao administrador.
 
-## 3. Integração no `TaskDetailDialog.tsx`
-- Adicionar o componente `TaskTimer` dentro do dialog de detalhes, após os anexos
-- Separado por `<Separator />`
-
-## 4. Fluxo do Usuário
-1. Abre o card da tarefa
-2. Clica em "Iniciar Timer" → registro criado, cronômetro começa
-3. Trabalha na atividade
-4. Clica em "Parar Timer" → registro atualizado com hora de fim
-5. Pode iniciar novamente para nova sessão
-6. Clica em "Consolidar Horas" → vê tabela com total por usuário
-
-## Arquivos criados/editados
-- **Migration SQL**: tabela `task_time_entries` com RLS
-- `src/components/kanban/TaskTimer.tsx` (novo)
-- `src/components/kanban/TaskDetailDialog.tsx` (adicionar TaskTimer)
+### Arquivos editados
+- `src/pages/Admin.tsx` — apenas o bloco de tratamento de erro no handleSubmit (~5 linhas alteradas)
 
