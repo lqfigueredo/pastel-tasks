@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { IdeaAttachments } from './IdeaAttachments';
+import { IdeaLinkedTasks } from './IdeaLinkedTasks';
 
 interface Idea {
   id: string;
@@ -118,6 +119,7 @@ export function EditIdeaDialog({ idea, open, onOpenChange, onUpdated }: Props) {
             </Select>
           </div>
           <IdeaAttachments ideaId={idea.id} />
+          <IdeaLinkedTasks ideaId={idea.id} isOwner={isOwner} />
         </div>
         {isOwner && (
           <DialogFooter className="flex-col sm:flex-row gap-2">

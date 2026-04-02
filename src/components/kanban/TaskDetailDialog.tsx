@@ -17,6 +17,7 @@ import { Switch } from '@/components/ui/switch';
 import { TaskAttachments } from './TaskAttachments';
 import { TaskChangeHistory } from './TaskChangeHistory';
 import { TaskTimer } from './TaskTimer';
+import { TaskLinkedIdeas } from './TaskLinkedIdeas';
 
 interface Comment {
   id: string;
@@ -307,6 +308,10 @@ export function TaskDetailDialog({ task, allStatuses, open, onOpenChange, onRefr
             <Separator />
 
             <TaskAttachments taskId={task.id} />
+
+            <Separator />
+
+            <TaskLinkedIdeas taskId={task.id} />
 
             <Separator />
 
