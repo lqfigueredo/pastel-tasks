@@ -88,7 +88,7 @@ const Landing = () => {
         </h1>
         <p className="mx-auto mt-6 max-w-2xl text-lg text-muted-foreground">
           Organize projetos, gerencie equipes e acompanhe reuniões em um único lugar.
-          O SimpleTask foi criado para times que querem produtividade sem complexidade.
+          O NEVVOH foi criado para times que querem produtividade sem complexidade.
         </p>
         <div className="mt-10">
           <Dialog open={open} onOpenChange={setOpen}>
