@@ -252,7 +252,14 @@ export default function Admin() {
             <UserPlus className="h-5 w-5" />
             Cadastrar Usuário
           </CardTitle>
-          <CardDescription>O usuário poderá fazer login imediatamente após o cadastro.</CardDescription>
+          <CardDescription>
+            O usuário poderá fazer login imediatamente após o cadastro.
+            {userLimit && (
+              <span className="ml-2 font-medium">
+                ({userLimit.current}/{userLimit.max} usuários utilizados)
+              </span>
+            )}
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="grid gap-4 sm:grid-cols-2">
