@@ -92,6 +92,20 @@ export function CreateIdeaDialog({ open, onOpenChange, onCreated }: Props) {
             <Textarea id="idea-desc" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Descreva a ideia..." rows={4} />
           </div>
           <div>
+            <Label>Equipe (opcional)</Label>
+            <Select value={teamId} onValueChange={setTeamId}>
+              <SelectTrigger>
+                <SelectValue placeholder="Sem equipe" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">Sem equipe</SelectItem>
+                {teams.map((t) => (
+                  <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
             <Label>Anexos</Label>
             <input ref={fileRef} type="file" multiple className="hidden" onChange={(e) => { if (e.target.files) setFiles(Array.from(e.target.files)); }} />
             <Button type="button" variant="outline" size="sm" className="mt-1 gap-1" onClick={() => fileRef.current?.click()}>
