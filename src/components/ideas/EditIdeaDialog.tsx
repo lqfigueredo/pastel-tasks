@@ -33,7 +33,17 @@ export function EditIdeaDialog({ idea, open, onOpenChange, onUpdated }: Props) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [isImplemented, setIsImplemented] = useState(false);
+  const [teamId, setTeamId] = useState<string>('none');
+  const [teams, setTeams] = useState<{ id: string; name: string }[]>([]);
   const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    const fetchTeams = async () => {
+      const { data } = await supabase.from('teams').select('id, name').order('name');
+      if (data) setTeams(data);
+    };
+    fetchTeams();
+  }, []);
 
   const isOwner = user?.id === idea?.created_by;
 
