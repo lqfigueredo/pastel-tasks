@@ -311,6 +311,10 @@ export function TaskDetailDialog({ task, allStatuses, open, onOpenChange, onRefr
 
             <Separator />
 
+            <TaskLinkedIdeas taskId={task.id} />
+
+            <Separator />
+
             <TaskTimer taskId={task.id} />
 
             <Separator />
