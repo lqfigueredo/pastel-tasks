@@ -24,6 +24,7 @@ const navItems = [
   { title: 'Atas de Reunião', url: '/atas', icon: FileText },
   { title: 'Instruções de Trabalho', url: '/instrucoes', icon: BookOpen },
   { title: 'Agenda', url: '/agenda', icon: Calendar },
+  { title: 'Registro de Ideias', url: '/ideias', icon: Lightbulb },
 ];
 
 export function AppSidebar() {
