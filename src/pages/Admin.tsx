@@ -132,7 +132,14 @@ export default function Admin() {
       });
 
       if (error) {
-        toast.error(data?.error || 'Erro ao cadastrar usuário');
+        let msg = 'Erro ao cadastrar usuário';
+        try {
+          const errBody = await (error as any).context?.json?.();
+          if (errBody?.error) msg = errBody.error;
+        } catch {
+          if (data?.error) msg = data.error;
+        }
+        toast.error(msg);
         setSubmitting(false);
         return;
       }
