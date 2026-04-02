@@ -109,6 +109,19 @@ export default function MeetingMinuteDetail() {
       return;
     }
 
+    // Sync linked task in Kanban
+    const { data: linkedTask } = await supabase
+      .from('tasks')
+      .select('id')
+      .eq('meeting_pendency_id', pendency.id)
+      .maybeSingle();
+
+    if (linkedTask) {
+      await supabase.from('tasks').update({
+        actual_end_date: newCompleted ? new Date().toISOString().split('T')[0] : null,
+      }).eq('id', linkedTask.id);
+    }
+
     setPendencies((prev) =>
       prev.map((p) =>
         p.id === pendency.id ? { ...p, is_completed: newCompleted, completed_at: newCompleted ? new Date().toISOString() : null } : p
