@@ -70,6 +70,7 @@ export function CreateIdeaDialog({ open, onOpenChange, onCreated }: Props) {
     setTitle('');
     setDescription('');
     setFiles([]);
+    setTeamId('none');
     onOpenChange(false);
     onCreated();
     toast({ title: 'Ideia registrada!' });
