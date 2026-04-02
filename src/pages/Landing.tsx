@@ -102,7 +102,7 @@ const Landing = () => {
               <DialogHeader>
                 <DialogTitle>Demonstre seu interesse</DialogTitle>
                 <DialogDescription>
-                  Preencha seus dados e entraremos em contato para apresentar o SimpleTask.
+                  Preencha seus dados e entraremos em contato para apresentar o NEVVOH.
                 </DialogDescription>
               </DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-4">
