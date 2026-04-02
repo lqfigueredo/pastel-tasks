@@ -52,6 +52,7 @@ export function EditIdeaDialog({ idea, open, onOpenChange, onUpdated }: Props) {
       setTitle(idea.title);
       setDescription(idea.description || '');
       setIsImplemented(idea.is_implemented);
+      setTeamId(idea.team_id || 'none');
     }
   }, [idea]);
 
