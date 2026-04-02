@@ -1,4 +1,5 @@
-import { LayoutDashboard, Users, Settings, LogOut, CheckSquare, ShieldCheck, CalendarDays, FileText, TrendingUp, BookOpen, Calendar, Lightbulb } from 'lucide-react';
+import { LayoutDashboard, Users, Settings, LogOut, ShieldCheck, CalendarDays, FileText, TrendingUp, BookOpen, Calendar, Lightbulb } from 'lucide-react';
+import logo from '@/assets/logo.png';
 import { NavLink } from '@/components/NavLink';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserRoles } from '@/hooks/useUserRoles';
@@ -39,9 +40,7 @@ export function AppSidebar() {
     <Sidebar collapsible="icon">
       <SidebarHeader className="p-4">
         <div className="flex items-center gap-2">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary">
-            <CheckSquare className="h-5 w-5 text-primary-foreground" />
-          </div>
+          <img src={logo} alt="NEVVOH" className="h-9 w-9 shrink-0 rounded-xl" />
           {!collapsed && (
             <span className="font-display text-lg font-bold text-foreground">NEVVOH</span>
           )}

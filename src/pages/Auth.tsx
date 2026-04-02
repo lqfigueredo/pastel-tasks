@@ -6,7 +6,8 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { CheckSquare, ArrowLeft } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
+import logo from '@/assets/logo.png';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { Link } from 'react-router-dom';
 
@@ -65,9 +66,7 @@ const Auth = () => {
       </div>
       <div className="w-full max-w-md animate-fade-in">
         <div className="mb-8 text-center">
-          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary">
-            <CheckSquare className="h-7 w-7 text-primary-foreground" />
-          </div>
+          <img src={logo} alt="NEVVOH" className="mx-auto mb-4 h-14 w-14 rounded-2xl" />
           <h1 className="font-display text-3xl font-bold text-foreground">NEVVOH</h1>
           <p className="mt-1 text-sm text-muted-foreground">Gerencie seus projetos com simplicidade</p>
         </div>
