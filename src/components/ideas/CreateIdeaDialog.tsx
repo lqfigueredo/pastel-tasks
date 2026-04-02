@@ -41,7 +41,7 @@ export function CreateIdeaDialog({ open, onOpenChange, onCreated }: Props) {
 
     const { data: idea, error } = await supabase
       .from('ideas')
-      .insert({ title: title.trim(), description: description.trim() || null, created_by: user.id })
+      .insert({ title: title.trim(), description: description.trim() || null, created_by: user.id, team_id: teamId !== 'none' ? teamId : null })
       .select('id')
       .single();
 
