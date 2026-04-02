@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Check, X, Ban, CalendarIcon, RotateCcw, MailCheck, Pencil } from 'lucide-react';
+import { Check, X, Ban, CalendarIcon, RotateCcw, MailCheck, Pencil, Users } from 'lucide-react';
 import EditUserProfileDialog from '@/components/financial/EditUserProfileDialog';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
