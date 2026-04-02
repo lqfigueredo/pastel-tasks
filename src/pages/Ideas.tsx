@@ -18,7 +18,9 @@ interface Idea {
   is_implemented: boolean;
   created_by: string;
   created_at: string;
+  team_id: string | null;
   profiles?: { display_name: string } | null;
+  teams?: { name: string } | null;
 }
 
 export default function Ideas() {
