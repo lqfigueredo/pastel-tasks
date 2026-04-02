@@ -17,6 +17,7 @@ interface Idea {
   description: string | null;
   is_implemented: boolean;
   created_by: string;
+  team_id: string | null;
 }
 
 interface Props {
