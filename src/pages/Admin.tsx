@@ -57,6 +57,7 @@ export default function Admin() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [userLimit, setUserLimit] = useState<{ current: number; max: number } | null>(null);
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
