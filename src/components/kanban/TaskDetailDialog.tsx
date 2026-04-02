@@ -311,7 +311,7 @@ export function TaskDetailDialog({ task, allStatuses, open, onOpenChange, onRefr
 
             <Separator />
 
-            <TaskLinkedIdeas taskId={task.id} />
+            <TaskLinkedIdeas taskId={task.id} isOwner={task.created_by === user?.id} />
 
             <Separator />
 
