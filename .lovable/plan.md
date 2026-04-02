@@ -1,39 +1,30 @@
 
 
-# Substituir logo do NEVVOH
+# Corrigir logo deformado ao minimizar menu lateral
 
-## Resumo
-Substituir o ícone atual (CheckSquare do Lucide) pelo novo logo enviado em todos os locais do app, e usá-lo também como favicon.
+## Problema
+Quando o menu lateral é minimizado (`collapsible="icon"`), a largura colapsa para `3rem` (48px). O logo tem `h-9 w-9` (36px) mas o `SidebarHeader` tem `p-4` (16px de padding em cada lado), totalizando 36+32 = 68px necessários — muito mais que os 48px disponíveis. O logo é comprimido horizontalmente.
 
-## Locais identificados
+## Solução
 
-| Arquivo | O que mudar |
-|---------|------------|
-| `src/components/AppSidebar.tsx` | Ícone na sidebar header |
-| `src/pages/Auth.tsx` | Ícone na tela de login |
-| `src/pages/Landing.tsx` | Ícone no header da landing |
-| `index.html` | Adicionar favicon com o novo logo |
+### 1. Aumentar largura do sidebar colapsado
+Em `src/components/ui/sidebar.tsx`, alterar `SIDEBAR_WIDTH_ICON` de `"3rem"` para `"3.5rem"` (56px), acomodando o logo de 36px com algum padding.
 
-## Alterações
+### 2. Ajustar padding do header quando colapsado
+Em `src/components/AppSidebar.tsx`, usar padding menor quando colapsado e garantir que o logo não distorça com `object-contain`:
 
-### 1. Copiar o logo para o projeto
-- Copiar `user-uploads://Sem_nome_Logotipo_animado.png` para `src/assets/logo.png` (para uso em componentes React)
-- Copiar também para `public/favicon.png` (para favicon)
-
-### 2. Atualizar favicon (`index.html`)
-- Adicionar `<link rel="icon" href="/favicon.png" type="image/png">`
-- Remover `public/favicon.ico` se existir
-
-### 3. Substituir ícone nos 3 componentes
-Em cada arquivo, trocar o bloco com `CheckSquare` dentro de um `div` colorido por uma tag `<img>` com o logo importado:
-
-- **AppSidebar.tsx**: remover import do `CheckSquare`, importar logo de `@/assets/logo.png`, substituir o `div` com ícone por `<img src={logo} alt="NEVVOH" className="h-9 w-9 rounded-xl" />`
-- **Auth.tsx**: mesmo padrão, `<img src={logo} alt="NEVVOH" className="h-14 w-14 rounded-2xl" />`
-- **Landing.tsx**: mesmo padrão, `<img src={logo} alt="NEVVOH" className="h-9 w-9 rounded-xl" />`
+```tsx
+<SidebarHeader className={collapsed ? "p-2" : "p-4"}>
+  <div className="flex items-center gap-2 justify-center">
+    <img src={logo} alt="NEVVOH" className="h-9 w-9 shrink-0 rounded-xl object-contain" />
+    {!collapsed && (
+      <span className="font-display text-lg font-bold text-foreground">NEVVOH</span>
+    )}
+  </div>
+</SidebarHeader>
+```
 
 ### Arquivos
-- `index.html` — adicionar favicon
-- `src/components/AppSidebar.tsx` — trocar ícone
-- `src/pages/Auth.tsx` — trocar ícone
-- `src/pages/Landing.tsx` — trocar ícone
+- `src/components/ui/sidebar.tsx` — ajustar `SIDEBAR_WIDTH_ICON`
+- `src/components/AppSidebar.tsx` — ajustar padding e centralizar logo
 
