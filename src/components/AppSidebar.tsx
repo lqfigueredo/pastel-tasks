@@ -20,7 +20,7 @@ import { ThemeToggle } from '@/components/ThemeToggle';
 
 const navItems = [
   { title: 'Dashboard', url: '/dashboard', icon: CalendarDays },
-  { title: 'Minhas Tarefas', url: '/', icon: LayoutDashboard },
+  { title: 'Minhas Tarefas', url: '/tarefas', icon: LayoutDashboard },
   { title: 'Equipe', url: '/equipe', icon: Users },
   { title: 'Atas de Reunião', url: '/atas', icon: FileText },
   { title: 'Instruções de Trabalho', url: '/instrucoes', icon: BookOpen },
