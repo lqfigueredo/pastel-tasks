@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, type ReactNode } from 'react';
+import FeaturePreviewDialog from '@/components/landing/FeaturePreviewDialog';
 import {
   LayoutDashboard,
   Users,
@@ -136,6 +137,8 @@ const highlights = [
 ];
 
 const Landing = () => {
+  const [previewFeature, setPreviewFeature] = useState<string | null>(null);
+
   return (
     <div className="min-h-screen bg-background text-foreground scroll-smooth">
       {/* Header */}
@@ -208,12 +211,16 @@ const Landing = () => {
           <div className="mt-14 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {features.map((f, i) => (
               <RevealOnScroll key={f.title} delay={i * 80}>
-                <div className="rounded-xl border border-border bg-card p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg h-full">
+                <div
+                  className="rounded-xl border border-border bg-card p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg h-full cursor-pointer"
+                  onClick={() => setPreviewFeature(f.title)}
+                >
                   <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
                     <f.icon className="h-5 w-5 text-primary" />
                   </div>
                   <h3 className="font-semibold">{f.title}</h3>
                   <p className="mt-2 text-sm text-muted-foreground">{f.description}</p>
+                  <p className="mt-3 text-xs text-primary font-medium">Clique para ver exemplo →</p>
                 </div>
               </RevealOnScroll>
             ))}
@@ -288,6 +295,11 @@ const Landing = () => {
           </Link>
         </div>
       </footer>
+      <FeaturePreviewDialog
+        open={!!previewFeature}
+        onOpenChange={(open) => !open && setPreviewFeature(null)}
+        featureTitle={previewFeature}
+      />
     </div>
   );
 };
