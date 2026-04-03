@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, type ReactNode } from 'react';
+import FeaturePreviewDialog from '@/components/landing/FeaturePreviewDialog';
 import {
   LayoutDashboard,
   Users,
