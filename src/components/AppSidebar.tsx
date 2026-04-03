@@ -20,7 +20,7 @@ import { ThemeToggle } from '@/components/ThemeToggle';
 
 const navItems = [
   { title: 'Dashboard', url: '/dashboard', icon: CalendarDays },
-  { title: 'Minhas Tarefas', url: '/', icon: LayoutDashboard },
+  { title: 'Minhas Tarefas', url: '/tarefas', icon: LayoutDashboard },
   { title: 'Equipe', url: '/equipe', icon: Users },
   { title: 'Atas de Reunião', url: '/atas', icon: FileText },
   { title: 'Instruções de Trabalho', url: '/instrucoes', icon: BookOpen },
@@ -56,7 +56,7 @@ export function AppSidebar() {
                   <SidebarMenuButton asChild>
                     <NavLink
                       to={item.url}
-                      end={item.url === '/'}
+                      end={item.url === '/tarefas'}
                       className="hover:bg-sidebar-accent/60"
                       activeClassName="bg-sidebar-accent text-primary font-medium"
                     >

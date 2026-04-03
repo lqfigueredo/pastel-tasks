@@ -50,11 +50,12 @@ const App = () => (
           <AuthProvider>
             <Suspense fallback={<LazyFallback />}>
               <Routes>
+                <Route path="/" element={<Landing />} />
                 <Route path="/landing" element={<Landing />} />
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/financeiro/cadastro" element={<FinancialRegister />} />
                 <Route element={<AppLayout />}>
-                  <Route path="/" element={<Index />} />
+                  <Route path="/tarefas" element={<Index />} />
                   <Route path="/dashboard" element={<Dashboard />} />
                   <Route path="/equipe" element={<TeamList />} />
                   <Route path="/equipe/:teamId" element={<Team />} />
