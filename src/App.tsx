@@ -24,6 +24,7 @@ const FinancialRegister = lazy(() => import("@/pages/FinancialRegister"));
 const WorkInstructions = lazy(() => import("@/pages/WorkInstructions"));
 const PersonalCalendar = lazy(() => import("@/pages/PersonalCalendar"));
 const Ideas = lazy(() => import("@/pages/Ideas"));
+const Timer = lazy(() => import("@/pages/Timer"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
