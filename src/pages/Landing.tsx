@@ -1,5 +1,20 @@
 import { useState } from 'react';
-import { LayoutDashboard, Users, FileText, CalendarDays, Send } from 'lucide-react';
+import {
+  LayoutDashboard,
+  Users,
+  FileText,
+  CalendarDays,
+  Timer,
+  Calendar,
+  BookOpen,
+  Lightbulb,
+  Send,
+  UserPlus,
+  ListChecks,
+  BarChart3,
+  ArrowRight,
+  Sparkles,
+} from 'lucide-react';
 import logo from '@/assets/logo.png';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -20,7 +35,7 @@ const features = [
   {
     icon: LayoutDashboard,
     title: 'Kanban Intuitivo',
-    description: 'Organize suas tarefas em colunas personalizáveis com arrastar e soltar.',
+    description: 'Organize tarefas em colunas personalizáveis com arrastar e soltar.',
   },
   {
     icon: Users,
@@ -37,6 +52,53 @@ const features = [
     title: 'Dashboard de Prazos',
     description: 'Visualize entregas por período e nunca perca um prazo importante.',
   },
+  {
+    icon: Timer,
+    title: 'Temporizador Pomodoro',
+    description: 'Controle seu tempo com timer, countdown, pausa e retomada.',
+  },
+  {
+    icon: Calendar,
+    title: 'Agenda Pessoal',
+    description: 'Gerencie eventos e compromissos em um calendário integrado.',
+  },
+  {
+    icon: BookOpen,
+    title: 'Instruções de Trabalho',
+    description: 'Documentos versionados com histórico completo de alterações.',
+  },
+  {
+    icon: Lightbulb,
+    title: 'Registro de Ideias',
+    description: 'Capture insights e vincule ideias diretamente a tarefas.',
+  },
+];
+
+const steps = [
+  {
+    icon: UserPlus,
+    number: '01',
+    title: 'Crie sua conta',
+    description: 'Cadastro rápido e sem complicações.',
+  },
+  {
+    icon: ListChecks,
+    number: '02',
+    title: 'Organize suas tarefas',
+    description: 'Monte seu quadro Kanban e distribua para a equipe.',
+  },
+  {
+    icon: BarChart3,
+    number: '03',
+    title: 'Acompanhe os resultados',
+    description: 'Dashboards em tempo real para decisões mais inteligentes.',
+  },
+];
+
+const highlights = [
+  { label: 'Tudo em um só lugar', value: '8+ módulos' },
+  { label: 'Gestão simplificada', value: '100% visual' },
+  { label: 'Equipes conectadas', value: 'Tempo real' },
 ];
 
 const Landing = () => {
@@ -65,13 +127,13 @@ const Landing = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="min-h-screen bg-background text-foreground scroll-smooth">
       {/* Header */}
       <header className="border-b border-border/50 bg-background/80 backdrop-blur-sm sticky top-0 z-10">
         <div className="mx-auto max-w-6xl flex items-center justify-between px-6 py-4">
           <div className="flex items-center gap-2">
             <img src={logo} alt="NEVVOH" className="h-9 w-9 rounded-xl" />
-            <span className="text-lg font-bold">NEVVOH</span>
+            <span className="text-lg font-bold font-display">NEVVOH</span>
           </div>
           <Link to="/auth">
             <Button variant="outline" size="sm">Já tenho conta</Button>
@@ -80,70 +142,111 @@ const Landing = () => {
       </header>
 
       {/* Hero */}
-      <section className="mx-auto max-w-6xl px-6 py-24 text-center">
-        <h1 className="text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
-          Gestão de tarefas
-          <span className="text-primary"> simples e eficiente</span>
-        </h1>
-        <p className="mx-auto mt-6 max-w-2xl text-lg text-muted-foreground">
-          Organize projetos, gerencie equipes e acompanhe reuniões em um único lugar.
-          O NEVVOH foi criado para times que querem produtividade sem complexidade.
-        </p>
-        <div className="mt-10">
-          <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
-              <Button size="lg" className="text-base px-8">
-                <Send className="mr-2 h-5 w-5" />
-                Tenho Interesse
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-md">
-              <DialogHeader>
-                <DialogTitle>Demonstre seu interesse</DialogTitle>
-                <DialogDescription>
-                  Preencha seus dados e entraremos em contato para apresentar o NEVVOH.
-                </DialogDescription>
-              </DialogHeader>
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="lead-name">Nome</Label>
-                  <Input
-                    id="lead-name"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="Seu nome completo"
-                    required
-                    maxLength={100}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="lead-email">E-mail</Label>
-                  <Input
-                    id="lead-email"
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="seu@email.com"
-                    required
-                    maxLength={255}
-                  />
-                </div>
-                <Button type="submit" className="w-full" disabled={loading}>
-                  {loading ? 'Enviando...' : 'Enviar'}
+      <section className="relative overflow-hidden">
+        {/* Gradient background */}
+        <div className="absolute inset-0 bg-gradient-to-b from-mint-light/40 via-transparent to-transparent pointer-events-none" />
+
+        <div className="relative mx-auto max-w-6xl px-6 py-28 text-center">
+          {/* Badge */}
+          <div
+            className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 text-sm font-medium text-primary mb-8 animate-fade-in"
+          >
+            <Sparkles className="h-4 w-4" />
+            Produtividade sem complexidade
+          </div>
+
+          <h1
+            className="text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl font-display animate-fade-in"
+            style={{ animationDelay: '100ms', animationFillMode: 'both' }}
+          >
+            Gestão de tarefas
+            <span className="text-primary"> simples e eficiente</span>
+          </h1>
+
+          <p
+            className="mx-auto mt-6 max-w-2xl text-lg text-muted-foreground animate-fade-in"
+            style={{ animationDelay: '200ms', animationFillMode: 'both' }}
+          >
+            Organize projetos, gerencie equipes e acompanhe reuniões em um único lugar.
+            O NEVVOH foi criado para times que querem produtividade sem complexidade.
+          </p>
+
+          <div
+            className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4 animate-fade-in"
+            style={{ animationDelay: '300ms', animationFillMode: 'both' }}
+          >
+            <Dialog open={open} onOpenChange={setOpen}>
+              <DialogTrigger asChild>
+                <Button size="lg" className="text-base px-8">
+                  <Send className="mr-2 h-5 w-5" />
+                  Tenho Interesse
                 </Button>
-              </form>
-            </DialogContent>
-          </Dialog>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Demonstre seu interesse</DialogTitle>
+                  <DialogDescription>
+                    Preencha seus dados e entraremos em contato para apresentar o NEVVOH.
+                  </DialogDescription>
+                </DialogHeader>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="lead-name">Nome</Label>
+                    <Input
+                      id="lead-name"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      placeholder="Seu nome completo"
+                      required
+                      maxLength={100}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="lead-email">E-mail</Label>
+                    <Input
+                      id="lead-email"
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="seu@email.com"
+                      required
+                      maxLength={255}
+                    />
+                  </div>
+                  <Button type="submit" className="w-full" disabled={loading}>
+                    {loading ? 'Enviando...' : 'Enviar'}
+                  </Button>
+                </form>
+              </DialogContent>
+            </Dialog>
+
+            <Link to="/auth">
+              <Button variant="ghost" size="lg" className="text-base gap-2">
+                Já tenho conta
+                <ArrowRight className="h-4 w-4" />
+              </Button>
+            </Link>
+          </div>
         </div>
       </section>
 
       {/* Features */}
-      <section className="border-t border-border/50 bg-muted/30 py-20">
+      <section className="border-t border-border/50 bg-muted/30 py-24">
         <div className="mx-auto max-w-6xl px-6">
-          <h2 className="text-center text-2xl font-bold sm:text-3xl">Tudo que você precisa</h2>
-          <div className="mt-12 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
-            {features.map((f) => (
-              <div key={f.title} className="rounded-xl border border-border bg-card p-6 shadow-sm">
+          <h2 className="text-center text-2xl font-bold sm:text-3xl font-display">
+            Tudo que você precisa
+          </h2>
+          <p className="mx-auto mt-3 max-w-xl text-center text-muted-foreground">
+            8 módulos integrados para cobrir todo o ciclo de gestão da sua equipe.
+          </p>
+
+          <div className="mt-14 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            {features.map((f, i) => (
+              <div
+                key={f.title}
+                className="rounded-xl border border-border bg-card p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg animate-fade-in"
+                style={{ animationDelay: `${i * 80}ms`, animationFillMode: 'both' }}
+              >
                 <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
                   <f.icon className="h-5 w-5 text-primary" />
                 </div>
@@ -155,9 +258,72 @@ const Landing = () => {
         </div>
       </section>
 
+      {/* How it works */}
+      <section className="py-24">
+        <div className="mx-auto max-w-6xl px-6">
+          <h2 className="text-center text-2xl font-bold sm:text-3xl font-display">
+            Como funciona
+          </h2>
+          <p className="mx-auto mt-3 max-w-xl text-center text-muted-foreground">
+            Comece em minutos. Sem curva de aprendizado.
+          </p>
+
+          <div className="mt-14 grid gap-8 sm:grid-cols-3">
+            {steps.map((step, i) => (
+              <div
+                key={step.number}
+                className="relative text-center animate-fade-in"
+                style={{ animationDelay: `${i * 150}ms`, animationFillMode: 'both' }}
+              >
+                {/* Connector line */}
+                {i < steps.length - 1 && (
+                  <div className="hidden sm:block absolute top-8 left-[60%] w-[80%] h-px bg-border" />
+                )}
+
+                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10">
+                  <step.icon className="h-7 w-7 text-primary" />
+                </div>
+                <span className="text-xs font-bold text-primary tracking-widest uppercase">
+                  Passo {step.number}
+                </span>
+                <h3 className="mt-2 text-lg font-semibold">{step.title}</h3>
+                <p className="mt-1 text-sm text-muted-foreground">{step.description}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Highlight band */}
+      <section className="bg-primary py-16">
+        <div className="mx-auto max-w-6xl px-6">
+          <div className="grid gap-8 sm:grid-cols-3 text-center">
+            {highlights.map((h) => (
+              <div key={h.label}>
+                <p className="text-2xl font-bold text-primary-foreground sm:text-3xl font-display">
+                  {h.value}
+                </p>
+                <p className="mt-1 text-primary-foreground/80 text-sm">{h.label}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* Footer */}
-      <footer className="border-t border-border/50 py-8 text-center text-sm text-muted-foreground">
-        © {new Date().getFullYear()} NEVVOH. Todos os direitos reservados.
+      <footer className="border-t border-border/50 py-10">
+        <div className="mx-auto max-w-6xl px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-2">
+            <img src={logo} alt="NEVVOH" className="h-7 w-7 rounded-lg" />
+            <span className="text-sm font-semibold">NEVVOH</span>
+          </div>
+          <p className="text-sm text-muted-foreground">
+            © {new Date().getFullYear()} NEVVOH. Todos os direitos reservados.
+          </p>
+          <Link to="/auth" className="text-sm text-primary hover:underline">
+            Acessar plataforma
+          </Link>
+        </div>
       </footer>
     </div>
   );
