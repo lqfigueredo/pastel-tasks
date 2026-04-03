@@ -11,7 +11,7 @@ import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
-type TimerState = 'idle' | 'running' | 'finished';
+type TimerState = 'idle' | 'running' | 'paused' | 'finished';
 
 const playAlertSound = () => {
   const ctx = new AudioContext();
