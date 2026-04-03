@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef, type ReactNode } from 'react';
 import {
   LayoutDashboard,
   Users,
@@ -30,6 +30,52 @@ import {
 } from '@/components/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+
+/* ── Scroll-reveal wrapper ────────────────────────────── */
+const RevealOnScroll = ({
+  children,
+  className = '',
+  delay = 0,
+}: {
+  children: ReactNode;
+  className?: string;
+  delay?: number;
+}) => {
+  const ref = useRef<HTMLDivElement>(null);
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setVisible(true);
+          observer.unobserve(el);
+        }
+      },
+      { threshold: 0.15 }
+    );
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <div
+      ref={ref}
+      className={`transition-all duration-700 ease-out ${
+        visible
+          ? 'opacity-100 translate-y-0'
+          : 'opacity-0 translate-y-6'
+      } ${className}`}
+      style={{ transitionDelay: `${delay}ms` }}
+    >
+      {children}
+    </div>
+  );
+};
 
 const features = [
   {
@@ -143,14 +189,10 @@ const Landing = () => {
 
       {/* Hero */}
       <section className="relative overflow-hidden">
-        {/* Gradient background */}
         <div className="absolute inset-0 bg-gradient-to-b from-mint-light/40 via-transparent to-transparent pointer-events-none" />
 
         <div className="relative mx-auto max-w-6xl px-6 py-28 text-center">
-          {/* Badge */}
-          <div
-            className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 text-sm font-medium text-primary mb-8 animate-fade-in"
-          >
+          <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 text-sm font-medium text-primary mb-8 animate-fade-in">
             <Sparkles className="h-4 w-4" />
             Produtividade sem complexidade
           </div>
@@ -233,26 +275,26 @@ const Landing = () => {
       {/* Features */}
       <section className="border-t border-border/50 bg-muted/30 py-24">
         <div className="mx-auto max-w-6xl px-6">
-          <h2 className="text-center text-2xl font-bold sm:text-3xl font-display">
-            Tudo que você precisa
-          </h2>
-          <p className="mx-auto mt-3 max-w-xl text-center text-muted-foreground">
-            8 módulos integrados para cobrir todo o ciclo de gestão da sua equipe.
-          </p>
+          <RevealOnScroll>
+            <h2 className="text-center text-2xl font-bold sm:text-3xl font-display">
+              Tudo que você precisa
+            </h2>
+            <p className="mx-auto mt-3 max-w-xl text-center text-muted-foreground">
+              8 módulos integrados para cobrir todo o ciclo de gestão da sua equipe.
+            </p>
+          </RevealOnScroll>
 
           <div className="mt-14 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {features.map((f, i) => (
-              <div
-                key={f.title}
-                className="rounded-xl border border-border bg-card p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg animate-fade-in"
-                style={{ animationDelay: `${i * 80}ms`, animationFillMode: 'both' }}
-              >
-                <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
-                  <f.icon className="h-5 w-5 text-primary" />
+              <RevealOnScroll key={f.title} delay={i * 80}>
+                <div className="rounded-xl border border-border bg-card p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg h-full">
+                  <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
+                    <f.icon className="h-5 w-5 text-primary" />
+                  </div>
+                  <h3 className="font-semibold">{f.title}</h3>
+                  <p className="mt-2 text-sm text-muted-foreground">{f.description}</p>
                 </div>
-                <h3 className="font-semibold">{f.title}</h3>
-                <p className="mt-2 text-sm text-muted-foreground">{f.description}</p>
-              </div>
+              </RevealOnScroll>
             ))}
           </div>
         </div>
@@ -261,34 +303,32 @@ const Landing = () => {
       {/* How it works */}
       <section className="py-24">
         <div className="mx-auto max-w-6xl px-6">
-          <h2 className="text-center text-2xl font-bold sm:text-3xl font-display">
-            Como funciona
-          </h2>
-          <p className="mx-auto mt-3 max-w-xl text-center text-muted-foreground">
-            Comece em minutos. Sem curva de aprendizado.
-          </p>
+          <RevealOnScroll>
+            <h2 className="text-center text-2xl font-bold sm:text-3xl font-display">
+              Como funciona
+            </h2>
+            <p className="mx-auto mt-3 max-w-xl text-center text-muted-foreground">
+              Comece em minutos. Sem curva de aprendizado.
+            </p>
+          </RevealOnScroll>
 
           <div className="mt-14 grid gap-8 sm:grid-cols-3">
             {steps.map((step, i) => (
-              <div
-                key={step.number}
-                className="relative text-center animate-fade-in"
-                style={{ animationDelay: `${i * 150}ms`, animationFillMode: 'both' }}
-              >
-                {/* Connector line */}
-                {i < steps.length - 1 && (
-                  <div className="hidden sm:block absolute top-8 left-[60%] w-[80%] h-px bg-border" />
-                )}
-
-                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10">
-                  <step.icon className="h-7 w-7 text-primary" />
+              <RevealOnScroll key={step.number} delay={i * 150}>
+                <div className="relative text-center">
+                  {i < steps.length - 1 && (
+                    <div className="hidden sm:block absolute top-8 left-[60%] w-[80%] h-px bg-border" />
+                  )}
+                  <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10">
+                    <step.icon className="h-7 w-7 text-primary" />
+                  </div>
+                  <span className="text-xs font-bold text-primary tracking-widest uppercase">
+                    Passo {step.number}
+                  </span>
+                  <h3 className="mt-2 text-lg font-semibold">{step.title}</h3>
+                  <p className="mt-1 text-sm text-muted-foreground">{step.description}</p>
                 </div>
-                <span className="text-xs font-bold text-primary tracking-widest uppercase">
-                  Passo {step.number}
-                </span>
-                <h3 className="mt-2 text-lg font-semibold">{step.title}</h3>
-                <p className="mt-1 text-sm text-muted-foreground">{step.description}</p>
-              </div>
+              </RevealOnScroll>
             ))}
           </div>
         </div>
@@ -298,13 +338,15 @@ const Landing = () => {
       <section className="bg-primary py-16">
         <div className="mx-auto max-w-6xl px-6">
           <div className="grid gap-8 sm:grid-cols-3 text-center">
-            {highlights.map((h) => (
-              <div key={h.label}>
-                <p className="text-2xl font-bold text-primary-foreground sm:text-3xl font-display">
-                  {h.value}
-                </p>
-                <p className="mt-1 text-primary-foreground/80 text-sm">{h.label}</p>
-              </div>
+            {highlights.map((h, i) => (
+              <RevealOnScroll key={h.label} delay={i * 120}>
+                <div>
+                  <p className="text-2xl font-bold text-primary-foreground sm:text-3xl font-display">
+                    {h.value}
+                  </p>
+                  <p className="mt-1 text-primary-foreground/80 text-sm">{h.label}</p>
+                </div>
+              </RevealOnScroll>
             ))}
           </div>
         </div>
