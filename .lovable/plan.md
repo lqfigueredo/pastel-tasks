@@ -1,32 +1,35 @@
 
 
-## Previews interativos nas features da Landing Page
+## Melhorar SEO para ranqueamento no Google
 
-### O que muda
-Ao clicar em qualquer card de feature (Kanban, Gestão de Equipes, etc.), abre um Dialog com um mockup HTML estilizado daquela funcionalidade -- não screenshots reais, mas representações visuais construídas com HTML/Tailwind.
+O Lighthouse já dá 100 em SEO técnico, mas isso cobre apenas o básico (meta tags, mobile-friendly). Para aparecer em buscas como "gerenciador de tarefas", "software de gestão de equipes", etc., precisamos trabalhar **conteúdo, estrutura semântica e SEO on-page**.
 
-### Implementação
+### 1. Palavras-chave e Meta Tags estratégicas
+- Atualizar `<title>` para incluir palavras-chave: ex. `NEVVOH - Gerenciador de Tarefas e Projetos para Equipes`
+- Expandir `<meta description>` com termos de busca: ex. `Software de gestão de tarefas, projetos e equipes. Kanban, atas de reunião, temporizador e agenda em um só lugar. Experimente grátis.`
+- Adicionar `<meta keywords>` (baixo impacto, mas não custa)
 
-**1. Criar componente `FeaturePreviewDialog`**
-- Recebe o `title` da feature e renderiza o mockup correspondente
-- Usa o `Dialog` existente (`src/components/ui/dialog.tsx`) com `max-w-3xl`
-- Cada feature terá um componente de mockup inline (JSX puro com Tailwind)
+### 2. Dados Estruturados (JSON-LD)
+- Adicionar schema.org `SoftwareApplication` no `index.html` para aparecer em rich snippets do Google
+- Incluir informações como nome, descrição, categoria, sistema operacional (web), preço
 
-**2. Mockups HTML para cada feature:**
-- **Kanban Intuitivo**: 3 colunas (A Fazer, Em Progresso, Concluído) com cards coloridos arrastáveis
-- **Gestão de Equipes**: Lista de membros com avatares, roles e indicadores de status
-- **Atas de Reunião**: Layout de ata com título, participantes, pendências
-- **Dashboard de Prazos**: Cards de prazo com barras de progresso e datas
-- **Temporizador Pomodoro**: Timer circular com botões play/pause/reset
-- **Agenda Pessoal**: Mini calendário com eventos coloridos
-- **Instruções de Trabalho**: Documento com versão, autor e conteúdo formatado
-- **Registro de Ideias**: Cards de ideias com tags e status
+### 3. Conteúdo semântico na Landing Page
+- Usar tags `<h1>`, `<h2>`, `<h3>` com hierarquia correta (já parcialmente feito)
+- Adicionar uma seção de **FAQ** com perguntas comuns que as pessoas buscam no Google (ex. "O que é um gerenciador de tarefas?", "Como organizar tarefas da equipe?")
+- Adicionar `<alt>` descritivo em todas as imagens
 
-**3. Alterar `Landing.tsx`**
-- Tornar cada card de feature clicável (`cursor-pointer`)
-- Ao clicar, abrir o `FeaturePreviewDialog` com o mockup correspondente
+### 4. SEO técnico adicional
+- Adicionar `sitemap.xml` gerado estaticamente
+- Melhorar `robots.txt` com referência ao sitemap
+- Adicionar tag `<link rel="canonical">` para evitar conteúdo duplicado
+- Adicionar hreflang para indicar idioma PT-BR
+
+### 5. Open Graph e Social
+- Atualizar OG tags com descrições mais ricas e palavras-chave
 
 ### Arquivos modificados
-- `src/components/landing/FeaturePreviewDialog.tsx` (novo)
-- `src/pages/Landing.tsx` (adicionar estado e dialog)
+- `index.html` — meta tags, JSON-LD, canonical, hreflang
+- `public/sitemap.xml` — novo
+- `public/robots.txt` — referência ao sitemap
+- `src/pages/Landing.tsx` — seção FAQ com perguntas otimizadas para SEO
 
