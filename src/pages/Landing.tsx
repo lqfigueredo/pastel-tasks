@@ -295,6 +295,11 @@ const Landing = () => {
           </Link>
         </div>
       </footer>
+      <FeaturePreviewDialog
+        open={!!previewFeature}
+        onOpenChange={(open) => !open && setPreviewFeature(null)}
+        featureTitle={previewFeature}
+      />
     </div>
   );
 };
