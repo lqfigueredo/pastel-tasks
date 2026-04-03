@@ -56,7 +56,7 @@ export function AppSidebar() {
                   <SidebarMenuButton asChild>
                     <NavLink
                       to={item.url}
-                      end={item.url === '/'}
+                      end={item.url === '/tarefas'}
                       className="hover:bg-sidebar-accent/60"
                       activeClassName="bg-sidebar-accent text-primary font-medium"
                     >
