@@ -80,7 +80,7 @@ const Settings = () => {
     return <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>;
   }
   if (!isAdmin) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/tarefas" replace />;
   }
 
   const handleCreate = async () => {
