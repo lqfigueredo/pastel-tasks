@@ -137,6 +137,8 @@ const highlights = [
 ];
 
 const Landing = () => {
+  const [previewFeature, setPreviewFeature] = useState<string | null>(null);
+
   return (
     <div className="min-h-screen bg-background text-foreground scroll-smooth">
       {/* Header */}
