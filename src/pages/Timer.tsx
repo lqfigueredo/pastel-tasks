@@ -107,13 +107,7 @@ const Timer = () => {
 
   useEffect(() => () => stopInterval(), [stopInterval]);
 
-  const handleStart = () => {
-    const total = minutes * 60;
-    totalSecondsRef.current = total;
-    setSecondsLeft(total);
-    setElapsedSeconds(0);
-    setTimerState('running');
-
+  const startInterval = () => {
     intervalRef.current = window.setInterval(() => {
       setSecondsLeft((prev) => {
         if (prev <= 1) {
@@ -126,6 +120,25 @@ const Timer = () => {
       });
       setElapsedSeconds((prev) => prev + 1);
     }, 1000);
+  };
+
+  const handleStart = () => {
+    const total = minutes * 60;
+    totalSecondsRef.current = total;
+    setSecondsLeft(total);
+    setElapsedSeconds(0);
+    setTimerState('running');
+    startInterval();
+  };
+
+  const handlePause = () => {
+    stopInterval();
+    setTimerState('paused');
+  };
+
+  const handleResume = () => {
+    setTimerState('running');
+    startInterval();
   };
 
   const handleStop = () => {
