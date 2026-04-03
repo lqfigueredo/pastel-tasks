@@ -26,6 +26,7 @@ const navItems = [
   { title: 'Instruções de Trabalho', url: '/instrucoes', icon: BookOpen },
   { title: 'Agenda', url: '/agenda', icon: Calendar },
   { title: 'Registro de Ideias', url: '/ideias', icon: Lightbulb },
+  { title: 'Temporizador', url: '/temporizador', icon: Timer },
 ];
 
 export function AppSidebar() {
