@@ -8,7 +8,6 @@ import {
   Calendar,
   BookOpen,
   Lightbulb,
-  Send,
   UserPlus,
   ListChecks,
   BarChart3,
@@ -18,18 +17,7 @@ import {
 import logo from '@/assets/logo.png';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
+import LeadFormTrigger from '@/components/landing/LeadFormTrigger';
 
 /* ── Scroll-reveal wrapper ────────────────────────────── */
 const RevealOnScroll = ({
@@ -148,30 +136,6 @@ const highlights = [
 ];
 
 const Landing = () => {
-  const [open, setOpen] = useState(false);
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [loading, setLoading] = useState(false);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!name.trim() || !email.trim()) return;
-
-    setLoading(true);
-    const { error } = await supabase.from('leads').insert({ name: name.trim(), email: email.trim() });
-    setLoading(false);
-
-    if (error) {
-      toast.error('Erro ao enviar. Tente novamente.');
-      return;
-    }
-
-    toast.success('Obrigado pelo interesse! Entraremos em contato.');
-    setName('');
-    setEmail('');
-    setOpen(false);
-  };
-
   return (
     <div className="min-h-screen bg-background text-foreground scroll-smooth">
       {/* Header */}
@@ -217,50 +181,7 @@ const Landing = () => {
             className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4 animate-fade-in"
             style={{ animationDelay: '300ms', animationFillMode: 'both' }}
           >
-            <Dialog open={open} onOpenChange={setOpen}>
-              <DialogTrigger asChild>
-                <Button size="lg" className="text-base px-8">
-                  <Send className="mr-2 h-5 w-5" />
-                  Tenho Interesse
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-md">
-                <DialogHeader>
-                  <DialogTitle>Demonstre seu interesse</DialogTitle>
-                  <DialogDescription>
-                    Preencha seus dados e entraremos em contato para apresentar o NEVVOH.
-                  </DialogDescription>
-                </DialogHeader>
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="lead-name">Nome</Label>
-                    <Input
-                      id="lead-name"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      placeholder="Seu nome completo"
-                      required
-                      maxLength={100}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="lead-email">E-mail</Label>
-                    <Input
-                      id="lead-email"
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder="seu@email.com"
-                      required
-                      maxLength={255}
-                    />
-                  </div>
-                  <Button type="submit" className="w-full" disabled={loading}>
-                    {loading ? 'Enviando...' : 'Enviar'}
-                  </Button>
-                </form>
-              </DialogContent>
-            </Dialog>
+            <LeadFormTrigger />
 
             <Link to="/auth">
               <Button variant="ghost" size="lg" className="text-base gap-2">
