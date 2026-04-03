@@ -1,47 +1,32 @@
 
 
-# Redesign da Landing Page — funcionalidades completas e visual moderno
+## Previews interativos nas features da Landing Page
 
-## Problema atual
-A landing exibe apenas 4 funcionalidades (Kanban, Equipes, Atas, Dashboard), mas a plataforma já possui Temporizador, Agenda Pessoal, Instruções de Trabalho, Registro de Ideias, Suporte e Notificações. Além disso, o layout é estático e simples demais para transmitir modernidade.
+### O que muda
+Ao clicar em qualquer card de feature (Kanban, Gestão de Equipes, etc.), abre um Dialog com um mockup HTML estilizado daquela funcionalidade -- não screenshots reais, mas representações visuais construídas com HTML/Tailwind.
 
-## Alterações propostas
+### Implementação
 
-### 1. Hero section modernizada
-- Adicionar um gradiente sutil mint-to-transparent no fundo
-- Badge animado acima do titulo (ex: "Produtividade sem complexidade")
-- Animacoes de fade-in escalonadas nos elementos (titulo, subtitulo, botao)
-- Segundo CTA secundario "Ja tenho conta" ao lado do botao principal
+**1. Criar componente `FeaturePreviewDialog`**
+- Recebe o `title` da feature e renderiza o mockup correspondente
+- Usa o `Dialog` existente (`src/components/ui/dialog.tsx`) com `max-w-3xl`
+- Cada feature terá um componente de mockup inline (JSX puro com Tailwind)
 
-### 2. Seção de funcionalidades expandida (8 features em grid)
-Adicionar as funcionalidades que faltam:
-- **Kanban Intuitivo** (existente)
-- **Gestao de Equipes** (existente)
-- **Atas de Reuniao** (existente)
-- **Dashboard de Prazos** (existente)
-- **Temporizador Pomodoro** (novo) — Timer, countdown com pausa/retomada
-- **Agenda Pessoal** (novo) — Calendar, eventos e compromissos
-- **Instrucoes de Trabalho** (novo) — BookOpen, documentos versionados
-- **Registro de Ideias** (novo) — Lightbulb, capture e vincule ideias a tarefas
+**2. Mockups HTML para cada feature:**
+- **Kanban Intuitivo**: 3 colunas (A Fazer, Em Progresso, Concluído) com cards coloridos arrastáveis
+- **Gestão de Equipes**: Lista de membros com avatares, roles e indicadores de status
+- **Atas de Reunião**: Layout de ata com título, participantes, pendências
+- **Dashboard de Prazos**: Cards de prazo com barras de progresso e datas
+- **Temporizador Pomodoro**: Timer circular com botões play/pause/reset
+- **Agenda Pessoal**: Mini calendário com eventos coloridos
+- **Instruções de Trabalho**: Documento com versão, autor e conteúdo formatado
+- **Registro de Ideias**: Cards de ideias com tags e status
 
-Layout: grid 2 colunas mobile, 4 colunas desktop. Cards com hover elevado (translate-y + shadow) para dar sensacao de fluidez.
+**3. Alterar `Landing.tsx`**
+- Tornar cada card de feature clicável (`cursor-pointer`)
+- Ao clicar, abrir o `FeaturePreviewDialog` com o mockup correspondente
 
-### 3. Seção "Como funciona" (nova)
-3 passos visuais com icones numerados e linhas conectoras:
-1. Crie sua conta
-2. Organize suas tarefas
-3. Acompanhe os resultados
-
-### 4. Seção de destaque visual (nova)
-Uma faixa com fundo gradiente mint exibindo numeros/metricas de impacto (ex: "Tudo em um so lugar", "Gestao simplificada", "Equipes conectadas") — texto branco sobre fundo colorido.
-
-### 5. Melhorias visuais gerais
-- Scroll suave entre secoes
-- Transicoes CSS com `animate-fade-in` e delays escalonados
-- Cards com `transition-all duration-300 hover:-translate-y-1 hover:shadow-lg`
-- Espacamento mais generoso entre secoes (py-24 em vez de py-20)
-- Footer com links para login e texto mais completo
-
-## Arquivo modificado
-- `src/pages/Landing.tsx` — reescrita completa mantendo a logica do formulario de leads
+### Arquivos modificados
+- `src/components/landing/FeaturePreviewDialog.tsx` (novo)
+- `src/pages/Landing.tsx` (adicionar estado e dialog)
 
