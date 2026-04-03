@@ -201,7 +201,7 @@ const Timer = () => {
             </>
           )}
 
-          {timerState === 'running' && (
+          {(timerState === 'running' || timerState === 'paused') && (
             <div className="flex flex-col items-center gap-6">
               <div className="relative w-48 h-48 flex items-center justify-center">
                 <svg className="absolute inset-0 -rotate-90" viewBox="0 0 100 100">
@@ -214,11 +214,27 @@ const Timer = () => {
                     strokeLinecap="round"
                   />
                 </svg>
-                <span className="text-4xl font-mono font-bold text-foreground">{formatTime(secondsLeft)}</span>
+                <div className="flex flex-col items-center">
+                  <span className="text-4xl font-mono font-bold text-foreground">{formatTime(secondsLeft)}</span>
+                  {timerState === 'paused' && (
+                    <span className="text-sm text-muted-foreground mt-1">Pausado</span>
+                  )}
+                </div>
               </div>
-              <Button variant="destructive" onClick={handleStop} className="gap-2">
-                <Square className="h-4 w-4" /> Interromper
-              </Button>
+              <div className="flex gap-2">
+                {timerState === 'running' ? (
+                  <Button variant="outline" onClick={handlePause} className="gap-2">
+                    <Pause className="h-4 w-4" /> Pausar
+                  </Button>
+                ) : (
+                  <Button onClick={handleResume} className="gap-2">
+                    <Play className="h-4 w-4" /> Retomar
+                  </Button>
+                )}
+                <Button variant="destructive" onClick={handleStop} className="gap-2">
+                  <Square className="h-4 w-4" /> Interromper
+                </Button>
+              </div>
             </div>
           )}
 
