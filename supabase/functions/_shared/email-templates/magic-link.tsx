@@ -30,7 +30,7 @@ export const MagicLinkEmail = ({
     <Preview>Seu link de acesso ao NEVVOH</Preview>
     <Body style={main}>
       <Container style={container}>
-        <Img src={LOGO_URL} alt="NEVVOH" width="120" height="40" style={logo} />
+        <Img src={LOGO_URL} alt="NEVVOH" width="48" height="48" style={logo} />
         <Heading style={h1}>Seu link de acesso</Heading>
         <Text style={text}>
           Clique no botão abaixo para acessar o NEVVOH. Este link expira em breve.

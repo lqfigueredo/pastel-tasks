@@ -35,7 +35,7 @@ export const SignupEmail = ({
     <Preview>Confirme seu e-mail no NEVVOH</Preview>
     <Body style={main}>
       <Container style={container}>
-        <Img src={LOGO_URL} alt="NEVVOH" width="120" height="40" style={logo} />
+        <Img src={LOGO_URL} alt="NEVVOH" width="48" height="48" style={logo} />
         <Heading style={h1}>Confirme seu cadastro</Heading>
         <Text style={text}>
           Obrigado por se cadastrar no{' '}
