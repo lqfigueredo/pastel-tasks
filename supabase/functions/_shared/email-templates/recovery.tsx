@@ -30,7 +30,7 @@ export const RecoveryEmail = ({
     <Preview>Redefinir sua senha no NEVVOH</Preview>
     <Body style={main}>
       <Container style={container}>
-        <Img src={LOGO_URL} alt="NEVVOH" width="120" height="40" style={logo} />
+        <Img src={LOGO_URL} alt="NEVVOH" width="48" height="48" style={logo} />
         <Heading style={h1}>Redefinir senha</Heading>
         <Text style={text}>
           Recebemos uma solicitação para redefinir sua senha no NEVVOH. Clique no botão abaixo para escolher uma nova senha.
