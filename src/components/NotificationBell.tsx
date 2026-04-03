@@ -82,7 +82,7 @@ export const NotificationBell = () => {
     markAsRead(n.id);
     setOpen(false);
     if (n.type === 'task_deadline' && n.reference_id) {
-      navigate('/');
+      navigate('/tarefas');
     } else if (n.type === 'pendency_deadline' && n.reference_id) {
       navigate(`/atas/${n.reference_id}`);
     }
