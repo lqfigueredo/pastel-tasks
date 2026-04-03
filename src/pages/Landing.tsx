@@ -280,6 +280,61 @@ const Landing = () => {
         </div>
       </section>
 
+      {/* FAQ - SEO */}
+      <section className="py-24 border-t border-border/50">
+        <div className="mx-auto max-w-3xl px-6">
+          <RevealOnScroll>
+            <h2 className="text-center text-2xl font-bold sm:text-3xl font-display">
+              Perguntas Frequentes
+            </h2>
+            <p className="mx-auto mt-3 max-w-xl text-center text-muted-foreground">
+              Tire suas dúvidas sobre o NEVVOH e gestão de tarefas.
+            </p>
+          </RevealOnScroll>
+
+          <div className="mt-12 space-y-6">
+            {[
+              {
+                q: 'O que é um gerenciador de tarefas online?',
+                a: 'Um gerenciador de tarefas online é um software que permite criar, organizar e acompanhar atividades de forma digital. O NEVVOH vai além: integra Kanban, gestão de equipes, atas de reunião, temporizador Pomodoro e agenda pessoal em uma única plataforma.',
+              },
+              {
+                q: 'Como organizar as tarefas da minha equipe?',
+                a: 'Com o NEVVOH, você cria equipes, distribui tarefas no quadro Kanban com arrastar e soltar, define prazos e acompanha o progresso em tempo real pelo dashboard. Cada membro visualiza suas responsabilidades de forma clara.',
+              },
+              {
+                q: 'O NEVVOH substitui ferramentas como Trello ou Asana?',
+                a: 'Sim. O NEVVOH oferece funcionalidades equivalentes — Kanban, gestão de equipes, prazos — e ainda inclui módulos exclusivos como atas de reunião com pendências, instruções de trabalho versionadas e registro de ideias.',
+              },
+              {
+                q: 'Posso usar o NEVVOH para gerenciar reuniões?',
+                a: 'Sim! O módulo de Atas de Reunião permite registrar participantes, criar pendências com responsáveis e prazos, e vincular automaticamente tarefas geradas a partir da reunião.',
+              },
+              {
+                q: 'O NEVVOH é gratuito?',
+                a: 'O NEVVOH oferece um período de teste gratuito para que você conheça todas as funcionalidades. Entre em contato para saber mais sobre os planos disponíveis.',
+              },
+              {
+                q: 'Como funciona o temporizador Pomodoro do NEVVOH?',
+                a: 'O temporizador integrado permite controlar seu tempo de trabalho com sessões focadas, pausas e contagem regressiva. Você pode associar o timer a tarefas específicas para medir o tempo gasto em cada atividade.',
+              },
+            ].map((faq, i) => (
+              <RevealOnScroll key={i} delay={i * 80}>
+                <details className="group rounded-xl border border-border bg-card p-5">
+                  <summary className="cursor-pointer list-none flex items-center justify-between font-semibold">
+                    <span>{faq.q}</span>
+                    <span className="ml-4 text-muted-foreground group-open:rotate-45 transition-transform text-xl leading-none">+</span>
+                  </summary>
+                  <p className="mt-3 text-sm text-muted-foreground leading-relaxed">
+                    {faq.a}
+                  </p>
+                </details>
+              </RevealOnScroll>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* Footer */}
       <footer className="border-t border-border/50 py-10">
         <div className="mx-auto max-w-6xl px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
