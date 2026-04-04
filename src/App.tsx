@@ -25,7 +25,7 @@ const WorkInstructions = lazy(() => import("@/pages/WorkInstructions"));
 const PersonalCalendar = lazy(() => import("@/pages/PersonalCalendar"));
 const Ideas = lazy(() => import("@/pages/Ideas"));
 const Timer = lazy(() => import("@/pages/Timer"));
-
+const Unsubscribe = lazy(() => import("@/pages/Unsubscribe"));
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -55,6 +55,7 @@ const App = () => (
                 <Route path="/landing" element={<Landing />} />
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/financeiro/cadastro" element={<FinancialRegister />} />
+                <Route path="/unsubscribe" element={<Unsubscribe />} />
                 <Route element={<AppLayout />}>
                   <Route path="/tarefas" element={<Index />} />
                   <Route path="/dashboard" element={<Dashboard />} />

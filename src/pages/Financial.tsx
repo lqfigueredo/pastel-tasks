@@ -9,8 +9,9 @@ import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Input } from '@/components/ui/input';
-import { Check, X, Ban, CalendarIcon, RotateCcw, MailCheck, Pencil, Users } from 'lucide-react';
+import { Check, X, Ban, CalendarIcon, RotateCcw, MailCheck, Pencil, Users, Send } from 'lucide-react';
 import EditUserProfileDialog from '@/components/financial/EditUserProfileDialog';
+import ReplyLeadDialog from '@/components/financial/ReplyLeadDialog';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import SupportTicketList from '@/components/support/SupportTicketList';
@@ -42,6 +43,8 @@ interface Lead {
   name: string;
   email: string;
   created_at: string;
+  replied_at: string | null;
+  reply_message: string | null;
 }
 
 interface UserApproval {
@@ -73,6 +76,7 @@ const Financial = () => {
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [editingUser, setEditingUser] = useState<UserApproval | null>(null);
   const [editingLimit, setEditingLimit] = useState<{ adminId: string; value: string } | null>(null);
+  const [replyingLead, setReplyingLead] = useState<Lead | null>(null);
   const pendingCount = approvals.filter(a => a.status === 'pending').length;
 
   useEffect(() => {
@@ -424,13 +428,15 @@ const Financial = () => {
           {leads.length === 0 ? (
             <p className="text-muted-foreground py-10 text-center">Nenhum lead registrado ainda.</p>
           ) : (
-            <div className="rounded-lg border border-border">
+            <div className="rounded-lg border border-border overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead>Nome</TableHead>
                     <TableHead>E-mail</TableHead>
                     <TableHead>Data de Contato</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Ações</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -440,6 +446,23 @@ const Financial = () => {
                       <TableCell>{lead.email}</TableCell>
                       <TableCell>
                         {format(new Date(lead.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+                      </TableCell>
+                      <TableCell>
+                        {lead.replied_at ? (
+                          <Badge className="bg-green-600">Respondido</Badge>
+                        ) : (
+                          <Badge variant="outline" className="text-yellow-600 border-yellow-400">Aguardando</Badge>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button
+                          size="sm"
+                          variant={lead.replied_at ? 'ghost' : 'outline'}
+                          onClick={() => setReplyingLead(lead)}
+                        >
+                          <Send className="h-4 w-4 mr-1" />
+                          {lead.replied_at ? 'Reenviar' : 'Responder'}
+                        </Button>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -550,6 +573,13 @@ const Financial = () => {
           onSaved={loadData}
         />
       )}
+
+      <ReplyLeadDialog
+        lead={replyingLead}
+        open={!!replyingLead}
+        onOpenChange={(open) => !open && setReplyingLead(null)}
+        onSuccess={loadData}
+      />
     </div>
   );
 };
