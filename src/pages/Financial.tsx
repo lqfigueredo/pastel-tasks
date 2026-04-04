@@ -42,6 +42,8 @@ interface Lead {
   name: string;
   email: string;
   created_at: string;
+  replied_at: string | null;
+  reply_message: string | null;
 }
 
 interface UserApproval {
