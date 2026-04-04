@@ -76,6 +76,7 @@ const Financial = () => {
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [editingUser, setEditingUser] = useState<UserApproval | null>(null);
   const [editingLimit, setEditingLimit] = useState<{ adminId: string; value: string } | null>(null);
+  const [replyingLead, setReplyingLead] = useState<Lead | null>(null);
   const pendingCount = approvals.filter(a => a.status === 'pending').length;
 
   useEffect(() => {
