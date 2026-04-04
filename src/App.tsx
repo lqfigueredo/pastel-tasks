@@ -55,6 +55,7 @@ const App = () => (
                 <Route path="/landing" element={<Landing />} />
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/financeiro/cadastro" element={<FinancialRegister />} />
+                <Route path="/unsubscribe" element={<Unsubscribe />} />
                 <Route element={<AppLayout />}>
                   <Route path="/tarefas" element={<Index />} />
                   <Route path="/dashboard" element={<Dashboard />} />
