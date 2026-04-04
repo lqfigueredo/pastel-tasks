@@ -573,6 +573,13 @@ const Financial = () => {
           onSaved={loadData}
         />
       )}
+
+      <ReplyLeadDialog
+        lead={replyingLead}
+        open={!!replyingLead}
+        onOpenChange={(open) => !open && setReplyingLead(null)}
+        onSuccess={loadData}
+      />
     </div>
   );
 };
