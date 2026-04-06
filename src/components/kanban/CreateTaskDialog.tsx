@@ -237,6 +237,45 @@ export function CreateTaskDialog({ open, onOpenChange, onTaskCreated }: Props) {
             </div>
           </div>
 
+          {fromMeeting && (
+            <div className="space-y-3 rounded-lg border border-border/50 bg-muted/20 p-3">
+              <div className="space-y-2">
+                <Label>Ata de Reunião</Label>
+                <Select value={selectedMeetingId} onValueChange={(meetingId) => {
+                  setSelectedMeetingId(meetingId);
+                  setSelectedPendencyId('');
+                  supabase.from('meeting_pendencies')
+                    .select('id, description')
+                    .eq('meeting_id', meetingId)
+                    .eq('is_completed', false)
+                    .then(({ data }) => setPendencies(data || []));
+                }}>
+                  <SelectTrigger><SelectValue placeholder="Selecione uma ata..." /></SelectTrigger>
+                  <SelectContent>
+                    {meetings.map((m) => (
+                      <SelectItem key={m.id} value={m.id}>
+                        {m.description} ({new Date(m.meeting_date).toLocaleDateString('pt-BR')})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              {pendencies.length > 0 && (
+                <div className="space-y-2">
+                  <Label>Pendência</Label>
+                  <Select value={selectedPendencyId} onValueChange={setSelectedPendencyId}>
+                    <SelectTrigger><SelectValue placeholder="Selecione uma pendência..." /></SelectTrigger>
+                    <SelectContent>
+                      {pendencies.map((p) => (
+                        <SelectItem key={p.id} value={p.id}>{p.description}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+            </div>
+          )}
+
           {isRecurring ? (
             <div className="space-y-3 rounded-lg border border-border/50 bg-muted/20 p-3">
               <div className="space-y-2">
