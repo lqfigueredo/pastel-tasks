@@ -11,6 +11,7 @@ import { ptBR } from 'date-fns/locale';
 import { AddPendencyDialog } from '@/components/meetings/AddPendencyDialog';
 import { EditMeetingDialog } from '@/components/meetings/EditMeetingDialog';
 import { MeetingAttachments } from '@/components/meetings/MeetingAttachments';
+import { MeetingRecorder } from '@/components/meetings/MeetingRecorder';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { cn } from '@/lib/utils';
@@ -156,11 +157,14 @@ export default function MeetingMinuteDetail() {
             </div>
             <CardTitle className="text-lg mt-1">Descrição da Reunião</CardTitle>
           </div>
-          {meeting.created_by === user?.id && (
-            <Button size="sm" variant="outline" onClick={() => setEditDialogOpen(true)}>
-              <Pencil className="mr-2 h-4 w-4" /> Editar
-            </Button>
-          )}
+          <div className="flex items-center gap-2">
+            <MeetingRecorder meetingId={meetingId!} onRecorded={fetchAll} />
+            {meeting.created_by === user?.id && (
+              <Button size="sm" variant="outline" onClick={() => setEditDialogOpen(true)}>
+                <Pencil className="mr-2 h-4 w-4" /> Editar
+              </Button>
+            )}
+          </div>
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="whitespace-pre-wrap text-sm text-foreground">{meeting.description}</p>
