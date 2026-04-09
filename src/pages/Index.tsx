@@ -6,7 +6,10 @@ import { KanbanBoard, KanbanBoardRef } from '@/components/kanban/KanbanBoard';
 import { CreateTaskDialog } from '@/components/kanban/CreateTaskDialog';
 import { useUserRoles } from '@/hooks/useUserRoles';
 import { HelpButton } from '@/components/HelpButton';
-import { useProfilesQuery } from '@/hooks/useProfilesQuery';
+import { useProfilesQuery, ProfileInfo } from '@/hooks/useProfilesQuery';
+import { useAuth } from '@/contexts/AuthContext';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const Index = () => {
@@ -15,7 +18,38 @@ const Index = () => {
   const boardRef = useRef<KanbanBoardRef>(null);
   const { isSolutionAdmin, isAdmin, isRegularUser } = useUserRoles();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { data: profilesMap } = useProfilesQuery();
+
+  const { data: visibleIds } = useQuery({
+    queryKey: ['visible-user-ids', user?.id],
+    queryFn: async () => {
+      if (!user) return new Set<string>();
+
+      const [{ data: myTeams }, { data: approvals }] = await Promise.all([
+        supabase.from('team_members').select('team_id').eq('user_id', user.id),
+        supabase.from('user_approvals').select('user_id').eq('created_by_admin', user.id),
+      ]);
+
+      const teamIds = myTeams?.map(t => t.team_id) || [];
+      let teammateIds: string[] = [];
+      if (teamIds.length > 0) {
+        const { data: teammates } = await supabase
+          .from('team_members')
+          .select('user_id')
+          .in('team_id', teamIds);
+        teammateIds = teammates?.map(t => t.user_id) || [];
+      }
+
+      return new Set([
+        user.id,
+        ...(approvals?.map(a => a.user_id) || []),
+        ...teammateIds,
+      ]);
+    },
+    enabled: !!user,
+    staleTime: 120_000,
+  });
 
   useEffect(() => {
     if (isSolutionAdmin && !isAdmin && !isRegularUser) {
@@ -27,7 +61,9 @@ const Index = () => {
     boardRef.current?.refresh();
   };
 
-  const profiles = profilesMap ? Array.from(profilesMap.values()) : [];
+  const profiles = profilesMap && visibleIds
+    ? Array.from(profilesMap.values()).filter(p => visibleIds.has(p.user_id))
+    : [];
 
   return (
     <div className="animate-fade-in">
