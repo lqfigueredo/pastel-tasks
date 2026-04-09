@@ -20,21 +20,24 @@ const AppLayout = () => {
   if (!user) return <Navigate to="/auth" replace />;
 
   return (
-    <SidebarProvider>
-      <div className="min-h-screen flex w-full">
-        <AppSidebar />
-        <div className="flex-1 flex flex-col">
-          <header className="h-14 flex items-center border-b border-border/50 px-4 bg-background/80 backdrop-blur-sm">
-            <SidebarTrigger className="mr-4" />
-            <div className="flex-1" />
-            <NotificationBell />
-          </header>
-          <main className="flex-1 overflow-auto p-6">
-            <Outlet />
-          </main>
+    <TimerProvider>
+      <SidebarProvider>
+        <div className="min-h-screen flex w-full">
+          <AppSidebar />
+          <div className="flex-1 flex flex-col">
+            <header className="h-14 flex items-center border-b border-border/50 px-4 bg-background/80 backdrop-blur-sm">
+              <SidebarTrigger className="mr-4" />
+              <div className="flex-1" />
+              <GlobalTimerIndicator />
+              <NotificationBell />
+            </header>
+            <main className="flex-1 overflow-auto p-6">
+              <Outlet />
+            </main>
+          </div>
         </div>
-      </div>
-    </SidebarProvider>
+      </SidebarProvider>
+    </TimerProvider>
   );
 };
 
