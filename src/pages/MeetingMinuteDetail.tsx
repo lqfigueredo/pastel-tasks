@@ -11,6 +11,7 @@ import { ptBR } from 'date-fns/locale';
 import { AddPendencyDialog } from '@/components/meetings/AddPendencyDialog';
 import { EditMeetingDialog } from '@/components/meetings/EditMeetingDialog';
 import { MeetingAttachments } from '@/components/meetings/MeetingAttachments';
+import { MeetingRecorder } from '@/components/meetings/MeetingRecorder';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { cn } from '@/lib/utils';
