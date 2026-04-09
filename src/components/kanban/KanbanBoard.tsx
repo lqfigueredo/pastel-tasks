@@ -153,13 +153,17 @@ export const KanbanBoard = forwardRef<KanbanBoardRef, KanbanBoardProps>(({ filte
     );
   }
 
+  const filteredTasks = filterAssigneeId
+    ? localTasks.filter((t) => t.assignees.some((a) => a.id === filterAssigneeId))
+    : localTasks;
+
   return (
     <div className="flex gap-4 overflow-x-auto pb-4">
       {orderedStatuses.map((status, idx) => (
         <KanbanColumn
           key={status.id}
           status={status}
-          tasks={localTasks.filter((t) => t.status_id === status.id)}
+          tasks={filteredTasks.filter((t) => t.status_id === status.id)}
           allStatuses={orderedStatuses}
           onMoveTask={moveTask}
           onRefresh={refresh}
