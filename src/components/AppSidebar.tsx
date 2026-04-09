@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, Settings, LogOut, ShieldCheck, CalendarDays, FileText, TrendingUp, BookOpen, Calendar, Lightbulb, Timer } from 'lucide-react';
+import { LayoutDashboard, Users, Settings, LogOut, ShieldCheck, CalendarDays, FileText, TrendingUp, BookOpen, Calendar, Lightbulb, BookMarked, Timer } from 'lucide-react';
 import logo from '@/assets/logo.webp';
 import { NavLink } from '@/components/NavLink';
 import { useAuth } from '@/contexts/AuthContext';
@@ -26,6 +26,7 @@ const navItems = [
   { title: 'Instruções de Trabalho', url: '/instrucoes', icon: BookOpen },
   { title: 'Agenda', url: '/agenda', icon: Calendar },
   { title: 'Registro de Ideias', url: '/ideias', icon: Lightbulb },
+  { title: 'Fonte de Conhecimento', url: '/conhecimento', icon: BookMarked },
   { title: 'Temporizador', url: '/temporizador', icon: Timer },
 ];
 

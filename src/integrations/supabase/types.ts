@@ -387,6 +387,56 @@ export type Database = {
           },
         ]
       }
+      knowledge_sources: {
+        Row: {
+          created_at: string
+          created_by: string
+          description: string | null
+          file_name: string | null
+          file_path: string | null
+          id: string
+          reference_url: string | null
+          scope: string
+          team_id: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          description?: string | null
+          file_name?: string | null
+          file_path?: string | null
+          id?: string
+          reference_url?: string | null
+          scope?: string
+          team_id?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          file_name?: string | null
+          file_path?: string | null
+          id?: string
+          reference_url?: string | null
+          scope?: string
+          team_id?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "knowledge_sources_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       leads: {
         Row: {
           created_at: string

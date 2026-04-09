@@ -24,6 +24,7 @@ const FinancialRegister = lazy(() => import("@/pages/FinancialRegister"));
 const WorkInstructions = lazy(() => import("@/pages/WorkInstructions"));
 const PersonalCalendar = lazy(() => import("@/pages/PersonalCalendar"));
 const Ideas = lazy(() => import("@/pages/Ideas"));
+const KnowledgeBase = lazy(() => import("@/pages/KnowledgeBase"));
 const Timer = lazy(() => import("@/pages/Timer"));
 const Unsubscribe = lazy(() => import("@/pages/Unsubscribe"));
 const queryClient = new QueryClient({
@@ -69,6 +70,7 @@ const App = () => (
                   <Route path="/instrucoes" element={<WorkInstructions />} />
                   <Route path="/agenda" element={<PersonalCalendar />} />
                   <Route path="/ideias" element={<Ideas />} />
+                  <Route path="/conhecimento" element={<KnowledgeBase />} />
                   <Route path="/temporizador" element={<Timer />} />
                 </Route>
                 <Route path="*" element={<NotFound />} />
