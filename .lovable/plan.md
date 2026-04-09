@@ -1,27 +1,44 @@
 
-## Corrigir campos de reunião no modal de Nova Tarefa
+
+## Permitir usuários comuns verem e atribuírem colegas de equipe
 
 ### Problema
-Quando o toggle "Reunião" é ativado, os campos de seleção de ata e pendência não aparecem. O código possui os estados (`meetings`, `selectedMeetingId`, `pendencies`, `selectedPendencyId`) e a lógica de fetch, mas o bloco de JSX que renderiza esses campos foi perdido durante a refatoração dos toggles compactos.
+O `AssigneeSelector` só mostra perfis de usuários criados pelo usuário logado (via `user_approvals.created_by_admin`). Um usuário comum criado por um admin não criou ninguém, então vê apenas a si mesmo na lista de responsáveis.
 
 ### Solução
 
-**Arquivo: `src/components/kanban/CreateTaskDialog.tsx`**
+**Arquivo: `src/components/kanban/AssigneeSelector.tsx`**
 
-Adicionar um bloco condicional `{fromMeeting && (...)}` logo após o grid dos toggles (linha 238), antes do bloco `{isRecurring ? ... : ...}` (linha 240). O bloco deve conter:
+Alterar a lógica de `fetchProfiles` para também buscar membros das equipes do usuário logado:
 
-1. **Select de Ata de Reunião** — dropdown com as atas carregadas, mostrando descrição e data
-2. **Select de Pendência** — dropdown com as pendências da ata selecionada (carregadas via fetch ao selecionar a ata)
-3. Estilizado como card com borda e fundo sutil (`rounded-lg border border-border/50 bg-muted/20 p-3`), consistente com o bloco de recorrência
+1. Buscar `user_approvals` onde `created_by_admin = user.id` (mantém comportamento atual para admins)
+2. Buscar `team_members` das equipes do usuário logado para obter os IDs dos colegas de equipe
+3. Unir todos os IDs (próprio + criados + colegas de equipe) e buscar perfis
 
-A lógica de fetch de pendências ao selecionar uma ata será adicionada no `onValueChange` do select de ata:
 ```typescript
-onValueChange={(meetingId) => {
-  setSelectedMeetingId(meetingId);
-  supabase.from('meeting_pendencies')
-    .select('id, description')
-    .eq('meeting_id', meetingId)
-    .eq('is_completed', false)
-    .then(({ data }) => setPendencies(data || []));
-}}
+// Além dos approvals existentes, buscar colegas de equipe:
+const { data: myTeams } = await supabase
+  .from('team_members')
+  .select('team_id')
+  .eq('user_id', user.id);
+
+const teamIds = myTeams?.map(t => t.team_id) || [];
+
+let teammateIds: string[] = [];
+if (teamIds.length > 0) {
+  const { data: teammates } = await supabase
+    .from('team_members')
+    .select('user_id')
+    .in('team_id', teamIds);
+  teammateIds = teammates?.map(t => t.user_id) || [];
+}
+
+const visibleIds = [...new Set([
+  user.id,
+  ...(approvals?.map(a => a.user_id) || []),
+  ...teammateIds
+])];
 ```
+
+Isso permite que qualquer membro de equipe veja e atribua tarefas a outros membros da mesma equipe, sem alterar banco de dados ou RLS.
+
