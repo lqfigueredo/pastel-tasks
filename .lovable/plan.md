@@ -1,43 +1,59 @@
 
 
-## Adicionar recorrência diária + e-mail de notificação
+## Problema: Comentários de Jonathas não são salvos
 
-### O que muda
+### Causa raiz
 
-1. **Novo tipo de recorrência "daily"** em todo o fluxo (UI, banco, Edge Function)
-2. **E-mail de notificação** enviado aos responsáveis quando uma tarefa recorrente é criada automaticamente
+Jonathas consegue **visualizar** tarefas da equipe (a política de SELECT permite via `team_members`), mas a política de **INSERT** na tabela `task_comments` exige que o usuário seja **dono** ou **responsável** pela tarefa. Em tarefas onde ele é apenas membro da equipe (sem ser assignee), o insert é bloqueado silenciosamente pelo banco.
 
-### Implementação
+Além disso, o código não trata erros do insert — então o comentário some sem nenhuma mensagem de erro.
 
-#### 1. Migration — permitir `daily` no validator
-- Atualizar a função `validate_recurrence_type()` para aceitar `'daily'` além de `weekly`, `monthly`, `yearly`
+### Solução
 
-#### 2. CreateTaskDialog.tsx — opção "Diária" no select
-- Adicionar `<SelectItem value="daily">Diária</SelectItem>` no select de frequência
-- Tratar `daily` no cálculo de `nextRun`: próximo dia = amanhã
-- Quando `recurrenceType === 'daily'`, não exibir seletor de dia (não é necessário)
+#### 1. Migration — permitir membros de equipe comentarem
 
-#### 3. RecurringTasksSettings.tsx — exibir label "Diária"
-- Atualizar `describeRecurrence` para retornar `'Diária'` quando `type === 'daily'`
+Adicionar uma nova política de INSERT na tabela `task_comments` que permita membros da equipe inserir comentários:
 
-#### 4. process-recurring-tasks/index.ts — suporte a daily + envio de e-mail
-- Adicionar `case "daily"` no `calcNextDate`: incrementar 1 dia
-- Após criar a tarefa e os assignees, buscar o e-mail dos responsáveis via `profiles` → `auth.users` (usando service role) e invocar `send-transactional-email` com template `recurring-task-reminder` para cada responsável
+```sql
+CREATE POLICY "Team members can add comments"
+ON public.task_comments
+FOR INSERT
+TO authenticated
+WITH CHECK (
+  auth.uid() = user_id
+  AND EXISTS (
+    SELECT 1 FROM tasks t
+    WHERE t.id = task_comments.task_id
+      AND t.team_id IS NOT NULL
+      AND is_team_member(auth.uid(), t.team_id)
+  )
+);
+```
 
-#### 5. Novo template de e-mail — recurring-task-reminder.tsx
-- Template React Email com branding NEVVOH (mesmo estilo do lead-reply)
-- Props: `taskTitle`, `userName`, `dueDate`
-- Subject: "Tarefa recorrente: {taskTitle}"
-- Registrar no `registry.ts`
+Também adicionar política de SELECT para membros da equipe (caso não exista):
 
-#### 6. Deploy
-- Deploy das Edge Functions `process-recurring-tasks` e `send-transactional-email`
+```sql
+CREATE POLICY "Team members can view task comments"
+ON public.task_comments
+FOR SELECT
+TO authenticated
+USING (
+  EXISTS (
+    SELECT 1 FROM tasks t
+    WHERE t.id = task_comments.task_id
+      AND t.team_id IS NOT NULL
+      AND is_team_member(auth.uid(), t.team_id)
+  )
+);
+```
+
+#### 2. Código — tratar erros no insert de comentários
+
+**Arquivo: `src/components/kanban/TaskDetailDialog.tsx`**
+
+Na função `addComment`, capturar o erro do insert e exibir um toast de erro caso falhe, em vez de silenciosamente limpar o campo.
 
 ### Arquivos modificados
-- **Migration SQL** — alterar `validate_recurrence_type` para incluir `'daily'`
-- `src/components/kanban/CreateTaskDialog.tsx` — opção diária + cálculo nextRun
-- `src/components/settings/RecurringTasksSettings.tsx` — label "Diária"
-- `supabase/functions/process-recurring-tasks/index.ts` — case daily + envio e-mail
-- `supabase/functions/_shared/transactional-email-templates/recurring-task-reminder.tsx` (novo)
-- `supabase/functions/_shared/transactional-email-templates/registry.ts` — registrar template
+- **Migration SQL** — 2 novas políticas RLS em `task_comments`
+- `src/components/kanban/TaskDetailDialog.tsx` — tratamento de erro no `addComment`
 
