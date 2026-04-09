@@ -208,12 +208,16 @@ export function TaskDetailDialog({ task, allStatuses, open, onOpenChange, onRefr
 
   const addComment = async () => {
     if (!newComment.trim() || !user) return;
-    await supabase.from('task_comments').insert({
+    const { error } = await supabase.from('task_comments').insert({
       task_id: task.id,
       user_id: user.id,
       content: newComment.trim(),
       comment_type: 'normal',
     });
+    if (error) {
+      toast({ title: 'Erro ao adicionar comentário', description: 'Você pode não ter permissão para comentar nesta tarefa.', variant: 'destructive' });
+      return;
+    }
     setNewComment('');
     fetchComments();
   };
