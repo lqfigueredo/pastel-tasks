@@ -1,25 +1,24 @@
 
 
-## Filtro por responsável na tela de Tarefas
+## Limitar filtro de responsáveis ao usuário e membros da equipe
 
-### O que será feito
+### Problema
+O dropdown de filtro por responsável na tela de tarefas mostra **todos** os perfis do sistema. Deveria mostrar apenas o próprio usuário e colegas de equipe, seguindo a mesma lógica do `AssigneeSelector`.
 
-Adicionar um filtro dropdown na página `/tarefas` que permite selecionar um responsável (assignee) para filtrar as tarefas exibidas no Kanban. O filtro mostrará "Todos" por padrão e listará os perfis disponíveis.
+### Solução
+Não alterar o `useProfilesQuery` (usado em outros locais que precisam de todos os perfis). Em vez disso, filtrar a lista de perfis em `Index.tsx` usando os IDs visíveis — mesma lógica do `AssigneeSelector`:
+1. Buscar `team_members` das equipes do usuário
+2. Buscar `user_approvals` criadas pelo admin do usuário
+3. Montar conjunto de IDs visíveis (próprio + colegas + criados pelo admin)
+4. Filtrar os perfis do `useProfilesQuery` por esses IDs
 
 ### Implementação
 
-#### 1. Atualizar `src/pages/Index.tsx`
-- Adicionar estado `filterAssigneeId` (string | null)
-- Importar `useProfilesQuery` para obter a lista de perfis
-- Renderizar um `Select` dropdown ao lado do botão "Nova Tarefa" com as opções: "Todos os responsáveis" + lista de perfis
-- Passar `filterAssigneeId` como prop para o `KanbanBoard`
-
-#### 2. Atualizar `src/components/kanban/KanbanBoard.tsx`
-- Aceitar prop `filterAssigneeId?: string | null`
-- Filtrar `localTasks` pelo assignee selecionado antes de passar para as colunas: se `filterAssigneeId` estiver definido, exibir apenas tarefas cujo array `assignees` contenha esse user_id
-- Atualizar a interface `KanbanBoardRef` e o `forwardRef` para aceitar props
+**`src/pages/Index.tsx`**:
+- Adicionar um `useEffect` (ou `useQuery`) que busca os IDs de `team_members` e `user_approvals` para o usuário logado (mesma lógica que já existe no `AssigneeSelector`)
+- Filtrar `profiles` pelo conjunto de IDs visíveis antes de renderizar no `Select`
+- Manter `useProfilesQuery` inalterado para não quebrar `TimeReport` e `TaskTimer`
 
 ### Arquivos modificados
-- `src/pages/Index.tsx` — adicionar Select de filtro e estado
-- `src/components/kanban/KanbanBoard.tsx` — aceitar e aplicar prop de filtro
+- `src/pages/Index.tsx` — filtrar perfis visíveis no dropdown
 
