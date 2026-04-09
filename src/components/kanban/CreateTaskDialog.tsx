@@ -72,7 +72,10 @@ export function CreateTaskDialog({ open, onOpenChange, onTaskCreated }: Props) {
       // Calculate next_run_date based on recurrence type
       const today = new Date();
       let nextRun: Date;
-      if (recurrenceType === 'weekly') {
+      if (recurrenceType === 'daily') {
+        nextRun = new Date(today);
+        nextRun.setDate(today.getDate() + 1);
+      } else if (recurrenceType === 'weekly') {
         const currentDay = today.getDay();
         const diff = (recurrenceDay - currentDay + 7) % 7 || 7;
         nextRun = new Date(today);
@@ -80,8 +83,6 @@ export function CreateTaskDialog({ open, onOpenChange, onTaskCreated }: Props) {
       } else if (recurrenceType === 'monthly') {
         nextRun = new Date(today.getFullYear(), today.getMonth() + 1, Math.min(recurrenceDay, 28));
       } else {
-        nextRun = new Date(today.getFullYear() + 1, 0, Math.min(recurrenceDay, 365));
-        // For yearly, recurrenceDay is month (0-11), use day 1
         nextRun = new Date(today.getFullYear() + (today.getMonth() >= recurrenceDay ? 1 : 0), recurrenceDay, 1);
       }
 
@@ -282,7 +283,8 @@ export function CreateTaskDialog({ open, onOpenChange, onTaskCreated }: Props) {
                 <Label>Frequência</Label>
                 <Select value={recurrenceType} onValueChange={(v) => { setRecurrenceType(v); setRecurrenceDay(v === 'weekly' ? 1 : 1); }}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
+                   <SelectContent>
+                    <SelectItem value="daily">Diária</SelectItem>
                     <SelectItem value="weekly">Semanal</SelectItem>
                     <SelectItem value="monthly">Mensal</SelectItem>
                     <SelectItem value="yearly">Anual</SelectItem>
