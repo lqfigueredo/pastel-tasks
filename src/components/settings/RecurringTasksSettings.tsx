@@ -24,6 +24,7 @@ const WEEKDAYS = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', '
 const MONTHS = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
 
 function describeRecurrence(type: string, day: number | null): string {
+  if (type === 'daily') return 'Diária';
   if (type === 'weekly') return `Semanal — ${WEEKDAYS[day ?? 0]}`;
   if (type === 'monthly') return `Mensal — Dia ${day ?? 1}`;
   if (type === 'yearly') return `Anual — ${MONTHS[day ?? 0]}`;

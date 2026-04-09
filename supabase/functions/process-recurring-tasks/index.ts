@@ -68,6 +68,35 @@ Deno.serve(async (req) => {
             user_id: userId,
           }))
         );
+
+        // Send email notification to each assignee
+        for (const userId of rec.assignee_ids) {
+          try {
+            const { data: userData } = await supabase.auth.admin.getUserById(userId);
+            if (userData?.user?.email) {
+              const { data: profile } = await supabase
+                .from("profiles")
+                .select("display_name")
+                .eq("user_id", userId)
+                .single();
+
+              await supabase.functions.invoke("send-transactional-email", {
+                body: {
+                  templateName: "recurring-task-reminder",
+                  recipientEmail: userData.user.email,
+                  idempotencyKey: `recurring-task-${task.id}-${userId}`,
+                  templateData: {
+                    taskTitle: rec.title,
+                    userName: profile?.display_name || "",
+                    dueDate: rec.next_run_date,
+                  },
+                },
+              });
+            }
+          } catch (emailErr) {
+            console.error(`Failed to send email to ${userId}:`, emailErr);
+          }
+        }
       }
 
       // Calculate next run date
@@ -98,6 +127,9 @@ function calcNextDate(currentDate: string, type: string, day: number | null): st
   const d = new Date(currentDate + "T00:00:00Z");
 
   switch (type) {
+    case "daily":
+      d.setUTCDate(d.getUTCDate() + 1);
+      break;
     case "weekly":
       d.setUTCDate(d.getUTCDate() + 7);
       break;

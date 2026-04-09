@@ -10,7 +10,9 @@ export interface TemplateEntry {
 }
 
 import { template as leadReply } from './lead-reply.tsx'
+import { template as recurringTaskReminder } from './recurring-task-reminder.tsx'
 
 export const TEMPLATES: Record<string, TemplateEntry> = {
   'lead-reply': leadReply,
+  'recurring-task-reminder': recurringTaskReminder,
 }
