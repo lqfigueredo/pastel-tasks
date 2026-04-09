@@ -1,54 +1,29 @@
 
 
-## E-mail diário de pendências (tarefas e pendências de reunião)
+## Corrigir nome "simpletaskbr" para "NEVVOH" nos e-mails
 
-### O que será criado
+### Problema
+O campo `From:` dos e-mails está sendo enviado como `simpletaskbr <noreply@nevvoh.com>` em vez de `NEVVOH <noreply@nevvoh.com>`. Isso ocorre porque a constante `SITE_NAME` nos arquivos de envio ficou com o valor antigo "simpletaskbr".
 
-Uma Edge Function `send-daily-pending-email` que roda diariamente via pg_cron e envia um e-mail consolidado para cada usuário com:
-- Tarefas com prazo **hoje** ou **atrasadas** (sem `actual_end_date`)
-- Pendências de reunião com prazo **hoje** ou **atrasadas** (não concluídas)
+### Correção
 
-O e-mail inclui links diretos para `/tarefas` (tarefas) e `/atas/{meetingId}` (pendências).
+Alterar `SITE_NAME` de `"simpletaskbr"` para `"NEVVOH"` em dois arquivos:
 
-### Implementação
+1. **`supabase/functions/send-transactional-email/index.ts`** (linha 8)
+   - `const SITE_NAME = "simpletaskbr"` → `const SITE_NAME = "NEVVOH"`
 
-#### 1. Novo template de e-mail — `daily-pending-summary.tsx`
+2. **`supabase/functions/auth-email-hook/index.ts`** (linha 39)
+   - `const SITE_NAME = "simpletaskbr"` → `const SITE_NAME = "NEVVOH"`
 
-Template React Email em `supabase/functions/_shared/transactional-email-templates/` com:
-- Saudação com nome do usuário
-- Seção "Tarefas" — lista com título, prazo e link direto para `/tarefas`
-- Seção "Pendências de reunião" — lista com descrição, prazo e link direto para `/atas/{meetingId}`
-- Badge visual para "Atrasada" vs "Vence hoje"
-- Estilo consistente com os templates existentes (branding NEVVOH)
+Também atualizar a URL de referência no template de resumo diário:
 
-Registrar no `registry.ts`.
+3. **`supabase/functions/_shared/transactional-email-templates/daily-pending-summary.tsx`** (linha 18)
+   - `const SITE_URL = 'https://simpletaskbr.lovable.app'` → `const SITE_URL = 'https://nevvoh.com'`
 
-#### 2. Nova Edge Function — `send-daily-pending-email/index.ts`
+Após as edições, fazer deploy das duas Edge Functions afetadas.
 
-Lógica:
-1. Buscar todas as tarefas sem `actual_end_date` com `estimated_delivery_date <= hoje`
-2. Buscar todas as `meeting_pendencies` não concluídas com `due_date <= hoje`
-3. Agrupar por usuário (via `task_assignees` e `responsible_user_id`)
-4. Para cada usuário com itens pendentes, buscar e-mail e nome do perfil
-5. Invocar `send-transactional-email` com o template `daily-pending-summary` passando a lista de itens
-6. Usar `idempotencyKey` = `daily-pending-{userId}-{today}` para evitar duplicatas
-
-#### 3. Agendar via pg_cron
-
-Criar um cron job para executar diariamente às 7h (horário de Brasília / UTC-3 = 10:00 UTC):
-```
-0 10 * * *
-```
-Chamará a Edge Function `send-daily-pending-email`.
-
-#### 4. Configuração no `config.toml`
-
-Adicionar `verify_jwt = false` para a nova função.
-
-### Arquivos modificados/criados
-- `supabase/functions/_shared/transactional-email-templates/daily-pending-summary.tsx` (novo)
-- `supabase/functions/_shared/transactional-email-templates/registry.ts` — registrar template
-- `supabase/functions/send-daily-pending-email/index.ts` (novo)
-- `supabase/config.toml` — adicionar config da nova função
-- **SQL (insert via supabase)** — pg_cron job para execução diária
+### Arquivos modificados
+- `supabase/functions/send-transactional-email/index.ts`
+- `supabase/functions/auth-email-hook/index.ts`
+- `supabase/functions/_shared/transactional-email-templates/daily-pending-summary.tsx`
 
