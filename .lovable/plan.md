@@ -1,44 +1,43 @@
 
 
-## Permitir usuários comuns verem e atribuírem colegas de equipe
+## Adicionar recorrência diária + e-mail de notificação
 
-### Problema
-O `AssigneeSelector` só mostra perfis de usuários criados pelo usuário logado (via `user_approvals.created_by_admin`). Um usuário comum criado por um admin não criou ninguém, então vê apenas a si mesmo na lista de responsáveis.
+### O que muda
 
-### Solução
+1. **Novo tipo de recorrência "daily"** em todo o fluxo (UI, banco, Edge Function)
+2. **E-mail de notificação** enviado aos responsáveis quando uma tarefa recorrente é criada automaticamente
 
-**Arquivo: `src/components/kanban/AssigneeSelector.tsx`**
+### Implementação
 
-Alterar a lógica de `fetchProfiles` para também buscar membros das equipes do usuário logado:
+#### 1. Migration — permitir `daily` no validator
+- Atualizar a função `validate_recurrence_type()` para aceitar `'daily'` além de `weekly`, `monthly`, `yearly`
 
-1. Buscar `user_approvals` onde `created_by_admin = user.id` (mantém comportamento atual para admins)
-2. Buscar `team_members` das equipes do usuário logado para obter os IDs dos colegas de equipe
-3. Unir todos os IDs (próprio + criados + colegas de equipe) e buscar perfis
+#### 2. CreateTaskDialog.tsx — opção "Diária" no select
+- Adicionar `<SelectItem value="daily">Diária</SelectItem>` no select de frequência
+- Tratar `daily` no cálculo de `nextRun`: próximo dia = amanhã
+- Quando `recurrenceType === 'daily'`, não exibir seletor de dia (não é necessário)
 
-```typescript
-// Além dos approvals existentes, buscar colegas de equipe:
-const { data: myTeams } = await supabase
-  .from('team_members')
-  .select('team_id')
-  .eq('user_id', user.id);
+#### 3. RecurringTasksSettings.tsx — exibir label "Diária"
+- Atualizar `describeRecurrence` para retornar `'Diária'` quando `type === 'daily'`
 
-const teamIds = myTeams?.map(t => t.team_id) || [];
+#### 4. process-recurring-tasks/index.ts — suporte a daily + envio de e-mail
+- Adicionar `case "daily"` no `calcNextDate`: incrementar 1 dia
+- Após criar a tarefa e os assignees, buscar o e-mail dos responsáveis via `profiles` → `auth.users` (usando service role) e invocar `send-transactional-email` com template `recurring-task-reminder` para cada responsável
 
-let teammateIds: string[] = [];
-if (teamIds.length > 0) {
-  const { data: teammates } = await supabase
-    .from('team_members')
-    .select('user_id')
-    .in('team_id', teamIds);
-  teammateIds = teammates?.map(t => t.user_id) || [];
-}
+#### 5. Novo template de e-mail — recurring-task-reminder.tsx
+- Template React Email com branding NEVVOH (mesmo estilo do lead-reply)
+- Props: `taskTitle`, `userName`, `dueDate`
+- Subject: "Tarefa recorrente: {taskTitle}"
+- Registrar no `registry.ts`
 
-const visibleIds = [...new Set([
-  user.id,
-  ...(approvals?.map(a => a.user_id) || []),
-  ...teammateIds
-])];
-```
+#### 6. Deploy
+- Deploy das Edge Functions `process-recurring-tasks` e `send-transactional-email`
 
-Isso permite que qualquer membro de equipe veja e atribua tarefas a outros membros da mesma equipe, sem alterar banco de dados ou RLS.
+### Arquivos modificados
+- **Migration SQL** — alterar `validate_recurrence_type` para incluir `'daily'`
+- `src/components/kanban/CreateTaskDialog.tsx` — opção diária + cálculo nextRun
+- `src/components/settings/RecurringTasksSettings.tsx` — label "Diária"
+- `supabase/functions/process-recurring-tasks/index.ts` — case daily + envio e-mail
+- `supabase/functions/_shared/transactional-email-templates/recurring-task-reminder.tsx` (novo)
+- `supabase/functions/_shared/transactional-email-templates/registry.ts` — registrar template
 
