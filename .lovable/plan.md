@@ -1,59 +1,102 @@
 
 
-## Problema: Comentários de Jonathas não são salvos
+## Nova funcionalidade: Fonte de Conhecimento
 
-### Causa raiz
+### O que será criado
 
-Jonathas consegue **visualizar** tarefas da equipe (a política de SELECT permite via `team_members`), mas a política de **INSERT** na tabela `task_comments` exige que o usuário seja **dono** ou **responsável** pela tarefa. Em tarefas onde ele é apenas membro da equipe (sem ser assignee), o insert é bloqueado silenciosamente pelo banco.
+Uma nova página "Fonte de Conhecimento" onde usuários podem salvar links de referência e arquivos importantes, de forma individual ou compartilhada com a equipe. A página terá listagem com filtro por título e indicação visual se é individual ou de equipe.
 
-Além disso, o código não trata erros do insert — então o comentário some sem nenhuma mensagem de erro.
+### Implementação
 
-### Solução
-
-#### 1. Migration — permitir membros de equipe comentarem
-
-Adicionar uma nova política de INSERT na tabela `task_comments` que permita membros da equipe inserir comentários:
+#### 1. Migration — nova tabela `knowledge_sources`
 
 ```sql
-CREATE POLICY "Team members can add comments"
-ON public.task_comments
-FOR INSERT
-TO authenticated
-WITH CHECK (
-  auth.uid() = user_id
-  AND EXISTS (
-    SELECT 1 FROM tasks t
-    WHERE t.id = task_comments.task_id
-      AND t.team_id IS NOT NULL
-      AND is_team_member(auth.uid(), t.team_id)
-  )
+CREATE TABLE public.knowledge_sources (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  title text NOT NULL,
+  description text,
+  reference_url text,
+  file_path text,
+  file_name text,
+  scope text NOT NULL DEFAULT 'individual', -- 'individual' ou 'team'
+  team_id uuid,
+  created_by uuid NOT NULL,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now()
 );
+
+ALTER TABLE public.knowledge_sources ENABLE ROW LEVEL SECURITY;
+
+-- Usuário vê as próprias (individuais) + as da equipe
+CREATE POLICY "Users can view own sources" ON public.knowledge_sources
+  FOR SELECT TO authenticated
+  USING (created_by = auth.uid() OR (scope = 'team' AND team_id IS NOT NULL AND is_team_member(auth.uid(), team_id)));
+
+CREATE POLICY "Users can create sources" ON public.knowledge_sources
+  FOR INSERT TO authenticated
+  WITH CHECK (created_by = auth.uid());
+
+CREATE POLICY "Users can update own sources" ON public.knowledge_sources
+  FOR UPDATE TO authenticated
+  USING (created_by = auth.uid());
+
+CREATE POLICY "Users can delete own sources" ON public.knowledge_sources
+  FOR DELETE TO authenticated
+  USING (created_by = auth.uid());
 ```
 
-Também adicionar política de SELECT para membros da equipe (caso não exista):
+Também criar um bucket `knowledge-attachments` para os arquivos.
+
+#### 2. Storage — bucket + RLS
 
 ```sql
-CREATE POLICY "Team members can view task comments"
-ON public.task_comments
-FOR SELECT
-TO authenticated
-USING (
-  EXISTS (
-    SELECT 1 FROM tasks t
-    WHERE t.id = task_comments.task_id
-      AND t.team_id IS NOT NULL
-      AND is_team_member(auth.uid(), t.team_id)
-  )
-);
+INSERT INTO storage.buckets (id, name, public) VALUES ('knowledge-attachments', 'knowledge-attachments', false);
+
+-- Políticas de storage para o bucket
+CREATE POLICY "Auth users can upload knowledge files"
+ON storage.objects FOR INSERT TO authenticated
+WITH CHECK (bucket_id = 'knowledge-attachments');
+
+CREATE POLICY "Users can view knowledge files"
+ON storage.objects FOR SELECT TO authenticated
+USING (bucket_id = 'knowledge-attachments');
+
+CREATE POLICY "Uploader can delete knowledge files"
+ON storage.objects FOR DELETE TO authenticated
+USING (bucket_id = 'knowledge-attachments' AND (storage.foldername(name))[1] = auth.uid()::text);
 ```
 
-#### 2. Código — tratar erros no insert de comentários
+#### 3. Página — `src/pages/KnowledgeBase.tsx`
 
-**Arquivo: `src/components/kanban/TaskDetailDialog.tsx`**
+- Listagem em cards ou tabela com: título, descrição (truncada), link, arquivo, badge "Individual"/"Equipe", data
+- Campo de busca por título no topo
+- Botão "Nova Fonte" abrindo dialog de criação
+- Clique no item abre dialog de edição/visualização
 
-Na função `addComment`, capturar o erro do insert e exibir um toast de erro caso falhe, em vez de silenciosamente limpar o campo.
+#### 4. Dialog de criação — `src/components/knowledge/CreateKnowledgeDialog.tsx`
 
-### Arquivos modificados
-- **Migration SQL** — 2 novas políticas RLS em `task_comments`
-- `src/components/kanban/TaskDetailDialog.tsx` — tratamento de erro no `addComment`
+Campos:
+- Título (obrigatório)
+- Descrição (opcional, textarea)
+- Link de referência (opcional, input URL)
+- Arquivo (opcional, upload)
+- Escopo: Individual / Equipe (radio/select)
+- Se equipe: seletor de equipe (busca `team_members` do usuário)
+
+#### 5. Dialog de edição — `src/components/knowledge/EditKnowledgeDialog.tsx`
+
+Mesmos campos, com possibilidade de atualizar ou excluir.
+
+#### 6. Rota + Menu
+
+- **`src/App.tsx`**: adicionar rota `/conhecimento` com componente `KnowledgeBase`
+- **`src/components/AppSidebar.tsx`**: adicionar item "Fonte de Conhecimento" com ícone `BookMarked` entre "Registro de Ideias" e "Temporizador"
+
+### Arquivos modificados/criados
+- **Migration SQL** — tabela `knowledge_sources` + bucket + RLS
+- `src/pages/KnowledgeBase.tsx` (novo)
+- `src/components/knowledge/CreateKnowledgeDialog.tsx` (novo)
+- `src/components/knowledge/EditKnowledgeDialog.tsx` (novo)
+- `src/App.tsx` — nova rota
+- `src/components/AppSidebar.tsx` — novo item de menu
 
