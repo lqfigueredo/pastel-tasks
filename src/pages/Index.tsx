@@ -61,7 +61,9 @@ const Index = () => {
     boardRef.current?.refresh();
   };
 
-  const profiles = profilesMap ? Array.from(profilesMap.values()) : [];
+  const profiles = profilesMap && visibleIds
+    ? Array.from(profilesMap.values()).filter(p => visibleIds.has(p.user_id))
+    : [];
 
   return (
     <div className="animate-fade-in">
