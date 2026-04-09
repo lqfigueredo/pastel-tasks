@@ -154,7 +154,7 @@ export const KanbanBoard = forwardRef<KanbanBoardRef, KanbanBoardProps>(({ filte
   }
 
   const filteredTasks = filterAssigneeId
-    ? localTasks.filter((t) => t.assignees.some((a) => a.id === filterAssigneeId))
+    ? localTasks.filter((t) => t.assignees.some((a) => a.user_id === filterAssigneeId))
     : localTasks;
 
   return (
