@@ -31,7 +31,27 @@ export function AssigneeSelector({ selectedIds, onChange }: AssigneeSelectorProp
         .select('user_id')
         .eq('created_by_admin', user.id);
 
-      const visibleIds = [...new Set([user.id, ...(approvals?.map(a => a.user_id) || [])])];
+      const { data: myTeams } = await supabase
+        .from('team_members')
+        .select('team_id')
+        .eq('user_id', user.id);
+
+      const teamIds = myTeams?.map(t => t.team_id) || [];
+
+      let teammateIds: string[] = [];
+      if (teamIds.length > 0) {
+        const { data: teammates } = await supabase
+          .from('team_members')
+          .select('user_id')
+          .in('team_id', teamIds);
+        teammateIds = teammates?.map(t => t.user_id) || [];
+      }
+
+      const visibleIds = [...new Set([
+        user.id,
+        ...(approvals?.map(a => a.user_id) || []),
+        ...teammateIds
+      ])];
 
       const { data } = await supabase
         .from('profiles')
