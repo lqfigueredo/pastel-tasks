@@ -45,9 +45,9 @@ export default function MeetingMinuteDetail() {
   const [pendencyDialogOpen, setPendencyDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
 
-  const fetchAll = async () => {
+  const loadData = async (showLoading: boolean) => {
     if (!meetingId) return;
-    setLoading(true);
+    if (showLoading) setLoading(true);
 
     const [{ data: meetingData }, { data: partData }, { data: pendData }] = await Promise.all([
       supabase.from('meeting_minutes').select('*').eq('id', meetingId).single(),
@@ -88,8 +88,11 @@ export default function MeetingMinuteDetail() {
       setPendencies([]);
     }
 
-    setLoading(false);
+    if (showLoading) setLoading(false);
   };
+
+  const fetchAll = () => loadData(true);
+  const refreshData = () => loadData(false);
 
   useEffect(() => {
     fetchAll();
