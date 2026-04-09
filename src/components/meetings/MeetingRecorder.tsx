@@ -65,6 +65,7 @@ export function MeetingRecorder({ meetingId, onRecorded }: Props) {
         combinedTracks.push(...screenStream.getTracks());
 
         screenStream.getVideoTracks()[0]?.addEventListener('ended', () => {
+          toast.info('Compartilhamento de tela encerrado. A gravação foi finalizada.');
           stopRecording();
         });
       }
