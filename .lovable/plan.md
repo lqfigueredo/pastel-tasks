@@ -1,38 +1,25 @@
 
 
-## Gravador de Tela e Voz na Ata de Reunião
+## Limite de gravação de reuniões
 
-Sim, é possível. Usaremos as APIs nativas do navegador (`MediaRecorder`, `getDisplayMedia`, `getUserMedia`) para gravar tela e/ou voz diretamente na página de detalhe da ata, e salvar a gravação como anexo no bucket `meeting-attachments`.
+### Recomendação de limite
 
-### Como funcionará
+Para reuniões de ~30 minutos, os tamanhos típicos em WebM são:
+- **Apenas áudio**: ~15-30 MB (30 min)
+- **Tela + áudio**: ~100-200 MB (30 min)
 
-- Um botão "Gravar Reunião" aparecerá na página de detalhe da ata
-- O usuário escolhe o que gravar: **tela + áudio**, **apenas áudio**, ou **apenas tela**
-- Durante a gravação, um indicador visual com cronômetro e botão de parar ficará visível
-- Ao parar, o vídeo/áudio é automaticamente salvo como anexo da ata (formato WebM)
-- A gravação aparecerá na lista de anexos normalmente, podendo ser baixada
+Recomendo limitar em **45 minutos** de duração (margem sobre os 30 min típicos) e **200 MB** de tamanho de arquivo. Isso cobre a maioria dos cenários sem desperdiçar storage.
 
 ### Implementação
 
-#### 1. Novo componente `src/components/meetings/MeetingRecorder.tsx`
-- Botão para iniciar gravação com menu de opções (tela+áudio, só áudio, só tela)
-- Usa `navigator.mediaDevices.getDisplayMedia()` para captura de tela
-- Usa `navigator.mediaDevices.getUserMedia({ audio: true })` para captura de voz
-- Combina os streams com `MediaRecorder` (codec `video/webm`)
-- Indicador de gravação ativa com timer e botão de parar
-- Ao parar, faz upload automático para `meeting-attachments` e insere registro na tabela `meeting_attachments`
+**`src/components/meetings/MeetingRecorder.tsx`**:
 
-#### 2. Integrar na página `src/pages/MeetingMinuteDetail.tsx`
-- Importar e renderizar `MeetingRecorder` ao lado dos botões existentes
-- Passar `meetingId` e callback `onRecorded` para atualizar a lista de anexos
+1. Adicionar constantes `MAX_DURATION_SECONDS = 2700` (45 min) e `MAX_SIZE_BYTES = 200 * 1024 * 1024`
+2. No timer (`setInterval`), verificar se `elapsed >= MAX_DURATION_SECONDS` → parar gravação automaticamente com `toast.warning`
+3. No `ondataavailable`, acumular tamanho total dos chunks e verificar se excede `MAX_SIZE_BYTES` → parar gravação com aviso
+4. Exibir aviso visual (texto amarelo) quando restarem 5 minutos (`elapsed >= MAX_DURATION_SECONDS - 300`)
+5. Mostrar o tempo máximo no tooltip do botão "Gravar" para informar o usuário antes de iniciar
 
-### Limitações conhecidas
-- Funciona apenas em navegadores desktop modernos (Chrome, Edge, Firefox)
-- A captura de tela requer permissão explícita do usuário
-- O formato de saída será WebM (suportado nativamente pelo MediaRecorder)
-- Gravações longas podem gerar arquivos grandes
-
-### Arquivos criados/modificados
-- `src/components/meetings/MeetingRecorder.tsx` (novo)
-- `src/pages/MeetingMinuteDetail.tsx` (adicionar componente)
+### Arquivos modificados
+- `src/components/meetings/MeetingRecorder.tsx`
 
