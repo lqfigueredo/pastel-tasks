@@ -1,25 +1,26 @@
 
 
-## Limite de gravação de reuniões
+## Corrigir gravação parando sozinha
 
-### Recomendação de limite
+### Diagnóstico
 
-Para reuniões de ~30 minutos, os tamanhos típicos em WebM são:
-- **Apenas áudio**: ~15-30 MB (30 min)
-- **Tela + áudio**: ~100-200 MB (30 min)
+Identifiquei duas causas prováveis:
 
-Recomendo limitar em **45 minutos** de duração (margem sobre os 30 min típicos) e **200 MB** de tamanho de arquivo. Isso cobre a maioria dos cenários sem desperdiçar storage.
+1. **Componente desmonta durante gravação**: A função `fetchAll` (usada como callback em AddPendencyDialog, EditMeetingDialog e MeetingAttachments) faz `setLoading(true)`, que desmonta toda a página -- incluindo o `MeetingRecorder`. Quando ele desmonta, o `useEffect` de cleanup para os streams e para a gravação.
 
-### Implementação
+2. **Evento `ended` na captura de tela**: Para gravações com tela, o navegador mostra um indicador "Parar compartilhamento". Se o usuário clicar acidentalmente ou mudar de aba/janela, o track de vídeo dispara `ended` e para a gravação.
 
-**`src/components/meetings/MeetingRecorder.tsx`**:
+### Correções
 
-1. Adicionar constantes `MAX_DURATION_SECONDS = 2700` (45 min) e `MAX_SIZE_BYTES = 200 * 1024 * 1024`
-2. No timer (`setInterval`), verificar se `elapsed >= MAX_DURATION_SECONDS` → parar gravação automaticamente com `toast.warning`
-3. No `ondataavailable`, acumular tamanho total dos chunks e verificar se excede `MAX_SIZE_BYTES` → parar gravação com aviso
-4. Exibir aviso visual (texto amarelo) quando restarem 5 minutos (`elapsed >= MAX_DURATION_SECONDS - 300`)
-5. Mostrar o tempo máximo no tooltip do botão "Gravar" para informar o usuário antes de iniciar
+#### 1. `src/pages/MeetingMinuteDetail.tsx`
+- Não usar `setLoading(true)` ao recarregar dados (apenas no carregamento inicial). Criar uma função `refreshData` que atualiza os estados sem setar `loading=true`, evitando que o componente MeetingRecorder seja desmontado durante uma gravação.
+- Usar `refreshData` (sem loading) nos callbacks `onCreated`, `onUpdated` e `onRecorded`.
+
+#### 2. `src/components/meetings/MeetingRecorder.tsx`
+- Remover o listener `ended` no video track que para a gravação automaticamente quando o usuário para o compartilhamento de tela (isso é confuso -- o usuário pode querer continuar gravando áudio).
+- Alternativamente, manter o comportamento mas exibir um toast informativo explicando por que a gravação parou.
 
 ### Arquivos modificados
-- `src/components/meetings/MeetingRecorder.tsx`
+- `src/pages/MeetingMinuteDetail.tsx` -- separar refresh sem loading
+- `src/components/meetings/MeetingRecorder.tsx` -- melhorar tratamento do evento `ended`
 
