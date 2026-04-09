@@ -1,29 +1,25 @@
 
 
-## Corrigir nome "simpletaskbr" para "NEVVOH" nos e-mails
+## Filtro por responsável na tela de Tarefas
 
-### Problema
-O campo `From:` dos e-mails está sendo enviado como `simpletaskbr <noreply@nevvoh.com>` em vez de `NEVVOH <noreply@nevvoh.com>`. Isso ocorre porque a constante `SITE_NAME` nos arquivos de envio ficou com o valor antigo "simpletaskbr".
+### O que será feito
 
-### Correção
+Adicionar um filtro dropdown na página `/tarefas` que permite selecionar um responsável (assignee) para filtrar as tarefas exibidas no Kanban. O filtro mostrará "Todos" por padrão e listará os perfis disponíveis.
 
-Alterar `SITE_NAME` de `"simpletaskbr"` para `"NEVVOH"` em dois arquivos:
+### Implementação
 
-1. **`supabase/functions/send-transactional-email/index.ts`** (linha 8)
-   - `const SITE_NAME = "simpletaskbr"` → `const SITE_NAME = "NEVVOH"`
+#### 1. Atualizar `src/pages/Index.tsx`
+- Adicionar estado `filterAssigneeId` (string | null)
+- Importar `useProfilesQuery` para obter a lista de perfis
+- Renderizar um `Select` dropdown ao lado do botão "Nova Tarefa" com as opções: "Todos os responsáveis" + lista de perfis
+- Passar `filterAssigneeId` como prop para o `KanbanBoard`
 
-2. **`supabase/functions/auth-email-hook/index.ts`** (linha 39)
-   - `const SITE_NAME = "simpletaskbr"` → `const SITE_NAME = "NEVVOH"`
-
-Também atualizar a URL de referência no template de resumo diário:
-
-3. **`supabase/functions/_shared/transactional-email-templates/daily-pending-summary.tsx`** (linha 18)
-   - `const SITE_URL = 'https://simpletaskbr.lovable.app'` → `const SITE_URL = 'https://nevvoh.com'`
-
-Após as edições, fazer deploy das duas Edge Functions afetadas.
+#### 2. Atualizar `src/components/kanban/KanbanBoard.tsx`
+- Aceitar prop `filterAssigneeId?: string | null`
+- Filtrar `localTasks` pelo assignee selecionado antes de passar para as colunas: se `filterAssigneeId` estiver definido, exibir apenas tarefas cujo array `assignees` contenha esse user_id
+- Atualizar a interface `KanbanBoardRef` e o `forwardRef` para aceitar props
 
 ### Arquivos modificados
-- `supabase/functions/send-transactional-email/index.ts`
-- `supabase/functions/auth-email-hook/index.ts`
-- `supabase/functions/_shared/transactional-email-templates/daily-pending-summary.tsx`
+- `src/pages/Index.tsx` — adicionar Select de filtro e estado
+- `src/components/kanban/KanbanBoard.tsx` — aceitar e aplicar prop de filtro
 
