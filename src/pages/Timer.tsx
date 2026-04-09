@@ -1,5 +1,6 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTimer } from '@/contexts/TimerContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,28 +11,6 @@ import { Play, Square, Check, Clock, Trash2, Pause } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-
-type TimerState = 'idle' | 'running' | 'paused' | 'finished';
-
-const playAlertSound = () => {
-  const ctx = new AudioContext();
-  const playBeep = (time: number, freq: number, dur: number) => {
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    osc.frequency.value = freq;
-    osc.type = 'sine';
-    gain.gain.setValueAtTime(0.3, time);
-    gain.gain.exponentialRampToValueAtTime(0.01, time + dur);
-    osc.start(time);
-    osc.stop(time + dur);
-  };
-  for (let i = 0; i < 5; i++) {
-    playBeep(ctx.currentTime + i * 0.4, 880, 0.25);
-  }
-  return ctx;
-};
 
 const formatTime = (totalSeconds: number) => {
   const m = Math.floor(totalSeconds / 60);
@@ -49,14 +28,11 @@ const formatDuration = (seconds: number) => {
 const Timer = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const [minutes, setMinutes] = useState(25);
-  const [secondsLeft, setSecondsLeft] = useState(0);
-  const [timerState, setTimerState] = useState<TimerState>('idle');
+  const {
+    timerState, secondsLeft, elapsedSeconds, minutes, totalSeconds,
+    setMinutes, start, pause, resume, stop, finish, cancel,
+  } = useTimer();
   const [description, setDescription] = useState('');
-  const [elapsedSeconds, setElapsedSeconds] = useState(0);
-  const intervalRef = useRef<number | null>(null);
-  const audioCtxRef = useRef<AudioContext | null>(null);
-  const totalSecondsRef = useRef(0);
 
   const { data: sessions = [], isLoading } = useQuery({
     queryKey: ['timer-sessions'],
@@ -98,81 +74,19 @@ const Timer = () => {
     },
   });
 
-  const stopInterval = useCallback(() => {
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-      intervalRef.current = null;
-    }
-  }, []);
-
-  useEffect(() => () => stopInterval(), [stopInterval]);
-
-  const startInterval = () => {
-    intervalRef.current = window.setInterval(() => {
-      setSecondsLeft((prev) => {
-        if (prev <= 1) {
-          stopInterval();
-          setTimerState('finished');
-          audioCtxRef.current = playAlertSound();
-          return 0;
-        }
-        return prev - 1;
-      });
-      setElapsedSeconds((prev) => prev + 1);
-    }, 1000);
-  };
-
-  const handleStart = () => {
-    const total = minutes * 60;
-    totalSecondsRef.current = total;
-    setSecondsLeft(total);
-    setElapsedSeconds(0);
-    setTimerState('running');
-    startInterval();
-  };
-
-  const handlePause = () => {
-    stopInterval();
-    setTimerState('paused');
-  };
-
-  const handleResume = () => {
-    setTimerState('running');
-    startInterval();
-  };
-
-  const handleStop = () => {
-    stopInterval();
-    if (audioCtxRef.current) {
-      audioCtxRef.current.close();
-      audioCtxRef.current = null;
-    }
-    setTimerState('finished');
-  };
-
   const handleFinish = () => {
-    const used = timerState === 'finished' ? elapsedSeconds || totalSecondsRef.current : elapsedSeconds;
-    saveMutation.mutate({ duration: used, desc: description });
-    setTimerState('idle');
+    const { duration } = finish(description);
+    saveMutation.mutate({ duration, desc: description });
     setDescription('');
-    setSecondsLeft(0);
-    setElapsedSeconds(0);
   };
 
   const handleCancel = () => {
-    stopInterval();
-    if (audioCtxRef.current) {
-      audioCtxRef.current.close();
-      audioCtxRef.current = null;
-    }
-    setTimerState('idle');
+    cancel();
     setDescription('');
-    setSecondsLeft(0);
-    setElapsedSeconds(0);
   };
 
-  const progress = timerState !== 'idle' && totalSecondsRef.current > 0
-    ? ((totalSecondsRef.current - secondsLeft) / totalSecondsRef.current) * 100
+  const progress = timerState !== 'idle' && totalSeconds > 0
+    ? ((totalSeconds - secondsLeft) / totalSeconds) * 100
     : 0;
 
   return (
@@ -195,7 +109,7 @@ const Timer = () => {
                   step={1}
                 />
               </div>
-              <Button onClick={handleStart} className="w-full gap-2">
+              <Button onClick={start} className="w-full gap-2">
                 <Play className="h-4 w-4" /> Iniciar
               </Button>
             </>
@@ -223,15 +137,15 @@ const Timer = () => {
               </div>
               <div className="flex gap-2">
                 {timerState === 'running' ? (
-                  <Button variant="outline" onClick={handlePause} className="gap-2">
+                  <Button variant="outline" onClick={pause} className="gap-2">
                     <Pause className="h-4 w-4" /> Pausar
                   </Button>
                 ) : (
-                  <Button onClick={handleResume} className="gap-2">
+                  <Button onClick={resume} className="gap-2">
                     <Play className="h-4 w-4" /> Retomar
                   </Button>
                 )}
-                <Button variant="destructive" onClick={handleStop} className="gap-2">
+                <Button variant="destructive" onClick={stop} className="gap-2">
                   <Square className="h-4 w-4" /> Interromper
                 </Button>
               </div>
@@ -243,7 +157,7 @@ const Timer = () => {
               <div className="text-center">
                 <p className="text-lg font-semibold text-foreground">Tempo finalizado!</p>
                 <p className="text-muted-foreground">
-                  Duração: {formatDuration(elapsedSeconds || totalSecondsRef.current)}
+                  Duração: {formatDuration(elapsedSeconds || totalSeconds)}
                 </p>
               </div>
               <Textarea

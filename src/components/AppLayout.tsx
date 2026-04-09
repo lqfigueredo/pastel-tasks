@@ -3,6 +3,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/AppSidebar';
 import { NotificationBell } from '@/components/NotificationBell';
+import { TimerProvider } from '@/contexts/TimerContext';
+import GlobalTimerIndicator from '@/components/GlobalTimerIndicator';
 
 const AppLayout = () => {
   const { user, loading } = useAuth();
