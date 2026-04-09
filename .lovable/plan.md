@@ -1,24 +1,38 @@
 
 
-## Limitar filtro de responsáveis ao usuário e membros da equipe
+## Gravador de Tela e Voz na Ata de Reunião
 
-### Problema
-O dropdown de filtro por responsável na tela de tarefas mostra **todos** os perfis do sistema. Deveria mostrar apenas o próprio usuário e colegas de equipe, seguindo a mesma lógica do `AssigneeSelector`.
+Sim, é possível. Usaremos as APIs nativas do navegador (`MediaRecorder`, `getDisplayMedia`, `getUserMedia`) para gravar tela e/ou voz diretamente na página de detalhe da ata, e salvar a gravação como anexo no bucket `meeting-attachments`.
 
-### Solução
-Não alterar o `useProfilesQuery` (usado em outros locais que precisam de todos os perfis). Em vez disso, filtrar a lista de perfis em `Index.tsx` usando os IDs visíveis — mesma lógica do `AssigneeSelector`:
-1. Buscar `team_members` das equipes do usuário
-2. Buscar `user_approvals` criadas pelo admin do usuário
-3. Montar conjunto de IDs visíveis (próprio + colegas + criados pelo admin)
-4. Filtrar os perfis do `useProfilesQuery` por esses IDs
+### Como funcionará
+
+- Um botão "Gravar Reunião" aparecerá na página de detalhe da ata
+- O usuário escolhe o que gravar: **tela + áudio**, **apenas áudio**, ou **apenas tela**
+- Durante a gravação, um indicador visual com cronômetro e botão de parar ficará visível
+- Ao parar, o vídeo/áudio é automaticamente salvo como anexo da ata (formato WebM)
+- A gravação aparecerá na lista de anexos normalmente, podendo ser baixada
 
 ### Implementação
 
-**`src/pages/Index.tsx`**:
-- Adicionar um `useEffect` (ou `useQuery`) que busca os IDs de `team_members` e `user_approvals` para o usuário logado (mesma lógica que já existe no `AssigneeSelector`)
-- Filtrar `profiles` pelo conjunto de IDs visíveis antes de renderizar no `Select`
-- Manter `useProfilesQuery` inalterado para não quebrar `TimeReport` e `TaskTimer`
+#### 1. Novo componente `src/components/meetings/MeetingRecorder.tsx`
+- Botão para iniciar gravação com menu de opções (tela+áudio, só áudio, só tela)
+- Usa `navigator.mediaDevices.getDisplayMedia()` para captura de tela
+- Usa `navigator.mediaDevices.getUserMedia({ audio: true })` para captura de voz
+- Combina os streams com `MediaRecorder` (codec `video/webm`)
+- Indicador de gravação ativa com timer e botão de parar
+- Ao parar, faz upload automático para `meeting-attachments` e insere registro na tabela `meeting_attachments`
 
-### Arquivos modificados
-- `src/pages/Index.tsx` — filtrar perfis visíveis no dropdown
+#### 2. Integrar na página `src/pages/MeetingMinuteDetail.tsx`
+- Importar e renderizar `MeetingRecorder` ao lado dos botões existentes
+- Passar `meetingId` e callback `onRecorded` para atualizar a lista de anexos
+
+### Limitações conhecidas
+- Funciona apenas em navegadores desktop modernos (Chrome, Edge, Firefox)
+- A captura de tela requer permissão explícita do usuário
+- O formato de saída será WebM (suportado nativamente pelo MediaRecorder)
+- Gravações longas podem gerar arquivos grandes
+
+### Arquivos criados/modificados
+- `src/components/meetings/MeetingRecorder.tsx` (novo)
+- `src/pages/MeetingMinuteDetail.tsx` (adicionar componente)
 
