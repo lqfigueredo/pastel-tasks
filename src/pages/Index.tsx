@@ -6,12 +6,16 @@ import { KanbanBoard, KanbanBoardRef } from '@/components/kanban/KanbanBoard';
 import { CreateTaskDialog } from '@/components/kanban/CreateTaskDialog';
 import { useUserRoles } from '@/hooks/useUserRoles';
 import { HelpButton } from '@/components/HelpButton';
+import { useProfilesQuery } from '@/hooks/useProfilesQuery';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const Index = () => {
   const [createOpen, setCreateOpen] = useState(false);
+  const [filterAssigneeId, setFilterAssigneeId] = useState<string | null>(null);
   const boardRef = useRef<KanbanBoardRef>(null);
   const { isSolutionAdmin, isAdmin, isRegularUser } = useUserRoles();
   const navigate = useNavigate();
+  const { data: profilesMap } = useProfilesQuery();
 
   useEffect(() => {
     if (isSolutionAdmin && !isAdmin && !isRegularUser) {
@@ -23,6 +27,8 @@ const Index = () => {
     boardRef.current?.refresh();
   };
 
+  const profiles = profilesMap ? Array.from(profilesMap.values()) : [];
+
   return (
     <div className="animate-fade-in">
       <div className="mb-6 flex items-center justify-between">
@@ -33,12 +39,30 @@ const Index = () => {
           </div>
           <p className="text-sm text-muted-foreground">Gerencie suas atividades no quadro Kanban</p>
         </div>
-        <Button onClick={() => setCreateOpen(true)} className="gap-2">
-          <Plus className="h-4 w-4" />
-          Nova Tarefa
-        </Button>
+        <div className="flex items-center gap-3">
+          <Select
+            value={filterAssigneeId ?? 'all'}
+            onValueChange={(v) => setFilterAssigneeId(v === 'all' ? null : v)}
+          >
+            <SelectTrigger className="w-[200px]">
+              <SelectValue placeholder="Filtrar por responsável" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos os responsáveis</SelectItem>
+              {profiles.map((p) => (
+                <SelectItem key={p.user_id} value={p.user_id}>
+                  {p.display_name || 'Sem nome'}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Button onClick={() => setCreateOpen(true)} className="gap-2">
+            <Plus className="h-4 w-4" />
+            Nova Tarefa
+          </Button>
+        </div>
       </div>
-      <KanbanBoard ref={boardRef} />
+      <KanbanBoard ref={boardRef} filterAssigneeId={filterAssigneeId} />
       <CreateTaskDialog open={createOpen} onOpenChange={setCreateOpen} onTaskCreated={handleTaskCreated} />
     </div>
   );

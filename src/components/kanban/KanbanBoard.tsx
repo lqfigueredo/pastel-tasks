@@ -37,7 +37,11 @@ export interface KanbanBoardRef {
   refresh: () => void;
 }
 
-export const KanbanBoard = forwardRef<KanbanBoardRef>((_props, ref) => {
+interface KanbanBoardProps {
+  filterAssigneeId?: string | null;
+}
+
+export const KanbanBoard = forwardRef<KanbanBoardRef, KanbanBoardProps>(({ filterAssigneeId }, ref) => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [orderedStatuses, setOrderedStatuses] = useState<TaskStatus[]>([]);
