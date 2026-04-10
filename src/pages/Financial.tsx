@@ -16,6 +16,7 @@ import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import SupportTicketList from '@/components/support/SupportTicketList';
 import HelpTextsManager from '@/components/financial/HelpTextsManager';
+import EmailDashboard from '@/components/admin/EmailDashboard';
 import { HelpButton } from '@/components/HelpButton';
 import {
   Table,
@@ -558,6 +559,10 @@ const Financial = () => {
 
         <TabsContent value="support">
           <SupportTicketList role="solution_admin" />
+        </TabsContent>
+
+        <TabsContent value="emails">
+          <EmailDashboard scope="global" />
         </TabsContent>
 
         <TabsContent value="help-texts">
