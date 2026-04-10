@@ -31,7 +31,6 @@ Deno.serve(async (req) => {
 
     const { data: { user }, error: userError } = await userClient.auth.getUser();
     if (userError || !user) {
-      console.error("Auth error:", userError?.message);
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -41,17 +40,18 @@ Deno.serve(async (req) => {
     const userId = user.id;
     const adminClient = createClient(supabaseUrl, serviceKey);
 
-    // Check solution_admin or admin role
-    const { data: roleData, error: roleError } = await adminClient
+    // Check roles
+    const { data: roleData } = await adminClient
       .from("user_roles")
       .select("role")
       .eq("user_id", userId)
-      .in("role", ["solution_admin", "admin"])
-      .limit(1);
+      .in("role", ["solution_admin", "admin"]);
 
-    console.log("Role check for", userId, "result:", roleData, "error:", roleError?.message);
+    const roles = (roleData || []).map((r: any) => r.role);
+    const isSolutionAdmin = roles.includes("solution_admin");
+    const isAdmin = roles.includes("admin");
 
-    if (!roleData || roleData.length === 0) {
+    if (!isSolutionAdmin && !isAdmin) {
       return new Response(JSON.stringify({ error: "Forbidden" }), {
         status: 403,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -62,8 +62,21 @@ Deno.serve(async (req) => {
     const period = url.searchParams.get("period") || "7d";
     const template = url.searchParams.get("template") || "";
     const status = url.searchParams.get("status") || "";
+    const scope = url.searchParams.get("scope") || ""; // "global" or "own"
     const page = parseInt(url.searchParams.get("page") || "0");
     const pageSize = 50;
+
+    // Determine if we need to filter by admin's users
+    let allowedEmails: string[] | null = null; // null = no filter (global)
+
+    if (isAdmin && !isSolutionAdmin) {
+      // Admin always sees only their own users
+      allowedEmails = await getAdminUserEmails(adminClient, userId);
+    } else if (isSolutionAdmin && scope === "own") {
+      // Solution admin requesting own scope
+      allowedEmails = await getAdminUserEmails(adminClient, userId);
+    }
+    // else: solution_admin with global scope → no filter
 
     // Calculate date range
     let startDate: string;
@@ -86,13 +99,34 @@ Deno.serve(async (req) => {
     if (customStart) startDate = new Date(customStart).toISOString();
     const endDate = customEnd ? new Date(customEnd).toISOString() : now.toISOString();
 
-    const { data: allLogs, error: logsError } = await adminClient
+    let query = adminClient
       .from("email_send_log")
       .select("*")
       .gte("created_at", startDate)
       .lte("created_at", endDate)
       .order("created_at", { ascending: false })
       .limit(1000);
+
+    // If scoped, filter by allowed emails
+    if (allowedEmails !== null) {
+      if (allowedEmails.length === 0) {
+        // No users → return empty
+        return new Response(
+          JSON.stringify({
+            stats: { total: 0, sent: 0, failed: 0, suppressed: 0 },
+            templates: [],
+            logs: [],
+            total: 0,
+            page,
+            pageSize,
+          }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      query = query.in("recipient_email", allowedEmails);
+    }
+
+    const { data: allLogs, error: logsError } = await query;
 
     if (logsError) {
       console.error("Logs query error:", logsError.message);
@@ -102,7 +136,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Deduplicate by message_id (first occurrence = latest due to DESC order)
+    // Deduplicate by message_id
     const deduped = new Map<string, typeof allLogs[0]>();
     for (const log of allLogs || []) {
       const key = log.message_id || log.id;
@@ -162,3 +196,29 @@ Deno.serve(async (req) => {
     );
   }
 });
+
+async function getAdminUserEmails(adminClient: any, adminUserId: string): Promise<string[]> {
+  // Get user_ids created by this admin
+  const { data: approvals } = await adminClient
+    .from("user_approvals")
+    .select("user_id")
+    .eq("created_by_admin", adminUserId);
+
+  const userIds = (approvals || []).map((a: any) => a.user_id);
+  // Include admin's own id
+  userIds.push(adminUserId);
+  const uniqueIds = [...new Set(userIds)];
+
+  if (uniqueIds.length === 0) return [];
+
+  // Get emails from auth.users via admin API
+  const emails: string[] = [];
+  for (const uid of uniqueIds) {
+    const { data } = await adminClient.auth.admin.getUserById(uid);
+    if (data?.user?.email) {
+      emails.push(data.user.email);
+    }
+  }
+
+  return emails;
+}

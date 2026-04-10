@@ -16,6 +16,7 @@ import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import SupportTicketList from '@/components/support/SupportTicketList';
 import HelpTextsManager from '@/components/financial/HelpTextsManager';
+import EmailDashboard from '@/components/admin/EmailDashboard';
 import { HelpButton } from '@/components/HelpButton';
 import {
   Table,
@@ -264,6 +265,7 @@ const Financial = () => {
             <Users className="h-4 w-4 mr-1" />
             Limites
           </TabsTrigger>
+          <TabsTrigger value="emails">Emails</TabsTrigger>
           <TabsTrigger value="support">Chamados</TabsTrigger>
           <TabsTrigger value="help-texts">Textos de Ajuda</TabsTrigger>
         </TabsList>
@@ -557,6 +559,10 @@ const Financial = () => {
 
         <TabsContent value="support">
           <SupportTicketList role="solution_admin" />
+        </TabsContent>
+
+        <TabsContent value="emails">
+          <EmailDashboard scope="global" />
         </TabsContent>
 
         <TabsContent value="help-texts">

@@ -424,7 +424,7 @@ export default function Admin() {
         </TabsContent>
 
         <TabsContent value="emails">
-          <EmailDashboard />
+          <EmailDashboard scope="own" />
         </TabsContent>
       </Tabs>
     </div>
