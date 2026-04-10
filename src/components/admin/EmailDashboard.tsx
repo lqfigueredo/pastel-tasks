@@ -64,13 +64,6 @@ export default function EmailDashboard() {
       if (template) params.set('template', template);
       if (status) params.set('status', status);
 
-      const { data: result, error } = await supabase.functions.invoke('get-email-logs', {
-        body: null,
-        headers: {},
-      });
-
-      // Use query params approach via GET
-      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
       const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/get-email-logs?${params.toString()}`;
       const session = await supabase.auth.getSession();
       const token = session.data.session?.access_token;
