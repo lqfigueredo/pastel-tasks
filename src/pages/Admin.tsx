@@ -12,6 +12,7 @@ import { toast } from 'sonner';
 import { ShieldX, UserPlus, Loader2, ShieldCheck, ShieldOff, UserX, UserCheck } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import SupportTicketList from '@/components/support/SupportTicketList';
+import EmailDashboard from '@/components/admin/EmailDashboard';
 import { HelpButton } from '@/components/HelpButton';
 import {
   Tooltip,
@@ -242,6 +243,7 @@ export default function Admin() {
         <TabsList>
           <TabsTrigger value="users">Usuários</TabsTrigger>
           <TabsTrigger value="support">Suporte</TabsTrigger>
+          <TabsTrigger value="emails">Emails</TabsTrigger>
         </TabsList>
 
         <TabsContent value="users" className="space-y-8">
@@ -419,6 +421,10 @@ export default function Admin() {
 
         <TabsContent value="support">
           <SupportTicketList role="admin" />
+        </TabsContent>
+
+        <TabsContent value="emails">
+          <EmailDashboard />
         </TabsContent>
       </Tabs>
     </div>
