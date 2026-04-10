@@ -264,6 +264,7 @@ const Financial = () => {
             <Users className="h-4 w-4 mr-1" />
             Limites
           </TabsTrigger>
+          <TabsTrigger value="emails">Emails</TabsTrigger>
           <TabsTrigger value="support">Chamados</TabsTrigger>
           <TabsTrigger value="help-texts">Textos de Ajuda</TabsTrigger>
         </TabsList>

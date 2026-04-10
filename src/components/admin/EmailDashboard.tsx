@@ -49,7 +49,11 @@ const statusConfig: Record<string, { label: string; variant: 'default' | 'destru
   complained: { label: 'Reclamação', variant: 'destructive' },
 };
 
-export default function EmailDashboard() {
+interface EmailDashboardProps {
+  scope?: 'global' | 'own';
+}
+
+export default function EmailDashboard({ scope }: EmailDashboardProps) {
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<EmailResponse | null>(null);
   const [period, setPeriod] = useState('7d');
@@ -63,6 +67,7 @@ export default function EmailDashboard() {
       const params = new URLSearchParams({ period, page: String(page) });
       if (template) params.set('template', template);
       if (status) params.set('status', status);
+      if (scope) params.set('scope', scope);
 
       const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/get-email-logs?${params.toString()}`;
       const session = await supabase.auth.getSession();
