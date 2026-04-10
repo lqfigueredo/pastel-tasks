@@ -1,42 +1,30 @@
 
 
-## Painel de Monitoramento de Emails
+## Filtrar emails por escopo e adicionar aba no Financeiro
 
 ### O que será feito
 
-Criar uma seção de monitoramento de emails na página de Administração (`/admin`), acessível apenas para solution admins. O painel mostrará todos os emails enviados pelo sistema com filtros e estatísticas.
+1. **Edge Function `get-email-logs`**: Adicionar filtro por escopo do usuário
+   - Se o usuário é `solution_admin`: retorna todos os emails (visão global)
+   - Se o usuário é `admin`: retorna apenas emails cujos destinatários são usuários criados por ele (consultando `user_approvals.created_by_admin` para obter os `user_id`s, depois `profiles` ou `auth.users` para mapear emails)
+   - Receber um parâmetro `scope` opcional (`global` ou `own`) para permitir que solution_admins também vejam apenas seus emails se desejarem
 
-### Funcionalidades
+2. **Componente `EmailDashboard`**: Aceitar prop opcional `scope` para passar à Edge Function
 
-1. **Cards de resumo** — Total de emails, enviados, falhos e suprimidos (deduplicados por `message_id`)
-2. **Filtro por período** — Últimas 24h, 7 dias, 30 dias, ou período customizado
-3. **Filtro por tipo** — Dropdown com os templates disponíveis (ex: lead-reply, recurring-task-reminder)
-4. **Filtro por status** — Todos, Enviados, Falhos, Suprimidos (com badges coloridos)
-5. **Tabela de logs** — Uma linha por email (deduplicado por `message_id`), com colunas: Template, Destinatário, Status, Data/Hora, Erro (se houver). Paginação de 50 em 50, ordenado por mais recente
+3. **Página `Financial.tsx`**: Adicionar aba "Emails" com `<EmailDashboard />` (visão global para solution_admin)
 
-### Acesso aos dados
+4. **Página `Admin.tsx`**: O `EmailDashboard` já existe, mas passará `scope="own"` para filtrar apenas emails dos usuários relacionados ao admin
 
-A tabela `email_send_log` só permite leitura via `service_role`. Para que o admin consiga consultar os dados pelo client-side, será criada uma Edge Function `get-email-logs` que faz a consulta deduplicada e retorna os resultados. Somente usuários com role `solution_admin` poderão acessar.
+### Detalhes técnicos
 
-### Implementação
+**Edge Function — lógica de filtragem:**
+- Identificar o role do usuário (admin vs solution_admin)
+- Se admin (não solution_admin), buscar emails dos usuários vinculados via `user_approvals.created_by_admin = userId`, mapear `user_id` → email via profiles/auth, e filtrar `email_send_log` por `recipient_email IN (...)`
+- Se solution_admin, retornar tudo (comportamento atual)
 
-1. **Nova Edge Function `supabase/functions/get-email-logs/index.ts`**
-   - Recebe filtros (período, template, status, página) via query params
-   - Valida que o usuário autenticado tem role `solution_admin`
-   - Consulta `email_send_log` com `DISTINCT ON (message_id)` e aplica filtros
-   - Retorna dados paginados + contagens por status
-
-2. **Novo componente `src/components/admin/EmailDashboard.tsx`**
-   - Cards de estatísticas no topo
-   - Filtros de período, template e status
-   - Tabela paginada com badges de status coloridos
-   - Busca dados via `supabase.functions.invoke('get-email-logs', ...)`
-
-3. **Atualizar `src/pages/Admin.tsx`**
-   - Adicionar aba ou seção "Emails" com o componente EmailDashboard
-
-### Arquivos criados/modificados
-- `supabase/functions/get-email-logs/index.ts` (novo)
-- `src/components/admin/EmailDashboard.tsx` (novo)
-- `src/pages/Admin.tsx` (adicionar seção)
+### Arquivos modificados
+- `supabase/functions/get-email-logs/index.ts` — adicionar filtragem por escopo
+- `src/components/admin/EmailDashboard.tsx` — aceitar prop `scope`
+- `src/pages/Financial.tsx` — adicionar aba "Emails" com EmailDashboard
+- `src/pages/Admin.tsx` — passar `scope="own"` ao EmailDashboard
 
