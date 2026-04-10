@@ -24,30 +24,34 @@ Deno.serve(async (req) => {
     const supabaseAnon = Deno.env.get("SUPABASE_ANON_KEY")!;
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-    // Verify user is solution_admin
+    // Get user from token
     const userClient = createClient(supabaseUrl, supabaseAnon, {
       global: { headers: { Authorization: authHeader } },
     });
 
-    const token = authHeader.replace("Bearer ", "");
-    const { data: claimsData, error: claimsError } =
-      await userClient.auth.getClaims(token);
-    if (claimsError || !claimsData?.claims) {
+    const { data: { user }, error: userError } = await userClient.auth.getUser();
+    if (userError || !user) {
+      console.error("Auth error:", userError?.message);
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-    const userId = claimsData.claims.sub;
 
+    const userId = user.id;
     const adminClient = createClient(supabaseUrl, serviceKey);
 
-    const { data: roleCheck } = await adminClient.rpc("has_role", {
-      _user_id: userId,
-      _role: "solution_admin",
-    });
+    // Check solution_admin or admin role
+    const { data: roleData, error: roleError } = await adminClient
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userId)
+      .in("role", ["solution_admin", "admin"])
+      .limit(1);
 
-    if (!roleCheck) {
+    console.log("Role check for", userId, "result:", roleData, "error:", roleError?.message);
+
+    if (!roleData || roleData.length === 0) {
       return new Response(JSON.stringify({ error: "Forbidden" }), {
         status: 403,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -77,31 +81,11 @@ Deno.serve(async (req) => {
         break;
     }
 
-    // If custom dates provided
     const customStart = url.searchParams.get("start");
     const customEnd = url.searchParams.get("end");
     if (customStart) startDate = new Date(customStart).toISOString();
     const endDate = customEnd ? new Date(customEnd).toISOString() : now.toISOString();
 
-    // Build deduplicated query for stats
-    const statsQuery = `
-      SELECT status, count(*) as count FROM (
-        SELECT DISTINCT ON (message_id) status, created_at
-        FROM email_send_log
-        WHERE message_id IS NOT NULL
-        ORDER BY message_id, created_at DESC
-      ) latest
-      WHERE created_at >= $1 AND created_at <= $2
-      GROUP BY status
-    `;
-
-    const { data: statsData } = await adminClient.rpc("has_role", {
-      _user_id: userId,
-      _role: "solution_admin",
-    });
-
-    // Use raw SQL via admin client - we need to query directly
-    // Since we can't run raw SQL, we'll use the service role client to query
     const { data: allLogs, error: logsError } = await adminClient
       .from("email_send_log")
       .select("*")
@@ -111,25 +95,25 @@ Deno.serve(async (req) => {
       .limit(1000);
 
     if (logsError) {
+      console.error("Logs query error:", logsError.message);
       return new Response(JSON.stringify({ error: logsError.message }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // Deduplicate by message_id in code (latest status per message_id)
+    // Deduplicate by message_id (first occurrence = latest due to DESC order)
     const deduped = new Map<string, typeof allLogs[0]>();
     for (const log of allLogs || []) {
       const key = log.message_id || log.id;
       if (!deduped.has(key)) {
         deduped.set(key, log);
       }
-      // Already ordered by created_at DESC, first occurrence is latest
     }
 
     let logs = Array.from(deduped.values());
 
-    // Compute stats before filtering by template/status
+    // Stats before filtering
     const stats = { total: logs.length, sent: 0, failed: 0, suppressed: 0 };
     for (const l of logs) {
       if (l.status === "sent") stats.sent++;
@@ -137,7 +121,6 @@ Deno.serve(async (req) => {
       else if (l.status === "suppressed") stats.suppressed++;
     }
 
-    // Get distinct templates
     const templates = [...new Set(logs.map((l) => l.template_name))].sort();
 
     // Apply filters
@@ -169,6 +152,7 @@ Deno.serve(async (req) => {
       }
     );
   } catch (err) {
+    console.error("Unhandled error:", err);
     return new Response(
       JSON.stringify({ error: err.message || "Internal error" }),
       {
