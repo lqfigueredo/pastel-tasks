@@ -230,6 +230,12 @@ const Timer = () => {
           )}
         </CardContent>
       </Card>
+        </TabsContent>
+
+        <TabsContent value="dashboard" className="mt-6">
+          <TimerDashboard sessions={sessions} />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
