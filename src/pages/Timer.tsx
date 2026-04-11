@@ -7,10 +7,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { Textarea } from '@/components/ui/textarea';
-import { Play, Square, Check, Clock, Trash2, Pause } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Play, Square, Check, Clock, Trash2, Pause, BarChart3 } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import TimerDashboard from '@/components/timer/TimerDashboard';
 
 const formatTime = (totalSeconds: number) => {
   const m = Math.floor(totalSeconds / 60);
