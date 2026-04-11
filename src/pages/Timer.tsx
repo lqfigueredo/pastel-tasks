@@ -7,10 +7,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { Textarea } from '@/components/ui/textarea';
-import { Play, Square, Check, Clock, Trash2, Pause } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Play, Square, Check, Clock, Trash2, Pause, BarChart3 } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import TimerDashboard from '@/components/timer/TimerDashboard';
 
 const formatTime = (totalSeconds: number) => {
   const m = Math.floor(totalSeconds / 60);
@@ -41,7 +43,7 @@ const Timer = () => {
         .from('timer_sessions')
         .select('*')
         .order('created_at', { ascending: false })
-        .limit(50);
+        .limit(200);
       if (error) throw error;
       return data;
     },
@@ -93,6 +95,17 @@ const Timer = () => {
     <div className="space-y-6 max-w-2xl mx-auto">
       <h1 className="text-2xl font-bold text-foreground">Temporizador</h1>
 
+      <Tabs defaultValue="timer" className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="timer" className="gap-2">
+            <Clock className="h-4 w-4" /> Temporizador
+          </TabsTrigger>
+          <TabsTrigger value="dashboard" className="gap-2">
+            <BarChart3 className="h-4 w-4" /> Dashboard
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="timer" className="space-y-6 mt-6">
       <Card>
         <CardContent className="pt-6 space-y-6">
           {timerState === 'idle' && (
@@ -218,6 +231,12 @@ const Timer = () => {
           )}
         </CardContent>
       </Card>
+        </TabsContent>
+
+        <TabsContent value="dashboard" className="mt-6">
+          <TimerDashboard sessions={sessions} />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
