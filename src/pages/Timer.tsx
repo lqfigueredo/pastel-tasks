@@ -43,7 +43,7 @@ const Timer = () => {
         .from('timer_sessions')
         .select('*')
         .order('created_at', { ascending: false })
-        .limit(50);
+        .limit(200);
       if (error) throw error;
       return data;
     },
@@ -95,7 +95,17 @@ const Timer = () => {
     <div className="space-y-6 max-w-2xl mx-auto">
       <h1 className="text-2xl font-bold text-foreground">Temporizador</h1>
 
-      <Card>
+      <Tabs defaultValue="timer" className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="timer" className="gap-2">
+            <Clock className="h-4 w-4" /> Temporizador
+          </TabsTrigger>
+          <TabsTrigger value="dashboard" className="gap-2">
+            <BarChart3 className="h-4 w-4" /> Dashboard
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="timer" className="space-y-6 mt-6">
         <CardContent className="pt-6 space-y-6">
           {timerState === 'idle' && (
             <>
