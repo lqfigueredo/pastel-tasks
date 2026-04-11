@@ -106,6 +106,7 @@ const Timer = () => {
         </TabsList>
 
         <TabsContent value="timer" className="space-y-6 mt-6">
+      <Card>
         <CardContent className="pt-6 space-y-6">
           {timerState === 'idle' && (
             <>
