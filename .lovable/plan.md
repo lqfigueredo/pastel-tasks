@@ -1,30 +1,26 @@
 
 
-## Filtrar emails por escopo e adicionar aba no Financeiro
+## Dashboard Gráfico no Temporizador
 
 ### O que será feito
 
-1. **Edge Function `get-email-logs`**: Adicionar filtro por escopo do usuário
-   - Se o usuário é `solution_admin`: retorna todos os emails (visão global)
-   - Se o usuário é `admin`: retorna apenas emails cujos destinatários são usuários criados por ele (consultando `user_approvals.created_by_admin` para obter os `user_id`s, depois `profiles` ou `auth.users` para mapear emails)
-   - Receber um parâmetro `scope` opcional (`global` ou `own`) para permitir que solution_admins também vejam apenas seus emails se desejarem
+Adicionar uma seção de dashboard gráfico na página do Temporizador (`/temporizador`) com três visualizações:
 
-2. **Componente `EmailDashboard`**: Aceitar prop opcional `scope` para passar à Edge Function
-
-3. **Página `Financial.tsx`**: Adicionar aba "Emails" com `<EmailDashboard />` (visão global para solution_admin)
-
-4. **Página `Admin.tsx`**: O `EmailDashboard` já existe, mas passará `scope="own"` para filtrar apenas emails dos usuários relacionados ao admin
+1. **Tempo Total** — Card com o tempo total acumulado de todas as sessões
+2. **Tempo por Atividade** — Gráfico de barras horizontais agrupando sessões pela descrição (atividade), mostrando tempo total por cada uma
+3. **Tempo por Dia** — Gráfico de barras verticais mostrando o tempo total registrado em cada dia (últimos 14 dias)
 
 ### Detalhes técnicos
 
-**Edge Function — lógica de filtragem:**
-- Identificar o role do usuário (admin vs solution_admin)
-- Se admin (não solution_admin), buscar emails dos usuários vinculados via `user_approvals.created_by_admin = userId`, mapear `user_id` → email via profiles/auth, e filtrar `email_send_log` por `recipient_email IN (...)`
-- Se solution_admin, retornar tudo (comportamento atual)
+- Buscar todas as sessões do usuário (remover o `limit(50)` atual ou aumentar para cobrir o período do dashboard)
+- Usar os componentes `recharts` já disponíveis via `src/components/ui/chart.tsx`
+- Criar um componente `src/components/timer/TimerDashboard.tsx` com:
+  - Card de tempo total (soma de `duration_seconds`)
+  - `BarChart` horizontal: agrupa por `description` (sessões sem descrição agrupadas como "Sem descrição"), soma `duration_seconds`, formata em hh:mm
+  - `BarChart` vertical: agrupa por data (`created_at` → dia), soma `duration_seconds`, exibe últimos 14 dias
+- Integrar o componente na página `src/pages/Timer.tsx` entre o timer e o histórico, usando Tabs para alternar entre "Temporizador" e "Dashboard"
 
-### Arquivos modificados
-- `supabase/functions/get-email-logs/index.ts` — adicionar filtragem por escopo
-- `src/components/admin/EmailDashboard.tsx` — aceitar prop `scope`
-- `src/pages/Financial.tsx` — adicionar aba "Emails" com EmailDashboard
-- `src/pages/Admin.tsx` — passar `scope="own"` ao EmailDashboard
+### Arquivos
+- `src/components/timer/TimerDashboard.tsx` (novo)
+- `src/pages/Timer.tsx` (adicionar aba Dashboard)
 
