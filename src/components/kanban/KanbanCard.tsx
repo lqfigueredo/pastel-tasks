@@ -124,7 +124,7 @@ function KanbanCardImpl({ task, allStatuses, onRefresh, onMoveTask }: KanbanCard
                 {task.estimated_delivery_date && (
                   <div className="flex items-center gap-1 text-xs text-muted-foreground">
                     <Calendar className="h-3 w-3" />
-                    <span>{format(new Date(task.estimated_delivery_date), "dd MMM", { locale: ptBR })}</span>
+                    <span>{safeFormatDate(task.estimated_delivery_date, 'dd MMM')}</span>
                   </div>
                 )}
               </div>
@@ -163,3 +163,6 @@ function KanbanCardImpl({ task, allStatuses, onRefresh, onMoveTask }: KanbanCard
     </>
   );
 }
+
+export const KanbanCard = memo(KanbanCardImpl);
+
