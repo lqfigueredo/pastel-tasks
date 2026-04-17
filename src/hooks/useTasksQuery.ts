@@ -40,7 +40,7 @@ async function fetchTasksWithAssignees() {
     assignees: assigneeMap.get(t.id) ?? [],
   }));
 
-  return { tasks, assigneeRes: assigneeRes.data ?? [], profileMap };
+  return { tasks };
 }
 
 export function useTasksQuery() {

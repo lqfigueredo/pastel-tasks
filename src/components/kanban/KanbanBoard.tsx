@@ -6,6 +6,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useTasksQuery, useInvalidateTasks, useOptimisticTaskUpdate } from '@/hooks/useTasksQuery';
 import { useStatusesQuery } from '@/hooks/useStatusesQuery';
 import { useColumnOrderQuery, useUpdateColumnOrder } from '@/hooks/useColumnOrderQuery';
+import { useTasksRealtime } from '@/hooks/useTasksRealtime';
 import type { Task, TaskStatus } from '@/types/kanban';
 
 export type { Task, TaskStatus };
@@ -29,6 +30,9 @@ export const KanbanBoard = forwardRef<KanbanBoardRef, KanbanBoardProps>(({ filte
   const updateColumnOrder = useUpdateColumnOrder();
   const invalidateTasks = useInvalidateTasks();
   const optimisticUpdate = useOptimisticTaskUpdate();
+
+  // Subscribe once to realtime updates for tasks/task_assignees.
+  useTasksRealtime();
 
   const loading = tasksLoading || statusesLoading;
   const tasks = useMemo<Task[]>(() => tasksData?.tasks ?? [], [tasksData]);
@@ -58,23 +62,26 @@ export const KanbanBoard = forwardRef<KanbanBoardRef, KanbanBoardProps>(({ filte
 
   useImperativeHandle(ref, () => ({ refresh }), [refresh]);
 
-  const moveTask = async (taskId: string, newStatusId: string) => {
-    const task = tasks.find((t) => t.id === taskId);
-    if (!task || task.status_id === newStatusId) return;
+  const moveTask = useCallback(
+    async (taskId: string, newStatusId: string) => {
+      const task = tasks.find((t) => t.id === taskId);
+      if (!task || task.status_id === newStatusId) return;
 
-    // Optimistic update with rollback. The DB trigger handles change logging.
-    const rollback = optimisticUpdate(taskId, { status_id: newStatusId });
+      // Optimistic update with rollback. The DB trigger handles change logging.
+      const rollback = optimisticUpdate(taskId, { status_id: newStatusId });
 
-    const { error } = await supabase
-      .from('tasks')
-      .update({ status_id: newStatusId })
-      .eq('id', taskId);
+      const { error } = await supabase
+        .from('tasks')
+        .update({ status_id: newStatusId })
+        .eq('id', taskId);
 
-    if (error) {
-      rollback();
-      toast({ title: 'Erro ao mover tarefa', variant: 'destructive' });
-    }
-  };
+      if (error) {
+        rollback();
+        toast({ title: 'Erro ao mover tarefa', variant: 'destructive' });
+      }
+    },
+    [tasks, optimisticUpdate, toast]
+  );
 
   const handleColumnReorder = useCallback(
     (fromIdx: number, toIdx: number) => {
@@ -85,6 +92,19 @@ export const KanbanBoard = forwardRef<KanbanBoardRef, KanbanBoardProps>(({ filte
       updateColumnOrder.mutate(next.map((s) => s.id));
     },
     [orderedStatuses, updateColumnOrder]
+  );
+
+  const handleColumnDragStart = useCallback((i: number) => setDragColIdx(i), []);
+  const handleColumnDragEnter = useCallback((i: number) => setDragOverColIdx(i), []);
+  const handleColumnDragEnd = useCallback(
+    (fromIdx: number) => {
+      if (dragOverColIdx !== null && dragOverColIdx !== fromIdx) {
+        handleColumnReorder(fromIdx, dragOverColIdx);
+      }
+      setDragColIdx(null);
+      setDragOverColIdx(null);
+    },
+    [dragOverColIdx, handleColumnReorder]
   );
 
 
@@ -115,15 +135,9 @@ export const KanbanBoard = forwardRef<KanbanBoardRef, KanbanBoardProps>(({ filte
           columnIndex={idx}
           dragColIdx={dragColIdx}
           dragOverColIdx={dragOverColIdx}
-          onColumnDragStart={(i) => setDragColIdx(i)}
-          onColumnDragEnter={(i) => setDragOverColIdx(i)}
-          onColumnDragEnd={(fromIdx) => {
-            if (dragOverColIdx !== null && dragOverColIdx !== fromIdx) {
-              handleColumnReorder(fromIdx, dragOverColIdx);
-            }
-            setDragColIdx(null);
-            setDragOverColIdx(null);
-          }}
+          onColumnDragStart={handleColumnDragStart}
+          onColumnDragEnter={handleColumnDragEnter}
+          onColumnDragEnd={handleColumnDragEnd}
         />
       ))}
     </div>
