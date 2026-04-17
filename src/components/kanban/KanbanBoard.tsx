@@ -21,50 +21,37 @@ interface KanbanBoardProps {
 export const KanbanBoard = forwardRef<KanbanBoardRef, KanbanBoardProps>(({ filterAssigneeId }, ref) => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const [orderedStatuses, setOrderedStatuses] = useState<TaskStatus[]>([]);
   const [dragColIdx, setDragColIdx] = useState<number | null>(null);
   const [dragOverColIdx, setDragOverColIdx] = useState<number | null>(null);
 
   const { data: tasksData, isLoading: tasksLoading } = useTasksQuery();
   const { data: statusesData, isLoading: statusesLoading } = useStatusesQuery();
+  const { data: columnOrder } = useColumnOrderQuery();
+  const updateColumnOrder = useUpdateColumnOrder();
   const invalidateTasks = useInvalidateTasks();
   const optimisticUpdate = useOptimisticTaskUpdate();
 
   const loading = tasksLoading || statusesLoading;
   const tasks = useMemo<Task[]>(() => tasksData?.tasks ?? [], [tasksData]);
 
-  // Fetch user column order and apply it
-  useEffect(() => {
-    if (!user || !statusesData) return;
-
-    supabase
-      .from('user_column_order')
-      .select('status_ids_order')
-      .eq('user_id', user.id)
-      .maybeSingle()
-      .then(({ data: columnOrderData }) => {
-        const userOrder: string[] | null = columnOrderData?.status_ids_order || null;
-        let ordered: TaskStatus[];
-
-        if (userOrder && userOrder.length > 0) {
-          const statusMap = new Map(statusesData.map((s) => [s.id, s]));
-          const result: TaskStatus[] = [];
-          for (const id of userOrder) {
-            const s = statusMap.get(id);
-            if (s) {
-              result.push(s);
-              statusMap.delete(id);
-            }
-          }
-          const remaining = [...statusMap.values()].sort((a, b) => a.position - b.position);
-          ordered = [...result, ...remaining];
-        } else {
-          ordered = [...statusesData].sort((a, b) => a.position - b.position);
+  // Derive ordered statuses from query data (no local state, no useEffect).
+  const orderedStatuses = useMemo<TaskStatus[]>(() => {
+    if (!statusesData) return [];
+    if (columnOrder && columnOrder.length > 0) {
+      const statusMap = new Map(statusesData.map((s) => [s.id, s]));
+      const result: TaskStatus[] = [];
+      for (const id of columnOrder) {
+        const s = statusMap.get(id);
+        if (s) {
+          result.push(s);
+          statusMap.delete(id);
         }
-
-        setOrderedStatuses(ordered);
-      });
-  }, [user, statusesData]);
+      }
+      const remaining = [...statusMap.values()].sort((a, b) => a.position - b.position);
+      return [...result, ...remaining];
+    }
+    return [...statusesData].sort((a, b) => a.position - b.position);
+  }, [statusesData, columnOrder]);
 
   const refresh = useCallback(() => {
     invalidateTasks();
@@ -76,10 +63,7 @@ export const KanbanBoard = forwardRef<KanbanBoardRef, KanbanBoardProps>(({ filte
     const task = tasks.find((t) => t.id === taskId);
     if (!task || task.status_id === newStatusId) return;
 
-    const oldStatusName = orderedStatuses.find((s) => s.id === task.status_id)?.name || '';
-    const newStatusName = orderedStatuses.find((s) => s.id === newStatusId)?.name || '';
-
-    // Optimistic update with rollback
+    // Optimistic update with rollback. The DB trigger handles change logging.
     const rollback = optimisticUpdate(taskId, { status_id: newStatusId });
 
     const { error } = await supabase
@@ -90,30 +74,20 @@ export const KanbanBoard = forwardRef<KanbanBoardRef, KanbanBoardProps>(({ filte
     if (error) {
       rollback();
       toast({ title: 'Erro ao mover tarefa', variant: 'destructive' });
-    } else if (user && oldStatusName !== newStatusName) {
-      await supabase.from('task_change_logs').insert({
-        task_id: taskId,
-        user_id: user.id,
-        field_name: 'status',
-        old_value: oldStatusName,
-        new_value: newStatusName,
-      });
     }
   };
 
-  const handleColumnReorder = useCallback(async (fromIdx: number, toIdx: number) => {
-    if (!user || fromIdx === toIdx) return;
-    const newStatuses = [...orderedStatuses];
-    const [moved] = newStatuses.splice(fromIdx, 1);
-    newStatuses.splice(toIdx, 0, moved);
-    setOrderedStatuses(newStatuses);
+  const handleColumnReorder = useCallback(
+    (fromIdx: number, toIdx: number) => {
+      if (fromIdx === toIdx) return;
+      const next = [...orderedStatuses];
+      const [moved] = next.splice(fromIdx, 1);
+      next.splice(toIdx, 0, moved);
+      updateColumnOrder.mutate(next.map((s) => s.id));
+    },
+    [orderedStatuses, updateColumnOrder]
+  );
 
-    const newOrder = newStatuses.map((s) => s.id);
-    await supabase.from('user_column_order').upsert(
-      { user_id: user.id, status_ids_order: newOrder, updated_at: new Date().toISOString() },
-      { onConflict: 'user_id' }
-    );
-  }, [user, orderedStatuses]);
 
   if (loading) {
     return (
