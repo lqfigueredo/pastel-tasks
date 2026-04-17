@@ -1,81 +1,39 @@
 
 
-## Avaliação das Fases 1 e 2 + Plano Fase 3 (Fluidez)
+## Bug: Dropdown de equipes em "Nova Ideia" mostra times de outros admins
 
-### O que está bom ✅
-- **`useTasksQuery`** com optimistic update e rollback funcionando.
-- **Triggers Postgres** (`log_task_changes`, `log_task_assignee_changes`) substituíram inserts manuais → logs garantidos.
-- **`useColumnOrderQuery`** centralizado, sem `useEffect` solto.
-- **`safeFormatDate`/`safeParseISO`** criados em `src/lib/date.ts`.
-- **`KanbanBoard`** sem estado duplicado, derivando tudo via `useMemo`.
+### Causa raiz
+A policy RLS `"Admins can view all teams"` em `teams` libera SELECT para qualquer usuário com role `admin`. Como o `CreateIdeaDialog` faz `supabase.from('teams').select('id, name')` sem filtro, retorna todos os times do banco — incluindo "TESTE", criado por outro admin.
 
-### Pendências detectadas que afetam fluidez 🔴
+Esse mesmo problema existe no `EditIdeaDialog.tsx` (idêntico) e no `WorkInstructions.tsx` (lista todos os times sem filtro).
 
-**1. Imports de tipos ainda apontam para `KanbanBoard`** (não migrados na Fase 2)
-`KanbanCard`, `KanbanColumn`, `TaskDetailDialog`, `TaskTooltip`, `Dashboard` ainda fazem `import { Task, TaskStatus } from './KanbanBoard'`. Funciona via re-export, mas mantém ciclo de dependências e quebra tree-shaking. Migrar para `@/types/kanban`.
+### Por que a policy existe assim
+Provavelmente herança histórica do Admin panel global. Mas hoje o app é multi-tenant por `created_by_admin`/`team_id` (vide memory de admin-isolation), então essa policy quebra o isolamento.
 
-**2. `KanbanCard` e `KanbanColumn` não são memoizados**
-Cada drag/move re-renderiza TODOS os cards do board (centenas de componentes em escala). Gargalo claro de fluidez no Kanban.
+### Correção (escopo mínimo, seguro)
+Filtrar os componentes para mostrar **apenas times dos quais o usuário é membro** — usando `team_members` como fonte de verdade, exatamente como `TeamList.tsx` já faz.
 
-**3. `toggleMinimize` no `KanbanCard` não é otimista**
-Aguarda round-trip do Supabase antes de refletir visualmente. Deveria usar `useOptimisticTaskUpdate`.
+**Arquivos a alterar:**
+1. `src/components/ideas/CreateIdeaDialog.tsx` — buscar `team_members` do user → `teams.in('id', teamIds)`.
+2. `src/components/ideas/EditIdeaDialog.tsx` — mesma mudança.
+3. `src/pages/WorkInstructions.tsx` — filtrar `teams` pelos IDs em que o user é membro (não quebra render porque já mapeia via `teamMap`).
 
-**4. `TaskDetailDialog` faz fetch sequencial** (comments + pendency) sem React Query
-Sem cache, sem deduplicação. Reabrir o diálogo sempre re-busca tudo.
-
-**5. Sem realtime em `tasks`/`task_assignees`**
-Usuário precisa F5 para ver mudanças de colegas. Pesa muito na percepção de "vivacidade" do app.
-
-**6. `useTasksQuery` ainda faz 3 queries paralelas + retorna `assigneeRes`/`profileMap` que ninguém consome**
-Pode simplificar payload retornado.
-
-**7. Sem `error boundary`** — qualquer crash em uma página derruba o app inteiro.
-
----
-
-### Plano de execução — Fase 3 (Fluidez)
-
-**Etapa A — Memoização e otimismo no Kanban (impacto alto, risco baixo)**
-1. Envolver `KanbanCard` e `KanbanColumn` em `React.memo` com comparação rasa.
-2. Estabilizar handlers em `KanbanBoard` com `useCallback`.
-3. Tornar `toggleMinimize` otimista usando `useOptimisticTaskUpdate`.
-
-**Etapa B — Migrar imports de tipos**
-4. Trocar `from './KanbanBoard'` → `from '@/types/kanban'` em: `KanbanCard`, `KanbanColumn`, `TaskDetailDialog`, `TaskTooltip`, `Dashboard`.
-5. Limpar re-export desnecessário em `KanbanBoard.tsx`.
-
-**Etapa C — Realtime nas tarefas (impacto alto)**
-6. Migration: `ALTER PUBLICATION supabase_realtime ADD TABLE tasks, task_assignees;` + `REPLICA IDENTITY FULL`.
-7. Hook `useTasksRealtime()` em `KanbanBoard` que escuta `postgres_changes` e chama `invalidateTasks()` (debounced 300ms para evitar tempestade).
-
-**Etapa D — `TaskDetailDialog` com React Query**
-8. Criar `useTaskCommentsQuery(taskId)` e `useMeetingPendencyQuery(pendencyId)`.
-9. Substituir os `useEffect` de fetch por esses hooks.
-
-**Etapa E — Resiliência**
-10. Criar `<RouteErrorBoundary>` simples e envolver cada `<Route>` autenticada em `App.tsx`.
-
----
-
-### Diagrama de fluxo após Fase 3
-
-```text
-User drag → optimistic setQueryData (instant UI)
-        ↓
-      Supabase UPDATE
-        ↓
-   Trigger logs change
-        ↓
-   Realtime broadcast → other users' invalidateTasks (debounced)
-        ↓
-   Memoized KanbanCard re-renders only the affected card
+### Padrão a aplicar (consistente com `TeamList`)
+```ts
+const { data: memberships } = await supabase
+  .from('team_members').select('team_id').eq('user_id', user.id);
+const teamIds = (memberships ?? []).map(m => m.team_id);
+const { data } = teamIds.length
+  ? await supabase.from('teams').select('id, name').in('id', teamIds).order('name')
+  : { data: [] };
+setTeams(data ?? []);
 ```
 
-### O que NÃO vou fazer agora
-- Code-splitting por feature (ganho marginal frente ao resto).
-- Testes (vale uma fase dedicada).
-- Migrar todos os `new Date()` espalhados — só os críticos quando aparecerem como bug.
+### O que NÃO vou mexer agora
+- A policy `"Admins can view all teams"` — pode ser intencional para o painel `Admin.tsx`. Removê-la sem análise pode quebrar outras telas. Trato como item separado se você quiser endurecer depois.
+- `Admin.tsx` já filtra por `eq('created_by', user.id)` — está OK.
+- `CreateTaskDialog.tsx` já filtra por membership — OK.
 
-### Recomendação
-Executar **Etapas A, B, C** em uma sessão (núcleo da fluidez). D e E em sessão separada se preferir focar primeiro no impacto visual.
+### Recomendação adicional (opcional, pós-fix)
+Auditar se a policy de admin global ainda faz sentido. Pelo padrão multi-tenant atual, o correto seria: admins veem times que **eles criaram** ou dos quais são membros — não todos do sistema. Posso preparar uma migration separada se aprovar.
 
