@@ -1,4 +1,4 @@
-import { format, parseISO } from 'date-fns';
+import { format, parseISO, isValid } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Task, TaskStatus } from '@/components/kanban/KanbanBoard';
 import {
@@ -18,7 +18,13 @@ interface TaskTooltipProps {
 
 function formatDate(dateStr: string | null) {
   if (!dateStr) return null;
-  return format(parseISO(dateStr), "dd 'de' MMM", { locale: ptBR });
+  try {
+    const parsed = parseISO(dateStr);
+    if (!isValid(parsed)) return null;
+    return format(parsed, "dd 'de' MMM", { locale: ptBR });
+  } catch {
+    return null;
+  }
 }
 
 export function TaskTooltip({ task, statusName, statusColor, children }: TaskTooltipProps) {
