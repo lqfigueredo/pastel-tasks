@@ -1,13 +1,13 @@
-import { useState } from 'react';
+import { memo, useCallback, useMemo, useState } from 'react';
 import { Calendar, Minimize2, Maximize2, Repeat, FileText, AlertTriangle, ChevronLeft, ChevronRight } from 'lucide-react';
 
 import { Card, CardContent } from '@/components/ui/card';
-import { Task, TaskStatus } from './KanbanBoard';
+import type { Task, TaskStatus } from '@/types/kanban';
 import { TaskDetailDialog } from './TaskDetailDialog';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { safeFormatDate } from '@/lib/date';
 import { supabase } from '@/integrations/supabase/client';
+import { useOptimisticTaskUpdate } from '@/hooks/useTasksQuery';
 import { cn } from '@/lib/utils';
 
 interface KanbanCardProps {
@@ -17,33 +17,51 @@ interface KanbanCardProps {
   onMoveTask?: (taskId: string, newStatusId: string) => void;
 }
 
-export function KanbanCard({ task, allStatuses, onRefresh, onMoveTask }: KanbanCardProps) {
+function KanbanCardImpl({ task, allStatuses, onRefresh, onMoveTask }: KanbanCardProps) {
   const [detailOpen, setDetailOpen] = useState(false);
-  const [minimized, setMinimized] = useState(task.is_minimized);
+  const optimisticUpdate = useOptimisticTaskUpdate();
 
-  const sortedStatuses = [...allStatuses].sort((a, b) => a.position - b.position);
-  const currentIndex = sortedStatuses.findIndex(s => s.id === task.status_id);
+  const sortedStatuses = useMemo(
+    () => [...allStatuses].sort((a, b) => a.position - b.position),
+    [allStatuses]
+  );
+  const currentIndex = sortedStatuses.findIndex((s) => s.id === task.status_id);
   const canMoveLeft = currentIndex > 0;
   const canMoveRight = currentIndex < sortedStatuses.length - 1;
 
-  const handleMove = (e: React.MouseEvent, direction: 'left' | 'right') => {
-    e.stopPropagation();
-    const newIndex = direction === 'left' ? currentIndex - 1 : currentIndex + 1;
-    if (newIndex >= 0 && newIndex < sortedStatuses.length && onMoveTask) {
-      onMoveTask(task.id, sortedStatuses[newIndex].id);
-    }
-  };
+  const handleMove = useCallback(
+    (e: React.MouseEvent, direction: 'left' | 'right') => {
+      e.stopPropagation();
+      const newIndex = direction === 'left' ? currentIndex - 1 : currentIndex + 1;
+      if (newIndex >= 0 && newIndex < sortedStatuses.length && onMoveTask) {
+        onMoveTask(task.id, sortedStatuses[newIndex].id);
+      }
+    },
+    [currentIndex, sortedStatuses, onMoveTask, task.id]
+  );
 
-  const toggleMinimize = async (e: React.MouseEvent) => {
-    e.stopPropagation();
-    const newVal = !minimized;
-    setMinimized(newVal);
-    await supabase.from('tasks').update({ is_minimized: newVal }).eq('id', task.id);
-  };
+  const toggleMinimize = useCallback(
+    async (e: React.MouseEvent) => {
+      e.stopPropagation();
+      const newVal = !task.is_minimized;
+      const rollback = optimisticUpdate(task.id, { is_minimized: newVal });
+      const { error } = await supabase
+        .from('tasks')
+        .update({ is_minimized: newVal })
+        .eq('id', task.id);
+      if (error) rollback();
+    },
+    [task.id, task.is_minimized, optimisticUpdate]
+  );
 
-  const handleDragStart = (e: React.DragEvent) => {
-    e.dataTransfer.setData('taskId', task.id);
-  };
+  const handleDragStart = useCallback(
+    (e: React.DragEvent) => {
+      e.dataTransfer.setData('taskId', task.id);
+    },
+    [task.id]
+  );
+
+  const minimized = task.is_minimized;
 
   return (
     <>
@@ -106,7 +124,7 @@ export function KanbanCard({ task, allStatuses, onRefresh, onMoveTask }: KanbanC
                 {task.estimated_delivery_date && (
                   <div className="flex items-center gap-1 text-xs text-muted-foreground">
                     <Calendar className="h-3 w-3" />
-                    <span>{format(new Date(task.estimated_delivery_date), "dd MMM", { locale: ptBR })}</span>
+                    <span>{safeFormatDate(task.estimated_delivery_date, 'dd MMM')}</span>
                   </div>
                 )}
               </div>
@@ -145,3 +163,6 @@ export function KanbanCard({ task, allStatuses, onRefresh, onMoveTask }: KanbanC
     </>
   );
 }
+
+export const KanbanCard = memo(KanbanCardImpl);
+

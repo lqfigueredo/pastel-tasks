@@ -1,4 +1,4 @@
-import { Task, TaskStatus } from '@/components/kanban/KanbanBoard';
+import type { Task, TaskStatus } from '@/types/kanban';
 import { safeFormatDate } from '@/lib/date';
 import {
   Tooltip,

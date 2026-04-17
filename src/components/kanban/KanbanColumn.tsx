@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { memo, useState } from 'react';
 import { ChevronDown, ChevronRight, GripVertical } from 'lucide-react';
-import { Task, TaskStatus } from './KanbanBoard';
+import type { Task, TaskStatus } from '@/types/kanban';
 import { KanbanCard } from './KanbanCard';
 import { cn } from '@/lib/utils';
 
@@ -18,7 +18,7 @@ interface KanbanColumnProps {
   onColumnDragEnd: (fromIdx: number) => void;
 }
 
-export function KanbanColumn({
+function KanbanColumnImpl({
   status, tasks, allStatuses, onMoveTask, onRefresh,
   columnIndex, dragColIdx, dragOverColIdx,
   onColumnDragStart, onColumnDragEnter, onColumnDragEnd,
@@ -137,3 +137,6 @@ export function KanbanColumn({
     </div>
   );
 }
+
+export const KanbanColumn = memo(KanbanColumnImpl);
+

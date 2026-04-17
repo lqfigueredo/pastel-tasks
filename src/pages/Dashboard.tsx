@@ -2,7 +2,7 @@ import { useState, useCallback, useMemo } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTasksQuery, useInvalidateTasks } from '@/hooks/useTasksQuery';
 import { useStatusesQuery } from '@/hooks/useStatusesQuery';
-import { Task } from '@/components/kanban/KanbanBoard';
+import type { Task } from '@/types/kanban';
 import { TaskTooltip } from '@/components/dashboard/TaskTooltip';
 import { TaskDetailDialog } from '@/components/kanban/TaskDetailDialog';
 import { Button } from '@/components/ui/button';
@@ -77,13 +77,13 @@ export default function Dashboard() {
 
   const allTasks: Task[] = tasksData?.tasks || [];
   const myAssignedIds = useMemo(() => {
-    if (!user || !tasksData) return new Set<string>();
+    if (!user) return new Set<string>();
     return new Set(
-      tasksData.assigneeRes
-        .filter((r) => r.user_id === user.id)
-        .map((r) => r.task_id)
+      allTasks
+        .filter((t) => t.assignees.some((a) => a.user_id === user.id))
+        .map((t) => t.id)
     );
-  }, [tasksData, user]);
+  }, [allTasks, user]);
 
   const tasks = useMemo(() => {
     if (!user) return allTasks;
