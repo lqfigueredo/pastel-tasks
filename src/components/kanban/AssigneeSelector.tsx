@@ -6,11 +6,9 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { UserPlus, X } from 'lucide-react';
 
-export interface Profile {
-  user_id: string;
-  display_name: string;
-  avatar_url: string | null;
-}
+// Re-exported from centralized types for backwards compatibility.
+export type { Profile } from '@/types/kanban';
+import type { Profile } from '@/types/kanban';
 
 interface AssigneeSelectorProps {
   selectedIds: string[];
