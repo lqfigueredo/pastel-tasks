@@ -1,6 +1,6 @@
 import { useState, useCallback, useImperativeHandle, forwardRef, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
+
 import { KanbanColumn } from './KanbanColumn';
 import { useToast } from '@/hooks/use-toast';
 import { useTasksQuery, useInvalidateTasks, useOptimisticTaskUpdate } from '@/hooks/useTasksQuery';
