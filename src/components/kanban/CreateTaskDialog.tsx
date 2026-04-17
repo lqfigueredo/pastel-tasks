@@ -63,9 +63,21 @@ export function CreateTaskDialog({ open, onOpenChange, onTaskCreated }: Props) {
     }
   }, [open]);
 
+  const isValidDate = (d: string) => {
+    if (!d) return true;
+    const m = d.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (!m) return false;
+    const year = parseInt(m[1], 10);
+    return year >= 1900 && year <= 2100;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user || !title.trim()) return;
+    if (!isValidDate(startDate) || !isValidDate(estimatedDate)) {
+      toast({ title: 'Data inválida', description: 'O ano deve estar entre 1900 e 2100.', variant: 'destructive' });
+      return;
+    }
     setSaving(true);
 
     if (isRecurring) {
