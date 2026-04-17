@@ -1,10 +1,10 @@
-import { useEffect, useState, useCallback, useImperativeHandle, forwardRef } from 'react';
+import { useEffect, useState, useCallback, useImperativeHandle, forwardRef, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { KanbanColumn } from './KanbanColumn';
 import { useToast } from '@/hooks/use-toast';
 import { Profile } from './AssigneeSelector';
-import { useTasksQuery, useInvalidateTasks } from '@/hooks/useTasksQuery';
+import { useTasksQuery, useInvalidateTasks, useOptimisticTaskUpdate } from '@/hooks/useTasksQuery';
 import { useStatusesQuery } from '@/hooks/useStatusesQuery';
 
 export interface Task {
@@ -45,15 +45,16 @@ export const KanbanBoard = forwardRef<KanbanBoardRef, KanbanBoardProps>(({ filte
   const { user } = useAuth();
   const { toast } = useToast();
   const [orderedStatuses, setOrderedStatuses] = useState<TaskStatus[]>([]);
-  const [localTasks, setLocalTasks] = useState<Task[]>([]);
   const [dragColIdx, setDragColIdx] = useState<number | null>(null);
   const [dragOverColIdx, setDragOverColIdx] = useState<number | null>(null);
 
   const { data: tasksData, isLoading: tasksLoading } = useTasksQuery();
   const { data: statusesData, isLoading: statusesLoading } = useStatusesQuery();
   const invalidateTasks = useInvalidateTasks();
+  const optimisticUpdate = useOptimisticTaskUpdate();
 
   const loading = tasksLoading || statusesLoading;
+  const tasks = useMemo<Task[]>(() => tasksData?.tasks ?? [], [tasksData]);
 
   // Fetch user column order and apply it
   useEffect(() => {
@@ -88,13 +89,6 @@ export const KanbanBoard = forwardRef<KanbanBoardRef, KanbanBoardProps>(({ filte
       });
   }, [user, statusesData]);
 
-  // Sync tasks from React Query
-  useEffect(() => {
-    if (tasksData) {
-      setLocalTasks(tasksData.tasks);
-    }
-  }, [tasksData]);
-
   const refresh = useCallback(() => {
     invalidateTasks();
   }, [invalidateTasks]);
@@ -102,13 +96,14 @@ export const KanbanBoard = forwardRef<KanbanBoardRef, KanbanBoardProps>(({ filte
   useImperativeHandle(ref, () => ({ refresh }), [refresh]);
 
   const moveTask = async (taskId: string, newStatusId: string) => {
-    const task = localTasks.find((t) => t.id === taskId);
-    const oldStatusName = orderedStatuses.find((s) => s.id === task?.status_id)?.name || '';
+    const task = tasks.find((t) => t.id === taskId);
+    if (!task || task.status_id === newStatusId) return;
+
+    const oldStatusName = orderedStatuses.find((s) => s.id === task.status_id)?.name || '';
     const newStatusName = orderedStatuses.find((s) => s.id === newStatusId)?.name || '';
 
-    setLocalTasks((prev) =>
-      prev.map((t) => (t.id === taskId ? { ...t, status_id: newStatusId } : t))
-    );
+    // Optimistic update with rollback
+    const rollback = optimisticUpdate(taskId, { status_id: newStatusId });
 
     const { error } = await supabase
       .from('tasks')
@@ -116,8 +111,8 @@ export const KanbanBoard = forwardRef<KanbanBoardRef, KanbanBoardProps>(({ filte
       .eq('id', taskId);
 
     if (error) {
+      rollback();
       toast({ title: 'Erro ao mover tarefa', variant: 'destructive' });
-      invalidateTasks();
     } else if (user && oldStatusName !== newStatusName) {
       await supabase.from('task_change_logs').insert({
         task_id: taskId,
@@ -154,8 +149,8 @@ export const KanbanBoard = forwardRef<KanbanBoardRef, KanbanBoardProps>(({ filte
   }
 
   const filteredTasks = filterAssigneeId
-    ? localTasks.filter((t) => t.assignees.some((a) => a.user_id === filterAssigneeId))
-    : localTasks;
+    ? tasks.filter((t) => t.assignees.some((a) => a.user_id === filterAssigneeId))
+    : tasks;
 
   return (
     <div className="flex gap-4 overflow-x-auto pb-4">
