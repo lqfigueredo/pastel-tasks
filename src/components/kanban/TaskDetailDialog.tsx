@@ -288,15 +288,15 @@ export function TaskDetailDialog({ task, allStatuses, open, onOpenChange, onRefr
             <div className="grid grid-cols-3 gap-3">
               <div className="space-y-2">
                 <Label>Início</Label>
-                <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+                <Input type="date" min="1900-01-01" max="2100-12-31" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
               </div>
               <div className="space-y-2">
                 <Label>Previsão</Label>
-                <Input type="date" value={estimatedDate} onChange={(e) => handleEstimatedDateChange(e.target.value)} />
+                <Input type="date" min="1900-01-01" max="2100-12-31" value={estimatedDate} onChange={(e) => handleEstimatedDateChange(e.target.value)} />
               </div>
               <div className="space-y-2">
                 <Label>Fim Real</Label>
-                <Input type="date" value={actualEndDate} onChange={(e) => setActualEndDate(e.target.value)} />
+                <Input type="date" min="1900-01-01" max="2100-12-31" value={actualEndDate} onChange={(e) => setActualEndDate(e.target.value)} />
               </div>
             </div>
 

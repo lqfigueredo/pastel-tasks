@@ -337,11 +337,11 @@ export function CreateTaskDialog({ open, onOpenChange, onTaskCreated }: Props) {
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">
                 <Label>Data de Início</Label>
-                <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+                <Input type="date" min="1900-01-01" max="2100-12-31" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
               </div>
               <div className="space-y-2">
                 <Label>Previsão de Entrega</Label>
-                <Input type="date" value={estimatedDate} onChange={(e) => setEstimatedDate(e.target.value)} />
+                <Input type="date" min="1900-01-01" max="2100-12-31" value={estimatedDate} onChange={(e) => setEstimatedDate(e.target.value)} />
               </div>
             </div>
           )}
