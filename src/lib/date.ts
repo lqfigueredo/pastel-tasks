@@ -1,4 +1,4 @@
-import { format, parseISO, isValid } from 'date-fns';
+import { format, parseISO, isValid, type Locale } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 /**
