@@ -26,6 +26,7 @@ const PersonalCalendar = lazy(() => import("@/pages/PersonalCalendar"));
 const Ideas = lazy(() => import("@/pages/Ideas"));
 const KnowledgeBase = lazy(() => import("@/pages/KnowledgeBase"));
 const Timer = lazy(() => import("@/pages/Timer"));
+const Billing = lazy(() => import("@/pages/Billing"));
 const Unsubscribe = lazy(() => import("@/pages/Unsubscribe"));
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -72,6 +73,7 @@ const App = () => (
                   <Route path="/ideias" element={<Ideas />} />
                   <Route path="/conhecimento" element={<KnowledgeBase />} />
                   <Route path="/temporizador" element={<Timer />} />
+                  <Route path="/cobranca" element={<Billing />} />
                 </Route>
                 <Route path="*" element={<NotFound />} />
               </Routes>

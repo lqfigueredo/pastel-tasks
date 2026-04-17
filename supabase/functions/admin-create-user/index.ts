@@ -51,21 +51,33 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: 'A senha deve ter pelo menos 6 caracteres' }), { status: 400, headers: corsHeaders })
     }
 
-    // Check user limit for this admin
-    const { count: currentCount } = await supabaseAdmin
-      .from('user_approvals')
-      .select('*', { count: 'exact', head: true })
-      .eq('created_by_admin', callerUserId)
+    // Check seat availability via subscription-aware RPC
+    const { data: canAdd, error: canAddError } = await supabaseAdmin
+      .rpc('admin_can_add_user', { _admin_id: callerUserId })
 
-    const { data: adminSettings } = await supabaseAdmin
-      .from('admin_settings')
-      .select('max_users')
-      .eq('admin_user_id', callerUserId)
-      .single()
+    if (canAddError) {
+      console.error('admin_can_add_user error:', canAddError)
+      return new Response(JSON.stringify({ error: 'Erro ao validar limite de assentos' }), { status: 500, headers: corsHeaders })
+    }
 
-    const maxUsers = adminSettings?.max_users ?? 10
-    if (currentCount !== null && currentCount >= maxUsers) {
-      return new Response(JSON.stringify({ error: `Limite de usuários atingido (${currentCount}/${maxUsers})` }), { status: 403, headers: corsHeaders })
+    if (!canAdd) {
+      // Fetch current usage for a friendlier message
+      const { count: currentCount } = await supabaseAdmin
+        .from('user_approvals')
+        .select('*', { count: 'exact', head: true })
+        .eq('created_by_admin', callerUserId)
+
+      const { data: sub } = await supabaseAdmin
+        .from('subscriptions')
+        .select('seats_purchased, status')
+        .eq('admin_user_id', callerUserId)
+        .maybeSingle()
+
+      const seats = sub?.seats_purchased ?? 10
+      const msg = sub?.status === 'suspended' || sub?.status === 'canceled'
+        ? 'Assinatura suspensa ou cancelada. Regularize o pagamento para criar novos usuários.'
+        : `Limite de assentos atingido (${currentCount ?? 0}/${seats}). Faça upgrade da assinatura para adicionar mais usuários.`
+      return new Response(JSON.stringify({ error: msg }), { status: 403, headers: corsHeaders })
     }
 
     // Create user with email already confirmed

@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, Settings, LogOut, ShieldCheck, CalendarDays, FileText, TrendingUp, BookOpen, Calendar, Lightbulb, BookMarked, Timer } from 'lucide-react';
+import { LayoutDashboard, Users, Settings, LogOut, ShieldCheck, CalendarDays, FileText, TrendingUp, BookOpen, Calendar, Lightbulb, BookMarked, Timer, CreditCard } from 'lucide-react';
 import logo from '@/assets/logo.webp';
 import { NavLink } from '@/components/NavLink';
 import { useAuth } from '@/contexts/AuthContext';
@@ -91,6 +91,18 @@ export function AppSidebar() {
                       >
                         <ShieldCheck className="mr-2 h-4 w-4" />
                         {!collapsed && <span>Administração</span>}
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild>
+                      <NavLink
+                        to="/cobranca"
+                        className="hover:bg-sidebar-accent/60"
+                        activeClassName="bg-sidebar-accent text-primary font-medium"
+                      >
+                        <CreditCard className="mr-2 h-4 w-4" />
+                        {!collapsed && <span>Cobrança</span>}
                       </NavLink>
                     </SidebarMenuButton>
                   </SidebarMenuItem>

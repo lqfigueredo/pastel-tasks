@@ -38,6 +38,56 @@ export type Database = {
         }
         Relationships: []
       }
+      billing_events: {
+        Row: {
+          admin_user_id: string | null
+          created_at: string
+          error_message: string | null
+          event_id: string
+          event_type: string
+          id: string
+          payload: Json
+          processed: boolean
+          processed_at: string | null
+          provider: string
+          subscription_id: string | null
+        }
+        Insert: {
+          admin_user_id?: string | null
+          created_at?: string
+          error_message?: string | null
+          event_id: string
+          event_type: string
+          id?: string
+          payload: Json
+          processed?: boolean
+          processed_at?: string | null
+          provider: string
+          subscription_id?: string | null
+        }
+        Update: {
+          admin_user_id?: string | null
+          created_at?: string
+          error_message?: string | null
+          event_id?: string
+          event_type?: string
+          id?: string
+          payload?: Json
+          processed?: boolean
+          processed_at?: string | null
+          provider?: string
+          subscription_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "billing_events_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       calendar_event_participants: {
         Row: {
           added_at: string
@@ -727,6 +777,66 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      subscriptions: {
+        Row: {
+          admin_user_id: string
+          cancel_at_period_end: boolean
+          created_at: string
+          currency: string
+          current_period_end: string | null
+          current_period_start: string | null
+          id: string
+          minimum_seats: number
+          past_due_since: string | null
+          price_per_seat_cents: number
+          provider: string
+          provider_customer_id: string | null
+          provider_subscription_id: string | null
+          seats_purchased: number
+          status: string
+          trial_ends_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          admin_user_id: string
+          cancel_at_period_end?: boolean
+          created_at?: string
+          currency?: string
+          current_period_end?: string | null
+          current_period_start?: string | null
+          id?: string
+          minimum_seats?: number
+          past_due_since?: string | null
+          price_per_seat_cents?: number
+          provider?: string
+          provider_customer_id?: string | null
+          provider_subscription_id?: string | null
+          seats_purchased?: number
+          status?: string
+          trial_ends_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          admin_user_id?: string
+          cancel_at_period_end?: boolean
+          created_at?: string
+          currency?: string
+          current_period_end?: string | null
+          current_period_start?: string | null
+          id?: string
+          minimum_seats?: number
+          past_due_since?: string | null
+          price_per_seat_cents?: number
+          provider?: string
+          provider_customer_id?: string | null
+          provider_subscription_id?: string | null
+          seats_purchased?: number
+          status?: string
+          trial_ends_at?: string | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       support_messages: {
         Row: {
@@ -1440,6 +1550,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_can_add_user: { Args: { _admin_id: string }; Returns: boolean }
       can_access_task: {
         Args: { _task_id: string; _user_id: string }
         Returns: boolean
@@ -1454,6 +1565,10 @@ export type Database = {
       }
       enqueue_email: {
         Args: { payload: Json; queue_name: string }
+        Returns: number
+      }
+      get_admin_active_users_count: {
+        Args: { _admin_id: string }
         Returns: number
       }
       get_user_team_ids: { Args: { _user_id: string }; Returns: string[] }
