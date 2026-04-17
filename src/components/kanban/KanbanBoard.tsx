@@ -149,8 +149,8 @@ export const KanbanBoard = forwardRef<KanbanBoardRef, KanbanBoardProps>(({ filte
   }
 
   const filteredTasks = filterAssigneeId
-    ? localTasks.filter((t) => t.assignees.some((a) => a.user_id === filterAssigneeId))
-    : localTasks;
+    ? tasks.filter((t) => t.assignees.some((a) => a.user_id === filterAssigneeId))
+    : tasks;
 
   return (
     <div className="flex gap-4 overflow-x-auto pb-4">
