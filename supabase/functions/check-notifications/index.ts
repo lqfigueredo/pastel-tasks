@@ -44,15 +44,16 @@ Deno.serve(async (req) => {
         if (!assignees?.length) continue;
 
         for (const assignee of assignees) {
-          // Check for duplicate (same type + reference + date)
+          // Dedup: 1 notificação por (usuário, tipo, tarefa, título-estado).
+          // Sem janela de dia — só re-notifica se o estado mudar (ex: amanhã -> hoje -> vencido).
           const { data: existing } = await supabase
             .from("notifications")
             .select("id")
             .eq("user_id", assignee.user_id)
             .eq("type", "task_deadline")
             .eq("reference_id", task.id)
-            .gte("created_at", `${today}T00:00:00Z`)
-            .lte("created_at", `${today}T23:59:59Z`);
+            .eq("title", titleText)
+            .limit(1);
 
           if (existing && existing.length > 0) continue;
 
@@ -88,15 +89,16 @@ Deno.serve(async (req) => {
         else if (isToday) titleText = "Pendência vence hoje";
         else if (isTomorrow) titleText = "Pendência vence amanhã";
 
-        // Check for duplicate
+        // Dedup: 1 notificação por (usuário, tipo, pendência, título-estado).
+        // reference_id agora é o id da pendência (não da reunião), evitando colisão entre pendências da mesma reunião.
         const { data: existing } = await supabase
           .from("notifications")
           .select("id")
           .eq("user_id", p.responsible_user_id!)
           .eq("type", "pendency_deadline")
           .eq("reference_id", p.id)
-          .gte("created_at", `${today}T00:00:00Z`)
-          .lte("created_at", `${today}T23:59:59Z`);
+          .eq("title", titleText)
+          .limit(1);
 
         if (existing && existing.length > 0) continue;
 
@@ -105,7 +107,7 @@ Deno.serve(async (req) => {
           type: "pendency_deadline",
           title: titleText,
           message: `"${p.description?.substring(0, 80)}" — prazo: ${p.due_date}`,
-          reference_id: p.meeting_id,
+          reference_id: p.id,
         });
         insertedCount++;
       }
