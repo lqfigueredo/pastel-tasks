@@ -1,26 +1,9 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { Profile } from '@/components/kanban/AssigneeSelector';
+import type { Profile, Task as TaskWithAssignees } from '@/types/kanban';
 
-export interface TaskWithAssignees {
-  id: string;
-  title: string;
-  description: string | null;
-  status_id: string;
-  start_date: string | null;
-  end_date: string | null;
-  estimated_delivery_date: string | null;
-  actual_end_date: string | null;
-  is_minimized: boolean;
-  recurring_task_id: string | null;
-  meeting_pendency_id: string | null;
-  is_critical: boolean;
-  created_by: string;
-  team_id: string | null;
-  created_at: string;
-  assignees: Profile[];
-}
+export type { TaskWithAssignees };
 
 interface AssigneeRow {
   task_id: string;
