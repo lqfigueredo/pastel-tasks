@@ -2,7 +2,7 @@ import { useState, useCallback, useMemo } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTasksQuery, useInvalidateTasks } from '@/hooks/useTasksQuery';
 import { useStatusesQuery } from '@/hooks/useStatusesQuery';
-import { Task } from '@/components/kanban/KanbanBoard';
+import type { Task } from '@/types/kanban';
 import { TaskTooltip } from '@/components/dashboard/TaskTooltip';
 import { TaskDetailDialog } from '@/components/kanban/TaskDetailDialog';
 import { Button } from '@/components/ui/button';
