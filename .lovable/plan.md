@@ -1,130 +1,81 @@
 
 
-## Análise Crítica do Código — Oportunidades de Melhoria e Refatoração
+## Avaliação das Fases 1 e 2 + Plano Fase 3 (Fluidez)
 
-Fiz uma varredura no código compartilhado e identifiquei pontos relevantes. Abaixo está a análise organizada por **prioridade** (impacto × esforço).
+### O que está bom ✅
+- **`useTasksQuery`** com optimistic update e rollback funcionando.
+- **Triggers Postgres** (`log_task_changes`, `log_task_assignee_changes`) substituíram inserts manuais → logs garantidos.
+- **`useColumnOrderQuery`** centralizado, sem `useEffect` solto.
+- **`safeFormatDate`/`safeParseISO`** criados em `src/lib/date.ts`.
+- **`KanbanBoard`** sem estado duplicado, derivando tudo via `useMemo`.
+
+### Pendências detectadas que afetam fluidez 🔴
+
+**1. Imports de tipos ainda apontam para `KanbanBoard`** (não migrados na Fase 2)
+`KanbanCard`, `KanbanColumn`, `TaskDetailDialog`, `TaskTooltip`, `Dashboard` ainda fazem `import { Task, TaskStatus } from './KanbanBoard'`. Funciona via re-export, mas mantém ciclo de dependências e quebra tree-shaking. Migrar para `@/types/kanban`.
+
+**2. `KanbanCard` e `KanbanColumn` não são memoizados**
+Cada drag/move re-renderiza TODOS os cards do board (centenas de componentes em escala). Gargalo claro de fluidez no Kanban.
+
+**3. `toggleMinimize` no `KanbanCard` não é otimista**
+Aguarda round-trip do Supabase antes de refletir visualmente. Deveria usar `useOptimisticTaskUpdate`.
+
+**4. `TaskDetailDialog` faz fetch sequencial** (comments + pendency) sem React Query
+Sem cache, sem deduplicação. Reabrir o diálogo sempre re-busca tudo.
+
+**5. Sem realtime em `tasks`/`task_assignees`**
+Usuário precisa F5 para ver mudanças de colegas. Pesa muito na percepção de "vivacidade" do app.
+
+**6. `useTasksQuery` ainda faz 3 queries paralelas + retorna `assigneeRes`/`profileMap` que ninguém consome**
+Pode simplificar payload retornado.
+
+**7. Sem `error boundary`** — qualquer crash em uma página derruba o app inteiro.
 
 ---
 
-### 🔴 Alta prioridade — Problemas reais
+### Plano de execução — Fase 3 (Fluidez)
 
-**1. RLS de `tasks` causa N+1 e bloqueia visibilidade cruzada**
+**Etapa A — Memoização e otimismo no Kanban (impacto alto, risco baixo)**
+1. Envolver `KanbanCard` e `KanbanColumn` em `React.memo` com comparação rasa.
+2. Estabilizar handlers em `KanbanBoard` com `useCallback`.
+3. Tornar `toggleMinimize` otimista usando `useOptimisticTaskUpdate`.
 
-Hoje a tabela `tasks` tem 3 políticas SELECT separadas (own, assignee, team). Isso já é OK em termos de segurança, mas o `useTasksQuery` faz:
+**Etapa B — Migrar imports de tipos**
+4. Trocar `from './KanbanBoard'` → `from '@/types/kanban'` em: `KanbanCard`, `KanbanColumn`, `TaskDetailDialog`, `TaskTooltip`, `Dashboard`.
+5. Limpar re-export desnecessário em `KanbanBoard.tsx`.
 
-```ts
-supabase.from('tasks').select('*')        // 1 query
-supabase.from('task_assignees').select(...) // 2 query (TODAS as linhas globais)
-supabase.from('profiles').select(...)       // 3 query (TODOS perfis)
+**Etapa C — Realtime nas tarefas (impacto alto)**
+6. Migration: `ALTER PUBLICATION supabase_realtime ADD TABLE tasks, task_assignees;` + `REPLICA IDENTITY FULL`.
+7. Hook `useTasksRealtime()` em `KanbanBoard` que escuta `postgres_changes` e chama `invalidateTasks()` (debounced 300ms para evitar tempestade).
+
+**Etapa D — `TaskDetailDialog` com React Query**
+8. Criar `useTaskCommentsQuery(taskId)` e `useMeetingPendencyQuery(pendencyId)`.
+9. Substituir os `useEffect` de fetch por esses hooks.
+
+**Etapa E — Resiliência**
+10. Criar `<RouteErrorBoundary>` simples e envolver cada `<Route>` autenticada em `App.tsx`.
+
+---
+
+### Diagrama de fluxo após Fase 3
+
+```text
+User drag → optimistic setQueryData (instant UI)
+        ↓
+      Supabase UPDATE
+        ↓
+   Trigger logs change
+        ↓
+   Realtime broadcast → other users' invalidateTasks (debounced)
+        ↓
+   Memoized KanbanCard re-renders only the affected card
 ```
 
-Problemas:
-- `task_assignees` e `profiles` puxam TUDO que o RLS permitir, sem filtro. Em escala, isso vira centenas de KB no payload.
-- Não há paginação nem filtro por equipe/usuário no client.
-- O `profiles` é refeito em vários hooks (`useProfilesQuery`, `useTasksQuery`).
+### O que NÃO vou fazer agora
+- Code-splitting por feature (ganho marginal frente ao resto).
+- Testes (vale uma fase dedicada).
+- Migrar todos os `new Date()` espalhados — só os críticos quando aparecerem como bug.
 
-**Refatoração proposta**: trocar por uma única query com join:
-```ts
-supabase.from('tasks').select(`
-  *,
-  task_assignees ( user_id, profiles ( user_id, display_name, avatar_url ) )
-`)
-```
-Reduz 3 round-trips para 1, e o RLS aplica naturalmente nas joins.
-
----
-
-**2. `KanbanBoard` faz fetch redundante de `user_column_order` em `useEffect`**
-
-Toda vez que `statusesData` muda, o componente refaz a query de column order direto no Supabase, fora do React Query — perdendo cache e causando re-fetches. Deveria ser um `useColumnOrderQuery` próprio com cache.
-
----
-
-**3. Estado duplicado: `localTasks` espelhando `tasksData.tasks`**
-
-```ts
-const [localTasks, setLocalTasks] = useState<Task[]>([]);
-useEffect(() => { if (tasksData) setLocalTasks(tasksData.tasks); }, [tasksData]);
-```
-
-Isso é anti-pattern. Cria duas fontes de verdade e perde o benefício do cache. Para drag & drop otimista, o correto é `queryClient.setQueryData` com rollback no erro — não duplicar estado local.
-
----
-
-**4. Logs de mudança escritos do client (`task_change_logs`)**
-
-No `moveTask`, o client insere em `task_change_logs` após o update. Problemas:
-- Se o usuário fechar a aba entre o UPDATE e o INSERT, o log se perde.
-- Pode ser burlado (cliente malicioso pode pular o log).
-- Duplica responsabilidade em todo lugar onde tarefas são editadas.
-
-**Solução**: trigger no Postgres em `tasks AFTER UPDATE` que registra automaticamente as mudanças de campos relevantes. Garante consistência e simplifica todos os componentes.
-
----
-
-### 🟡 Média prioridade — Qualidade de código
-
-**5. Tipos duplicados**
-
-`Task`, `TaskStatus`, `Profile` estão redefinidos em `KanbanBoard.tsx`, `useTasksQuery.ts`, `useStatusesQuery.ts` e `AssigneeSelector.tsx`. Centralizar em `src/types/kanban.ts`.
-
-**6. `TaskTooltip` (e outros) usam `parseISO` sem `isValid`**
-
-Já corrigimos um caso. Vale uma utility `safeFormatDate(dateStr, formatStr)` em `src/lib/date.ts` para reutilizar e nunca mais cair no `RangeError`.
-
-**7. `App.tsx` tem 18 `lazy()` mas todas as rotas autenticadas estão dentro do mesmo `AppLayout`**
-
-Como `AppLayout` carrega o sidebar com referências a quase tudo, o ganho do `lazy` é menor que o esperado. Vale agrupar bundles por feature (ex: tudo de "financeiro" num chunk só) via `vite-plugin-chunk-split` ou comentários `webpackChunkName`.
-
-**8. `useProfilesQuery` e `useTasksQuery` ambos buscam `profiles`**
-
-Consolidar: `useTasksQuery` consome `useProfilesQuery` em vez de re-fetch.
-
----
-
-### 🟢 Baixa prioridade — Polimento
-
-**9. Falta de `error boundaries`** por rota — um crash em qualquer página derruba o app.
-
-**10. `staleTime` inconsistente** — 30s em `tasks`, 60s em `statuses`, 120s em `profiles`. Documentar o critério ou padronizar.
-
-**11. Realtime não usado para tarefas** — usuários precisam recarregar para ver mudanças de outros. Já existe infra de realtime (mencionado nas memories) mas não aplicado a `tasks`/`task_assignees`.
-
-**12. Sem testes** — só existe `example.test.ts`. As funções críticas (`moveTask`, RLS helpers, `safeFormatDate`) merecem testes.
-
----
-
-### Plano de execução proposto (em fases)
-
-**Fase 1 — Correções críticas (1 sessão)**
-- Criar `src/lib/date.ts` com `safeFormatDate`/`safeParseISO` e migrar usos.
-- Refatorar `useTasksQuery` para usar join único + consumir `useProfilesQuery`.
-- Eliminar `localTasks` duplicado em `KanbanBoard` usando `queryClient.setQueryData` para updates otimistas.
-
-**Fase 2 — Consolidação (1 sessão)**
-- Centralizar tipos em `src/types/`.
-- Criar `useColumnOrderQuery` e remover `useEffect` solto no `KanbanBoard`.
-- Trigger Postgres para `task_change_logs` (migration) + remover inserts manuais do client.
-
-**Fase 3 — Melhorias estruturais (opcional, separado)**
-- Realtime em `tasks`.
-- Error boundaries por rota.
-- Code-splitting por feature.
-- Testes para hooks/utilities críticos.
-
----
-
-### O que NÃO vou mexer
-
-- RLS policies já estão sólidas (vi várias com `SECURITY DEFINER` e helpers tipo `is_task_owner`). Não há sinal de privilégio escapando.
-- Estrutura de `AuthContext` está correta (subscribe + getSession na ordem certa).
-- `client.ts` e `types.ts` do Supabase — gerados automaticamente.
-
----
-
-### Minha recomendação
-
-Começar pela **Fase 1**. As 3 mudanças derrubam latência percebida no Kanban, eliminam o risco de `RangeError` em qualquer componente de data, e removem ~40 linhas de código duplicado. Risco baixo, ganho alto.
-
-Posso seguir só com a Fase 1, ou prefere que eu detalhe uma fase específica antes de implementar?
+### Recomendação
+Executar **Etapas A, B, C** em uma sessão (núcleo da fluidez). D e E em sessão separada se preferir focar primeiro no impacto visual.
 
