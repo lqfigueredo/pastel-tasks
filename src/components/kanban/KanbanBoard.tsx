@@ -19,7 +19,6 @@ interface KanbanBoardProps {
 }
 
 export const KanbanBoard = forwardRef<KanbanBoardRef, KanbanBoardProps>(({ filterAssigneeId }, ref) => {
-  const { user } = useAuth();
   const { toast } = useToast();
   const [dragColIdx, setDragColIdx] = useState<number | null>(null);
   const [dragOverColIdx, setDragOverColIdx] = useState<number | null>(null);
