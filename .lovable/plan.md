@@ -1,39 +1,62 @@
 
 
-## Bug: Dropdown de equipes em "Nova Ideia" mostra times de outros admins
+## Apuração geral — Desencontros de isolamento entre admins
 
-### Causa raiz
-A policy RLS `"Admins can view all teams"` em `teams` libera SELECT para qualquer usuário com role `admin`. Como o `CreateIdeaDialog` faz `supabase.from('teams').select('id, name')` sem filtro, retorna todos os times do banco — incluindo "TESTE", criado por outro admin.
+### Resumo do que está acontecendo
+Existem **dois admins separados** no sistema (Luciano Figueredo e Luciano Figueredo - GMAIL), cada um com seu time, mas várias tabelas estão **vazando dados entre eles** porque a RLS é frouxa **OU** porque o client não filtra. O bug das ideias era só a ponta do iceberg.
 
-Esse mesmo problema existe no `EditIdeaDialog.tsx` (idêntico) e no `WorkInstructions.tsx` (lista todos os times sem filtro).
+### Mapa de problemas confirmados via banco
 
-### Por que a policy existe assim
-Provavelmente herança histórica do Admin panel global. Mas hoje o app é multi-tenant por `created_by_admin`/`team_id` (vide memory de admin-isolation), então essa policy quebra o isolamento.
+| # | Tabela | O que vaza | Causa | Severidade |
+|---|--------|------------|-------|------------|
+| 1 | `task_statuses` (globais, `team_id IS NULL`) | Status "TESTE", "Backlog", "Em Desenvolvimento", "Concluída" criados por admins diferentes aparecem **para todo mundo** no Kanban | Policy `"All users can view global statuses"` + hook `useStatusesQuery` busca todos sem filtro por `created_by` | 🔴 **Alta** — visível no Kanban de todos os admins |
+| 2 | `teams` | Admin vê times que não criou e dos quais não é membro (ex: "TESTE" do GMAIL aparecia para o Luciano) | Policy `"Admins can view all teams"` libera SELECT global por role admin | 🔴 **Alta** — já corrigida no client mas RLS continua frouxa |
+| 3 | `profiles` | Todo authenticated vê **todos os perfis** do sistema (display_name, avatar, theme) | Policy `"Users can view all profiles" USING (true)` | 🟡 **Média** — vaza nomes/foto entre tenants (não senha/email) |
+| 4 | `task_statuses` (Settings page) | `Settings.tsx` lista TODOS os status globais sem filtro por criador → admin pode editar/deletar status de outro admin | Policy `"Users can update/delete own statuses"` permite update se `created_by = auth.uid()` (OK) **mas** o SELECT mostra tudo, confundindo a UI | 🟡 **Média** |
 
-### Correção (escopo mínimo, seguro)
-Filtrar os componentes para mostrar **apenas times dos quais o usuário é membro** — usando `team_members` como fonte de verdade, exatamente como `TeamList.tsx` já faz.
+### Itens auditados e **OK** ✅
+- `tasks` / `task_assignees` — SELECT só por owner, assignee ou membro do time. Sem vazamento.
+- `ideas` — SELECT só por criador ou time. Sem vazamento (bug era só na lista de teams do dropdown).
+- `meeting_minutes`, `task_comments`, `task_change_logs`, `knowledge_sources`, `recurring_tasks` — todas com escopo correto por owner/team/membership.
+- `Admin.tsx` — já filtra `teams` por `created_by`.
+- `CreateTaskDialog`, `KnowledgeBase`, `Ideas`, `WorkInstructions`, `EditIdeaDialog`, `CreateIdeaDialog` — já filtram teams por membership (correções anteriores).
 
-**Arquivos a alterar:**
-1. `src/components/ideas/CreateIdeaDialog.tsx` — buscar `team_members` do user → `teams.in('id', teamIds)`.
-2. `src/components/ideas/EditIdeaDialog.tsx` — mesma mudança.
-3. `src/pages/WorkInstructions.tsx` — filtrar `teams` pelos IDs em que o user é membro (não quebra render porque já mapeia via `teamMap`).
+### Plano de correção
 
-### Padrão a aplicar (consistente com `TeamList`)
-```ts
-const { data: memberships } = await supabase
-  .from('team_members').select('team_id').eq('user_id', user.id);
-const teamIds = (memberships ?? []).map(m => m.team_id);
-const { data } = teamIds.length
-  ? await supabase.from('teams').select('id, name').in('id', teamIds).order('name')
-  : { data: [] };
-setTeams(data ?? []);
+**Migration única** (aplicada ao banco):
+
+1. **`task_statuses` globais** — substituir SELECT global por: cada usuário vê só `is_default = true` (sistema) **ou** os que ele mesmo criou **ou** de times dos quais é membro. Já existe a policy correta `"Users can view own or default statuses"`; basta **remover** a duplicata `"All users can view global statuses"` que sobrescreve com escopo amplo.
+
+2. **`teams`** — remover policy `"Admins can view all teams"` (admin não precisa ver times de outros admins; `solution_admin` continua tendo acesso global via outra rota se necessário). Manter `"Members can view team"` e `"Creator can view own team"`.
+
+3. **`profiles`** — restringir SELECT para: o próprio usuário **+** perfis de pessoas que compartilham pelo menos um time com ele **+** `solution_admin`. Usar uma função `SECURITY DEFINER` `can_view_profile(_viewer, _target)` para evitar recursão.
+
+**Ajuste no client** (1 arquivo):
+
+4. **`Settings.tsx`** — após restringir RLS de `task_statuses`, a UI vai listar só os relevantes automaticamente. Adicionar fallback visual se a query voltar vazia para o usuário.
+
+### Diagrama do isolamento depois da correção
+
+```text
+Admin A (Luciano) ──┐
+                    ├─ vê: seus times + ideias + status próprios
+                    └─ NÃO vê: times/status do Admin B
+Admin B (GMAIL) ────┐
+                    ├─ vê: seus times + ideias + status próprios  
+                    └─ NÃO vê: times/status do Admin A
+solution_admin ─────► vê tudo (mantido)
+profiles ───────────► só perfis de quem compartilha time + próprio
 ```
 
-### O que NÃO vou mexer agora
-- A policy `"Admins can view all teams"` — pode ser intencional para o painel `Admin.tsx`. Removê-la sem análise pode quebrar outras telas. Trato como item separado se você quiser endurecer depois.
-- `Admin.tsx` já filtra por `eq('created_by', user.id)` — está OK.
-- `CreateTaskDialog.tsx` já filtra por membership — OK.
+### Riscos e o que NÃO vou mexer
 
-### Recomendação adicional (opcional, pós-fix)
-Auditar se a policy de admin global ainda faz sentido. Pelo padrão multi-tenant atual, o correto seria: admins veem times que **eles criaram** ou dos quais são membros — não todos do sistema. Posso preparar uma migration separada se aprovar.
+- **Não vou apagar** os status duplicados no banco — eles já estão vinculados a tarefas. Só restringir visibilidade. Você pode arquivar manualmente depois pelo Settings.
+- **Não vou** mexer nas policies de `task_assignees`/`tasks` — já estão corretas.
+- **Risco baixo**: a única quebra possível é se algum componente assumia ver perfis de qualquer um (ex: avatar de criador externo). Vou rodar busca prévia para confirmar que `profiles` é sempre consumido em contextos onde há time/tarefa em comum.
+
+### Etapas
+
+1. Migration: drop policies inseguras + criar policies estritas + função `can_view_profile`.
+2. Verificar se `Settings.tsx` precisa de aviso visual.
+3. Atualizar memory `mem://security/admin-isolation` com regras finais.
 
