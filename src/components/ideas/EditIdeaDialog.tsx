@@ -40,11 +40,17 @@ export function EditIdeaDialog({ idea, open, onOpenChange, onUpdated }: Props) {
 
   useEffect(() => {
     const fetchTeams = async () => {
-      const { data } = await supabase.from('teams').select('id, name').order('name');
+      if (!user) return;
+      const { data: memberships } = await supabase
+        .from('team_members').select('team_id').eq('user_id', user.id);
+      const teamIds = (memberships ?? []).map((m) => m.team_id);
+      if (!teamIds.length) { setTeams([]); return; }
+      const { data } = await supabase
+        .from('teams').select('id, name').in('id', teamIds).order('name');
       if (data) setTeams(data);
     };
     fetchTeams();
-  }, []);
+  }, [user]);
 
   const isOwner = user?.id === idea?.created_by;
 

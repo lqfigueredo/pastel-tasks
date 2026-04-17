@@ -50,21 +50,28 @@ export default function WorkInstructions() {
   const [profiles, setProfiles] = useState<Record<string, string>>({});
 
   const fetchData = async () => {
+    if (!user) return;
     setLoading(true);
+    const { data: memberships } = await supabase
+      .from('team_members').select('team_id').eq('user_id', user.id);
+    const teamIds = (memberships ?? []).map((m) => m.team_id);
+
     const [{ data: instrData }, { data: teamsData }, { data: profilesData }] = await Promise.all([
       supabase.from('work_instructions').select('*').order('created_at', { ascending: false }),
-      supabase.from('teams').select('id, name'),
+      teamIds.length
+        ? supabase.from('teams').select('id, name').in('id', teamIds).order('name')
+        : Promise.resolve({ data: [] as Team[] }),
       supabase.from('profiles').select('user_id, display_name'),
     ]);
     setInstructions((instrData as WorkInstruction[]) || []);
-    setTeams(teamsData || []);
+    setTeams((teamsData as Team[]) || []);
     const pMap: Record<string, string> = {};
     (profilesData || []).forEach((p: any) => { pMap[p.user_id] = p.display_name; });
     setProfiles(pMap);
     setLoading(false);
   };
 
-  useEffect(() => { fetchData(); }, []);
+  useEffect(() => { fetchData(); }, [user]);
 
   const filtered = instructions.filter(i => {
     if (filterTeam !== 'all' && i.team_id !== filterTeam) return false;
