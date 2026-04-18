@@ -1,57 +1,71 @@
 
 
-## Plano — Teste real de compra de um plano
+## Plano — Estruturar visões financeiras antes do checkout
 
-### Situação atual
-- Página `/cobranca` existe, mas os botões "Fazer upgrade" e "Gerenciar pagamento" só mostram `toast.info`.
-- Tabela `subscriptions` já existe e está sincronizada com `admin_settings.max_users`.
-- Nenhum provedor de pagamento está habilitado → **não dá para fazer uma compra real ainda**.
+### Objetivo
+Pausar a integração com provedor e deixar **a operação interna de cobrança** completa primeiro: o que o `solution_admin` precisa enxergar para gerenciar a base, e o que cada `admin` pagante precisa enxergar para gerenciar a própria conta. Sem isso, o checkout entra em cima de uma base que não consegue operar.
 
-### O que vamos fazer
-Habilitar o pagamento built-in da Lovable em modo **teste (sandbox)**, criar o produto "Assento mensal" e ligar a página `/cobranca` ao checkout real. Tudo sem dinheiro real e sem você precisar criar conta no provedor.
+### Lacunas atuais
+Hoje só existem `subscriptions`, `billing_events` (vazio), `admin_settings.max_users` e `user_approvals`. **Não há** registro de faturas, pagamentos manuais, histórico de mudança de plano, descontos, dados fiscais nem notas internas. A página `/financeiro` não mostra nada de assinatura, e `/cobranca` só tem slider e botões placeholder.
 
-### Etapas
+### Parte 1 — Painel do `solution_admin` (`/financeiro`)
 
-**1. Recomendar e habilitar o provedor**
-- Rodar `recommend_payment_provider` (analisa o produto e sugere Paddle ou Stripe).
-- Para SaaS B2B PT-BR cobrando assinatura recorrente por assento, normalmente cai em **Paddle** (Merchant of Record, cuida de imposto/NF) ou **Stripe** (mais flexível).
-- Habilitar o provedor recomendado → cria automaticamente o ambiente sandbox.
+**KPIs no topo**
+- MRR atual (R$/mês das ativas) e MRR potencial (em trial)
+- Contagens por status: ativas, trial, past_due, suspended, canceladas
+- Total de assentos contratados x usados (taxa de ocupação)
+- Churn do mês
 
-**2. Criar o produto de assinatura**
-- Produto: "Assento mensal Nevvoh"
-- Preço: a definir com você (ex.: R$ 49/assento/mês), cobrado por quantidade.
-- Trial: 14 dias com cartão (já decidido).
-- Modo: sandbox (teste).
+**Lista de assinaturas** (uma linha por admin pagante)
+- Admin (nome, email), status, assentos contratados/usados, mensalidade, próximo ciclo, trial termina em, inadimplente desde, provider
+- Ações: ver detalhes, ajustar assentos, suspender, reativar, cancelar, registrar pagamento manual, estender trial
 
-**3. Criar edge functions de billing**
-- `create-checkout`: gera URL de checkout para o admin contratar/aumentar assentos.
-- `billing-portal`: abre portal do cliente (atualizar cartão, ver faturas, cancelar).
-- `billing-webhook`: recebe eventos do provedor, atualiza `subscriptions` e grava em `billing_events` com idempotência.
+**Drawer de detalhe**
+- Dados da assinatura, histórico de mudanças, faturas, eventos do provider, notas internas
 
-**4. Conectar `/cobranca` ao fluxo real**
-- Botão "Fazer upgrade" → chama `create-checkout` com o novo `seats` e abre o checkout em nova aba.
-- Botão "Gerenciar pagamento" → chama `billing-portal` e abre o portal.
-- Ao retornar do checkout, refazer `load()` para refletir o novo status.
+**Filtros e alertas**
+- Filtrar por status / provider / inadimplência / trial expirando em N dias
+- Alertas: trials vencendo em 3 dias, past_due > N dias
 
-**5. Testar a compra (você executa no preview)**
-- Logar como um admin de teste em `/cobranca`.
-- Ajustar slider para 12 assentos, clicar **Fazer upgrade**.
-- Completar o checkout sandbox com **cartão de teste** (ex.: `4242 4242 4242 4242` no Stripe).
-- Voltar para `/cobranca` e verificar:
-  - `status = trialing` ou `active`
-  - `seats_purchased = 12`
-  - `admin_settings.max_users = 12` (sincronizado pelo trigger)
-- Tentar criar 13 usuários em `/admin` → o 13º deve ser bloqueado.
+### Parte 2 — Painel do admin pagante (`/cobranca`)
 
-### Decisão necessária antes de executar
-Preciso que você confirme **qual provedor habilitar**. Como o resultado da análise pode mudar a recomendação, vou perguntar depois que rodar `recommend_payment_provider`. Por padrão, se você não tiver preferência, sigo com a recomendação dele.
+- **Resumo**: plano, status (badge), assentos contratados x usados (barra), mensalidade, próxima cobrança, trial restante
+- **Histórico de faturas** com data, valor, status, método
+- **Método de pagamento** (placeholder até provider)
+- **Dados fiscais** (razão social, CNPJ/CPF, endereço, email de cobrança) — necessário para nota e para enviar ao provider
+- **Banners de status** (past_due, trial expirando, cancelada)
+- **Histórico de mudanças de plano**
 
-Pré-requisito: o projeto precisa estar em **plano Pro** para habilitar pagamentos. Lovable Cloud já está habilitado ✓.
+### Parte 3 — Estrutura de dados nova
 
-### Detalhes técnicos
-- Ferramentas usadas: `payments--recommend_payment_provider`, depois `payments--enable_paddle_payments` **ou** `payments--enable_stripe_payments`.
-- Após habilitar, a Lovable injeta automaticamente os secrets do provedor e fornece knowledge files com o padrão exato de checkout/webhook.
-- Webhook URL é registrada automaticamente no provedor sandbox.
-- `billing-webhook` precisa ter `verify_jwt = false` no `config.toml` (já é o padrão).
-- `subscriptions.provider` passa de `'manual'`/`'pending'` para `'paddle'` ou `'stripe'` quando o checkout completar.
+| Tabela | Função |
+|---|---|
+| `invoices` | Faturas — opera com pagamento manual hoje, recebe do provider depois |
+| `payment_methods` | Cartão/método salvo (placeholder) |
+| `subscription_changes` | Auditoria (upgrade/downgrade/status/manual) |
+| `billing_profiles` | Dados fiscais do admin |
+| `subscription_notes` | Notas internas só do solution_admin |
+
+Todas com RLS: admin vê só o que é dele; solution_admin vê tudo; notas só solution_admin.
+
+### Parte 4 — Fluxos manuais (antes do provider)
+Sem checkout, o solution_admin já consegue operar:
+- Registrar pagamento manual → cria invoice paga, avança ciclo, mantém `active`
+- Estender trial → ajusta `trial_ends_at`
+- Ajustar assentos → trigger sincroniza `max_users`
+- Suspender / reativar / cancelar com motivo em `subscription_changes`
+
+### Ordem de implementação
+1. Tabelas novas + RLS + triggers de auditoria
+2. `Financial.tsx` reescrita: KPIs + lista + filtros
+3. Drawer de detalhe + ações manuais
+4. `Billing.tsx` reescrita: resumo + faturas + dados fiscais + banners
+5. Banner global no `AppLayout` para admins
+6. Só então plugar Paddle/Stripe
+
+### Decisões abertas
+- Coletar **dados fiscais (CNPJ/CPF/endereço)** já agora ou só quando integrar provider?
+- **Pagamento manual** (PIX/boleto fora do sistema) é essencial nessa fase ou pode esperar?
+- **Notas internas** por assinatura vão entrar?
+- **Banner global** de status em todo o app, ou só dentro de `/cobranca`?
 
