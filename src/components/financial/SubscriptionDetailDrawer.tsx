@@ -9,10 +9,11 @@ import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { toast } from 'sonner';
-import { Loader2, Plus, FileText, History, StickyNote, Settings2 } from 'lucide-react';
+import { Loader2, Plus, FileText, History, StickyNote, Settings2, Receipt, AlertCircle, CheckCircle2 } from 'lucide-react';
 import type { SubscriptionRow } from './SubscriptionsTab';
 import ManualPaymentDialog from './ManualPaymentDialog';
 import SubscriptionActionsDialog from './SubscriptionActionsDialog';
+import { formatCPF, formatCNPJ, formatCEP, formatPhone } from '@/lib/br-validators';
 
 interface Props {
   subscription: SubscriptionRow | null;
