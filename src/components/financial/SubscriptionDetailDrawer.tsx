@@ -186,8 +186,9 @@ export default function SubscriptionDetailDrawer({ subscription, open, onClose, 
             <Separator />
 
             <Tabs defaultValue="invoices">
-              <TabsList className="grid w-full grid-cols-3">
+              <TabsList className="grid w-full grid-cols-4">
                 <TabsTrigger value="invoices"><FileText className="h-4 w-4 mr-1" /> Faturas</TabsTrigger>
+                <TabsTrigger value="fiscal"><Receipt className="h-4 w-4 mr-1" /> Fiscal</TabsTrigger>
                 <TabsTrigger value="changes"><History className="h-4 w-4 mr-1" /> Histórico</TabsTrigger>
                 <TabsTrigger value="notes"><StickyNote className="h-4 w-4 mr-1" /> Notas</TabsTrigger>
               </TabsList>
