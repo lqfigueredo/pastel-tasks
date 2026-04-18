@@ -2006,6 +2006,10 @@ export type Database = {
         Args: { _code: string; _subscription_id: string }
         Returns: string
       }
+      billing_profile_missing_fields: {
+        Args: { _admin_id: string }
+        Returns: string[]
+      }
       calculate_invoice_amount: {
         Args: { _subscription_id: string }
         Returns: {
