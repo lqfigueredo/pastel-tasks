@@ -1,71 +1,92 @@
 
 
-## Plano — Estruturar visões financeiras antes do checkout
+O usuário está confirmando que precisamos coletar CNPJ/CPF para emissão de NF. A resposta é sim, e o `BillingProfileForm.tsx` já coleta isso. Mas ele provavelmente quer saber se está completo o suficiente para emissão real de nota fiscal no Brasil.
 
-### Objetivo
-Pausar a integração com provedor e deixar **a operação interna de cobrança** completa primeiro: o que o `solution_admin` precisa enxergar para gerenciar a base, e o que cada `admin` pagante precisa enxergar para gerenciar a própria conta. Sem isso, o checkout entra em cima de uma base que não consegue operar.
+Vou olhar o que `billing_profiles` tem hoje e comparar com o que uma NFS-e exige.
 
-### Lacunas atuais
-Hoje só existem `subscriptions`, `billing_events` (vazio), `admin_settings.max_users` e `user_approvals`. **Não há** registro de faturas, pagamentos manuais, histórico de mudança de plano, descontos, dados fiscais nem notas internas. A página `/financeiro` não mostra nada de assinatura, e `/cobranca` só tem slider e botões placeholder.
+Hoje em `billing_profiles`:
+- entity_type (individual/company) ✓
+- legal_name ✓
+- tax_id (CPF ou CNPJ) ✓
+- email, phone ✓
+- address_line1/2, city, state, postal_code, country ✓
 
-### Parte 1 — Painel do `solution_admin` (`/financeiro`)
+O que **falta** para emissão real de NFS-e no Brasil:
 
-**KPIs no topo**
-- MRR atual (R$/mês das ativas) e MRR potencial (em trial)
-- Contagens por status: ativas, trial, past_due, suspended, canceladas
-- Total de assentos contratados x usados (taxa de ocupação)
-- Churn do mês
+**Para PJ (CNPJ):**
+- Inscrição Municipal (obrigatória na maioria dos municípios para tomador PJ)
+- Inscrição Estadual (opcional, "Isento" se não tiver)
+- Razão social vs Nome fantasia (hoje só tem `legal_name`)
 
-**Lista de assinaturas** (uma linha por admin pagante)
-- Admin (nome, email), status, assentos contratados/usados, mensalidade, próximo ciclo, trial termina em, inadimplente desde, provider
-- Ações: ver detalhes, ajustar assentos, suspender, reativar, cancelar, registrar pagamento manual, estender trial
+**Para PF (CPF):**
+- RG (opcional, mas alguns municípios pedem)
+- Nome completo já é o `legal_name` ✓
 
-**Drawer de detalhe**
-- Dados da assinatura, histórico de mudanças, faturas, eventos do provider, notas internas
+**Endereço:**
+- Bairro (campo separado é exigido pela maioria dos sistemas de NFS-e — hoje vai jogado no `address_line2`)
+- Número e complemento separados (hoje tudo junto em `address_line1`)
+- Código IBGE do município (necessário no XML da NFS-e — pode ser derivado de cidade+UF na hora da emissão, não precisa pedir ao usuário)
 
-**Filtros e alertas**
-- Filtrar por status / provider / inadimplência / trial expirando em N dias
-- Alertas: trials vencendo em 3 dias, past_due > N dias
+**Validação:**
+- Hoje aceita qualquer texto em `tax_id`. Precisa validar formato e dígito verificador de CPF/CNPJ.
+- CEP precisa de máscara/validação (8 dígitos).
+- UF precisa ser uma das 27 válidas.
 
-### Parte 2 — Painel do admin pagante (`/cobranca`)
+**Outras considerações:**
+- Se o emissor for **NEVVOH (CNPJ próprio)**, a NF é emitida pela NEVVOH com o cliente como tomador → precisa só dos dados acima do cliente. O CNPJ da NEVVOH é configuração interna, não vai em `billing_profiles`.
+- Para emitir de fato, precisa integrar com prefeitura ou serviço como NFE.io / Focus NFe / eNotas. Isso é uma fase posterior.
 
-- **Resumo**: plano, status (badge), assentos contratados x usados (barra), mensalidade, próxima cobrança, trial restante
-- **Histórico de faturas** com data, valor, status, método
-- **Método de pagamento** (placeholder até provider)
-- **Dados fiscais** (razão social, CNPJ/CPF, endereço, email de cobrança) — necessário para nota e para enviar ao provider
-- **Banners de status** (past_due, trial expirando, cancelada)
-- **Histórico de mudanças de plano**
+## Plano — Completar dados fiscais para emissão de NFS-e
 
-### Parte 3 — Estrutura de dados nova
+### O que já temos
+`billing_profiles` cobre: tipo (PF/PJ), nome/razão social, CPF/CNPJ, email, telefone, endereço básico (linha 1, linha 2, cidade, UF, CEP, país).
 
-| Tabela | Função |
-|---|---|
-| `invoices` | Faturas — opera com pagamento manual hoje, recebe do provider depois |
-| `payment_methods` | Cartão/método salvo (placeholder) |
-| `subscription_changes` | Auditoria (upgrade/downgrade/status/manual) |
-| `billing_profiles` | Dados fiscais do admin |
-| `subscription_notes` | Notas internas só do solution_admin |
+### O que falta para uma NFS-e válida
 
-Todas com RLS: admin vê só o que é dele; solution_admin vê tudo; notas só solution_admin.
+**Campos novos em `billing_profiles`:**
+| Campo | Tipo | Quando obrigatório |
+|---|---|---|
+| `trade_name` (nome fantasia) | text, opcional | PJ |
+| `municipal_registration` (inscrição municipal) | text, opcional | PJ — alguns municípios exigem |
+| `state_registration` (inscrição estadual) | text, opcional | PJ — "ISENTO" se não tiver |
+| `address_number` (número) | text | sempre |
+| `address_complement` (complemento) | text, opcional | sempre |
+| `neighborhood` (bairro) | text | sempre |
 
-### Parte 4 — Fluxos manuais (antes do provider)
-Sem checkout, o solution_admin já consegue operar:
-- Registrar pagamento manual → cria invoice paga, avança ciclo, mantém `active`
-- Estender trial → ajusta `trial_ends_at`
-- Ajustar assentos → trigger sincroniza `max_users`
-- Suspender / reativar / cancelar com motivo em `subscription_changes`
+**Reorganização do endereço:**
+Hoje `address_line1` mistura rua + número e `address_line2` vira complemento. Para NF, o ideal é: `street`, `number`, `complement`, `neighborhood`, `city`, `state`, `postal_code`. Manter `address_line1/line2` como legado e adicionar os novos campos estruturados.
 
-### Ordem de implementação
-1. Tabelas novas + RLS + triggers de auditoria
-2. `Financial.tsx` reescrita: KPIs + lista + filtros
-3. Drawer de detalhe + ações manuais
-4. `Billing.tsx` reescrita: resumo + faturas + dados fiscais + banners
-5. Banner global no `AppLayout` para admins
-6. Só então plugar Paddle/Stripe
+**Validação no form:**
+- CPF: 11 dígitos + algoritmo de dígito verificador
+- CNPJ: 14 dígitos + algoritmo de dígito verificador
+- CEP: 8 dígitos numéricos, máscara `00000-000`
+- UF: select com as 27 unidades federativas
+- Auto-preenchimento de endereço via API ViaCEP ao digitar o CEP (gratuita, sem chave)
 
-### Decisões abertas
-- Coletar **dados fiscais (CNPJ/CPF/endereço)** já agora ou só quando integrar provider?
-- **Pagamento manual** (PIX/boleto fora do sistema) é essencial nessa fase ou pode esperar?
-- **Notas internas** por assinatura vão entrar?
-- **Banner global** de status em todo o app, ou só dentro de `/cobranca`?
+### Fluxo proposto
+
+**Etapa A — Schema (agora)**
+Adicionar colunas novas em `billing_profiles` (todas opcionais para não quebrar registros existentes), sem remover as antigas.
+
+**Etapa B — Form (`BillingProfileForm.tsx`)**
+Reescrever com:
+- Campos condicionais por `entity_type` (PF não vê inscrição municipal/estadual)
+- Validação com zod (CPF, CNPJ, CEP, UF)
+- Máscaras de input para CPF/CNPJ/CEP/telefone
+- Integração com ViaCEP para auto-completar bairro/cidade/UF
+- Mensagens claras de erro
+
+**Etapa C — Painel solution_admin**
+Mostrar resumo dos dados fiscais no `SubscriptionDetailDrawer`, com aviso "Dados fiscais incompletos" se faltar campo essencial. Útil pra você cobrar o cliente a preencher antes de gerar a primeira NF.
+
+**Etapa D — Emissão real (depois)**
+Integração com NFE.io / Focus NFe / eNotas. Não entra agora — o objetivo desta fase é só **coletar e validar** os dados certos para que a emissão funcione quando plugarmos.
+
+### O que NÃO entra agora
+- Integração com prefeitura / API de NFS-e
+- CNAE, alíquota ISS, regime tributário do tomador (geralmente o emissor define, não o tomador)
+- Geração de PDF/XML da nota
+
+### Decisão pendente
+Confirmar se você quer que eu também já adicione **integração com ViaCEP** para auto-preencher endereço pelo CEP (recomendo, melhora muito o UX e quase elimina erro de digitação no endereço — é grátis e sem chave).
 
