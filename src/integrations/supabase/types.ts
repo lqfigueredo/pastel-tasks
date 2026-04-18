@@ -277,6 +277,71 @@ export type Database = {
           },
         ]
       }
+      discount_vouchers: {
+        Row: {
+          applies_to_plan_id: string | null
+          code: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          discount_type: string
+          discount_value: number
+          duration: string
+          duration_in_months: number | null
+          id: string
+          is_active: boolean
+          max_redemptions: number | null
+          times_redeemed: number
+          updated_at: string
+          valid_from: string | null
+          valid_until: string | null
+        }
+        Insert: {
+          applies_to_plan_id?: string | null
+          code: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          discount_type: string
+          discount_value: number
+          duration?: string
+          duration_in_months?: number | null
+          id?: string
+          is_active?: boolean
+          max_redemptions?: number | null
+          times_redeemed?: number
+          updated_at?: string
+          valid_from?: string | null
+          valid_until?: string | null
+        }
+        Update: {
+          applies_to_plan_id?: string | null
+          code?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          discount_type?: string
+          discount_value?: number
+          duration?: string
+          duration_in_months?: number | null
+          id?: string
+          is_active?: boolean
+          max_redemptions?: number | null
+          times_redeemed?: number
+          updated_at?: string
+          valid_from?: string | null
+          valid_until?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "discount_vouchers_applies_to_plan_id_fkey"
+            columns: ["applies_to_plan_id"]
+            isOneToOne: false
+            referencedRelation: "plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       email_send_log: {
         Row: {
           created_at: string
@@ -516,6 +581,7 @@ export type Database = {
           created_at: string
           created_by: string | null
           currency: string
+          discount_cents: number
           due_date: string | null
           external_invoice_id: string | null
           id: string
@@ -529,6 +595,7 @@ export type Database = {
           period_start: string
           status: string
           subscription_id: string
+          subtotal_cents: number | null
           updated_at: string
         }
         Insert: {
@@ -537,6 +604,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           currency?: string
+          discount_cents?: number
           due_date?: string | null
           external_invoice_id?: string | null
           id?: string
@@ -550,6 +618,7 @@ export type Database = {
           period_start: string
           status?: string
           subscription_id: string
+          subtotal_cents?: number | null
           updated_at?: string
         }
         Update: {
@@ -558,6 +627,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           currency?: string
+          discount_cents?: number
           due_date?: string | null
           external_invoice_id?: string | null
           id?: string
@@ -571,6 +641,7 @@ export type Database = {
           period_start?: string
           status?: string
           subscription_id?: string
+          subtotal_cents?: number | null
           updated_at?: string
         }
         Relationships: [
@@ -876,6 +947,54 @@ export type Database = {
         }
         Relationships: []
       }
+      plans: {
+        Row: {
+          billing_interval: string
+          code: string
+          created_at: string
+          currency: string
+          description: string | null
+          features: Json
+          id: string
+          is_active: boolean
+          is_default: boolean
+          minimum_seats: number
+          name: string
+          price_per_seat_cents: number
+          updated_at: string
+        }
+        Insert: {
+          billing_interval?: string
+          code: string
+          created_at?: string
+          currency?: string
+          description?: string | null
+          features?: Json
+          id?: string
+          is_active?: boolean
+          is_default?: boolean
+          minimum_seats?: number
+          name: string
+          price_per_seat_cents?: number
+          updated_at?: string
+        }
+        Update: {
+          billing_interval?: string
+          code?: string
+          created_at?: string
+          currency?: string
+          description?: string | null
+          features?: Json
+          id?: string
+          is_active?: boolean
+          is_default?: boolean
+          minimum_seats?: number
+          name?: string
+          price_per_seat_cents?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -1010,6 +1129,63 @@ export type Database = {
           },
         ]
       }
+      subscription_discounts: {
+        Row: {
+          applied_at: string
+          applied_by: string | null
+          created_at: string
+          expires_at: string | null
+          id: string
+          invoices_remaining: number | null
+          is_active: boolean
+          removed_at: string | null
+          removed_by: string | null
+          subscription_id: string
+          voucher_id: string
+        }
+        Insert: {
+          applied_at?: string
+          applied_by?: string | null
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          invoices_remaining?: number | null
+          is_active?: boolean
+          removed_at?: string | null
+          removed_by?: string | null
+          subscription_id: string
+          voucher_id: string
+        }
+        Update: {
+          applied_at?: string
+          applied_by?: string | null
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          invoices_remaining?: number | null
+          is_active?: boolean
+          removed_at?: string | null
+          removed_by?: string | null
+          subscription_id?: string
+          voucher_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscription_discounts_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "subscriptions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscription_discounts_voucher_id_fkey"
+            columns: ["voucher_id"]
+            isOneToOne: false
+            referencedRelation: "discount_vouchers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       subscription_notes: {
         Row: {
           author_id: string
@@ -1053,6 +1229,7 @@ export type Database = {
           id: string
           minimum_seats: number
           past_due_since: string | null
+          plan_id: string | null
           price_per_seat_cents: number
           provider: string
           provider_customer_id: string | null
@@ -1072,6 +1249,7 @@ export type Database = {
           id?: string
           minimum_seats?: number
           past_due_since?: string | null
+          plan_id?: string | null
           price_per_seat_cents?: number
           provider?: string
           provider_customer_id?: string | null
@@ -1091,6 +1269,7 @@ export type Database = {
           id?: string
           minimum_seats?: number
           past_due_since?: string | null
+          plan_id?: string | null
           price_per_seat_cents?: number
           provider?: string
           provider_customer_id?: string | null
@@ -1100,7 +1279,15 @@ export type Database = {
           trial_ends_at?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "subscriptions_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "plans"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       support_messages: {
         Row: {
@@ -1815,6 +2002,18 @@ export type Database = {
     }
     Functions: {
       admin_can_add_user: { Args: { _admin_id: string }; Returns: boolean }
+      apply_voucher: {
+        Args: { _code: string; _subscription_id: string }
+        Returns: string
+      }
+      calculate_invoice_amount: {
+        Args: { _subscription_id: string }
+        Returns: {
+          discount_cents: number
+          subtotal_cents: number
+          total_cents: number
+        }[]
+      }
       can_access_task: {
         Args: { _task_id: string; _user_id: string }
         Returns: boolean
@@ -1894,6 +2093,10 @@ export type Database = {
           _subscription_id: string
         }
         Returns: string
+      }
+      remove_voucher: {
+        Args: { _subscription_discount_id: string }
+        Returns: boolean
       }
     }
     Enums: {
