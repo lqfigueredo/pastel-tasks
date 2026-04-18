@@ -50,6 +50,25 @@ interface Note {
   created_at: string;
 }
 
+interface BillingProfile {
+  entity_type: string;
+  legal_name: string | null;
+  trade_name: string | null;
+  tax_id: string | null;
+  municipal_registration: string | null;
+  state_registration: string | null;
+  email: string | null;
+  phone: string | null;
+  postal_code: string | null;
+  address_line1: string | null;
+  address_number: string | null;
+  address_complement: string | null;
+  neighborhood: string | null;
+  city: string | null;
+  state: string | null;
+  country: string | null;
+}
+
 const CHANGE_LABELS: Record<string, string> = {
   seats_changed: 'Assentos alterados',
   status_changed: 'Status alterado',
@@ -66,6 +85,7 @@ export default function SubscriptionDetailDrawer({ subscription, open, onClose, 
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [changes, setChanges] = useState<Change[]>([]);
   const [notes, setNotes] = useState<Note[]>([]);
+  const [billingProfile, setBillingProfile] = useState<BillingProfile | null>(null);
   const [loading, setLoading] = useState(false);
   const [newNote, setNewNote] = useState('');
   const [savingNote, setSavingNote] = useState(false);
@@ -75,14 +95,16 @@ export default function SubscriptionDetailDrawer({ subscription, open, onClose, 
   const load = async () => {
     if (!subscription) return;
     setLoading(true);
-    const [inv, ch, nt] = await Promise.all([
+    const [inv, ch, nt, bp] = await Promise.all([
       supabase.from('invoices').select('*').eq('subscription_id', subscription.id).order('created_at', { ascending: false }),
       supabase.from('subscription_changes').select('*').eq('subscription_id', subscription.id).order('created_at', { ascending: false }).limit(50),
       supabase.from('subscription_notes').select('*').eq('subscription_id', subscription.id).order('created_at', { ascending: false }),
+      supabase.from('billing_profiles').select('*').eq('admin_user_id', subscription.admin_user_id).maybeSingle(),
     ]);
     setInvoices((inv.data as Invoice[]) || []);
     setChanges((ch.data as Change[]) || []);
     setNotes((nt.data as Note[]) || []);
+    setBillingProfile((bp.data as BillingProfile) || null);
     setLoading(false);
   };
 
