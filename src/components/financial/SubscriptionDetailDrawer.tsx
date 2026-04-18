@@ -14,6 +14,8 @@ import type { SubscriptionRow } from './SubscriptionsTab';
 import ManualPaymentDialog from './ManualPaymentDialog';
 import SubscriptionActionsDialog from './SubscriptionActionsDialog';
 import SubscriptionDiscountsSection from './SubscriptionDiscountsSection';
+import EditBillingProfileDialog from './EditBillingProfileDialog';
+import { Pencil } from 'lucide-react';
 import { formatCPF, formatCNPJ, formatCEP, formatPhone } from '@/lib/br-validators';
 
 interface Props {
