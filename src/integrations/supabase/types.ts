@@ -90,8 +90,10 @@ export type Database = {
       }
       billing_profiles: {
         Row: {
+          address_complement: string | null
           address_line1: string | null
           address_line2: string | null
+          address_number: string | null
           admin_user_id: string
           city: string | null
           country: string
@@ -100,15 +102,21 @@ export type Database = {
           entity_type: string
           id: string
           legal_name: string
+          municipal_registration: string | null
+          neighborhood: string | null
           phone: string | null
           postal_code: string | null
           state: string | null
+          state_registration: string | null
           tax_id: string
+          trade_name: string | null
           updated_at: string
         }
         Insert: {
+          address_complement?: string | null
           address_line1?: string | null
           address_line2?: string | null
+          address_number?: string | null
           admin_user_id: string
           city?: string | null
           country?: string
@@ -117,15 +125,21 @@ export type Database = {
           entity_type?: string
           id?: string
           legal_name: string
+          municipal_registration?: string | null
+          neighborhood?: string | null
           phone?: string | null
           postal_code?: string | null
           state?: string | null
+          state_registration?: string | null
           tax_id: string
+          trade_name?: string | null
           updated_at?: string
         }
         Update: {
+          address_complement?: string | null
           address_line1?: string | null
           address_line2?: string | null
+          address_number?: string | null
           admin_user_id?: string
           city?: string | null
           country?: string
@@ -134,10 +148,14 @@ export type Database = {
           entity_type?: string
           id?: string
           legal_name?: string
+          municipal_registration?: string | null
+          neighborhood?: string | null
           phone?: string | null
           postal_code?: string | null
           state?: string | null
+          state_registration?: string | null
           tax_id?: string
+          trade_name?: string | null
           updated_at?: string
         }
         Relationships: []
