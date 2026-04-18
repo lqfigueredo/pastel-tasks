@@ -14,6 +14,8 @@ import type { SubscriptionRow } from './SubscriptionsTab';
 import ManualPaymentDialog from './ManualPaymentDialog';
 import SubscriptionActionsDialog from './SubscriptionActionsDialog';
 import SubscriptionDiscountsSection from './SubscriptionDiscountsSection';
+import EditBillingProfileDialog from './EditBillingProfileDialog';
+import { Pencil } from 'lucide-react';
 import { formatCPF, formatCNPJ, formatCEP, formatPhone } from '@/lib/br-validators';
 
 interface Props {
@@ -92,6 +94,7 @@ export default function SubscriptionDetailDrawer({ subscription, open, onClose, 
   const [savingNote, setSavingNote] = useState(false);
   const [paymentOpen, setPaymentOpen] = useState(false);
   const [actionsOpen, setActionsOpen] = useState(false);
+  const [editFiscalOpen, setEditFiscalOpen] = useState(false);
 
   const load = async () => {
     if (!subscription) return;
@@ -246,6 +249,12 @@ export default function SubscriptionDetailDrawer({ subscription, open, onClose, 
                   </TabsContent>
 
                   <TabsContent value="fiscal" className="space-y-3 mt-4">
+                    <div className="flex justify-end">
+                      <Button size="sm" variant="outline" onClick={() => setEditFiscalOpen(true)}>
+                        <Pencil className="h-3.5 w-3.5 mr-1" />
+                        {billingProfile ? 'Editar dados fiscais' : 'Cadastrar dados fiscais'}
+                      </Button>
+                    </div>
                     {!billingProfile ? (
                       <div className="text-center py-8 space-y-2">
                         <AlertCircle className="h-8 w-8 text-amber-500 mx-auto" />
@@ -390,6 +399,14 @@ export default function SubscriptionDetailDrawer({ subscription, open, onClose, 
         open={actionsOpen}
         onClose={() => setActionsOpen(false)}
         onSuccess={() => { setActionsOpen(false); load(); onChanged(); }}
+      />
+
+      <EditBillingProfileDialog
+        open={editFiscalOpen}
+        onClose={() => setEditFiscalOpen(false)}
+        adminUserId={subscription.admin_user_id}
+        adminName={subscription.admin_name}
+        onSaved={() => { load(); onChanged(); }}
       />
     </>
   );
