@@ -1,89 +1,84 @@
 
 
-O usuário quer dois recursos:
-1. **Configurador de valor de planos** — hoje `subscriptions.price_per_seat_cents` é por linha, sem catálogo central. Cada admin pode ter um preço diferente. Falta um lugar onde o `solution_admin` defina o preço padrão por assento (e talvez planos diferentes).
-2. **Cadastro de vouchers de desconto** — não existe nada no schema. Precisa tabela de vouchers, aplicação por assinatura/fatura, e UI de gestão.
+User quer implementar só o item 2 da avaliação anterior: trial automático sem fricção. Vou olhar register-user e o fluxo de aprovação para planejar a mudança certa.
 
-Preciso entender se eles querem **um plano único** (um preço/assento global) ou **múltiplos planos** (Starter, Pro, etc., cada um com features diferentes). Pelo contexto atual (cobrança puramente por assento, mínimo 10), o modelo é assento-único — então é mais provável que queiram **configurar o preço base global** + **descontos por cliente/voucher**.
+Pontos que já sei:
+- `register-user/index.ts` cria user, **bane** com `ban_duration: '876000h'`, e insere `user_approvals` com status `pending`.
+- `subscriptions.status` aceita `trialing`. Trigger `sync_admin_max_users` espelha em `admin_settings.max_users` (e como trialing não está na lista de suspensos, já libera assentos).
+- `admin_can_add_user` já trata trialing como ativo (só bloqueia suspended/canceled).
+- Nova conta hoje não recebe role `admin` — só role `user` via `handle_new_user`. Para um cadastro virar "cliente pagante" precisa role `admin` (senão não aparece como admin no resto do sistema, não tem sidebar de cobrança, etc).
+- `Auth.tsx` ainda mostra toast "Aguarde aprovação do financeiro" depois do signup — precisa mudar para "Trial iniciado, faça login".
 
-Também preciso clarear: o desconto é percentual, valor fixo, vitalício, por X meses, single-use vs reusable, atrelado a um cliente específico ou aberto.
+Decisões a tomar:
+- Plano usado para o trial: usar `plans.is_default = true` se existir; senão fallback (price 0, 10 seats, 14 dias).
+- Aprovação manual: hoje todo signup → `user_approvals.pending`. Para trial automático, o **admin pagante** deve nascer aprovado. Os usuários convidados pelo admin continuam no fluxo atual de aprovação (não mexer nisso).
+- Plano cobre só o cadastro pela landing/`/auth` (que cria admin novo). Convite de equipe é outro tema.
 
-Vou propor o modelo mais comum (genérico), com perguntas críticas no final do plano.
+Não preciso fazer perguntas — escopo claro.
 
 ---
 
-## Plano — Configurador de planos e vouchers de desconto
+## Plano — Trial automático de 14 dias ao se cadastrar
 
-### Parte 1 — Catálogo de planos
+### O que muda
 
-**Hoje:** `subscriptions.price_per_seat_cents` é por linha, sem catálogo. Não dá para mudar o preço base sem editar admin por admin.
+**Hoje:** `/auth` → cria user → bane → `user_approvals.pending` → espera `solution_admin` aprovar manualmente.
 
-**Proposta:** criar tabela `plans` com o catálogo:
+**Depois:** `/auth` → cria user → atribui role `admin` → cria `subscription` em `trialing` por 14 dias → libera acesso direto. Sem ban, sem `user_approvals.pending`.
 
-| Campo | Uso |
-|---|---|
-| `code` (slug único, ex: `default`, `starter`, `pro`) | Identificador |
-| `name`, `description` | Exibição |
-| `price_per_seat_cents`, `currency` | Preço base por assento |
-| `minimum_seats` | Mínimo de assentos (default 10) |
-| `billing_interval` (`month`/`year`) | Ciclo |
-| `is_active`, `is_default` | Visibilidade / plano novo padrão |
-| `features` (jsonb) | Lista textual de o que está incluído |
+### 1. Edge function `register-user`
 
-`subscriptions` ganha coluna `plan_id` opcional. Ao criar nova assinatura, copia preço/mínimo do plano. Mudar preço do plano **não** afeta assinaturas existentes (só novas) — assim ninguém é cobrado a mais sem aviso. Existe ação manual "Aplicar preço atual do plano" no drawer.
+Reescrever o fluxo:
+1. Validar email/senha/nome (igual hoje).
+2. `auth.admin.createUser` com `email_confirm: true`. **Remover** o `ban_duration`.
+3. Atribuir role `admin` em `user_roles` (substitui o `user` default que o trigger cria).
+4. Buscar `plans` ativo + `is_default = true` (fallback: primeiro `is_active`, depois hardcoded).
+5. `INSERT` em `subscriptions`:
+   - `admin_user_id = newUserId`
+   - `status = 'trialing'`
+   - `provider = 'pending'`
+   - `seats_purchased = plan.minimum_seats`
+   - `minimum_seats = plan.minimum_seats`
+   - `price_per_seat_cents = plan.price_per_seat_cents`
+   - `plan_id = plan.id`
+   - `trial_ends_at = now() + 14 days`
+   - `current_period_start = now()`, `current_period_end = trial_ends_at`
+6. **Não** inserir em `user_approvals`. (O fluxo de aprovação continua valendo só para usuários criados via `admin-create-user`.)
+7. Retornar mensagem: "Conta criada! Você tem 14 dias grátis para testar. Faça login para começar."
 
-**UI no `/financeiro`:** nova aba **Planos** com listagem, criar/editar/desativar, marcar como default.
+Trigger `sync_admin_max_users` já vai criar `admin_settings` automaticamente porque `trialing` não é suspended/canceled.
 
-### Parte 2 — Vouchers de desconto
+### 2. `Auth.tsx`
 
-**Tabela `discount_vouchers`:**
+Trocar o toast pós-signup:
+- De: "Aguarde aprovação do financeiro para acessar o sistema."
+- Para: "Conta criada! Você tem 14 dias grátis. Faça login para começar."
 
-| Campo | Uso |
-|---|---|
-| `code` (único, case-insensitive, ex: `LANCAMENTO20`) | O cupom |
-| `description` | Interno |
-| `discount_type` (`percent` / `fixed_amount`) | Como calcular |
-| `discount_value` | 20 (=20%) ou 5000 (=R$50) |
-| `duration` (`once` / `repeating` / `forever`) | Quantas faturas pega |
-| `duration_in_months` | Se `repeating` |
-| `max_redemptions` | NULL = ilimitado |
-| `times_redeemed` | Contador |
-| `valid_from`, `valid_until` | Janela |
-| `applies_to_plan_id` | NULL = qualquer plano |
-| `is_active` | On/off |
+Opcional: após signup bem-sucedido, alternar para o modo login automaticamente para o usuário só digitar a senha.
 
-**Tabela `subscription_discounts`** (vínculo voucher × assinatura):
-- `subscription_id`, `voucher_id`, `applied_at`, `applied_by`, `expires_at` (calculado por duration), `invoices_remaining`
+### 3. Banner de trial em `/cobranca` (Billing.tsx)
 
-**Aplicação:**
-- Função `apply_voucher(_subscription_id, _code)` valida (ativo, dentro da janela, não excedeu max_redemptions, não duplicado para a mesma sub) → cria registro em `subscription_discounts`, incrementa `times_redeemed`, registra em `subscription_changes`.
-- Função `calculate_invoice_amount(_subscription_id)` retorna `subtotal_cents`, `discount_cents`, `total_cents` aplicando descontos ativos.
-- `register_manual_payment` passa a usar essa função: a fatura registra `subtotal_cents`, `discount_cents` e `total_cents` (precisa adicionar essas colunas em `invoices`).
+Atualizar `SubscriptionStatusBanner` para tratar `trialing`:
+- Mostrar dias restantes ("Faltam X dias do seu período de teste")
+- CTA "Ativar assinatura" (placeholder por enquanto — abre toast informando que checkout será habilitado em breve, igual hoje, ou simplesmente "Fale conosco para continuar").
+- Quando faltarem ≤3 dias, banner em destaque (`destructive` ou `warning`).
 
-**UI:**
-- Nova aba **Vouchers** em `/financeiro` (solution_admin): CRUD de cupons + tabela com uso atual (`times_redeemed`/`max_redemptions`) e quem resgatou.
-- No `SubscriptionDetailDrawer`, seção "Descontos aplicados" com botão **Aplicar voucher** (input do código) e remover.
-- Em `/cobranca` (admin pagante): mostra desconto ativo no resumo e na próxima cobrança ("R$ 1.000 - R$ 200 desconto = R$ 800"). Opcionalmente, campo para o admin digitar um código (decisão pendente — ver abaixo).
+### 4. Banner global para admins em trial (opcional, pequeno)
 
-### Parte 3 — Mudanças em tabelas existentes
+Adicionar uma faixa fina no topo de `AppLayout` quando o admin logado tem `subscription.status = 'trialing'`, mostrando "Trial: X dias restantes — Ativar agora" linkando para `/cobranca`. Some quando `status` muda para `active`.
 
-- `subscriptions`: + `plan_id uuid` (nullable, FK lógica para plans).
-- `invoices`: + `subtotal_cents`, `discount_cents` (default 0). `amount_cents` continua sendo o total final cobrado.
-- Nada destrutivo — assinaturas/faturas atuais continuam funcionando.
+### 5. Compatibilidade com o que já existe
 
-### Parte 4 — Ordem de implementação
+- **Usuários criados pelo admin** (via `admin-create-user`): nada muda. Continuam passando por `user_approvals` com aprovação do `solution_admin`/admin do time. RLS e fluxo intactos.
+- **Admins legados** (criados antes desta mudança): já têm subscription seedada como `active` pela migração inicial. Não afetados.
+- **Página de aprovação de leads/usuários** em `/financeiro`: continua funcionando para os casos restantes.
 
-1. Migração: `plans`, `discount_vouchers`, `subscription_discounts`; colunas novas em `subscriptions` e `invoices`; funções `apply_voucher` e `calculate_invoice_amount`; ajuste em `register_manual_payment`.
-2. Aba **Planos** em `/financeiro` (CRUD).
-3. Aba **Vouchers** em `/financeiro` (CRUD + uso).
-4. Seção de desconto no `SubscriptionDetailDrawer` (aplicar/remover voucher, ver histórico).
-5. Atualizar `Billing.tsx` para mostrar desconto ativo no resumo.
-6. Atualizar `SubscriptionsTab` (lista) para mostrar mensalidade líquida (com desconto).
+### Arquivos afetados
 
-### Decisões pendentes
+- `supabase/functions/register-user/index.ts` — reescrever fluxo
+- `src/pages/Auth.tsx` — texto pós-signup + auto-switch para login
+- `src/components/billing/SubscriptionStatusBanner.tsx` — tratar `trialing` com dias restantes e CTA
+- `src/components/AppLayout.tsx` — faixa global de trial (pequena adição)
 
-1. **Múltiplos planos ou um só?** Posso já criar a estrutura de catálogo aceitando vários planos (Starter/Pro/Enterprise) **ou** manter só "plano padrão" único editável. Recomendo o catálogo — flexibilidade quase de graça.
-2. **Quem aplica voucher?** Só `solution_admin` (mais controle, evita fraude) ou também o admin pagante pode digitar código em `/cobranca`?
-3. **Voucher percentual vs fixo:** ambos? (Recomendo: ambos — `percent` e `fixed_amount`.)
-4. **Duração:** suportar `once` (só próxima fatura), `repeating` (N meses) e `forever` (vitalício)?
+Sem migrações de schema — `subscriptions` já tem todos os campos necessários (`trial_ends_at`, `status='trialing'`, `plan_id`).
 
