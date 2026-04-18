@@ -9,10 +9,11 @@ import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { toast } from 'sonner';
-import { Loader2, Plus, FileText, History, StickyNote, Settings2, Receipt, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { Loader2, Plus, FileText, History, StickyNote, Settings2, Receipt, AlertCircle, CheckCircle2, Tag } from 'lucide-react';
 import type { SubscriptionRow } from './SubscriptionsTab';
 import ManualPaymentDialog from './ManualPaymentDialog';
 import SubscriptionActionsDialog from './SubscriptionActionsDialog';
+import SubscriptionDiscountsSection from './SubscriptionDiscountsSection';
 import { formatCPF, formatCNPJ, formatCEP, formatPhone } from '@/lib/br-validators';
 
 interface Props {
@@ -186,8 +187,9 @@ export default function SubscriptionDetailDrawer({ subscription, open, onClose, 
             <Separator />
 
             <Tabs defaultValue="invoices">
-              <TabsList className="grid w-full grid-cols-4">
+              <TabsList className="grid w-full grid-cols-5">
                 <TabsTrigger value="invoices"><FileText className="h-4 w-4 mr-1" /> Faturas</TabsTrigger>
+                <TabsTrigger value="discounts"><Tag className="h-4 w-4 mr-1" /> Descontos</TabsTrigger>
                 <TabsTrigger value="fiscal"><Receipt className="h-4 w-4 mr-1" /> Fiscal</TabsTrigger>
                 <TabsTrigger value="changes"><History className="h-4 w-4 mr-1" /> Histórico</TabsTrigger>
                 <TabsTrigger value="notes"><StickyNote className="h-4 w-4 mr-1" /> Notas</TabsTrigger>
@@ -217,6 +219,13 @@ export default function SubscriptionDetailDrawer({ subscription, open, onClose, 
                         </div>
                       </div>
                     ))}
+                  </TabsContent>
+
+                  <TabsContent value="discounts" className="mt-4">
+                    <SubscriptionDiscountsSection
+                      subscriptionId={subscription.id}
+                      onChanged={() => { load(); onChanged(); }}
+                    />
                   </TabsContent>
 
                   <TabsContent value="fiscal" className="space-y-3 mt-4">
