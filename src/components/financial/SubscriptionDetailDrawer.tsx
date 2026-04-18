@@ -301,6 +301,8 @@ export default function SubscriptionDetailDrawer({ subscription, open, onClose, 
                       );
                     })()}
                   </TabsContent>
+
+                  <TabsContent value="changes" className="space-y-2 mt-4">
                     {changes.length === 0 ? (
                       <p className="text-center text-muted-foreground text-sm py-6">Sem mudanças registradas.</p>
                     ) : changes.map((ch) => (
