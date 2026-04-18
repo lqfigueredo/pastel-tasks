@@ -174,6 +174,23 @@ export default function SubscriptionDetailDrawer({ subscription, open, onClose, 
               </div>
             </div>
 
+            {/* Aviso de dados fiscais incompletos */}
+            {billingProfile === null || (() => {
+              const required = ['legal_name', 'tax_id', 'email', 'postal_code', 'address_line1', 'address_number', 'neighborhood', 'city', 'state'];
+              return billingProfile && required.some((k) => !String((billingProfile as any)[k] || '').trim());
+            })() ? (
+              <div className="flex items-start gap-2 rounded-lg border border-amber-500/40 bg-amber-500/10 p-3 text-amber-700 dark:text-amber-400">
+                <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
+                <div className="text-xs space-y-1">
+                  <p className="font-semibold">Dados fiscais incompletos</p>
+                  <p>
+                    Não é possível registrar pagamento ou gerar fatura até o cliente completar
+                    o cadastro fiscal. Veja os campos pendentes na aba <strong>Fiscal</strong>.
+                  </p>
+                </div>
+              </div>
+            ) : null}
+
             {/* Ações rápidas */}
             <div className="flex flex-wrap gap-2">
               <Button size="sm" onClick={() => setPaymentOpen(true)}>
