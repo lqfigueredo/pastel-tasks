@@ -49,7 +49,12 @@ const Auth = () => {
       if (error) {
         toast({ title: 'Erro ao cadastrar', description: error.message, variant: 'destructive' });
       } else {
-        toast({ title: 'Conta criada!', description: 'Aguarde aprovação do financeiro para acessar o sistema.' });
+        toast({
+          title: 'Conta criada! 🎉',
+          description: 'Você tem 14 dias grátis para testar. Faça login para começar.',
+        });
+        setIsLogin(true);
+        setPassword('');
       }
     }
     setSubmitting(false);

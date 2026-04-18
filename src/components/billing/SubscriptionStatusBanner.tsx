@@ -45,11 +45,14 @@ export default function SubscriptionStatusBanner() {
     tone = 'destructive';
   } else if (sub.status === 'trialing' && sub.trial_ends_at) {
     const days = differenceInDays(new Date(sub.trial_ends_at), new Date());
-    if (days <= 5 && days >= 0) {
-      message = `Seu período de teste termina em ${days === 0 ? 'menos de 1 dia' : `${days} dia(s)`}. Configure sua assinatura.`;
-    } else if (days < 0) {
-      message = 'Seu período de teste expirou. Configure sua assinatura para continuar.';
+    if (days < 0) {
+      message = 'Seu período de teste expirou. Ative sua assinatura para continuar usando.';
       tone = 'destructive';
+    } else if (days <= 3) {
+      message = `Seu período de teste termina em ${days === 0 ? 'menos de 1 dia' : `${days} dia(s)`}. Ative sua assinatura.`;
+      tone = 'destructive';
+    } else if (days <= 7) {
+      message = `Faltam ${days} dias do seu período de teste gratuito. Ative sua assinatura quando quiser.`;
     }
   } else if (sub.status === 'canceled') {
     message = 'Sua assinatura foi cancelada. O acesso terminará no fim do período atual.';
