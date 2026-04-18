@@ -88,6 +88,60 @@ export type Database = {
           },
         ]
       }
+      billing_profiles: {
+        Row: {
+          address_line1: string | null
+          address_line2: string | null
+          admin_user_id: string
+          city: string | null
+          country: string
+          created_at: string
+          email: string
+          entity_type: string
+          id: string
+          legal_name: string
+          phone: string | null
+          postal_code: string | null
+          state: string | null
+          tax_id: string
+          updated_at: string
+        }
+        Insert: {
+          address_line1?: string | null
+          address_line2?: string | null
+          admin_user_id: string
+          city?: string | null
+          country?: string
+          created_at?: string
+          email: string
+          entity_type?: string
+          id?: string
+          legal_name: string
+          phone?: string | null
+          postal_code?: string | null
+          state?: string | null
+          tax_id: string
+          updated_at?: string
+        }
+        Update: {
+          address_line1?: string | null
+          address_line2?: string | null
+          admin_user_id?: string
+          city?: string | null
+          country?: string
+          created_at?: string
+          email?: string
+          entity_type?: string
+          id?: string
+          legal_name?: string
+          phone?: string | null
+          postal_code?: string | null
+          state?: string | null
+          tax_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       calendar_event_participants: {
         Row: {
           added_at: string
@@ -437,6 +491,80 @@ export type Database = {
           },
         ]
       }
+      invoices: {
+        Row: {
+          admin_user_id: string
+          amount_cents: number
+          created_at: string
+          created_by: string | null
+          currency: string
+          due_date: string | null
+          external_invoice_id: string | null
+          id: string
+          invoice_number: string | null
+          notes: string | null
+          paid_at: string | null
+          payment_method: string | null
+          payment_reference: string | null
+          pdf_url: string | null
+          period_end: string
+          period_start: string
+          status: string
+          subscription_id: string
+          updated_at: string
+        }
+        Insert: {
+          admin_user_id: string
+          amount_cents: number
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          due_date?: string | null
+          external_invoice_id?: string | null
+          id?: string
+          invoice_number?: string | null
+          notes?: string | null
+          paid_at?: string | null
+          payment_method?: string | null
+          payment_reference?: string | null
+          pdf_url?: string | null
+          period_end: string
+          period_start: string
+          status?: string
+          subscription_id: string
+          updated_at?: string
+        }
+        Update: {
+          admin_user_id?: string
+          amount_cents?: number
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          due_date?: string | null
+          external_invoice_id?: string | null
+          id?: string
+          invoice_number?: string | null
+          notes?: string | null
+          paid_at?: string | null
+          payment_method?: string | null
+          payment_reference?: string | null
+          pdf_url?: string | null
+          period_end?: string
+          period_start?: string
+          status?: string
+          subscription_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoices_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       knowledge_sources: {
         Row: {
           created_at: string
@@ -688,6 +816,48 @@ export type Database = {
         }
         Relationships: []
       }
+      payment_methods: {
+        Row: {
+          admin_user_id: string
+          brand: string | null
+          created_at: string
+          expires_at: string | null
+          external_id: string | null
+          id: string
+          is_default: boolean
+          last4: string | null
+          provider: string
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          admin_user_id: string
+          brand?: string | null
+          created_at?: string
+          expires_at?: string | null
+          external_id?: string | null
+          id?: string
+          is_default?: boolean
+          last4?: string | null
+          provider?: string
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          admin_user_id?: string
+          brand?: string | null
+          created_at?: string
+          expires_at?: string | null
+          external_id?: string | null
+          id?: string
+          is_default?: boolean
+          last4?: string | null
+          provider?: string
+          type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -774,6 +944,82 @@ export type Database = {
             columns: ["team_id"]
             isOneToOne: false
             referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      subscription_changes: {
+        Row: {
+          admin_user_id: string
+          change_type: string
+          changed_by: string | null
+          created_at: string
+          id: string
+          new_value: Json | null
+          old_value: Json | null
+          reason: string | null
+          subscription_id: string
+        }
+        Insert: {
+          admin_user_id: string
+          change_type: string
+          changed_by?: string | null
+          created_at?: string
+          id?: string
+          new_value?: Json | null
+          old_value?: Json | null
+          reason?: string | null
+          subscription_id: string
+        }
+        Update: {
+          admin_user_id?: string
+          change_type?: string
+          changed_by?: string | null
+          created_at?: string
+          id?: string
+          new_value?: Json | null
+          old_value?: Json | null
+          reason?: string | null
+          subscription_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscription_changes_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      subscription_notes: {
+        Row: {
+          author_id: string
+          content: string
+          created_at: string
+          id: string
+          subscription_id: string
+        }
+        Insert: {
+          author_id: string
+          content: string
+          created_at?: string
+          id?: string
+          subscription_id: string
+        }
+        Update: {
+          author_id?: string
+          content?: string
+          created_at?: string
+          id?: string
+          subscription_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscription_notes_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "subscriptions"
             referencedColumns: ["id"]
           },
         ]
@@ -1619,6 +1865,17 @@ export type Database = {
           msg_id: number
           read_ct: number
         }[]
+      }
+      register_manual_payment: {
+        Args: {
+          _advance_cycle?: boolean
+          _amount_cents: number
+          _notes?: string
+          _payment_method: string
+          _payment_reference?: string
+          _subscription_id: string
+        }
+        Returns: string
       }
     }
     Enums: {

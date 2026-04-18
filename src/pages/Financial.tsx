@@ -17,6 +17,7 @@ import { cn } from '@/lib/utils';
 import SupportTicketList from '@/components/support/SupportTicketList';
 import HelpTextsManager from '@/components/financial/HelpTextsManager';
 import EmailDashboard from '@/components/admin/EmailDashboard';
+import SubscriptionsTab from '@/components/financial/SubscriptionsTab';
 import { HelpButton } from '@/components/HelpButton';
 import {
   Table,
@@ -250,8 +251,9 @@ const Financial = () => {
         <p className="text-muted-foreground">Gerencie leads e aprovações de usuários.</p>
       </div>
 
-      <Tabs defaultValue="approvals">
-        <TabsList>
+      <Tabs defaultValue="subscriptions">
+        <TabsList className="flex-wrap h-auto">
+          <TabsTrigger value="subscriptions">Assinaturas</TabsTrigger>
           <TabsTrigger value="approvals" className="relative">
             Aprovações
             {pendingCount > 0 && (
@@ -269,6 +271,10 @@ const Financial = () => {
           <TabsTrigger value="support">Chamados</TabsTrigger>
           <TabsTrigger value="help-texts">Textos de Ajuda</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="subscriptions">
+          <SubscriptionsTab />
+        </TabsContent>
 
         <TabsContent value="approvals">
           {approvals.length === 0 ? (
