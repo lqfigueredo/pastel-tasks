@@ -219,7 +219,88 @@ export default function SubscriptionDetailDrawer({ subscription, open, onClose, 
                     ))}
                   </TabsContent>
 
-                  <TabsContent value="changes" className="space-y-2 mt-4">
+                  <TabsContent value="fiscal" className="space-y-3 mt-4">
+                    {!billingProfile ? (
+                      <div className="text-center py-8 space-y-2">
+                        <AlertCircle className="h-8 w-8 text-amber-500 mx-auto" />
+                        <p className="text-sm text-muted-foreground">
+                          Cliente ainda não preencheu os dados fiscais.
+                        </p>
+                      </div>
+                    ) : (() => {
+                      const isCompany = billingProfile.entity_type === 'company';
+                      const required = ['legal_name', 'tax_id', 'email', 'postal_code', 'address_line1', 'address_number', 'neighborhood', 'city', 'state'];
+                      const missing = required.filter((k) => !String((billingProfile as any)[k] || '').trim());
+                      const taxIdFmt = billingProfile.tax_id
+                        ? (isCompany ? formatCNPJ(billingProfile.tax_id) : formatCPF(billingProfile.tax_id))
+                        : '—';
+                      return (
+                        <>
+                          <div className={`flex items-center gap-2 text-sm p-3 rounded-lg ${missing.length === 0 ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400' : 'bg-amber-500/10 text-amber-700 dark:text-amber-400'}`}>
+                            {missing.length === 0 ? <CheckCircle2 className="h-4 w-4" /> : <AlertCircle className="h-4 w-4" />}
+                            {missing.length === 0
+                              ? 'Dados completos para emissão de NF'
+                              : `Faltam ${missing.length} campo(s) para emissão de NF`}
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-3 text-sm">
+                            <div>
+                              <p className="text-muted-foreground text-xs">Tipo</p>
+                              <p>{isCompany ? 'Pessoa jurídica' : 'Pessoa física'}</p>
+                            </div>
+                            <div>
+                              <p className="text-muted-foreground text-xs">{isCompany ? 'CNPJ' : 'CPF'}</p>
+                              <p className="font-mono">{taxIdFmt}</p>
+                            </div>
+                            <div className="col-span-2">
+                              <p className="text-muted-foreground text-xs">{isCompany ? 'Razão social' : 'Nome'}</p>
+                              <p>{billingProfile.legal_name || '—'}</p>
+                            </div>
+                            {isCompany && billingProfile.trade_name && (
+                              <div className="col-span-2">
+                                <p className="text-muted-foreground text-xs">Nome fantasia</p>
+                                <p>{billingProfile.trade_name}</p>
+                              </div>
+                            )}
+                            {isCompany && (
+                              <>
+                                <div>
+                                  <p className="text-muted-foreground text-xs">Inscrição municipal</p>
+                                  <p>{billingProfile.municipal_registration || '—'}</p>
+                                </div>
+                                <div>
+                                  <p className="text-muted-foreground text-xs">Inscrição estadual</p>
+                                  <p>{billingProfile.state_registration || '—'}</p>
+                                </div>
+                              </>
+                            )}
+                            <div>
+                              <p className="text-muted-foreground text-xs">Email</p>
+                              <p className="break-all">{billingProfile.email || '—'}</p>
+                            </div>
+                            <div>
+                              <p className="text-muted-foreground text-xs">Telefone</p>
+                              <p>{billingProfile.phone ? formatPhone(billingProfile.phone) : '—'}</p>
+                            </div>
+                            <div className="col-span-2">
+                              <p className="text-muted-foreground text-xs">Endereço</p>
+                              <p>
+                                {[
+                                  billingProfile.address_line1,
+                                  billingProfile.address_number,
+                                  billingProfile.address_complement,
+                                ].filter(Boolean).join(', ') || '—'}
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                {[billingProfile.neighborhood, billingProfile.city, billingProfile.state].filter(Boolean).join(' · ')}
+                                {billingProfile.postal_code && ` · CEP ${formatCEP(billingProfile.postal_code)}`}
+                              </p>
+                            </div>
+                          </div>
+                        </>
+                      );
+                    })()}
+                  </TabsContent>
                     {changes.length === 0 ? (
                       <p className="text-center text-muted-foreground text-sm py-6">Sem mudanças registradas.</p>
                     ) : changes.map((ch) => (
