@@ -400,6 +400,14 @@ export default function SubscriptionDetailDrawer({ subscription, open, onClose, 
         onClose={() => setActionsOpen(false)}
         onSuccess={() => { setActionsOpen(false); load(); onChanged(); }}
       />
+
+      <EditBillingProfileDialog
+        open={editFiscalOpen}
+        onClose={() => setEditFiscalOpen(false)}
+        adminUserId={subscription.admin_user_id}
+        adminName={subscription.admin_name}
+        onSaved={() => { load(); onChanged(); }}
+      />
     </>
   );
 }
