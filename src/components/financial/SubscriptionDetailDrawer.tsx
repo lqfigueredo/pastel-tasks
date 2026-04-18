@@ -94,6 +94,7 @@ export default function SubscriptionDetailDrawer({ subscription, open, onClose, 
   const [savingNote, setSavingNote] = useState(false);
   const [paymentOpen, setPaymentOpen] = useState(false);
   const [actionsOpen, setActionsOpen] = useState(false);
+  const [editFiscalOpen, setEditFiscalOpen] = useState(false);
 
   const load = async () => {
     if (!subscription) return;
