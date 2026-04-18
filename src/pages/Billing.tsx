@@ -5,10 +5,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Slider } from '@/components/ui/slider';
-import { Loader2, CreditCard, AlertTriangle, Users, Calendar, ArrowUp } from 'lucide-react';
+import { Loader2, CreditCard, AlertTriangle, Users, Calendar, ArrowUp, Clock } from 'lucide-react';
 import { toast } from 'sonner';
-import { format } from 'date-fns';
+import { format, differenceInDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import BillingProfileForm from '@/components/billing/BillingProfileForm';
+import InvoiceHistory from '@/components/billing/InvoiceHistory';
 
 interface Subscription {
   id: string;
@@ -61,7 +63,7 @@ export default function Billing() {
   };
 
   const handleUpgrade = async () => {
-    toast.info('A integração com o provedor de pagamentos ainda será configurada. Entre em contato com o suporte para ajustar seu plano.');
+    toast.info('Para ajustar assentos, entre em contato com o suporte (ainda sem checkout automatizado).');
   };
 
   const handleManagePayment = async () => {
@@ -94,22 +96,24 @@ export default function Billing() {
   const pendingTotal = (pendingSeats * sub.price_per_seat_cents) / 100;
   const isProblem = sub.status === 'past_due' || sub.status === 'suspended';
   const seatsUsedPct = Math.min(100, Math.round((activeUsers / sub.seats_purchased) * 100));
+  const trialDaysLeft = sub.trial_ends_at ? differenceInDays(new Date(sub.trial_ends_at), new Date()) : null;
 
   return (
-    <div className="container mx-auto space-y-6 p-6">
-      <div className="flex items-center justify-between">
+    <div className="container mx-auto space-y-6 p-6 max-w-5xl">
+      <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
           <h1 className="text-3xl font-bold">Assinatura e Cobrança</h1>
-          <p className="text-muted-foreground">Gerencie seu plano e seus assentos contratados</p>
+          <p className="text-muted-foreground">Gerencie seu plano, faturas e dados fiscais</p>
         </div>
         <Badge variant={statusInfo.variant} className="text-sm">{statusInfo.label}</Badge>
       </div>
 
+      {/* Banners */}
       {isProblem && (
         <Card className="border-destructive">
           <CardContent className="flex items-start gap-3 pt-6">
             <AlertTriangle className="mt-1 h-5 w-5 text-destructive" />
-            <div>
+            <div className="flex-1">
               <p className="font-semibold">Atenção: pagamento pendente</p>
               <p className="text-sm text-muted-foreground">
                 {sub.status === 'suspended'
@@ -124,6 +128,36 @@ export default function Billing() {
         </Card>
       )}
 
+      {sub.status === 'trialing' && trialDaysLeft !== null && trialDaysLeft >= 0 && trialDaysLeft <= 7 && (
+        <Card className="border-yellow-500/40 bg-yellow-500/5">
+          <CardContent className="flex items-start gap-3 pt-6">
+            <Clock className="mt-1 h-5 w-5 text-yellow-600" />
+            <div>
+              <p className="font-semibold">Período de teste termina em {trialDaysLeft} dia(s)</p>
+              <p className="text-sm text-muted-foreground">
+                Configure sua forma de pagamento para evitar interrupção do serviço.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {sub.cancel_at_period_end && (
+        <Card className="border-orange-500/40 bg-orange-500/5">
+          <CardContent className="flex items-start gap-3 pt-6">
+            <AlertTriangle className="mt-1 h-5 w-5 text-orange-600" />
+            <div>
+              <p className="font-semibold">Cancelamento agendado</p>
+              <p className="text-sm text-muted-foreground">
+                Sua assinatura será cancelada em{' '}
+                {sub.current_period_end ? format(new Date(sub.current_period_end), "dd 'de' MMMM 'de' yyyy", { locale: ptBR }) : '—'}.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Resumo */}
       <div className="grid gap-4 md:grid-cols-3">
         <Card>
           <CardHeader className="pb-2">
@@ -168,10 +202,11 @@ export default function Billing() {
         </Card>
       </div>
 
+      {/* Ajuste de assentos */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2"><ArrowUp className="h-5 w-5" /> Ajustar assentos</CardTitle>
-          <CardDescription>Aumente o número de assentos para adicionar mais usuários. Reduções entram em vigor no próximo ciclo.</CardDescription>
+          <CardDescription>Aumente para adicionar mais usuários. Reduções entram em vigor no próximo ciclo.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="flex items-baseline justify-between">
@@ -185,7 +220,7 @@ export default function Billing() {
             step={1}
             onValueChange={(v) => setPendingSeats(v[0])}
           />
-          <div className="flex items-center justify-between rounded-lg border p-4">
+          <div className="flex items-center justify-between rounded-lg border p-4 flex-wrap gap-3">
             <div>
               <p className="text-sm text-muted-foreground">Novo valor mensal estimado</p>
               <p className="text-xl font-semibold">
@@ -195,7 +230,7 @@ export default function Billing() {
               </p>
             </div>
             <Button onClick={handleUpgrade} disabled={pendingSeats === sub.seats_purchased}>
-              {pendingSeats > sub.seats_purchased ? 'Fazer upgrade' : pendingSeats < sub.seats_purchased ? 'Agendar redução' : 'Sem alterações'}
+              {pendingSeats > sub.seats_purchased ? 'Solicitar upgrade' : pendingSeats < sub.seats_purchased ? 'Agendar redução' : 'Sem alterações'}
             </Button>
           </div>
           <p className="text-xs text-muted-foreground">
@@ -205,6 +240,7 @@ export default function Billing() {
         </CardContent>
       </Card>
 
+      {/* Ciclo */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2"><Calendar className="h-5 w-5" /> Ciclo atual</CardTitle>
@@ -234,17 +270,20 @@ export default function Billing() {
               </p>
             </div>
           )}
-          {sub.cancel_at_period_end && (
-            <div className="sm:col-span-2 rounded-lg border border-destructive/50 bg-destructive/10 p-3 text-sm">
-              Sua assinatura será cancelada ao final do período atual.
-            </div>
-          )}
         </CardContent>
       </Card>
 
+      {/* Faturas */}
+      <InvoiceHistory />
+
+      {/* Dados fiscais */}
+      <BillingProfileForm />
+
+      {/* Pagamento */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2"><CreditCard className="h-5 w-5" /> Forma de pagamento</CardTitle>
+          <CardDescription>Em breve: gestão automática de cartão e boleto via provedor.</CardDescription>
         </CardHeader>
         <CardContent>
           <Button variant="outline" onClick={handleManagePayment}>Gerenciar pagamento</Button>
