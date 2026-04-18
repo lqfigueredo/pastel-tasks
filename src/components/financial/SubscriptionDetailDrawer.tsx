@@ -249,6 +249,12 @@ export default function SubscriptionDetailDrawer({ subscription, open, onClose, 
                   </TabsContent>
 
                   <TabsContent value="fiscal" className="space-y-3 mt-4">
+                    <div className="flex justify-end">
+                      <Button size="sm" variant="outline" onClick={() => setEditFiscalOpen(true)}>
+                        <Pencil className="h-3.5 w-3.5 mr-1" />
+                        {billingProfile ? 'Editar dados fiscais' : 'Cadastrar dados fiscais'}
+                      </Button>
+                    </div>
                     {!billingProfile ? (
                       <div className="text-center py-8 space-y-2">
                         <AlertCircle className="h-8 w-8 text-amber-500 mx-auto" />
