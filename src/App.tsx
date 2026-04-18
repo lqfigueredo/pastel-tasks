@@ -28,6 +28,7 @@ const KnowledgeBase = lazy(() => import("@/pages/KnowledgeBase"));
 const Timer = lazy(() => import("@/pages/Timer"));
 const Billing = lazy(() => import("@/pages/Billing"));
 const Unsubscribe = lazy(() => import("@/pages/Unsubscribe"));
+const AcceptInvite = lazy(() => import("@/pages/AcceptInvite"));
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -58,6 +59,7 @@ const App = () => (
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/financeiro/cadastro" element={<FinancialRegister />} />
                 <Route path="/unsubscribe" element={<Unsubscribe />} />
+                <Route path="/convite/:token" element={<AcceptInvite />} />
                 <Route element={<AppLayout />}>
                   <Route path="/tarefas" element={<Index />} />
                   <Route path="/dashboard" element={<Dashboard />} />
