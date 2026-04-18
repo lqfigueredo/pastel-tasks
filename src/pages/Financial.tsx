@@ -18,6 +18,8 @@ import SupportTicketList from '@/components/support/SupportTicketList';
 import HelpTextsManager from '@/components/financial/HelpTextsManager';
 import EmailDashboard from '@/components/admin/EmailDashboard';
 import SubscriptionsTab from '@/components/financial/SubscriptionsTab';
+import PlansTab from '@/components/financial/PlansTab';
+import VouchersTab from '@/components/financial/VouchersTab';
 import { HelpButton } from '@/components/HelpButton';
 import {
   Table,
@@ -254,6 +256,8 @@ const Financial = () => {
       <Tabs defaultValue="subscriptions">
         <TabsList className="flex-wrap h-auto">
           <TabsTrigger value="subscriptions">Assinaturas</TabsTrigger>
+          <TabsTrigger value="plans">Planos</TabsTrigger>
+          <TabsTrigger value="vouchers">Vouchers</TabsTrigger>
           <TabsTrigger value="approvals" className="relative">
             Aprovações
             {pendingCount > 0 && (
@@ -274,6 +278,14 @@ const Financial = () => {
 
         <TabsContent value="subscriptions">
           <SubscriptionsTab />
+        </TabsContent>
+
+        <TabsContent value="plans">
+          <PlansTab />
+        </TabsContent>
+
+        <TabsContent value="vouchers">
+          <VouchersTab />
         </TabsContent>
 
         <TabsContent value="approvals">

@@ -116,7 +116,7 @@ export default function SubscriptionDiscountsSection({ subscriptionId, onChanged
             <span>{formatMoney(calc.subtotal_cents)}</span>
           </div>
           {calc.discount_cents > 0 && (
-            <div className="flex justify-between text-emerald-700 dark:text-emerald-400">
+            <div className="flex justify-between text-primary">
               <span>Descontos</span>
               <span>− {formatMoney(calc.discount_cents)}</span>
             </div>
