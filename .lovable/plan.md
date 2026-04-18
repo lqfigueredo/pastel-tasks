@@ -1,92 +1,89 @@
 
 
-O usuário está confirmando que precisamos coletar CNPJ/CPF para emissão de NF. A resposta é sim, e o `BillingProfileForm.tsx` já coleta isso. Mas ele provavelmente quer saber se está completo o suficiente para emissão real de nota fiscal no Brasil.
+O usuário quer dois recursos:
+1. **Configurador de valor de planos** — hoje `subscriptions.price_per_seat_cents` é por linha, sem catálogo central. Cada admin pode ter um preço diferente. Falta um lugar onde o `solution_admin` defina o preço padrão por assento (e talvez planos diferentes).
+2. **Cadastro de vouchers de desconto** — não existe nada no schema. Precisa tabela de vouchers, aplicação por assinatura/fatura, e UI de gestão.
 
-Vou olhar o que `billing_profiles` tem hoje e comparar com o que uma NFS-e exige.
+Preciso entender se eles querem **um plano único** (um preço/assento global) ou **múltiplos planos** (Starter, Pro, etc., cada um com features diferentes). Pelo contexto atual (cobrança puramente por assento, mínimo 10), o modelo é assento-único — então é mais provável que queiram **configurar o preço base global** + **descontos por cliente/voucher**.
 
-Hoje em `billing_profiles`:
-- entity_type (individual/company) ✓
-- legal_name ✓
-- tax_id (CPF ou CNPJ) ✓
-- email, phone ✓
-- address_line1/2, city, state, postal_code, country ✓
+Também preciso clarear: o desconto é percentual, valor fixo, vitalício, por X meses, single-use vs reusable, atrelado a um cliente específico ou aberto.
 
-O que **falta** para emissão real de NFS-e no Brasil:
+Vou propor o modelo mais comum (genérico), com perguntas críticas no final do plano.
 
-**Para PJ (CNPJ):**
-- Inscrição Municipal (obrigatória na maioria dos municípios para tomador PJ)
-- Inscrição Estadual (opcional, "Isento" se não tiver)
-- Razão social vs Nome fantasia (hoje só tem `legal_name`)
+---
 
-**Para PF (CPF):**
-- RG (opcional, mas alguns municípios pedem)
-- Nome completo já é o `legal_name` ✓
+## Plano — Configurador de planos e vouchers de desconto
 
-**Endereço:**
-- Bairro (campo separado é exigido pela maioria dos sistemas de NFS-e — hoje vai jogado no `address_line2`)
-- Número e complemento separados (hoje tudo junto em `address_line1`)
-- Código IBGE do município (necessário no XML da NFS-e — pode ser derivado de cidade+UF na hora da emissão, não precisa pedir ao usuário)
+### Parte 1 — Catálogo de planos
 
-**Validação:**
-- Hoje aceita qualquer texto em `tax_id`. Precisa validar formato e dígito verificador de CPF/CNPJ.
-- CEP precisa de máscara/validação (8 dígitos).
-- UF precisa ser uma das 27 válidas.
+**Hoje:** `subscriptions.price_per_seat_cents` é por linha, sem catálogo. Não dá para mudar o preço base sem editar admin por admin.
 
-**Outras considerações:**
-- Se o emissor for **NEVVOH (CNPJ próprio)**, a NF é emitida pela NEVVOH com o cliente como tomador → precisa só dos dados acima do cliente. O CNPJ da NEVVOH é configuração interna, não vai em `billing_profiles`.
-- Para emitir de fato, precisa integrar com prefeitura ou serviço como NFE.io / Focus NFe / eNotas. Isso é uma fase posterior.
+**Proposta:** criar tabela `plans` com o catálogo:
 
-## Plano — Completar dados fiscais para emissão de NFS-e
+| Campo | Uso |
+|---|---|
+| `code` (slug único, ex: `default`, `starter`, `pro`) | Identificador |
+| `name`, `description` | Exibição |
+| `price_per_seat_cents`, `currency` | Preço base por assento |
+| `minimum_seats` | Mínimo de assentos (default 10) |
+| `billing_interval` (`month`/`year`) | Ciclo |
+| `is_active`, `is_default` | Visibilidade / plano novo padrão |
+| `features` (jsonb) | Lista textual de o que está incluído |
 
-### O que já temos
-`billing_profiles` cobre: tipo (PF/PJ), nome/razão social, CPF/CNPJ, email, telefone, endereço básico (linha 1, linha 2, cidade, UF, CEP, país).
+`subscriptions` ganha coluna `plan_id` opcional. Ao criar nova assinatura, copia preço/mínimo do plano. Mudar preço do plano **não** afeta assinaturas existentes (só novas) — assim ninguém é cobrado a mais sem aviso. Existe ação manual "Aplicar preço atual do plano" no drawer.
 
-### O que falta para uma NFS-e válida
+**UI no `/financeiro`:** nova aba **Planos** com listagem, criar/editar/desativar, marcar como default.
 
-**Campos novos em `billing_profiles`:**
-| Campo | Tipo | Quando obrigatório |
-|---|---|---|
-| `trade_name` (nome fantasia) | text, opcional | PJ |
-| `municipal_registration` (inscrição municipal) | text, opcional | PJ — alguns municípios exigem |
-| `state_registration` (inscrição estadual) | text, opcional | PJ — "ISENTO" se não tiver |
-| `address_number` (número) | text | sempre |
-| `address_complement` (complemento) | text, opcional | sempre |
-| `neighborhood` (bairro) | text | sempre |
+### Parte 2 — Vouchers de desconto
 
-**Reorganização do endereço:**
-Hoje `address_line1` mistura rua + número e `address_line2` vira complemento. Para NF, o ideal é: `street`, `number`, `complement`, `neighborhood`, `city`, `state`, `postal_code`. Manter `address_line1/line2` como legado e adicionar os novos campos estruturados.
+**Tabela `discount_vouchers`:**
 
-**Validação no form:**
-- CPF: 11 dígitos + algoritmo de dígito verificador
-- CNPJ: 14 dígitos + algoritmo de dígito verificador
-- CEP: 8 dígitos numéricos, máscara `00000-000`
-- UF: select com as 27 unidades federativas
-- Auto-preenchimento de endereço via API ViaCEP ao digitar o CEP (gratuita, sem chave)
+| Campo | Uso |
+|---|---|
+| `code` (único, case-insensitive, ex: `LANCAMENTO20`) | O cupom |
+| `description` | Interno |
+| `discount_type` (`percent` / `fixed_amount`) | Como calcular |
+| `discount_value` | 20 (=20%) ou 5000 (=R$50) |
+| `duration` (`once` / `repeating` / `forever`) | Quantas faturas pega |
+| `duration_in_months` | Se `repeating` |
+| `max_redemptions` | NULL = ilimitado |
+| `times_redeemed` | Contador |
+| `valid_from`, `valid_until` | Janela |
+| `applies_to_plan_id` | NULL = qualquer plano |
+| `is_active` | On/off |
 
-### Fluxo proposto
+**Tabela `subscription_discounts`** (vínculo voucher × assinatura):
+- `subscription_id`, `voucher_id`, `applied_at`, `applied_by`, `expires_at` (calculado por duration), `invoices_remaining`
 
-**Etapa A — Schema (agora)**
-Adicionar colunas novas em `billing_profiles` (todas opcionais para não quebrar registros existentes), sem remover as antigas.
+**Aplicação:**
+- Função `apply_voucher(_subscription_id, _code)` valida (ativo, dentro da janela, não excedeu max_redemptions, não duplicado para a mesma sub) → cria registro em `subscription_discounts`, incrementa `times_redeemed`, registra em `subscription_changes`.
+- Função `calculate_invoice_amount(_subscription_id)` retorna `subtotal_cents`, `discount_cents`, `total_cents` aplicando descontos ativos.
+- `register_manual_payment` passa a usar essa função: a fatura registra `subtotal_cents`, `discount_cents` e `total_cents` (precisa adicionar essas colunas em `invoices`).
 
-**Etapa B — Form (`BillingProfileForm.tsx`)**
-Reescrever com:
-- Campos condicionais por `entity_type` (PF não vê inscrição municipal/estadual)
-- Validação com zod (CPF, CNPJ, CEP, UF)
-- Máscaras de input para CPF/CNPJ/CEP/telefone
-- Integração com ViaCEP para auto-completar bairro/cidade/UF
-- Mensagens claras de erro
+**UI:**
+- Nova aba **Vouchers** em `/financeiro` (solution_admin): CRUD de cupons + tabela com uso atual (`times_redeemed`/`max_redemptions`) e quem resgatou.
+- No `SubscriptionDetailDrawer`, seção "Descontos aplicados" com botão **Aplicar voucher** (input do código) e remover.
+- Em `/cobranca` (admin pagante): mostra desconto ativo no resumo e na próxima cobrança ("R$ 1.000 - R$ 200 desconto = R$ 800"). Opcionalmente, campo para o admin digitar um código (decisão pendente — ver abaixo).
 
-**Etapa C — Painel solution_admin**
-Mostrar resumo dos dados fiscais no `SubscriptionDetailDrawer`, com aviso "Dados fiscais incompletos" se faltar campo essencial. Útil pra você cobrar o cliente a preencher antes de gerar a primeira NF.
+### Parte 3 — Mudanças em tabelas existentes
 
-**Etapa D — Emissão real (depois)**
-Integração com NFE.io / Focus NFe / eNotas. Não entra agora — o objetivo desta fase é só **coletar e validar** os dados certos para que a emissão funcione quando plugarmos.
+- `subscriptions`: + `plan_id uuid` (nullable, FK lógica para plans).
+- `invoices`: + `subtotal_cents`, `discount_cents` (default 0). `amount_cents` continua sendo o total final cobrado.
+- Nada destrutivo — assinaturas/faturas atuais continuam funcionando.
 
-### O que NÃO entra agora
-- Integração com prefeitura / API de NFS-e
-- CNAE, alíquota ISS, regime tributário do tomador (geralmente o emissor define, não o tomador)
-- Geração de PDF/XML da nota
+### Parte 4 — Ordem de implementação
 
-### Decisão pendente
-Confirmar se você quer que eu também já adicione **integração com ViaCEP** para auto-preencher endereço pelo CEP (recomendo, melhora muito o UX e quase elimina erro de digitação no endereço — é grátis e sem chave).
+1. Migração: `plans`, `discount_vouchers`, `subscription_discounts`; colunas novas em `subscriptions` e `invoices`; funções `apply_voucher` e `calculate_invoice_amount`; ajuste em `register_manual_payment`.
+2. Aba **Planos** em `/financeiro` (CRUD).
+3. Aba **Vouchers** em `/financeiro` (CRUD + uso).
+4. Seção de desconto no `SubscriptionDetailDrawer` (aplicar/remover voucher, ver histórico).
+5. Atualizar `Billing.tsx` para mostrar desconto ativo no resumo.
+6. Atualizar `SubscriptionsTab` (lista) para mostrar mensalidade líquida (com desconto).
+
+### Decisões pendentes
+
+1. **Múltiplos planos ou um só?** Posso já criar a estrutura de catálogo aceitando vários planos (Starter/Pro/Enterprise) **ou** manter só "plano padrão" único editável. Recomendo o catálogo — flexibilidade quase de graça.
+2. **Quem aplica voucher?** Só `solution_admin` (mais controle, evita fraude) ou também o admin pagante pode digitar código em `/cobranca`?
+3. **Voucher percentual vs fixo:** ambos? (Recomendo: ambos — `percent` e `fixed_amount`.)
+4. **Duração:** suportar `once` (só próxima fatura), `repeating` (N meses) e `forever` (vitalício)?
 
