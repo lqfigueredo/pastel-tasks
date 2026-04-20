@@ -120,7 +120,10 @@ const Pricing = () => {
                   <span className="text-muted-foreground">/usuário/mês</span>
                 </div>
                 <p className="mt-2 text-sm text-muted-foreground">
-                  A partir de {primary.minimum_seats} assentos
+                  A partir de {primary.minimum_seats} assentos •{' '}
+                  <span className="font-semibold text-foreground">
+                    valor mínimo {formatBRL(primary.minimum_seats * primary.price_per_seat_cents)}/mês
+                  </span>
                 </p>
               </div>
 

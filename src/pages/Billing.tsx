@@ -5,12 +5,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Slider } from '@/components/ui/slider';
-import { Loader2, CreditCard, AlertTriangle, Users, Calendar, ArrowUp, Clock } from 'lucide-react';
-import { toast } from 'sonner';
+import { Loader2, CreditCard, AlertTriangle, Users, Calendar, ArrowUp, Clock, Sparkles } from 'lucide-react';
 import { format, differenceInDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import BillingProfileForm from '@/components/billing/BillingProfileForm';
 import InvoiceHistory from '@/components/billing/InvoiceHistory';
+import { ActivateSubscriptionDialog } from '@/components/billing/ActivateSubscriptionDialog';
 
 interface Subscription {
   id: string;
@@ -42,6 +42,11 @@ export default function Billing() {
   const [sub, setSub] = useState<Subscription | null>(null);
   const [activeUsers, setActiveUsers] = useState(0);
   const [pendingSeats, setPendingSeats] = useState(10);
+  const [activateOpen, setActivateOpen] = useState(false);
+  const [activateContext, setActivateContext] = useState<{ subject: string; label: string }>({
+    subject: 'Quero ativar minha assinatura',
+    label: 'ativação de assinatura',
+  });
 
   useEffect(() => {
     if (!user) return;
@@ -62,12 +67,23 @@ export default function Billing() {
     setLoading(false);
   };
 
+  const openActivate = (subject: string, label: string) => {
+    setActivateContext({ subject, label });
+    setActivateOpen(true);
+  };
+
   const handleUpgrade = async () => {
-    toast.info('Para ajustar assentos, entre em contato com o suporte (ainda sem checkout automatizado).');
+    const diff = pendingSeats - (sub?.seats_purchased ?? 0);
+    const action = diff > 0 ? `aumentar para ${pendingSeats} assentos (+${diff})` : `reduzir para ${pendingSeats} assentos (${diff})`;
+    openActivate(`Ajuste de assentos: ${action}`, `ajuste de assentos para ${pendingSeats}`);
   };
 
   const handleManagePayment = async () => {
-    toast.info('Portal de pagamento será disponibilizado após a integração com o provedor.');
+    openActivate('Atualizar forma de pagamento', 'atualização de forma de pagamento');
+  };
+
+  const handleActivateNow = () => {
+    openActivate('Quero ativar minha assinatura agora', 'ativação imediata da assinatura');
   };
 
   if (loading) {
@@ -128,16 +144,21 @@ export default function Billing() {
         </Card>
       )}
 
-      {sub.status === 'trialing' && trialDaysLeft !== null && trialDaysLeft >= 0 && trialDaysLeft <= 7 && (
-        <Card className="border-yellow-500/40 bg-yellow-500/5">
-          <CardContent className="flex items-start gap-3 pt-6">
-            <Clock className="mt-1 h-5 w-5 text-yellow-600" />
-            <div>
-              <p className="font-semibold">Período de teste termina em {trialDaysLeft} dia(s)</p>
+      {sub.status === 'trialing' && trialDaysLeft !== null && trialDaysLeft >= 0 && (
+        <Card className="border-primary/40 bg-primary/5">
+          <CardContent className="flex items-start gap-3 pt-6 flex-wrap">
+            <Sparkles className="mt-1 h-5 w-5 text-primary shrink-0" />
+            <div className="flex-1 min-w-[200px]">
+              <p className="font-semibold">
+                {trialDaysLeft <= 7
+                  ? `Período de teste termina em ${trialDaysLeft} dia(s)`
+                  : `Você está em período de teste (${trialDaysLeft} dias restantes)`}
+              </p>
               <p className="text-sm text-muted-foreground">
-                Configure sua forma de pagamento para evitar interrupção do serviço.
+                Ative sua assinatura agora para garantir continuidade do acesso da equipe.
               </p>
             </div>
+            <Button onClick={handleActivateNow} size="sm">Ativar agora</Button>
           </CardContent>
         </Card>
       )}
@@ -289,6 +310,14 @@ export default function Billing() {
           <Button variant="outline" onClick={handleManagePayment}>Gerenciar pagamento</Button>
         </CardContent>
       </Card>
+
+      <ActivateSubscriptionDialog
+        open={activateOpen}
+        onOpenChange={setActivateOpen}
+        defaultSubject={activateContext.subject}
+        contextLabel={activateContext.label}
+        onSuccess={load}
+      />
     </div>
   );
 }
