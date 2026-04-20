@@ -12,6 +12,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { KanbanSavedFilters } from '@/components/kanban/KanbanSavedFilters';
 
 const Index = () => {
   const [createOpen, setCreateOpen] = useState(false);
@@ -109,6 +110,10 @@ const Index = () => {
           </div>
         </div>
         <div className="flex items-center gap-3">
+          <KanbanSavedFilters
+            current={{ assigneeId: filterAssigneeId }}
+            onApply={(f) => setFilterAssigneeId(f.assigneeId ?? null)}
+          />
           <Select
             value={filterAssigneeId ?? 'all'}
             onValueChange={(v) => setFilterAssigneeId(v === 'all' ? null : v)}
