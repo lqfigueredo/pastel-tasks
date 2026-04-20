@@ -82,6 +82,9 @@ const CHANGE_LABELS: Record<string, string> = {
   cancellation_scheduled: 'Cancelamento agendado',
   reactivated: 'Reativada',
   note: 'Anotação',
+  comp_activation: 'Ativação como cortesia',
+  voucher_applied: 'Voucher aplicado',
+  voucher_removed: 'Voucher removido',
 };
 
 export default function SubscriptionDetailDrawer({ subscription, open, onClose, onChanged }: Props) {
@@ -146,9 +149,22 @@ export default function SubscriptionDetailDrawer({ subscription, open, onClose, 
         <SheetContent className="w-full sm:max-w-2xl overflow-y-auto">
           <SheetHeader>
             <SheetTitle>{subscription.admin_name}</SheetTitle>
-            <SheetDescription>
-              <Badge variant="outline">{subscription.provider}</Badge>{' '}
+            <SheetDescription className="flex flex-wrap items-center gap-2">
+              <Badge variant="outline">{subscription.provider}</Badge>
               <Badge>{subscription.status}</Badge>
+              {(() => {
+                const lastComp = changes.find((c) => c.change_type === 'comp_activation');
+                if (!lastComp) return null;
+                return (
+                  <Badge
+                    variant="secondary"
+                    className="bg-primary/15 text-primary border-primary/30"
+                    title={lastComp.reason || 'Cortesia ativa'}
+                  >
+                    🎁 Cortesia
+                  </Badge>
+                );
+              })()}
             </SheetDescription>
           </SheetHeader>
 
