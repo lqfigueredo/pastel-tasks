@@ -186,21 +186,16 @@ export function CreateTaskDialog({ open, onOpenChange, onTaskCreated }: Props) {
     setEstimatedDateError(undefined);
   };
 
-  if (!open) return null;
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="fixed inset-0 bg-black/60" onClick={() => onOpenChange(false)} />
-      <div className="relative z-50 w-full max-w-md rounded-xl border border-border bg-card p-6 shadow-xl animate-fade-in">
-        <button
-          onClick={() => onOpenChange(false)}
-          className="absolute right-4 top-4 rounded-sm opacity-70 hover:opacity-100"
-        >
-          <X className="h-4 w-4" />
-        </button>
-        <h2 className="text-lg font-semibold mb-1">Nova Tarefa</h2>
-        <p className="text-sm text-muted-foreground mb-4">Preencha os detalhes da nova tarefa</p>
-        <form onSubmit={handleSubmit} className="space-y-4">
+    <ResponsiveDialog open={open} onOpenChange={onOpenChange}>
+      <ResponsiveDialogHeader>
+        <ResponsiveDialogTitle>Nova Tarefa</ResponsiveDialogTitle>
+        <ResponsiveDialogDescription>
+          Preencha os detalhes da nova tarefa
+        </ResponsiveDialogDescription>
+      </ResponsiveDialogHeader>
+      <form onSubmit={handleSubmit} className="space-y-4">
+
           <div className="space-y-1.5">
             <Label>Título *</Label>
             <Input
@@ -419,7 +414,6 @@ export function CreateTaskDialog({ open, onOpenChange, onTaskCreated }: Props) {
             </Button>
           </div>
         </form>
-      </div>
-    </div>
+    </ResponsiveDialog>
   );
 }
