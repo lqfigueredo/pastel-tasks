@@ -40,9 +40,7 @@ const STATUS_LABELS: Record<string, { label: string; variant: 'default' | 'secon
 
 export default function Billing() {
   const { user } = useAuth();
-  const [loading, setLoading] = useState(true);
-  const [sub, setSub] = useState<Subscription | null>(null);
-  const [activeUsers, setActiveUsers] = useState(0);
+  const queryClient = useQueryClient();
   const [pendingSeats, setPendingSeats] = useState(10);
   const [activateOpen, setActivateOpen] = useState(false);
   const [activateContext, setActivateContext] = useState<{ subject: string; label: string }>({
@@ -51,24 +49,31 @@ export default function Billing() {
   });
   const [requestSeatsOpen, setRequestSeatsOpen] = useState(false);
 
-  useEffect(() => {
-    if (!user) return;
-    load();
-  }, [user]);
+  const { data: billingData, isLoading: loading } = useQuery({
+    queryKey: ['billing', user?.id],
+    queryFn: async () => {
+      const [subRes, countRes] = await Promise.all([
+        supabase.from('subscriptions').select('*').eq('admin_user_id', user!.id).maybeSingle(),
+        supabase.rpc('get_admin_active_users_count', { _admin_id: user!.id }),
+      ]);
+      return {
+        sub: (subRes.data as Subscription | null) ?? null,
+        activeUsers: typeof countRes.data === 'number' ? countRes.data : 0,
+      };
+    },
+    enabled: !!user,
+    staleTime: 30_000,
+  });
 
-  const load = async () => {
-    setLoading(true);
-    const [subRes, countRes] = await Promise.all([
-      supabase.from('subscriptions').select('*').eq('admin_user_id', user!.id).maybeSingle(),
-      supabase.rpc('get_admin_active_users_count', { _admin_id: user!.id }),
-    ]);
-    if (subRes.data) {
-      setSub(subRes.data as Subscription);
-      setPendingSeats(subRes.data.seats_purchased);
-    }
-    if (typeof countRes.data === 'number') setActiveUsers(countRes.data);
-    setLoading(false);
-  };
+  const sub = billingData?.sub ?? null;
+  const activeUsers = billingData?.activeUsers ?? 0;
+
+  // Sync pending seats when subscription loads
+  useEffect(() => {
+    if (sub) setPendingSeats(sub.seats_purchased);
+  }, [sub?.seats_purchased]);
+
+  const load = () => queryClient.invalidateQueries({ queryKey: ['billing', user?.id] });
 
   const openActivate = (subject: string, label: string) => {
     setActivateContext({ subject, label });
