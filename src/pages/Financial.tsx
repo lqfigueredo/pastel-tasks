@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, lazy, Suspense } from 'react';
 import { useSupportTicketsQuery } from '@/hooks/useSupportTicketsQuery';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -10,18 +10,25 @@ import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Input } from '@/components/ui/input';
-import { Check, X, Ban, CalendarIcon, RotateCcw, MailCheck, Pencil, Users, Send } from 'lucide-react';
+import { Check, X, Ban, CalendarIcon, RotateCcw, MailCheck, Pencil, Users, Send, Loader2 } from 'lucide-react';
 import EditUserProfileDialog from '@/components/financial/EditUserProfileDialog';
 import ReplyLeadDialog from '@/components/financial/ReplyLeadDialog';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
-import SupportTicketList from '@/components/support/SupportTicketList';
-import HelpTextsManager from '@/components/financial/HelpTextsManager';
-import EmailDashboard from '@/components/admin/EmailDashboard';
-import SubscriptionsTab from '@/components/financial/SubscriptionsTab';
-import PlansTab from '@/components/financial/PlansTab';
-import VouchersTab from '@/components/financial/VouchersTab';
 import { HelpButton } from '@/components/HelpButton';
+
+const SupportTicketList = lazy(() => import('@/components/support/SupportTicketList'));
+const HelpTextsManager = lazy(() => import('@/components/financial/HelpTextsManager'));
+const EmailDashboard = lazy(() => import('@/components/admin/EmailDashboard'));
+const SubscriptionsTab = lazy(() => import('@/components/financial/SubscriptionsTab'));
+const PlansTab = lazy(() => import('@/components/financial/PlansTab'));
+const VouchersTab = lazy(() => import('@/components/financial/VouchersTab'));
+
+const TabFallback = () => (
+  <div className="flex items-center justify-center py-12">
+    <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+  </div>
+);
 import {
   Table,
   TableBody,
@@ -296,15 +303,21 @@ const Financial = () => {
         </TabsList>
 
         <TabsContent value="subscriptions">
-          <SubscriptionsTab />
+          <Suspense fallback={<TabFallback />}>
+            <SubscriptionsTab />
+          </Suspense>
         </TabsContent>
 
         <TabsContent value="plans">
-          <PlansTab />
+          <Suspense fallback={<TabFallback />}>
+            <PlansTab />
+          </Suspense>
         </TabsContent>
 
         <TabsContent value="vouchers">
-          <VouchersTab />
+          <Suspense fallback={<TabFallback />}>
+            <VouchersTab />
+          </Suspense>
         </TabsContent>
 
         <TabsContent value="approvals">
@@ -595,15 +608,21 @@ const Financial = () => {
         </TabsContent>
 
         <TabsContent value="support">
-          <SupportTicketList role="solution_admin" />
+          <Suspense fallback={<TabFallback />}>
+            <SupportTicketList role="solution_admin" />
+          </Suspense>
         </TabsContent>
 
         <TabsContent value="emails">
-          <EmailDashboard scope="global" />
+          <Suspense fallback={<TabFallback />}>
+            <EmailDashboard scope="global" />
+          </Suspense>
         </TabsContent>
 
         <TabsContent value="help-texts">
-          <HelpTextsManager />
+          <Suspense fallback={<TabFallback />}>
+            <HelpTextsManager />
+          </Suspense>
         </TabsContent>
       </Tabs>
 

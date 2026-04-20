@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, lazy, Suspense } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -12,9 +12,16 @@ import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { ShieldX, UserPlus, Loader2, ShieldCheck, ShieldOff, UserX, UserCheck } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import SupportTicketList from '@/components/support/SupportTicketList';
-import EmailDashboard from '@/components/admin/EmailDashboard';
 import { HelpButton } from '@/components/HelpButton';
+
+const SupportTicketList = lazy(() => import('@/components/support/SupportTicketList'));
+const EmailDashboard = lazy(() => import('@/components/admin/EmailDashboard'));
+
+const TabFallback = () => (
+  <div className="flex items-center justify-center py-12">
+    <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+  </div>
+);
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertTriangle } from 'lucide-react';
 import { RequestSeatsDialog } from '@/components/admin/RequestSeatsDialog';
@@ -442,11 +449,15 @@ export default function Admin() {
         </TabsContent>
 
         <TabsContent value="support">
-          <SupportTicketList role="admin" />
+          <Suspense fallback={<TabFallback />}>
+            <SupportTicketList role="admin" />
+          </Suspense>
         </TabsContent>
 
         <TabsContent value="emails">
-          <EmailDashboard scope="own" />
+          <Suspense fallback={<TabFallback />}>
+            <EmailDashboard scope="own" />
+          </Suspense>
         </TabsContent>
       </Tabs>
 
