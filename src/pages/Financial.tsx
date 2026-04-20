@@ -106,17 +106,6 @@ const Financial = () => {
     });
   }, [user]);
 
-  const loadHotTickets = async () => {
-    const { data } = await supabase
-      .from('support_tickets')
-      .select('id, subject, status')
-      .eq('status', 'open');
-    const hot = (data || []).filter((t) => {
-      const s = (t.subject || '').toLowerCase();
-      return s.includes('assento') || s.includes('ativar');
-    });
-    setHotTicketsCount(hot.length);
-  };
 
   const loadData = async () => {
     const [leadsRes, approvalsRes, adminSettingsRes] = await Promise.all([
