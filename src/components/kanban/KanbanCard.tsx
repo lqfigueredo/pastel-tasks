@@ -5,10 +5,11 @@ import { Card, CardContent } from '@/components/ui/card';
 import type { Task, TaskStatus } from '@/types/kanban';
 import { TaskDetailDialog } from './TaskDetailDialog';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { safeFormatDate } from '@/lib/date';
+import { humanizeDate } from '@/lib/date-humanize';
 import { supabase } from '@/integrations/supabase/client';
 import { useOptimisticTaskUpdate } from '@/hooks/useTasksQuery';
 import { cn } from '@/lib/utils';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface KanbanCardProps {
   task: Task;
@@ -79,13 +80,28 @@ function KanbanCardImpl({ task, allStatuses, onRefresh, onMoveTask }: KanbanCard
           <div className="flex items-start justify-between gap-1">
             <div className="flex items-center gap-1.5">
               {task.recurring_task_id && (
-                <Repeat className="h-3 w-3 shrink-0 text-primary" />
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Repeat className="h-3 w-3 shrink-0 text-primary" />
+                  </TooltipTrigger>
+                  <TooltipContent>Tarefa recorrente</TooltipContent>
+                </Tooltip>
               )}
               {task.is_critical && (
-                <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-destructive animate-pulse" />
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-destructive animate-pulse" />
+                  </TooltipTrigger>
+                  <TooltipContent>Tarefa crítica</TooltipContent>
+                </Tooltip>
               )}
               {task.meeting_pendency_id && (
-                <FileText className="h-3 w-3 shrink-0 text-primary" />
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <FileText className="h-3 w-3 shrink-0 text-primary" />
+                  </TooltipTrigger>
+                  <TooltipContent>Vinculada a uma ata de reunião</TooltipContent>
+                </Tooltip>
               )}
               <h4 className={cn(
                 "text-sm font-medium text-foreground leading-snug",
@@ -94,13 +110,18 @@ function KanbanCardImpl({ task, allStatuses, onRefresh, onMoveTask }: KanbanCard
                 {task.title}
               </h4>
             </div>
-            <button
-              onClick={toggleMinimize}
-              className="shrink-0 rounded p-0.5 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-              title={minimized ? 'Expandir' : 'Minimizar'}
-            >
-              {minimized ? <Maximize2 className="h-3 w-3" /> : <Minimize2 className="h-3 w-3" />}
-            </button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={toggleMinimize}
+                  className="shrink-0 rounded p-0.5 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                  aria-label={minimized ? 'Expandir' : 'Minimizar'}
+                >
+                  {minimized ? <Maximize2 className="h-3 w-3" /> : <Minimize2 className="h-3 w-3" />}
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>{minimized ? 'Expandir card' : 'Minimizar card'}</TooltipContent>
+            </Tooltip>
           </div>
           {!minimized && (
             <>
@@ -121,12 +142,25 @@ function KanbanCardImpl({ task, allStatuses, onRefresh, onMoveTask }: KanbanCard
                 </div>
               )}
               <div className="mt-2 flex items-center justify-end">
-                {task.estimated_delivery_date && (
-                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                    <Calendar className="h-3 w-3" />
-                    <span>{safeFormatDate(task.estimated_delivery_date, 'dd MMM')}</span>
-                  </div>
-                )}
+                {task.estimated_delivery_date && (() => {
+                  const deadlineLabel = humanizeDate(task.estimated_delivery_date, { prefix: 'deadline' });
+                  if (!deadlineLabel) return null;
+                  const isOverdue = deadlineLabel.startsWith('Atrasada') || deadlineLabel.startsWith('Venceu');
+                  const isDueSoon = deadlineLabel === 'Vence hoje' || deadlineLabel === 'Vence amanhã';
+                  return (
+                    <div
+                      className={cn(
+                        'flex items-center gap-1 text-xs',
+                        isOverdue && 'text-destructive font-medium',
+                        isDueSoon && !isOverdue && 'text-amber-600 dark:text-amber-500 font-medium',
+                        !isOverdue && !isDueSoon && 'text-muted-foreground',
+                      )}
+                    >
+                      <Calendar className="h-3 w-3" />
+                      <span>{deadlineLabel}</span>
+                    </div>
+                  );
+                })()}
               </div>
               {onMoveTask && (
                 <div className="mt-2 flex items-center justify-between opacity-0 group-hover/card:opacity-100 transition-opacity md:opacity-0 max-md:opacity-100">
