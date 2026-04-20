@@ -6,9 +6,12 @@ import { NotificationBell } from '@/components/NotificationBell';
 import { TimerProvider } from '@/contexts/TimerContext';
 import GlobalTimerIndicator from '@/components/GlobalTimerIndicator';
 import SubscriptionStatusBanner from '@/components/billing/SubscriptionStatusBanner';
+import { OnboardingWizard } from '@/components/onboarding/OnboardingWizard';
+import { useOnboardingStatus } from '@/hooks/useOnboardingStatus';
 
 const AppLayout = () => {
   const { user, loading } = useAuth();
+  const { data: onboarding } = useOnboardingStatus();
 
   if (loading) {
     return (
@@ -38,6 +41,7 @@ const AppLayout = () => {
             </main>
           </div>
         </div>
+        {onboarding?.shouldShow && <OnboardingWizard />}
       </SidebarProvider>
     </TimerProvider>
   );

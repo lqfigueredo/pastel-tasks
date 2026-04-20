@@ -404,6 +404,33 @@ const Settings = () => {
       {/* Recurring Tasks */}
       <RecurringTasksSettings />
 
+      {/* Restart onboarding */}
+      <div className="border border-border/50 rounded-xl p-6 bg-card">
+        <h2 className="text-lg font-semibold mb-2">Tour de boas-vindas</h2>
+        <p className="text-sm text-muted-foreground mb-4">
+          Refaça o tour inicial para revisar a configuração da conta.
+        </p>
+        <Button
+          variant="outline"
+          onClick={async () => {
+            if (!user) return;
+            const { error } = await supabase
+              .from('profiles')
+              .update({ onboarding_completed_at: null })
+              .eq('user_id', user.id);
+            if (error) {
+              toast({ title: 'Erro', description: error.message, variant: 'destructive' });
+              return;
+            }
+            toast({ title: 'Tour reiniciado — recarregue a página' });
+            setTimeout(() => window.location.reload(), 800);
+          }}
+        >
+          <RotateCcw className="h-4 w-4" />
+          Refazer tour
+        </Button>
+      </div>
+
       {/* Delete confirmation dialog */}
       <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
         <AlertDialogContent>
