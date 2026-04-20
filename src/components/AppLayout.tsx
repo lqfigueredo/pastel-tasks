@@ -6,6 +6,7 @@ import { NotificationBell } from '@/components/NotificationBell';
 import { TimerProvider } from '@/contexts/TimerContext';
 import GlobalTimerIndicator from '@/components/GlobalTimerIndicator';
 import SubscriptionStatusBanner from '@/components/billing/SubscriptionStatusBanner';
+import TrialBanner from '@/components/TrialBanner';
 import { OnboardingWizard } from '@/components/onboarding/OnboardingWizard';
 import { useOnboardingStatus } from '@/hooks/useOnboardingStatus';
 
@@ -30,6 +31,7 @@ const AppLayout = () => {
           <AppSidebar />
           <div className="flex-1 flex flex-col">
             <SubscriptionStatusBanner />
+            <TrialBanner />
             <header className="h-14 flex items-center border-b border-border/50 px-4 bg-background/80 backdrop-blur-sm">
               <SidebarTrigger className="mr-4" />
               <div className="flex-1" />
