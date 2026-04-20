@@ -22,6 +22,7 @@ Deno.serve(async (req) => {
   const result = {
     moved_to_past_due: 0,
     moved_to_suspended: 0,
+    comp_expired: 0,
     errors: [] as string[],
   };
 
