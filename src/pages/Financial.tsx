@@ -619,6 +619,12 @@ const Financial = () => {
             <HelpTextsManager />
           </Suspense>
         </TabsContent>
+
+        <TabsContent value="legal">
+          <Suspense fallback={<TabFallback />}>
+            <LegalDocumentsEditor />
+          </Suspense>
+        </TabsContent>
       </Tabs>
 
       {editingUser && (
