@@ -608,15 +608,21 @@ const Financial = () => {
         </TabsContent>
 
         <TabsContent value="support">
-          <SupportTicketList role="solution_admin" />
+          <Suspense fallback={<TabFallback />}>
+            <SupportTicketList role="solution_admin" />
+          </Suspense>
         </TabsContent>
 
         <TabsContent value="emails">
-          <EmailDashboard scope="global" />
+          <Suspense fallback={<TabFallback />}>
+            <EmailDashboard scope="global" />
+          </Suspense>
         </TabsContent>
 
         <TabsContent value="help-texts">
-          <HelpTextsManager />
+          <Suspense fallback={<TabFallback />}>
+            <HelpTextsManager />
+          </Suspense>
         </TabsContent>
       </Tabs>
 
