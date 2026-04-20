@@ -1,5 +1,9 @@
 import { useState, useEffect, useRef, type ReactNode } from 'react';
 import FeaturePreviewDialog from '@/components/landing/FeaturePreviewDialog';
+import FloatingTasksBackground from '@/components/landing/FloatingTasksBackground';
+import FeatureMiniPreview from '@/components/landing/FeatureMiniPreview';
+import TaskMarquee from '@/components/landing/TaskMarquee';
+import { KanbanPreview } from '@/components/landing/featurePreviews';
 import {
   LayoutDashboard,
   Users,
@@ -14,6 +18,7 @@ import {
   BarChart3,
   ArrowRight,
   Sparkles,
+  CheckSquare,
 } from 'lucide-react';
 import logo from '@/assets/logo.webp';
 import { Link } from 'react-router-dom';
@@ -162,49 +167,80 @@ const Landing = () => {
       {/* Hero */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-mint-light/40 via-transparent to-transparent pointer-events-none" />
+        <FloatingTasksBackground />
 
-        <div className="relative mx-auto max-w-6xl px-6 py-28 text-center">
-          <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 text-sm font-medium text-primary mb-8 animate-fade-in">
-            <Sparkles className="h-4 w-4" />
-            Produtividade sem complexidade
+        <div className="relative mx-auto max-w-6xl px-6 py-24 lg:py-28">
+          <div className="grid items-center gap-12 lg:grid-cols-2">
+            {/* Left: copy */}
+            <div className="text-center lg:text-left">
+              <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 text-sm font-medium text-primary mb-6 animate-fade-in">
+                <Sparkles className="h-4 w-4" />
+                Produtividade sem complexidade
+              </div>
+
+              <h1
+                className="text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl font-display animate-fade-in"
+                style={{ animationDelay: '100ms', animationFillMode: 'both' }}
+              >
+                Gestão de tarefas
+                <span className="text-primary"> simples e eficiente</span>
+              </h1>
+
+              <p
+                className="mx-auto lg:mx-0 mt-6 max-w-2xl text-lg text-muted-foreground animate-fade-in"
+                style={{ animationDelay: '200ms', animationFillMode: 'both' }}
+              >
+                Organize projetos, gerencie equipes e acompanhe reuniões em um único lugar.
+                O NEVVOH foi criado para times que querem produtividade sem complexidade.
+              </p>
+
+              <div
+                className="mt-10 flex flex-col sm:flex-row items-center lg:justify-start justify-center gap-3 animate-fade-in"
+                style={{ animationDelay: '300ms', animationFillMode: 'both' }}
+              >
+                <Link to="/auth">
+                  <Button size="lg" className="text-base px-8 gap-2">
+                    <Sparkles className="h-5 w-5" />
+                    Realizar trial grátis
+                  </Button>
+                </Link>
+
+                <LeadFormTrigger />
+              </div>
+
+              <p
+                className="mt-4 text-xs text-muted-foreground animate-fade-in lg:text-left text-center"
+                style={{ animationDelay: '400ms', animationFillMode: 'both' }}
+              >
+                14 dias grátis · sem cartão de crédito
+              </p>
+            </div>
+
+            {/* Right: Kanban mockup */}
+            <div
+              aria-hidden="true"
+              className="hidden lg:block animate-fade-in"
+              style={{ animationDelay: '350ms', animationFillMode: 'both' }}
+            >
+              <div
+                className="relative rounded-2xl border border-border bg-card/95 p-5 shadow-2xl backdrop-blur"
+                style={{ transform: 'perspective(1200px) rotateY(-6deg) rotateX(2deg)' }}
+              >
+                <div className="mb-4 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="h-2.5 w-2.5 rounded-full bg-destructive/70" />
+                    <div className="h-2.5 w-2.5 rounded-full bg-yellow-500/70" />
+                    <div className="h-2.5 w-2.5 rounded-full bg-green-500/70" />
+                  </div>
+                  <span className="text-xs text-muted-foreground font-medium">Quadro · Equipe Produto</span>
+                </div>
+                <KanbanPreview />
+                <div className="absolute -bottom-3 -right-3 rounded-full bg-primary text-primary-foreground px-3 py-1 text-xs font-semibold shadow-lg">
+                  Tempo real
+                </div>
+              </div>
+            </div>
           </div>
-
-          <h1
-            className="text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl font-display animate-fade-in"
-            style={{ animationDelay: '100ms', animationFillMode: 'both' }}
-          >
-            Gestão de tarefas
-            <span className="text-primary"> simples e eficiente</span>
-          </h1>
-
-          <p
-            className="mx-auto mt-6 max-w-2xl text-lg text-muted-foreground animate-fade-in"
-            style={{ animationDelay: '200ms', animationFillMode: 'both' }}
-          >
-            Organize projetos, gerencie equipes e acompanhe reuniões em um único lugar.
-            O NEVVOH foi criado para times que querem produtividade sem complexidade.
-          </p>
-
-          <div
-            className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-3 animate-fade-in"
-            style={{ animationDelay: '300ms', animationFillMode: 'both' }}
-          >
-            <Link to="/auth">
-              <Button size="lg" className="text-base px-8 gap-2">
-                <Sparkles className="h-5 w-5" />
-                Realizar trial grátis
-              </Button>
-            </Link>
-
-            <LeadFormTrigger />
-          </div>
-
-          <p
-            className="mt-4 text-xs text-muted-foreground animate-fade-in"
-            style={{ animationDelay: '400ms', animationFillMode: 'both' }}
-          >
-            14 dias grátis · sem cartão de crédito
-          </p>
         </div>
       </section>
 
@@ -220,19 +256,26 @@ const Landing = () => {
             </p>
           </RevealOnScroll>
 
-          <div className="mt-14 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="mt-14 grid gap-6 sm:grid-cols-2">
             {features.map((f, i) => (
-              <RevealOnScroll key={f.title} delay={i * 80}>
+              <RevealOnScroll key={f.title} delay={i * 60}>
                 <div
-                  className="rounded-xl border border-border bg-card p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg h-full cursor-pointer"
+                  className="group rounded-xl border border-border bg-card p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg h-full cursor-pointer"
                   onClick={() => setPreviewFeature(f.title)}
                 >
-                  <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
-                    <f.icon className="h-5 w-5 text-primary" />
+                  <FeatureMiniPreview featureTitle={f.title} />
+                  <div className="mt-5 flex items-start gap-3">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+                      <f.icon className="h-5 w-5 text-primary" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-semibold">{f.title}</h3>
+                      <p className="mt-1 text-sm text-muted-foreground">{f.description}</p>
+                      <p className="mt-2 text-xs text-primary font-medium opacity-80 group-hover:opacity-100 transition-opacity">
+                        Clique para ver exemplo →
+                      </p>
+                    </div>
                   </div>
-                  <h3 className="font-semibold">{f.title}</h3>
-                  <p className="mt-2 text-sm text-muted-foreground">{f.description}</p>
-                  <p className="mt-3 text-xs text-primary font-medium">Clique para ver exemplo →</p>
                 </div>
               </RevealOnScroll>
             ))}
@@ -240,9 +283,18 @@ const Landing = () => {
         </div>
       </section>
 
+      {/* Marquee transition */}
+      <TaskMarquee />
+
       {/* How it works */}
-      <section className="py-24">
-        <div className="mx-auto max-w-6xl px-6">
+      <section className="relative py-24 overflow-hidden">
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute -right-20 top-1/2 -translate-y-1/2 opacity-[0.05] dark:opacity-[0.07]"
+        >
+          <Calendar className="h-[420px] w-[420px] text-primary" strokeWidth={1} />
+        </div>
+        <div className="relative mx-auto max-w-6xl px-6">
           <RevealOnScroll>
             <h2 className="text-center text-2xl font-bold sm:text-3xl font-display">
               Como funciona
@@ -293,8 +345,14 @@ const Landing = () => {
       </section>
 
       {/* FAQ - SEO */}
-      <section className="py-24 border-t border-border/50">
-        <div className="mx-auto max-w-3xl px-6">
+      <section className="relative py-24 border-t border-border/50 overflow-hidden">
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute -left-16 top-20 opacity-[0.05] dark:opacity-[0.07]"
+        >
+          <CheckSquare className="h-[360px] w-[360px] text-primary" strokeWidth={1} />
+        </div>
+        <div className="relative mx-auto max-w-3xl px-6">
           <RevealOnScroll>
             <h2 className="text-center text-2xl font-bold sm:text-3xl font-display">
               Perguntas Frequentes
