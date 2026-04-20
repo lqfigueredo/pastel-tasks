@@ -184,6 +184,14 @@ const Auth = () => {
                 Veja os planos →
               </Link>
             </div>
+            {!isLogin && (
+              <p className="mt-4 text-center text-xs text-muted-foreground">
+                Ao criar uma conta você concorda com nossos{' '}
+                <Link to="/termos" className="text-primary hover:underline">Termos de Uso</Link>
+                {' '}e{' '}
+                <Link to="/privacidade" className="text-primary hover:underline">Política de Privacidade</Link>.
+              </p>
+            )}
           </CardContent>
         </Card>
       </div>

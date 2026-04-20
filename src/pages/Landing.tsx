@@ -415,17 +415,21 @@ const Landing = () => {
 
       {/* Footer */}
       <footer className="border-t border-border/50 py-10">
-        <div className="mx-auto max-w-6xl px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <img src={logo} alt="NEVVOH" className="h-7 w-7 rounded-lg" />
-            <span className="text-sm font-semibold">NEVVOH</span>
+        <div className="mx-auto max-w-6xl px-6 flex flex-col gap-6">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-2">
+              <img src={logo} alt="NEVVOH" className="h-7 w-7 rounded-lg" />
+              <span className="text-sm font-semibold">NEVVOH</span>
+            </div>
+            <nav className="flex items-center gap-4 text-sm text-muted-foreground">
+              <Link to="/termos" className="hover:text-foreground">Termos de Uso</Link>
+              <Link to="/privacidade" className="hover:text-foreground">Política de Privacidade</Link>
+              <Link to="/auth" className="text-primary hover:underline">Acessar plataforma</Link>
+            </nav>
           </div>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-xs text-muted-foreground text-center">
             © {new Date().getFullYear()} NEVVOH. Todos os direitos reservados.
           </p>
-          <Link to="/auth" className="text-sm text-primary hover:underline">
-            Acessar plataforma
-          </Link>
         </div>
       </footer>
       {previewFeature && (

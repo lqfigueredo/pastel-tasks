@@ -32,6 +32,8 @@ const Billing = lazy(() => import("@/pages/Billing"));
 const Unsubscribe = lazy(() => import("@/pages/Unsubscribe"));
 const AcceptInvite = lazy(() => import("@/pages/AcceptInvite"));
 const Pricing = lazy(() => import("@/pages/Pricing"));
+const Terms = lazy(() => import("@/pages/legal/Terms"));
+const Privacy = lazy(() => import("@/pages/legal/Privacy"));
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -61,6 +63,8 @@ const App = () => (
                 <Route path="/financeiro/cadastro" element={<FinancialRegister />} />
                 <Route path="/unsubscribe" element={<Unsubscribe />} />
                 <Route path="/convite/:token" element={<AcceptInvite />} />
+                <Route path="/termos" element={<Terms />} />
+                <Route path="/privacidade" element={<Privacy />} />
                 <Route element={<AppLayout />}>
                   <Route path="/tarefas" element={<Index />} />
                   <Route path="/dashboard" element={<Dashboard />} />
