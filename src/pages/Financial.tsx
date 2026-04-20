@@ -294,6 +294,7 @@ const Financial = () => {
             )}
           </TabsTrigger>
           <TabsTrigger value="help-texts">Textos de Ajuda</TabsTrigger>
+          <TabsTrigger value="legal">Documentos Legais</TabsTrigger>
         </TabsList>
 
         <TabsContent value="subscriptions">
