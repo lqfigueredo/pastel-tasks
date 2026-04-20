@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -52,16 +53,10 @@ interface BannedUser {
 
 export default function Admin() {
   const { user } = useAuth();
-  const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
-  const [profiles, setProfiles] = useState<Profile[]>([]);
-  const [teams, setTeams] = useState<Team[]>([]);
-  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
-  const [adminRoles, setAdminRoles] = useState<Set<string>>(new Set());
-  const [bannedUsers, setBannedUsers] = useState<Set<string>>(new Set());
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [submitting, setSubmitting] = useState(false);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
-  const [userLimit, setUserLimit] = useState<{ current: number; max: number } | null>(null);
+  const [bannedUsers, setBannedUsers] = useState<Set<string>>(new Set());
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -69,52 +64,57 @@ export default function Admin() {
   const [teamId, setTeamId] = useState<string>('none');
   const [requestSeatsOpen, setRequestSeatsOpen] = useState(false);
 
-  useEffect(() => {
-    if (!user) return;
-    checkAdmin();
-  }, [user]);
+  const { data: isAdminData, isLoading: checkingAdmin } = useQuery({
+    queryKey: ['is-admin', user?.id],
+    queryFn: async () => {
+      const { data } = await supabase.rpc('has_role', { _user_id: user!.id, _role: 'admin' });
+      return !!data;
+    },
+    enabled: !!user,
+    staleTime: 60_000,
+  });
+  const isAdmin = isAdminData ?? null;
 
-  const checkAdmin = async () => {
-    const { data } = await supabase.rpc('has_role', { _user_id: user!.id, _role: 'admin' });
-    setIsAdmin(!!data);
-    if (data) {
-      await loadData();
-    }
-    setLoading(false);
-  };
+  const { data: adminData, isLoading: loadingData } = useQuery({
+    queryKey: ['admin-data', user?.id],
+    queryFn: async () => {
+      const { data: approvalsData } = await supabase
+        .from('user_approvals')
+        .select('user_id')
+        .eq('created_by_admin', user!.id);
 
-  const loadData = async () => {
-    const { data: approvalsData } = await supabase
-      .from('user_approvals')
-      .select('user_id')
-      .eq('created_by_admin', user!.id);
+      const createdUserIds = approvalsData?.map(a => a.user_id) || [];
+      const visibleUserIds = [...new Set([user!.id, ...createdUserIds])];
 
-    const createdUserIds = approvalsData?.map(a => a.user_id) || [];
-    const visibleUserIds = [...new Set([user!.id, ...createdUserIds])];
+      const [profilesRes, teamsRes, membersRes, rolesRes, settingsRes] = await Promise.all([
+        supabase.from('profiles').select('user_id, display_name, created_at').in('user_id', visibleUserIds).order('created_at', { ascending: false }),
+        supabase.from('teams').select('id, name').eq('created_by', user!.id),
+        supabase.from('team_members').select('user_id, team_id, teams(name)'),
+        supabase.from('user_roles').select('user_id, role').eq('role', 'admin'),
+        supabase.from('admin_settings').select('max_users').eq('admin_user_id', user!.id).maybeSingle(),
+      ]);
 
-    const [profilesRes, teamsRes, membersRes, rolesRes, settingsRes] = await Promise.all([
-      supabase.from('profiles').select('user_id, display_name, created_at').in('user_id', visibleUserIds).order('created_at', { ascending: false }),
-      supabase.from('teams').select('id, name').eq('created_by', user!.id),
-      supabase.from('team_members').select('user_id, team_id, teams(name)'),
-      supabase.from('user_roles').select('user_id, role').eq('role', 'admin'),
-      supabase.from('admin_settings').select('max_users').eq('admin_user_id', user!.id).maybeSingle(),
-    ]);
-    if (profilesRes.data) setProfiles(profilesRes.data);
-    if (teamsRes.data) setTeams(teamsRes.data);
-    if (membersRes.data) setTeamMembers(membersRes.data as unknown as TeamMember[]);
-    if (rolesRes.data) setAdminRoles(new Set(rolesRes.data.map((r: UserRole) => r.user_id)));
+      const maxUsers = settingsRes.data?.max_users ?? 10;
+      return {
+        profiles: (profilesRes.data || []) as Profile[],
+        teams: (teamsRes.data || []) as Team[],
+        teamMembers: (membersRes.data || []) as unknown as TeamMember[],
+        adminRoles: new Set((rolesRes.data || []).map((r: UserRole) => r.user_id)),
+        userLimit: { current: createdUserIds.length, max: maxUsers },
+      };
+    },
+    enabled: !!user && isAdmin === true,
+    staleTime: 30_000,
+  });
 
-    const maxUsers = settingsRes.data?.max_users ?? 10;
-    setUserLimit({ current: createdUserIds.length, max: maxUsers });
+  const profiles = adminData?.profiles ?? [];
+  const teams = adminData?.teams ?? [];
+  const teamMembers = adminData?.teamMembers ?? [];
+  const adminRoles = adminData?.adminRoles ?? new Set<string>();
+  const userLimit = adminData?.userLimit ?? null;
+  const loading = checkingAdmin || (isAdmin === true && loadingData);
 
-    await loadBannedStatus(profilesRes.data || []);
-  };
-
-  const loadBannedStatus = async (userProfiles: Profile[]) => {
-    // We'll check ban status by trying to get user info via the manage function
-    // For now, we track it locally after actions
-    // The banned set is updated when actions are performed
-  };
+  const loadData = () => queryClient.invalidateQueries({ queryKey: ['admin-data', user?.id] });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -185,14 +185,8 @@ export default function Admin() {
       toast.success(data.message);
 
       // Update local state
-      if (action === 'promote') {
-        setAdminRoles(prev => new Set([...prev, targetUserId]));
-      } else if (action === 'demote') {
-        setAdminRoles(prev => {
-          const next = new Set(prev);
-          next.delete(targetUserId);
-          return next;
-        });
+      if (action === 'promote' || action === 'demote') {
+        loadData();
       } else if (action === 'deactivate') {
         setBannedUsers(prev => new Set([...prev, targetUserId]));
       } else if (action === 'activate') {

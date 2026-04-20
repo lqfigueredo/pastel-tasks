@@ -1,5 +1,6 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -28,42 +29,32 @@ interface MeetingRow {
 export default function MeetingMinutes() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [meetings, setMeetings] = useState<MeetingRow[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [search, setSearch] = useState('');
   const [dateFrom, setDateFrom] = useState<Date | undefined>();
   const [dateTo, setDateTo] = useState<Date | undefined>();
   const [onlyWithPendencies, setOnlyWithPendencies] = useState(false);
 
-  const fetchMeetings = async () => {
-    if (!user) return;
-    setLoading(true);
+  const { data: meetings = [], isLoading: loading } = useQuery({
+    queryKey: ['meetings', user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('meeting_minutes')
+        .select('*, meeting_participants(count), meeting_pendencies(count)')
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return (data || []).map((m: any) => ({
+        ...m,
+        participant_count: m.meeting_participants?.[0]?.count ?? 0,
+        pendency_count: m.meeting_pendencies?.[0]?.count ?? 0,
+      })) as MeetingRow[];
+    },
+    enabled: !!user,
+    staleTime: 30_000,
+  });
 
-    const { data, error } = await supabase
-      .from('meeting_minutes')
-      .select('*, meeting_participants(count), meeting_pendencies(count)')
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      console.error(error);
-      setLoading(false);
-      return;
-    }
-
-    const enriched = (data || []).map((m: any) => ({
-      ...m,
-      participant_count: m.meeting_participants?.[0]?.count ?? 0,
-      pendency_count: m.meeting_pendencies?.[0]?.count ?? 0,
-    }));
-
-    setMeetings(enriched);
-    setLoading(false);
-  };
-
-  useEffect(() => {
-    fetchMeetings();
-  }, [user]);
+  const fetchMeetings = () => queryClient.invalidateQueries({ queryKey: ['meetings', user?.id] });
 
   const filteredMeetings = useMemo(() => {
     return meetings.filter((m) => {
