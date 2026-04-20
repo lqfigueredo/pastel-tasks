@@ -73,7 +73,11 @@ export default function VouchersTab() {
   const load = async () => {
     setLoading(true);
     const [vRes, pRes] = await Promise.all([
-      supabase.from('discount_vouchers').select('*').order('created_at', { ascending: false }),
+      supabase
+        .from('discount_vouchers')
+        .select('*')
+        .eq('is_adhoc', false)
+        .order('created_at', { ascending: false }),
       supabase.from('plans').select('id, name').eq('is_active', true),
     ]);
     setVouchers((vRes.data as Voucher[]) || []);

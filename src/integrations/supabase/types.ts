@@ -290,6 +290,7 @@ export type Database = {
           duration_in_months: number | null
           id: string
           is_active: boolean
+          is_adhoc: boolean
           max_redemptions: number | null
           times_redeemed: number
           updated_at: string
@@ -308,6 +309,7 @@ export type Database = {
           duration_in_months?: number | null
           id?: string
           is_active?: boolean
+          is_adhoc?: boolean
           max_redemptions?: number | null
           times_redeemed?: number
           updated_at?: string
@@ -326,6 +328,7 @@ export type Database = {
           duration_in_months?: number | null
           id?: string
           is_active?: boolean
+          is_adhoc?: boolean
           max_redemptions?: number | null
           times_redeemed?: number
           updated_at?: string
@@ -2055,6 +2058,17 @@ export type Database = {
     }
     Functions: {
       admin_can_add_user: { Args: { _admin_id: string }; Returns: boolean }
+      apply_direct_discount: {
+        Args: {
+          _discount_type: string
+          _discount_value: number
+          _duration: string
+          _duration_in_months: number
+          _reason: string
+          _subscription_id: string
+        }
+        Returns: string
+      }
       apply_voucher: {
         Args: { _code: string; _subscription_id: string }
         Returns: string

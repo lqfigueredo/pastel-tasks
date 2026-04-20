@@ -3,10 +3,11 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Tag, X, Plus } from 'lucide-react';
+import { Loader2, Tag, X, Plus, Sparkles } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { toast } from 'sonner';
+import DirectDiscountDialog from './DirectDiscountDialog';
 
 interface Props {
   subscriptionId: string;
@@ -25,6 +26,8 @@ interface AppliedDiscount {
     discount_type: 'percent' | 'fixed_amount';
     discount_value: number;
     duration: string;
+    is_adhoc?: boolean;
+    description?: string | null;
   };
 }
 
@@ -46,13 +49,14 @@ export default function SubscriptionDiscountsSection({ subscriptionId, onChanged
   const [loading, setLoading] = useState(true);
   const [code, setCode] = useState('');
   const [applying, setApplying] = useState(false);
+  const [directOpen, setDirectOpen] = useState(false);
 
   const load = async () => {
     setLoading(true);
     const [dRes, cRes] = await Promise.all([
       supabase
         .from('subscription_discounts')
-        .select('*, voucher:discount_vouchers(code, discount_type, discount_value, duration)')
+        .select('*, voucher:discount_vouchers(code, discount_type, discount_value, duration, is_adhoc, description)')
         .eq('subscription_id', subscriptionId)
         .eq('is_active', true)
         .order('applied_at', { ascending: false }),
@@ -128,17 +132,28 @@ export default function SubscriptionDiscountsSection({ subscriptionId, onChanged
         </div>
       )}
 
-      {/* Aplicar voucher */}
-      <div className="flex gap-2">
-        <Input
-          placeholder="Código do voucher"
-          value={code}
-          onChange={(e) => setCode(e.target.value.toUpperCase())}
-          className="font-mono"
-        />
-        <Button size="sm" onClick={handleApply} disabled={!code.trim() || applying}>
-          {applying ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4 mr-1" />}
-          Aplicar
+      {/* Aplicar voucher + atalho desconto direto */}
+      <div className="space-y-2">
+        <div className="flex gap-2">
+          <Input
+            placeholder="Código do voucher"
+            value={code}
+            onChange={(e) => setCode(e.target.value.toUpperCase())}
+            className="font-mono"
+          />
+          <Button size="sm" onClick={handleApply} disabled={!code.trim() || applying}>
+            {applying ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4 mr-1" />}
+            Aplicar
+          </Button>
+        </div>
+        <Button
+          size="sm"
+          variant="outline"
+          className="w-full"
+          onClick={() => setDirectOpen(true)}
+        >
+          <Sparkles className="h-4 w-4 mr-1" />
+          Aplicar desconto direto (sem voucher)
         </Button>
       </div>
 
@@ -149,10 +164,25 @@ export default function SubscriptionDiscountsSection({ subscriptionId, onChanged
         ) : (
           discounts.map((d) => (
             <div key={d.id} className="flex items-start justify-between border rounded-lg p-3">
-              <div className="flex-1">
-                <div className="flex items-center gap-2 font-medium">
-                  <Tag className="h-3 w-3" />
-                  <span className="font-mono">{d.voucher.code}</span>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 font-medium flex-wrap">
+                  {d.voucher.is_adhoc ? (
+                    <>
+                      <Sparkles className="h-3 w-3 text-primary" />
+                      <Badge
+                        variant="secondary"
+                        className="bg-primary/15 text-primary border-primary/30"
+                        title={d.voucher.description || 'Desconto direto'}
+                      >
+                        Direto
+                      </Badge>
+                    </>
+                  ) : (
+                    <>
+                      <Tag className="h-3 w-3" />
+                      <span className="font-mono">{d.voucher.code}</span>
+                    </>
+                  )}
                   <Badge variant="outline">{formatDiscount(d.voucher)}</Badge>
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">
@@ -161,6 +191,11 @@ export default function SubscriptionDiscountsSection({ subscriptionId, onChanged
                   {d.expires_at && ` · expira ${format(new Date(d.expires_at), 'dd/MM/yy', { locale: ptBR })}`}
                   {d.voucher.duration === 'forever' && ' · vitalício'}
                 </p>
+                {d.voucher.is_adhoc && d.voucher.description && (
+                  <p className="text-xs text-muted-foreground mt-1 italic truncate">
+                    {d.voucher.description}
+                  </p>
+                )}
               </div>
               <Button size="sm" variant="ghost" onClick={() => handleRemove(d.id)}>
                 <X className="h-3 w-3" />
@@ -169,6 +204,16 @@ export default function SubscriptionDiscountsSection({ subscriptionId, onChanged
           ))
         )}
       </div>
+
+      <DirectDiscountDialog
+        subscriptionId={subscriptionId}
+        open={directOpen}
+        onOpenChange={setDirectOpen}
+        onSuccess={() => {
+          load();
+          onChanged?.();
+        }}
+      />
     </div>
   );
 }

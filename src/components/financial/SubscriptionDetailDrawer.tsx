@@ -85,6 +85,7 @@ const CHANGE_LABELS: Record<string, string> = {
   comp_activation: 'Ativação como cortesia',
   voucher_applied: 'Voucher aplicado',
   voucher_removed: 'Voucher removido',
+  direct_discount: 'Desconto direto aplicado',
 };
 
 export default function SubscriptionDetailDrawer({ subscription, open, onClose, onChanged }: Props) {
