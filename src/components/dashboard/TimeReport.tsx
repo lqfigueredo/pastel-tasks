@@ -252,9 +252,21 @@ export function TimeReport() {
             <span className="text-muted-foreground">Total:</span>
             <span className="font-mono font-semibold text-foreground">{formatDuration(grandTotal)}</span>
           </div>
-          <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={exportCSV}>
-            <Download className="h-3.5 w-3.5" /> CSV
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" className="gap-1.5 text-xs">
+                <Download className="h-3.5 w-3.5" /> Exportar
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={exportCSV} className="gap-2">
+                <FileSpreadsheet className="h-4 w-4" /> CSV
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={exportPDF} className="gap-2">
+                <FileText className="h-4 w-4" /> PDF
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 
