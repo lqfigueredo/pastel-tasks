@@ -10,9 +10,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { Switch } from '@/components/ui/switch';
 import { AssigneeSelector } from './AssigneeSelector';
-import { X, Users, Repeat, FileText, AlertTriangle } from 'lucide-react';
+import { Users, Repeat, FileText, AlertTriangle } from 'lucide-react';
 import { errorToast } from '@/lib/toast-helpers';
 import { cn } from '@/lib/utils';
+import {
+  ResponsiveDialog,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+  ResponsiveDialogDescription,
+} from '@/components/ui/responsive-dialog';
 
 interface Props {
   open: boolean;
