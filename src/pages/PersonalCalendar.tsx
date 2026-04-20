@@ -30,33 +30,37 @@ interface CalendarEvent {
 
 export default function PersonalCalendar() {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [currentMonth, setCurrentMonth] = useState(new Date());
-  const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>();
 
-  const fetchEvents = useCallback(async () => {
-    if (!user) return;
-    const monthStart = startOfMonth(currentMonth);
-    const monthEnd = endOfMonth(currentMonth);
-    const calStart = startOfWeek(monthStart);
-    const calEnd = endOfWeek(monthEnd);
+  const monthKey = format(currentMonth, 'yyyy-MM');
 
-    const { data } = await supabase
-      .from('calendar_events')
-      .select('*')
-      .gte('event_date', format(calStart, 'yyyy-MM-dd'))
-      .lte('event_date', format(calEnd, 'yyyy-MM-dd'))
-      .order('start_time', { ascending: true, nullsFirst: false });
+  const { data: events = [] } = useQuery({
+    queryKey: ['calendar-events', user?.id, monthKey],
+    queryFn: async () => {
+      const monthStart = startOfMonth(currentMonth);
+      const monthEnd = endOfMonth(currentMonth);
+      const calStart = startOfWeek(monthStart);
+      const calEnd = endOfWeek(monthEnd);
 
-    setEvents(data || []);
-  }, [user, currentMonth]);
+      const { data } = await supabase
+        .from('calendar_events')
+        .select('*')
+        .gte('event_date', format(calStart, 'yyyy-MM-dd'))
+        .lte('event_date', format(calEnd, 'yyyy-MM-dd'))
+        .order('start_time', { ascending: true, nullsFirst: false });
 
-  useEffect(() => {
-    fetchEvents();
-  }, [fetchEvents]);
+      return (data || []) as CalendarEvent[];
+    },
+    enabled: !!user,
+    staleTime: 30_000,
+  });
+
+  const fetchEvents = () => queryClient.invalidateQueries({ queryKey: ['calendar-events', user?.id, monthKey] });
 
   const monthStart = startOfMonth(currentMonth);
   const monthEnd = endOfMonth(currentMonth);
