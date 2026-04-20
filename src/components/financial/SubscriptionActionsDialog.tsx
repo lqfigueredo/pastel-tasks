@@ -7,8 +7,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Gift } from 'lucide-react';
 import type { SubscriptionRow } from './SubscriptionsTab';
+import CompActivationDialog from './CompActivationDialog';
 
 interface Props {
   subscription: SubscriptionRow;
@@ -27,6 +28,7 @@ export default function SubscriptionActionsDialog({ subscription, open, onClose,
   const [pricePerSeat, setPricePerSeat] = useState((subscription.price_per_seat_cents / 100).toFixed(2));
   const [reason, setReason] = useState('');
   const [saving, setSaving] = useState(false);
+  const [compOpen, setCompOpen] = useState(false);
 
   const handleSave = async () => {
     setSaving(true);
@@ -73,6 +75,7 @@ export default function SubscriptionActionsDialog({ subscription, open, onClose,
   };
 
   return (
+    <>
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
       <DialogContent>
         <DialogHeader>
@@ -81,6 +84,14 @@ export default function SubscriptionActionsDialog({ subscription, open, onClose,
         </DialogHeader>
 
         <div className="space-y-4">
+          <Button
+            variant="outline"
+            className="w-full justify-start border-primary/40 text-primary hover:bg-primary/5"
+            onClick={() => setCompOpen(true)}
+          >
+            <Gift className="h-4 w-4 mr-2" />
+            Ativar como cortesia (sem cobrança)
+          </Button>
           <div>
             <Label>Ação</Label>
             <Select value={action} onValueChange={(v) => setAction(v as Action)}>
@@ -145,5 +156,14 @@ export default function SubscriptionActionsDialog({ subscription, open, onClose,
         </DialogFooter>
       </DialogContent>
     </Dialog>
+
+    <CompActivationDialog
+      subscriptionId={subscription.id}
+      adminName={subscription.admin_name}
+      open={compOpen}
+      onClose={() => setCompOpen(false)}
+      onSuccess={() => { setCompOpen(false); onSuccess(); }}
+    />
+    </>
   );
 }

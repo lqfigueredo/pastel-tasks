@@ -2079,6 +2079,10 @@ export type Database = {
         Args: { _target_id: string; _viewer_id: string }
         Returns: boolean
       }
+      comp_activate_subscription: {
+        Args: { _months: number; _reason: string; _subscription_id: string }
+        Returns: string
+      }
       delete_email: {
         Args: { message_id: number; queue_name: string }
         Returns: boolean
