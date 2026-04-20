@@ -110,6 +110,10 @@ const Index = () => {
           </div>
         </div>
         <div className="flex items-center gap-3">
+          <KanbanSavedFilters
+            current={{ assigneeId: filterAssigneeId }}
+            onApply={(f) => setFilterAssigneeId(f.assigneeId ?? null)}
+          />
           <Select
             value={filterAssigneeId ?? 'all'}
             onValueChange={(v) => setFilterAssigneeId(v === 'all' ? null : v)}
