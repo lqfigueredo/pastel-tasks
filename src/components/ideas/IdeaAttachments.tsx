@@ -3,7 +3,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
-import { Paperclip, Upload, Trash2, FileText, Image as ImageIcon, Download } from 'lucide-react';
+import { Paperclip, Upload, Trash2, FileText, Image as ImageIcon, Eye } from 'lucide-react';
+import { AttachmentPreview } from '@/components/AttachmentPreview';
 
 interface Attachment {
   id: string;
@@ -23,6 +24,7 @@ export function IdeaAttachments({ ideaId }: Props) {
   const { toast } = useToast();
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [uploading, setUploading] = useState(false);
+  const [previewAtt, setPreviewAtt] = useState<Attachment | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -76,13 +78,6 @@ export function IdeaAttachments({ ideaId }: Props) {
     fetchAttachments();
   };
 
-  const handleDownload = async (att: Attachment) => {
-    const { data } = await supabase.storage
-      .from('idea-attachments')
-      .createSignedUrl(att.file_path, 60);
-    if (data?.signedUrl) window.open(data.signedUrl, '_blank');
-  };
-
   const isImage = (type: string) => type.startsWith('image/');
 
   return (
@@ -123,18 +118,36 @@ export function IdeaAttachments({ ideaId }: Props) {
             ) : (
               <FileText className="h-4 w-4 text-primary shrink-0" />
             )}
-            <span className="truncate flex-1">{att.file_name}</span>
-            <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => handleDownload(att)}>
-              <Download className="h-3 w-3" />
+            <button
+              type="button"
+              onClick={() => setPreviewAtt(att)}
+              className="truncate flex-1 text-left hover:underline focus:outline-none focus:underline"
+              title="Pré-visualizar"
+            >
+              {att.file_name}
+            </button>
+            <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => setPreviewAtt(att)} title="Pré-visualizar">
+              <Eye className="h-3 w-3" />
             </Button>
             {user?.id === att.uploaded_by && (
-              <Button size="icon" variant="ghost" className="h-6 w-6 text-destructive" onClick={() => handleDelete(att)}>
+              <Button size="icon" variant="ghost" className="h-6 w-6 text-destructive" onClick={() => handleDelete(att)} title="Excluir">
                 <Trash2 className="h-3 w-3" />
               </Button>
             )}
           </div>
         ))}
       </div>
+
+      {previewAtt && (
+        <AttachmentPreview
+          open={!!previewAtt}
+          onOpenChange={(o) => !o && setPreviewAtt(null)}
+          bucket="idea-attachments"
+          filePath={previewAtt.file_path}
+          fileName={previewAtt.file_name}
+          fileType={previewAtt.file_type}
+        />
+      )}
     </div>
   );
 }
