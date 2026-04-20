@@ -1,5 +1,6 @@
 import type { Task, TaskStatus } from '@/types/kanban';
 import { safeFormatDate } from '@/lib/date';
+import { humanizeDate } from '@/lib/date-humanize';
 import {
   Tooltip,
   TooltipContent,
@@ -23,6 +24,7 @@ export function TaskTooltip({ task, statusName, statusColor, children }: TaskToo
   const startFormatted = formatDate(task.start_date);
   const endFormatted = formatDate(task.end_date);
   const deliveryFormatted = formatDate(task.estimated_delivery_date);
+  const deliveryHumanized = humanizeDate(task.estimated_delivery_date, { prefix: 'deadline' });
   const actualEndFormatted = formatDate(task.actual_end_date);
 
   const dateRange =
@@ -66,13 +68,17 @@ export function TaskTooltip({ task, statusName, statusColor, children }: TaskToo
           {deliveryFormatted && (
             <div className="flex items-center gap-1.5 text-muted-foreground">
               <Flag className="h-3 w-3 shrink-0" />
-              <span>Previsão: {deliveryFormatted}</span>
+              <span>
+                {deliveryHumanized && deliveryHumanized !== deliveryFormatted
+                  ? `${deliveryHumanized} (${deliveryFormatted})`
+                  : `Previsão: ${deliveryFormatted}`}
+              </span>
             </div>
           )}
 
           {actualEndFormatted && (
             <div className="flex items-center gap-1.5 text-muted-foreground">
-              <Flag className="h-3 w-3 shrink-0 text-green-500" />
+              <Flag className="h-3 w-3 shrink-0 text-primary" />
               <span>Concluída: {actualEndFormatted}</span>
             </div>
           )}

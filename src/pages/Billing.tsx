@@ -13,6 +13,7 @@ import BillingProfileForm from '@/components/billing/BillingProfileForm';
 import InvoiceHistory from '@/components/billing/InvoiceHistory';
 import { ActivateSubscriptionDialog } from '@/components/billing/ActivateSubscriptionDialog';
 import { RequestSeatsDialog } from '@/components/admin/RequestSeatsDialog';
+import { PageLoader } from '@/components/ui/loaders';
 
 interface Subscription {
   id: string;
@@ -103,11 +104,7 @@ export default function Billing() {
   };
 
   if (loading) {
-    return (
-      <div className="flex h-64 items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
+    return <PageLoader />;
   }
 
   if (!sub) {
