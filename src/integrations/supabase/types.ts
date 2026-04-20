@@ -2085,6 +2085,7 @@ export type Database = {
           total_cents: number
         }[]
       }
+      can_access_realtime_topic: { Args: { _topic: string }; Returns: boolean }
       can_access_task: {
         Args: { _task_id: string; _user_id: string }
         Returns: boolean
