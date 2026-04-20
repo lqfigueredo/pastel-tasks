@@ -148,6 +148,8 @@ export function TimeReport() {
 
   const grandTotal = useMemo(() => filteredEntries.reduce((sum, e) => sum + getDuration(e), 0), [filteredEntries]);
 
+  const fileSuffix = `${startDate ? '-de-' + format(startDate, 'yyyy-MM-dd') : ''}${endDate ? '-ate-' + format(endDate, 'yyyy-MM-dd') : ''}`;
+
   const exportCSV = () => {
     const rows = [['Usuário', 'Tarefa', 'Início', 'Fim', 'Duração (hh:mm:ss)']];
     for (const e of filteredEntries) {
@@ -164,9 +166,53 @@ export function TimeReport() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `relatorio-horas${startDate ? '-de-' + format(startDate, 'yyyy-MM-dd') : ''}${endDate ? '-ate-' + format(endDate, 'yyyy-MM-dd') : ''}.csv`;
+    a.download = `relatorio-horas${fileSuffix}.csv`;
     a.click();
     URL.revokeObjectURL(url);
+  };
+
+  const exportPDF = async () => {
+    // Lazy-load to keep bundle slim
+    const [{ default: jsPDF }, autoTableMod] = await Promise.all([
+      import('jspdf'),
+      import('jspdf-autotable'),
+    ]);
+    const autoTable = (autoTableMod as any).default ?? (autoTableMod as any);
+
+    const doc = new jsPDF({ unit: 'pt', format: 'a4' });
+    const periodLabel =
+      startDate || endDate
+        ? `${startDate ? format(startDate, 'dd/MM/yyyy') : '—'} a ${endDate ? format(endDate, 'dd/MM/yyyy') : '—'}`
+        : 'Todo o período';
+
+    doc.setFontSize(16);
+    doc.text('Relatório de Horas', 40, 40);
+    doc.setFontSize(10);
+    doc.setTextColor(100);
+    doc.text(`Período: ${periodLabel}`, 40, 58);
+    doc.text(`Total geral: ${formatDuration(grandTotal)}`, 40, 72);
+    doc.text(`Gerado em: ${format(new Date(), 'dd/MM/yyyy HH:mm')}`, 40, 86);
+
+    autoTable(doc, {
+      startY: 110,
+      head: [['Por Tarefa', 'Usuários', 'Total']],
+      body: byTask.map((g) => [g.taskTitle, String(g.userList.length), formatDuration(g.totalSeconds)]),
+      styles: { fontSize: 9, cellPadding: 4 },
+      headStyles: { fillColor: [71, 180, 160] },
+      theme: 'striped',
+    });
+
+    const lastY = (doc as any).lastAutoTable?.finalY ?? 110;
+    autoTable(doc, {
+      startY: lastY + 20,
+      head: [['Por Usuário', 'Tarefas', 'Total']],
+      body: byUser.map((g) => [g.userName, String(g.taskList.length), formatDuration(g.totalSeconds)]),
+      styles: { fontSize: 9, cellPadding: 4 },
+      headStyles: { fillColor: [71, 180, 160] },
+      theme: 'striped',
+    });
+
+    doc.save(`relatorio-horas${fileSuffix}.pdf`);
   };
 
   if (isLoading) {
