@@ -124,14 +124,17 @@ const Auth = () => {
                 {submitting ? 'Aguarde...' : isLogin ? 'Entrar' : 'Criar conta'}
               </Button>
             </form>
-            <div className="mt-4 text-center">
+            <div className="mt-4 text-center space-y-2">
               <button
                 type="button"
                 onClick={() => setIsLogin(!isLogin)}
-                className="text-sm text-primary hover:underline"
+                className="text-sm text-primary hover:underline block w-full"
               >
                 {isLogin ? 'Não tem conta? Cadastre-se' : 'Já tem conta? Entrar'}
               </button>
+              <Link to="/precos" className="text-xs text-muted-foreground hover:text-foreground inline-block">
+                Veja os planos →
+              </Link>
             </div>
           </CardContent>
         </Card>

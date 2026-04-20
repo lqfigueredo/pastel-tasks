@@ -29,6 +29,7 @@ const Timer = lazy(() => import("@/pages/Timer"));
 const Billing = lazy(() => import("@/pages/Billing"));
 const Unsubscribe = lazy(() => import("@/pages/Unsubscribe"));
 const AcceptInvite = lazy(() => import("@/pages/AcceptInvite"));
+const Pricing = lazy(() => import("@/pages/Pricing"));
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -57,6 +58,7 @@ const App = () => (
                 <Route path="/" element={<Landing />} />
                 <Route path="/landing" element={<Landing />} />
                 <Route path="/auth" element={<Auth />} />
+                <Route path="/precos" element={<Pricing />} />
                 <Route path="/financeiro/cadastro" element={<FinancialRegister />} />
                 <Route path="/unsubscribe" element={<Unsubscribe />} />
                 <Route path="/convite/:token" element={<AcceptInvite />} />

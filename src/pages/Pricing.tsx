@@ -1,0 +1,260 @@
+import { useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { Check, Sparkles, ArrowRight } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { Button } from '@/components/ui/button';
+import { Slider } from '@/components/ui/slider';
+import LeadFormTrigger from '@/components/landing/LeadFormTrigger';
+import logo from '@/assets/logo.webp';
+
+interface Plan {
+  id: string;
+  name: string;
+  description: string | null;
+  price_per_seat_cents: number;
+  currency: string;
+  minimum_seats: number;
+  billing_interval: string;
+  features: unknown;
+}
+
+const formatBRL = (cents: number) =>
+  new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(cents / 100);
+
+const Pricing = () => {
+  const [plans, setPlans] = useState<Plan[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [seats, setSeats] = useState(10);
+
+  useEffect(() => {
+    document.title = 'Preços do NEVVOH — Gestão de tarefas a partir de R$ por usuário';
+    const meta =
+      document.querySelector('meta[name="description"]') ||
+      Object.assign(document.createElement('meta'), { name: 'description' });
+    meta.setAttribute(
+      'content',
+      'Conheça os planos do NEVVOH: cobrança mensal por usuário, mínimo de 10 assentos e 14 dias de teste grátis sem cartão.'
+    );
+    if (!meta.parentNode) document.head.appendChild(meta);
+
+    supabase
+      .from('plans')
+      .select('id, name, description, price_per_seat_cents, currency, minimum_seats, billing_interval, features')
+      .eq('is_active', true)
+      .order('price_per_seat_cents', { ascending: true })
+      .then(({ data }) => {
+        setPlans((data as Plan[]) ?? []);
+        if (data && data.length > 0) setSeats((data[0] as Plan).minimum_seats);
+        setLoading(false);
+      });
+  }, []);
+
+  const primary = plans[0];
+  const monthlyTotal = useMemo(() => {
+    if (!primary) return 0;
+    const effective = Math.max(seats, primary.minimum_seats);
+    return effective * primary.price_per_seat_cents;
+  }, [primary, seats]);
+
+  const featuresList: string[] = useMemo(() => {
+    if (!primary) return [];
+    const f = primary.features;
+    if (Array.isArray(f)) return f.filter((i): i is string => typeof i === 'string');
+    return [];
+  }, [primary]);
+
+  return (
+    <div className="min-h-screen bg-background text-foreground scroll-smooth">
+      <header className="border-b border-border/50 bg-background/80 backdrop-blur-sm sticky top-0 z-10">
+        <div className="mx-auto max-w-6xl flex items-center justify-between px-6 py-4">
+          <Link to="/" className="flex items-center gap-2">
+            <img src={logo} alt="NEVVOH" className="h-9 w-9 rounded-xl" />
+            <span className="text-lg font-bold font-display">NEVVOH</span>
+          </Link>
+          <nav className="flex items-center gap-2">
+            <Link to="/" className="text-sm text-muted-foreground hover:text-foreground px-3">
+              Início
+            </Link>
+            <Link to="/auth">
+              <Button variant="outline" size="sm">Já tenho conta</Button>
+            </Link>
+          </nav>
+        </div>
+      </header>
+
+      <section className="relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-b from-mint-light/40 via-transparent to-transparent pointer-events-none" />
+        <div className="relative mx-auto max-w-4xl px-6 py-20 text-center">
+          <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 text-sm font-medium text-primary mb-6">
+            <Sparkles className="h-4 w-4" />
+            14 dias grátis, sem cartão
+          </div>
+          <h1 className="text-4xl font-bold tracking-tight sm:text-5xl font-display">
+            Preço transparente, <span className="text-primary">por usuário</span>
+          </h1>
+          <p className="mx-auto mt-6 max-w-2xl text-lg text-muted-foreground">
+            Sem letras miúdas. Pague apenas pelos assentos da sua equipe e cancele quando quiser.
+          </p>
+        </div>
+      </section>
+
+      <section className="pb-24">
+        <div className="mx-auto max-w-3xl px-6">
+          {loading ? (
+            <div className="flex justify-center py-16">
+              <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+            </div>
+          ) : !primary ? (
+            <p className="text-center text-muted-foreground">Nenhum plano disponível no momento.</p>
+          ) : (
+            <div className="rounded-2xl border-2 border-primary/30 bg-card shadow-xl overflow-hidden">
+              <div className="bg-primary/5 border-b border-primary/20 p-8 text-center">
+                <h2 className="text-2xl font-bold font-display">{primary.name}</h2>
+                {primary.description && (
+                  <p className="mt-2 text-muted-foreground">{primary.description}</p>
+                )}
+                <div className="mt-6 flex items-baseline justify-center gap-2">
+                  <span className="text-5xl font-bold text-primary font-display">
+                    {formatBRL(primary.price_per_seat_cents)}
+                  </span>
+                  <span className="text-muted-foreground">/usuário/mês</span>
+                </div>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  A partir de {primary.minimum_seats} assentos
+                </p>
+              </div>
+
+              <div className="p-8 space-y-8">
+                <div className="rounded-xl bg-muted/50 p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <span className="font-medium">Quantos usuários?</span>
+                    <span className="text-2xl font-bold text-primary font-display">{seats}</span>
+                  </div>
+                  <Slider
+                    value={[seats]}
+                    onValueChange={([v]) => setSeats(v)}
+                    min={primary.minimum_seats}
+                    max={500}
+                    step={1}
+                    className="mb-4"
+                  />
+                  <div className="flex items-center justify-between pt-4 border-t border-border">
+                    <span className="text-sm text-muted-foreground">Mensalidade estimada</span>
+                    <span className="text-3xl font-bold font-display">{formatBRL(monthlyTotal)}</span>
+                  </div>
+                </div>
+
+                {featuresList.length > 0 && (
+                  <ul className="space-y-3">
+                    {featuresList.map((feat, i) => (
+                      <li key={i} className="flex items-start gap-3">
+                        <Check className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+                        <span className="text-sm">{feat}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+
+                <div className="flex flex-col sm:flex-row gap-3 pt-4">
+                  <Link to="/auth" className="flex-1">
+                    <Button size="lg" className="w-full gap-2">
+                      Começar teste grátis
+                      <ArrowRight className="h-4 w-4" />
+                    </Button>
+                  </Link>
+                  <div className="flex-1">
+                    <LeadFormTrigger />
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </section>
+
+      <section className="border-t border-border/50 bg-muted/30 py-20">
+        <div className="mx-auto max-w-3xl px-6">
+          <h2 className="text-center text-2xl font-bold sm:text-3xl font-display mb-10">
+            Perguntas frequentes
+          </h2>
+          <div className="space-y-4">
+            {[
+              {
+                q: 'Posso cancelar quando quiser?',
+                a: 'Sim. Você pode cancelar a assinatura a qualquer momento pelo painel de cobrança. O acesso continua até o fim do período já pago.',
+              },
+              {
+                q: 'Como funciona o teste grátis?',
+                a: 'São 14 dias completos com acesso a todos os módulos, sem precisar cadastrar cartão. Ao final, você decide se ativa a assinatura.',
+              },
+              {
+                q: 'Por que o mínimo é de 10 assentos?',
+                a: 'O NEVVOH foi desenhado para times. O mínimo de 10 assentos garante que você tenha espaço para crescer e que a colaboração entre membros seja efetiva desde o início.',
+              },
+              {
+                q: 'Posso aumentar ou diminuir assentos depois?',
+                a: 'Sim. Pelo painel de cobrança você ajusta o número de assentos quando precisar e a próxima fatura é recalculada automaticamente.',
+              },
+              {
+                q: 'Quais formas de pagamento são aceitas?',
+                a: 'No momento o pagamento é processado manualmente pelo time comercial. Em breve teremos checkout automático com cartão e Pix.',
+              },
+            ].map((faq, i) => (
+              <details key={i} className="group rounded-xl border border-border bg-card p-5">
+                <summary className="cursor-pointer list-none flex items-center justify-between font-semibold">
+                  <span>{faq.q}</span>
+                  <span className="ml-4 text-muted-foreground group-open:rotate-45 transition-transform text-xl leading-none">
+                    +
+                  </span>
+                </summary>
+                <p className="mt-3 text-sm text-muted-foreground leading-relaxed">{faq.a}</p>
+              </details>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <footer className="border-t border-border/50 py-10">
+        <div className="mx-auto max-w-6xl px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-2">
+            <img src={logo} alt="NEVVOH" className="h-7 w-7 rounded-lg" />
+            <span className="text-sm font-semibold">NEVVOH</span>
+          </div>
+          <p className="text-sm text-muted-foreground">
+            © {new Date().getFullYear()} NEVVOH. Todos os direitos reservados.
+          </p>
+          <Link to="/auth" className="text-sm text-primary hover:underline">
+            Acessar plataforma
+          </Link>
+        </div>
+      </footer>
+
+      {primary && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              '@context': 'https://schema.org',
+              '@type': 'Product',
+              name: `NEVVOH — ${primary.name}`,
+              description: primary.description || 'Plataforma de gestão de tarefas e equipes',
+              offers: {
+                '@type': 'Offer',
+                price: (primary.price_per_seat_cents / 100).toFixed(2),
+                priceCurrency: primary.currency,
+                priceSpecification: {
+                  '@type': 'UnitPriceSpecification',
+                  price: (primary.price_per_seat_cents / 100).toFixed(2),
+                  priceCurrency: primary.currency,
+                  unitText: 'usuário/mês',
+                },
+              },
+            }),
+          }}
+        />
+      )}
+    </div>
+  );
+};
+
+export default Pricing;
