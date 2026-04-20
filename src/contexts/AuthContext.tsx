@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
+import { setSentryUser } from '@/lib/sentry';
 
 interface AuthContextType {
   user: User | null;
@@ -23,12 +24,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
+      setSentryUser(session?.user ? { id: session.user.id, email: session.user.email } : null);
     });
 
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
+      setSentryUser(session?.user ? { id: session.user.id, email: session.user.email } : null);
     });
 
     return () => subscription.unsubscribe();

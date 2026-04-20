@@ -7,6 +7,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ThemeProvider } from "@/hooks/use-theme";
 import { PageLoader } from "@/components/ui/loaders";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 const AppLayout = lazy(() => import("@/components/AppLayout"));
 const Auth = lazy(() => import("@/pages/Auth"));
 const Index = lazy(() => import("@/pages/Index"));
@@ -50,8 +51,9 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <AuthProvider>
-            <Suspense fallback={<LazyFallback />}>
-              <Routes>
+            <ErrorBoundary>
+              <Suspense fallback={<LazyFallback />}>
+                <Routes>
                 <Route path="/" element={<Landing />} />
                 <Route path="/landing" element={<Landing />} />
                 <Route path="/auth" element={<Auth />} />
@@ -76,9 +78,10 @@ const App = () => (
                   <Route path="/temporizador" element={<Timer />} />
                   <Route path="/cobranca" element={<Billing />} />
                 </Route>
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </Suspense>
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </Suspense>
+            </ErrorBoundary>
           </AuthProvider>
         </BrowserRouter>
       </TooltipProvider>
