@@ -152,7 +152,7 @@ function KanbanCardImpl({ task, allStatuses, onRefresh, onMoveTask }: KanbanCard
                       className={cn(
                         'flex items-center gap-1 text-xs',
                         isOverdue && 'text-destructive font-medium',
-                        isDueSoon && !isOverdue && 'text-amber-600 dark:text-amber-500 font-medium',
+                        isDueSoon && !isOverdue && 'text-warning font-medium',
                         !isOverdue && !isDueSoon && 'text-muted-foreground',
                       )}
                     >
