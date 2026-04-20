@@ -45,7 +45,7 @@ export default function SupportChat({ ticket, role, onClose }: SupportChatProps)
     loadMessages();
 
     const channel = supabase
-      .channel(`support-${ticket.id}`)
+      .channel(`support:${ticket.id}`)
       .on('postgres_changes', {
         event: 'INSERT',
         schema: 'public',

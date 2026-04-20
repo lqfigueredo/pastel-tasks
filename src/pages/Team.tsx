@@ -184,7 +184,7 @@ const Team = () => {
       body: { email: inviteEmail.trim() },
     });
 
-    if (error || data?.error) {
+    if (error || !data || data.found === false || data.error) {
       toast({ title: 'Erro', description: data?.error || 'Usuário não encontrado', variant: 'destructive' });
       setInviting(false);
       return;

@@ -75,7 +75,7 @@ export const NotificationBell = () => {
 
     if (!user) return;
     const channel = supabase
-      .channel('notifications-realtime')
+      .channel(`user:${user.id}`)
       .on(
         'postgres_changes',
         {
