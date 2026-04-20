@@ -15,11 +15,15 @@ export default defineConfig(({ mode }) => ({
   build: {
     rollupOptions: {
       output: {
-        manualChunks: {
-          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
-          'vendor-query': ['@tanstack/react-query'],
-          'vendor-ui': ['@radix-ui/react-dialog', '@radix-ui/react-popover', '@radix-ui/react-tooltip', '@radix-ui/react-dropdown-menu', '@radix-ui/react-select', '@radix-ui/react-tabs'],
-          'vendor-supabase': ['@supabase/supabase-js'],
+        manualChunks: (id) => {
+          if (id.includes('node_modules')) {
+            if (id.includes('react-router')) return 'vendor-react';
+            if (id.includes('react-dom') || id.match(/[\\/]react[\\/]/)) return 'vendor-react';
+            if (id.includes('@tanstack/react-query')) return 'vendor-query';
+            if (id.includes('@radix-ui')) return 'vendor-ui';
+            if (id.includes('@supabase')) return 'vendor-supabase';
+            if (id.includes('lucide-react')) return 'vendor-icons';
+          }
         },
       },
     },
