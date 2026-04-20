@@ -310,6 +310,14 @@ export default function Billing() {
           <Button variant="outline" onClick={handleManagePayment}>Gerenciar pagamento</Button>
         </CardContent>
       </Card>
+
+      <ActivateSubscriptionDialog
+        open={activateOpen}
+        onOpenChange={setActivateOpen}
+        defaultSubject={activateContext.subject}
+        contextLabel={activateContext.label}
+        onSuccess={load}
+      />
     </div>
   );
 }
