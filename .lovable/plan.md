@@ -1,63 +1,52 @@
 
 ## Contexto
 
-Usuário (solution_admin) está em `/financeiro` e quer poder marcar uma assinatura como **ativa sem cobrar pagamento** — útil para cortesia, contas internas, parceiros, beta testers, etc.
+Hoje o desconto em assinatura existente exige criar primeiro um voucher (em "Vouchers") e depois aplicá-lo via aba "Descontos". O usuário quer um **atalho**: aplicar desconto direto numa assinatura, sem criar voucher manualmente.
 
-Hoje o único caminho para sair de `trialing`/`past_due`/`suspended` para `active` é:
-1. `register_manual_payment` — exige criar uma fatura paga, com método e valor.
-2. Editar manualmente via SQL (não exposto na UI).
+## Decisão de design
 
-Falta um botão "Ativar gratuitamente" no painel financeiro do solution_admin.
+Em vez de criar uma estrutura paralela (que duplicaria `subscription_discounts` + cálculo em `calculate_invoice_amount`), vou **gerar um voucher "ad-hoc" automaticamente nos bastidores** e aplicá-lo. Vantagens:
 
-## Decisões de design
-
-- **Quem pode usar:** apenas `solution_admin` (já é o público de `/financeiro`).
-- **Onde aparece:** dentro do `SubscriptionDetailDrawer` (drawer de detalhes da assinatura) e no menu de ações `SubscriptionActionsDialog`. É a tela natural para essa operação.
-- **O que faz:**
-  - Muda `status` para `active`.
-  - Define `current_period_start = now()` e `current_period_end = now() + 1 mês` (ou período customizável).
-  - Limpa `past_due_since` e `trial_ends_at`.
-  - **Não cria fatura** (é o ponto: conta ativa sem pagamento).
-  - Registra em `subscription_changes` com `change_type = 'comp_activation'` e `reason` obrigatório (texto explicando o motivo da cortesia).
-  - Opcionalmente cria uma `subscription_notes` com a justificativa para histórico.
-- **Controle de duração:** dropdown com opções "1 mês / 3 meses / 6 meses / 12 meses / indefinido". Indefinido = `current_period_end = NULL`, e o cron de expiração ignora subscriptions sem `current_period_end`.
-- **Confirmação:** dialog com aviso claro ("Esta conta ficará ativa sem cobrança até [data]") e campo de motivo obrigatório.
+- Reaproveita 100% da lógica existente (`calculate_invoice_amount`, `register_manual_payment`, exibição na aba Descontos, badge no resumo, decremento de `invoices_remaining`).
+- Histórico fica consistente: aparece como `voucher_applied` em `subscription_changes`.
+- Voucher ad-hoc fica oculto da listagem de Vouchers (campo `is_adhoc = true`) para não poluir.
+- Solution_admin pode remover a qualquer momento usando o botão atual.
 
 ## Implementação
 
-### 1. Função RPC `comp_activate_subscription`
-SECURITY DEFINER, restrita a solution_admin:
-- Parâmetros: `_subscription_id uuid, _months integer (nullable), _reason text`
-- Valida role.
-- Valida que `_reason` não está vazio.
-- Atualiza `subscriptions`: status='active', period_start=now(), period_end=now()+months (ou NULL), trial_ends_at=NULL, past_due_since=NULL.
-- Insere em `subscription_changes` (change_type='comp_activation', reason).
-- Insere em `subscription_notes` com o motivo.
+### 1. Migração
+- Adicionar coluna `discount_vouchers.is_adhoc boolean default false`.
+- Criar RPC `apply_direct_discount(_subscription_id, _discount_type, _discount_value, _duration, _duration_in_months, _reason)`:
+  - Valida `solution_admin` e motivo (mín. 5 caracteres).
+  - Valida valores (% entre 1-100, ou centavos > 0).
+  - Gera código único `ADHOC-<sub_id_curto>-<timestamp>`.
+  - INSERT em `discount_vouchers` com `is_adhoc=true`, `max_redemptions=1`, `applies_to_plan_id=NULL`.
+  - Chama internamente a lógica de `apply_voucher` (ou inline equivalente) para vincular à assinatura.
+  - Registra `subscription_changes` com `change_type='direct_discount'` e `reason`.
+- Ajustar listagem de `VouchersTab.tsx` para filtrar `is_adhoc=false` (não muda RPC).
 
-### 2. Ajuste no cron `expire-trials`
-Garantir que a query de `past_due` não pegue subscriptions com `current_period_end IS NULL` (cortesias indefinidas). A query atual filtra por `past_due_since`, então já está OK — só documentar que cortesia indefinida nunca entra em past_due porque `past_due_since` fica NULL.
+### 2. UI — botão "Aplicar desconto direto" na aba Descontos
+Em `SubscriptionDiscountsSection.tsx`:
+- Adicionar botão secundário ao lado do "Aplicar voucher": **"Desconto direto"**.
+- Abre dialog `DirectDiscountDialog`:
+  - Tipo: percentual (%) ou valor fixo (R$)
+  - Valor
+  - Duração: uma fatura / X meses / vitalício
+  - Motivo (textarea, obrigatório, mín. 5 chars)
+  - Preview: "Aplicará desconto de X em Y faturas"
+- Confirmar → chama RPC → toast → recarrega lista e cálculo.
 
-### 3. UI no `SubscriptionActionsDialog` (ou novo dialog dedicado)
-- Botão novo: "Ativar como cortesia" (ícone Gift).
-- Abre sub-dialog `CompActivationDialog`:
-  - Select de duração (1m / 3m / 6m / 12m / indefinido)
-  - Textarea de motivo (obrigatório)
-  - Preview: "A conta ficará ativa até dd/mm/aaaa" ou "indefinidamente"
-  - Botão confirmar chama RPC
-- Toast de sucesso + invalidate da query da assinatura.
-
-### 4. Indicador visual
-No `SubscriptionDetailDrawer`, se a última `subscription_change` for `comp_activation`, mostrar badge "Cortesia" próximo ao status, com tooltip mostrando o motivo registrado.
+### 3. Exibição
+Na lista de descontos aplicados, prefixo visual: se `voucher.is_adhoc`, mostrar badge "Direto" ao invés do código longo, e tooltip com motivo.
 
 ## Arquivos afetados
 
-- **Migração SQL:** criar função `comp_activate_subscription(_subscription_id, _months, _reason)`
-- **Novo:** `src/components/financial/CompActivationDialog.tsx`
-- **Editado:** `src/components/financial/SubscriptionActionsDialog.tsx` — adicionar botão "Ativar como cortesia"
-- **Editado:** `src/components/financial/SubscriptionDetailDrawer.tsx` — badge "Cortesia" quando aplicável
+- **Migração:** coluna `is_adhoc` em `discount_vouchers` + função `apply_direct_discount`.
+- **Novo:** `src/components/financial/DirectDiscountDialog.tsx`
+- **Editado:** `src/components/financial/SubscriptionDiscountsSection.tsx` — botão + integração + exibição "Direto".
+- **Editado:** `src/components/financial/VouchersTab.tsx` — filtrar `is_adhoc=false` no SELECT.
+- **Editado:** `src/components/financial/SubscriptionDetailDrawer.tsx` — adicionar `direct_discount` em `CHANGE_LABELS`.
 
-## Fora de escopo (não vou fazer agora, só sinalizo)
-
-- Renovação automática de cortesia quando expira — por enquanto, expira como qualquer outra (vai para past_due e depois suspended via cron). Solution_admin pode reativar manualmente.
-- Conversão automática cortesia → assinatura paga.
-- Relatório de "contas em cortesia" no dashboard MRR.
+## Fora de escopo
+- Aplicar em massa (múltiplas assinaturas de uma vez).
+- Conversão de desconto direto → voucher reutilizável.
