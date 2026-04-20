@@ -1,58 +1,54 @@
 
-## Tornar a Landing mais fluída com aspecto de "tarefas"
 
-### Diagnóstico atual
-- Hero é só texto centralizado — não comunica visualmente "isto é uma ferramenta de tarefas".
-- Features são cards iguais, sem prévia visual do produto (a prévia só aparece em modal após clique).
-- Falta movimento sutil que sugira fluxo de trabalho.
+## Limite inicial de 10 usuários + fluxo de solicitação ao Financeiro
 
-### Conceito visual
-Background "vivo" com **cards de tarefas flutuando lentamente** em diagonal, semi-transparentes, atrás do conteúdo principal. Mantém todo o conteúdo (hero, features, steps, highlights, FAQ, footer) — apenas adiciona camada visual e melhora a apresentação das features.
+### Diagnóstico
+- O backend já trava a criação acima do limite (`admin_can_add_user` + `admin-create-user`), e novas assinaturas já nascem com `seats_purchased = 10` (mínimo via `subscriptions.minimum_seats`).
+- **Falta o UX**: ao bater no limite, o admin recebe um toast genérico e não tem caminho claro para pedir mais. O Financeiro também não vê essas solicitações em destaque.
 
-### Mudanças propostas
+### O que muda
 
-**1. Hero — Mockup de Kanban ao lado do texto + ticker de fundo**
-- Hero passa de centralizado para **2 colunas em desktop** (texto à esquerda, mockup à direita), mantendo centralizado no mobile.
-- À direita: mini-Kanban estático com 3 colunas e cards realistas (reaproveita `KanbanPreview` do `FeaturePreviewDialog`), com leve rotação 3D (`rotate-y` sutil) e sombra forte.
-- Atrás de tudo na seção Hero: **camada de cards de tarefa flutuantes** (5-6 cards pequenos) com animação `float` lenta (20-30s), opacidade 8-12%, ângulos variados. Ícones de check, prazo, responsável.
-- Mantém badge, h1, parágrafo, CTAs (trial + contato) e a frase "14 dias grátis".
+**1. Sinalização proativa em `/admin` (página Cadastrar Usuário)**
+- Quando `userLimit.current >= userLimit.max`, mostrar um **banner informativo amarelo** acima do formulário:
+  > "Você atingiu o limite de 10 usuários do seu plano. Solicite ao Financeiro a liberação de assentos adicionais."
+- Botão **"Solicitar mais assentos"** abre um diálogo `RequestSeatsDialog` (novo) já preenchido com contexto.
+- Desabilita o botão "Cadastrar Usuário" no formulário e mostra texto auxiliar quando no limite (evita o erro depois do clique).
 
-**2. Features — substituir cards-genéricos por preview visual inline**
-- Cada card de feature mostra **uma miniatura visual do módulo** no topo (não só ícone), reaproveitando os mesmos previews já existentes em `FeaturePreviewDialog.tsx`, mas em escala reduzida (≈ 160px de altura, `pointer-events: none`, `scale-[0.55]` com `transform-origin: top left` num container `overflow-hidden`).
-- Abaixo: ícone + título + descrição (como hoje).
-- Mantém o "Clique para ver exemplo →" e o dialog continua abrindo a versão full ao clicar.
-- Grid passa de `lg:grid-cols-4` para `lg:grid-cols-2` (cards maiores, 2 colunas) — dá protagonismo visual ao preview.
+**2. Novo componente `src/components/admin/RequestSeatsDialog.tsx`**
+- Campos: quantidade desejada (input numérico, mínimo = atual+1, sugere atual+5), motivo (textarea, obrigatório, mín. 10 chars).
+- Ao enviar, cria um `support_ticket` com `subject = "Solicitação de aumento de assentos"` e uma `support_message` formatada com:
+  - assentos atuais, assentos solicitados, diferença, motivo, nome do admin.
+- Mesmo padrão usado por `ActivateSubscriptionDialog` (ticket + mensagem). Garante que cai em `Financeiro → Suporte` automaticamente, sem nova tabela.
+- Toast de sucesso: "Pedido enviado ao Financeiro. Entraremos em contato em breve."
 
-**3. Banda de "tarefas concluídas" entre seções (transição fluida)**
-- Faixa fina entre Features e How-it-works com ~6 chips de tarefa rolando horizontalmente em loop infinito (marquee CSS), exemplos: "✓ Sprint review concluída", "→ Deploy v2.0 em andamento", "📌 Reunião 15:00", "⏱ Pomodoro 25min", etc. Opacidade 60%, fundo sutil, sem interação.
+**3. Reaproveitar em `/cobranca`**
+- O slider de "Ajustar assentos" hoje já abre o `ActivateSubscriptionDialog` com texto livre. Trocar para abrir o novo `RequestSeatsDialog` quando o usuário clica em "Solicitar upgrade", já pré-preenchido com a quantidade do slider e o delta.
+- Fluxo unificado de solicitação independente da origem (cobrança ou admin).
 
-**4. Mini-mockups de fundo nas seções "Como funciona" e "FAQ"**
-- Camada de fundo decorativa em `<section>` "Como funciona": silhueta blur de calendário grande no canto direito, opacidade 5-8%.
-- FAQ: silhueta de checklist no canto esquerdo, mesma opacidade.
-- Apenas decoração, `pointer-events-none`, `aria-hidden`.
+**4. Visibilidade no `/financeiro`**
+- Na aba **Suporte** (já existente, lista todos os tickets), nada precisa mudar funcionalmente — os pedidos já aparecem.
+- Pequeno realce: na aba **Assinaturas**, adicionar um badge contador na sub-aba/Tab Suporte: `"Suporte (3)"` quando há tickets abertos cujo `subject` contenha "assentos" ou "ativar". Ajuda solution_admin a ver demanda quente.
+
+**5. Mensagem de erro mais clara no `admin-create-user`**
+- Hoje retorna "Limite de assentos atingido (10/10). Faça upgrade da assinatura...". Trocar para:
+  > "Limite de 10 assentos atingido. Solicite a liberação de mais assentos pelo botão 'Solicitar mais assentos' na página de Administração."
+- Mantém o status 403 e a estrutura atual.
 
 ### Detalhes técnicos
-- **Novo componente** `src/components/landing/FloatingTasksBackground.tsx` — renderiza N cards absolutos com `animation: float-slow 25s ease-in-out infinite alternate` e delays escalonados. Usa apenas Tailwind + keyframe novo.
-- **Novo componente** `src/components/landing/FeatureMiniPreview.tsx` — wrapper que renderiza o componente preview correspondente ao título, com escala fixa, sem interação. Importa as mesmas funções já definidas no map de `FeaturePreviewDialog.tsx` (refatorar: extrair o `previewMap` para `landing/featurePreviews.tsx` para reuso).
-- **Novo keyframe** em `tailwind.config.ts`:
-  - `float-slow`: translate suave Y±20px e rotate ±2deg ao longo de 25s.
-  - `marquee`: `translateX(0)` → `translateX(-50%)` em 30s linear infinite.
-- **Refatoração**: mover `previewMap` e os componentes `*Preview` de `FeaturePreviewDialog.tsx` para `src/components/landing/featurePreviews.tsx` (export nomeado). `FeaturePreviewDialog` passa a importar de lá. Sem mudança de comportamento.
-- Performance: cards flutuantes usam `transform` apenas (GPU), `will-change: transform`, e respeitam `prefers-reduced-motion` (sem animação se reduzido).
-- Acessibilidade: toda decoração `aria-hidden="true"`. Mockup do hero também `aria-hidden`.
-
-### Arquivos afetados
-- `src/pages/Landing.tsx` — hero em 2 colunas, grid de features 2 colunas com mini-previews, marquee entre seções, decorações nas seções.
-- `src/components/landing/FeaturePreviewDialog.tsx` — passa a importar `previewMap` do novo arquivo.
-- **Novos:**
-  - `src/components/landing/featurePreviews.tsx` (extração)
-  - `src/components/landing/FloatingTasksBackground.tsx`
-  - `src/components/landing/FeatureMiniPreview.tsx`
-  - `src/components/landing/TaskMarquee.tsx`
-- `tailwind.config.ts` — keyframes `float-slow` e `marquee`.
+- **Sem migração de banco.** O modelo já está pronto:
+  - `subscriptions.minimum_seats = 10` e default `seats_purchased = 10` ✅
+  - `admin_can_add_user` faz a checagem ✅
+  - `support_tickets`/`support_messages` cobrem o canal de solicitação ✅
+- **Novos arquivos:**
+  - `src/components/admin/RequestSeatsDialog.tsx`
+- **Editados:**
+  - `src/pages/Admin.tsx` — banner + botão + integração do diálogo + desabilitar form no limite.
+  - `src/pages/Billing.tsx` — substituir `handleUpgrade` para abrir `RequestSeatsDialog` com a quantidade do slider.
+  - `src/components/financial/SubscriptionsTab.tsx` — (opcional, leve) badge contador de tickets abertos relacionados.
+  - `supabase/functions/admin-create-user/index.ts` — texto da mensagem de erro de limite.
 
 ### Fora de escopo
-- Mudar copy, FAQs, header, footer, CTAs (trial/contato) — permanecem idênticos.
-- Adicionar imagens reais/screenshots externos — usaremos os mocks já construídos no projeto.
-- Mexer em `/precos` ou outras páginas.
-- Tema escuro de cores novas — usa tokens existentes.
+- Criar uma nova tabela `seat_requests` (poderia ser uma evolução, mas hoje `support_tickets` resolve sem fragmentar dados).
+- Aprovação automática / checkout — segue manual como já é hoje.
+- Mexer em convites por email (`invite-team-member`) — ele já usa o mesmo `admin_can_add_user`, vai bloquear igual; o usuário será orientado pelo banner do Admin.
+
