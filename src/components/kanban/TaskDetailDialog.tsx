@@ -272,7 +272,7 @@ export function TaskDetailDialog({ task, allStatuses, open, onOpenChange, onRefr
               <Switch id="critical-detail-toggle" checked={isCritical} onCheckedChange={setIsCritical} />
             </div>
 
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div className="space-y-2">
                 <Label>Início</Label>
                 <Input type="date" min="1900-01-01" max="2100-12-31" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
