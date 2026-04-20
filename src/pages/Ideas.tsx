@@ -26,57 +26,45 @@ interface Idea {
 
 export default function Ideas() {
   const { user } = useAuth();
-  const [ideas, setIdeas] = useState<Idea[]>([]);
+  const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState('all');
   const [createOpen, setCreateOpen] = useState(false);
   const [editIdea, setEditIdea] = useState<Idea | null>(null);
 
-  const fetchIdeas = async () => {
-    const { data } = await supabase
-      .from('ideas')
-      .select('*, profiles!ideas_created_by_fkey(display_name)')
-      .order('created_at', { ascending: false });
+  const { data: ideas = [] } = useQuery({
+    queryKey: ['ideas', user?.id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('ideas')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (!data) return [] as Idea[];
 
-    if (data) {
-      // profiles join may fail due to no FK, fetch separately
-      setIdeas(data as unknown as Idea[]);
-    }
-  };
+      const userIds = [...new Set(data.map((i) => i.created_by))];
+      const teamIds = [...new Set(data.map((i) => i.team_id).filter(Boolean))] as string[];
 
-  const fetchIdeasWithProfiles = async () => {
-    const { data } = await supabase
-      .from('ideas')
-      .select('*')
-      .order('created_at', { ascending: false });
+      const [{ data: profiles }, { data: teamsData }] = await Promise.all([
+        supabase.from('profiles').select('user_id, display_name').in('user_id', userIds),
+        teamIds.length > 0
+          ? supabase.from('teams').select('id, name').in('id', teamIds)
+          : Promise.resolve({ data: [] as { id: string; name: string }[] }),
+      ]);
 
-    if (!data) return;
+      const profileMap = new Map(profiles?.map((p) => [p.user_id, p.display_name]) || []);
+      const teamMap = new Map(teamsData?.map((t) => [t.id, t.name]) || []);
 
-    const userIds = [...new Set(data.map((i) => i.created_by))];
-    const teamIds = [...new Set(data.map((i) => i.team_id).filter(Boolean))] as string[];
-
-    const [{ data: profiles }, { data: teamsData }] = await Promise.all([
-      supabase.from('profiles').select('user_id, display_name').in('user_id', userIds),
-      teamIds.length > 0
-        ? supabase.from('teams').select('id, name').in('id', teamIds)
-        : Promise.resolve({ data: [] as { id: string; name: string }[] }),
-    ]);
-
-    const profileMap = new Map(profiles?.map((p) => [p.user_id, p.display_name]) || []);
-    const teamMap = new Map(teamsData?.map((t) => [t.id, t.name]) || []);
-
-    setIdeas(
-      data.map((i) => ({
+      return data.map((i) => ({
         ...i,
         profiles: { display_name: profileMap.get(i.created_by) || 'Usuário' },
         teams: i.team_id ? { name: teamMap.get(i.team_id) || '' } : null,
-      }))
-    );
-  };
+      })) as Idea[];
+    },
+    enabled: !!user,
+    staleTime: 30_000,
+  });
 
-  useEffect(() => {
-    fetchIdeasWithProfiles();
-  }, []);
+  const fetchIdeasWithProfiles = () => queryClient.invalidateQueries({ queryKey: ['ideas', user?.id] });
 
   const filtered = ideas.filter((idea) => {
     const matchSearch =
