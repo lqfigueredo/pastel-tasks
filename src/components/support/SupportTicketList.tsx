@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
+import { useSupportTicketsQuery, useInvalidateSupportTickets } from '@/hooks/useSupportTicketsQuery';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { format } from 'date-fns';
@@ -37,8 +38,8 @@ interface SupportTicketListProps {
 
 export default function SupportTicketList({ role }: SupportTicketListProps) {
   const { user } = useAuth();
-  const [tickets, setTickets] = useState<Ticket[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: tickets = [], isLoading: loading } = useSupportTicketsQuery();
+  const invalidateTickets = useInvalidateSupportTickets();
   const [filter, setFilter] = useState<string>('all');
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
@@ -46,32 +47,7 @@ export default function SupportTicketList({ role }: SupportTicketListProps) {
   const [firstMessage, setFirstMessage] = useState('');
   const [creating, setCreating] = useState(false);
 
-  useEffect(() => {
-    loadTickets();
-  }, []);
-
-  const loadTickets = async () => {
-    const { data, error } = await supabase
-      .from('support_tickets')
-      .select('*')
-      .order('created_at', { ascending: false });
-
-    if (data) {
-      // Fetch creator names
-      const userIds = [...new Set(data.map(t => t.created_by))];
-      const { data: profiles } = await supabase
-        .from('profiles')
-        .select('user_id, display_name')
-        .in('user_id', userIds);
-      const nameMap = new Map((profiles || []).map(p => [p.user_id, p.display_name]));
-
-      setTickets(data.map(t => ({
-        ...t,
-        creator_name: nameMap.get(t.created_by) || 'Desconhecido',
-      })));
-    }
-    setLoading(false);
-  };
+  const loadTickets = invalidateTickets;
 
   const handleCreate = async () => {
     if (!subject.trim() || !firstMessage.trim()) {

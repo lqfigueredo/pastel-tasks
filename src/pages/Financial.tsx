@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { useSupportTicketsQuery } from '@/hooks/useSupportTicketsQuery';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { format, isPast } from 'date-fns';
@@ -81,7 +82,15 @@ const Financial = () => {
   const [editingUser, setEditingUser] = useState<UserApproval | null>(null);
   const [editingLimit, setEditingLimit] = useState<{ adminId: string; value: string } | null>(null);
   const [replyingLead, setReplyingLead] = useState<Lead | null>(null);
-  const [hotTicketsCount, setHotTicketsCount] = useState(0);
+  const { data: supportTickets } = useSupportTicketsQuery();
+  const hotTicketsCount = useMemo(() => {
+    if (!supportTickets) return 0;
+    return supportTickets.filter((t) => {
+      if (t.status !== 'open') return false;
+      const s = (t.subject || '').toLowerCase();
+      return s.includes('assento') || s.includes('ativar');
+    }).length;
+  }, [supportTickets]);
   const pendingCount = approvals.filter(a => a.status === 'pending').length;
 
   useEffect(() => {
@@ -90,24 +99,13 @@ const Financial = () => {
       setIsSolutionAdmin(!!data);
       if (data) {
         loadData();
-        loadHotTickets();
+        // hotTicketsCount handled via useSupportTicketsQuery
       } else {
         setLoading(false);
       }
     });
   }, [user]);
 
-  const loadHotTickets = async () => {
-    const { data } = await supabase
-      .from('support_tickets')
-      .select('id, subject, status')
-      .eq('status', 'open');
-    const hot = (data || []).filter((t) => {
-      const s = (t.subject || '').toLowerCase();
-      return s.includes('assento') || s.includes('ativar');
-    });
-    setHotTicketsCount(hot.length);
-  };
 
   const loadData = async () => {
     const [leadsRes, approvalsRes, adminSettingsRes] = await Promise.all([

@@ -1,14 +1,17 @@
+import { lazy, Suspense } from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/AppSidebar';
-import { NotificationBell } from '@/components/NotificationBell';
 import { TimerProvider } from '@/contexts/TimerContext';
-import GlobalTimerIndicator from '@/components/GlobalTimerIndicator';
-import SubscriptionStatusBanner from '@/components/billing/SubscriptionStatusBanner';
-import TrialBanner from '@/components/TrialBanner';
-import { OnboardingWizard } from '@/components/onboarding/OnboardingWizard';
 import { useOnboardingStatus } from '@/hooks/useOnboardingStatus';
+
+// Defer non-critical global components — they don't need to block first paint
+const NotificationBell = lazy(() => import('@/components/NotificationBell').then(m => ({ default: m.NotificationBell })));
+const GlobalTimerIndicator = lazy(() => import('@/components/GlobalTimerIndicator'));
+const SubscriptionStatusBanner = lazy(() => import('@/components/billing/SubscriptionStatusBanner'));
+const TrialBanner = lazy(() => import('@/components/TrialBanner'));
+const OnboardingWizard = lazy(() => import('@/components/onboarding/OnboardingWizard').then(m => ({ default: m.OnboardingWizard })));
 
 const AppLayout = () => {
   const { user, loading } = useAuth();
@@ -30,20 +33,28 @@ const AppLayout = () => {
         <div className="min-h-screen flex w-full">
           <AppSidebar />
           <div className="flex-1 flex flex-col">
-            <SubscriptionStatusBanner />
-            <TrialBanner />
+            <Suspense fallback={null}>
+              <SubscriptionStatusBanner />
+              <TrialBanner />
+            </Suspense>
             <header className="h-14 flex items-center border-b border-border/50 px-4 bg-background/80 backdrop-blur-sm">
               <SidebarTrigger className="mr-4" />
               <div className="flex-1" />
-              <GlobalTimerIndicator />
-              <NotificationBell />
+              <Suspense fallback={null}>
+                <GlobalTimerIndicator />
+                <NotificationBell />
+              </Suspense>
             </header>
             <main className="flex-1 overflow-auto p-6">
               <Outlet />
             </main>
           </div>
         </div>
-        {onboarding?.shouldShow && <OnboardingWizard />}
+        {onboarding?.shouldShow && (
+          <Suspense fallback={null}>
+            <OnboardingWizard />
+          </Suspense>
+        )}
       </SidebarProvider>
     </TimerProvider>
   );
