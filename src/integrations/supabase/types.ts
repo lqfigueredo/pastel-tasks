@@ -761,6 +761,36 @@ export type Database = {
         }
         Relationships: []
       }
+      legal_documents: {
+        Row: {
+          content: string
+          created_at: string
+          doc_type: string
+          id: string
+          published_at: string
+          updated_by: string | null
+          version: number
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          doc_type: string
+          id?: string
+          published_at?: string
+          updated_by?: string | null
+          version: number
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          doc_type?: string
+          id?: string
+          published_at?: string
+          updated_by?: string | null
+          version?: number
+        }
+        Relationships: []
+      }
       meeting_attachments: {
         Row: {
           created_at: string
