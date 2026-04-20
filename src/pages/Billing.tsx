@@ -144,16 +144,21 @@ export default function Billing() {
         </Card>
       )}
 
-      {sub.status === 'trialing' && trialDaysLeft !== null && trialDaysLeft >= 0 && trialDaysLeft <= 7 && (
-        <Card className="border-yellow-500/40 bg-yellow-500/5">
-          <CardContent className="flex items-start gap-3 pt-6">
-            <Clock className="mt-1 h-5 w-5 text-yellow-600" />
-            <div>
-              <p className="font-semibold">Período de teste termina em {trialDaysLeft} dia(s)</p>
+      {sub.status === 'trialing' && trialDaysLeft !== null && trialDaysLeft >= 0 && (
+        <Card className="border-primary/40 bg-primary/5">
+          <CardContent className="flex items-start gap-3 pt-6 flex-wrap">
+            <Sparkles className="mt-1 h-5 w-5 text-primary shrink-0" />
+            <div className="flex-1 min-w-[200px]">
+              <p className="font-semibold">
+                {trialDaysLeft <= 7
+                  ? `Período de teste termina em ${trialDaysLeft} dia(s)`
+                  : `Você está em período de teste (${trialDaysLeft} dias restantes)`}
+              </p>
               <p className="text-sm text-muted-foreground">
-                Configure sua forma de pagamento para evitar interrupção do serviço.
+                Ative sua assinatura agora para garantir continuidade do acesso da equipe.
               </p>
             </div>
+            <Button onClick={handleActivateNow} size="sm">Ativar agora</Button>
           </CardContent>
         </Card>
       )}
