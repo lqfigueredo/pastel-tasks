@@ -186,25 +186,25 @@ const Landing = () => {
           </p>
 
           <div
-            className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4 animate-fade-in"
+            className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-3 animate-fade-in"
             style={{ animationDelay: '300ms', animationFillMode: 'both' }}
           >
-            <LeadFormTrigger />
-
-            <Link to="/precos">
-              <Button variant="outline" size="lg" className="text-base gap-2">
-                Ver preços
-                <ArrowRight className="h-4 w-4" />
-              </Button>
-            </Link>
-
             <Link to="/auth">
-              <Button variant="ghost" size="lg" className="text-base gap-2">
-                Já tenho conta
-                <ArrowRight className="h-4 w-4" />
+              <Button size="lg" className="text-base px-8 gap-2">
+                <Sparkles className="h-5 w-5" />
+                Realizar trial grátis
               </Button>
             </Link>
+
+            <LeadFormTrigger />
           </div>
+
+          <p
+            className="mt-4 text-xs text-muted-foreground animate-fade-in"
+            style={{ animationDelay: '400ms', animationFillMode: 'both' }}
+          >
+            14 dias grátis · sem cartão de crédito
+          </p>
         </div>
       </section>
 
