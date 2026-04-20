@@ -1,114 +1,87 @@
 
 
-## Fase 1 — UX de alto impacto
+## Remediação de segurança — plano completo
 
-Implementação das 6 mudanças críticas identificadas na avaliação heurística.
+Plano executado em 4 etapas: storage, realtime, edge functions e ajustes frontend. Sem rate-limiting de backend (não é suportado hoje).
 
-### 1. Sidebar agrupada por contexto
+---
 
-`src/components/AppSidebar.tsx` — converter a lista plana em 3-4 `SidebarGroup` com `SidebarGroupLabel`:
+### Etapa 1 — Storage hardening (Crítico 1 + Médio 3 + Médio 7)
 
-- **Trabalho**: Dashboard, Minhas Tarefas, Equipe, Agenda, Temporizador
-- **Documentação**: Atas de Reunião, Instruções de Trabalho, Registro de Ideias, Fonte de Conhecimento
-- **Administração** (visível só com `isAdmin`): Configurações, Administração, Cobrança
-- **Operação** (visível só com `isSolutionAdmin`): Financeiro
+**Migration SQL** com:
 
-Quando `collapsed`, os labels são ocultados (já é o comportamento padrão do shadcn — só os ícones permanecem).
+- **`idea-attachments`**: DROP da policy aberta `Authenticated can view idea attachments storage`. A policy estrita já existente (path `auth.uid()`) permanece.
+- **`knowledge-attachments`**: DROP `Users can view knowledge files` (aberta) e DROP `Auth users can upload knowledge files`. Recriar com path `(storage.foldername(name))[1] = auth.uid()::text` para SELECT/INSERT/UPDATE/DELETE. Acesso de time fica via signed URLs geradas pelo dono.
+- **`task-attachments`**: padronizar path `{user_id}/{task_id}/{filename}`. Reescrever policies SELECT/INSERT/UPDATE/DELETE para checar `(storage.foldername(name))[1] = auth.uid()::text` no INSERT e `can_access_task(auth.uid(), ((storage.foldername(name))[2])::uuid)` no SELECT. Frontend já usa `{user_id}/...` no upload, então não há migração de dados pesada — vamos aceitar coexistência via `OR` durante transição.
+- **`email-assets`**: DROP `Authenticated users can list email assets`. Bucket continua público para servir por URL direta (uso real em e-mails), mas bloqueia listagem.
 
-### 2. Confirmação ao sair
+### Etapa 2 — Realtime authorization (Crítico 2)
 
-`src/components/AppSidebar.tsx` — substituir o `onClick={signOut}` direto por um `AlertDialog`:
+**Migration SQL**:
 
-```text
-"Sair da conta?"
-"Você precisará entrar novamente para acessar."
-[Cancelar] [Sair]
-```
+- Habilitar RLS em `realtime.messages` (se não estiver) e adicionar policy que valide o `topic` do canal:
+  - Topics no padrão `user:{uuid}` → exigir `topic = 'user:' || auth.uid()::text`
+  - Topics no padrão `team:{uuid}` → exigir `is_team_member(auth.uid(), uuid_part)`
+  - Topics no padrão `support:{ticket_id}` → exigir owner OU `solution_admin`
+  - Demais topics negados por padrão
+- Função helper `public.can_access_realtime_topic(topic text)` `SECURITY DEFINER` para encapsular a lógica.
 
-### 3. Componente reutilizável `<EmptyState />`
+**Ajustes frontend** para usar nomes de canal escopo-específicos:
 
-Criar `src/components/ui/empty-state.tsx`:
+- `src/hooks/useTasksRealtime.ts` — canal passa de `tasks-realtime` para `user:{auth.uid()}`. Continuar ouvindo `postgres_changes` em `tasks` e `task_assignees`, mas o gate de autorização passa pelo nome do canal.
+- `src/components/NotificationBell.tsx` — canal `notifications-{userId}` → `user:{userId}`.
+- `src/components/support/SupportChat.tsx` — canal `support-{ticketId}` → `support:{ticketId}`.
 
-```tsx
-interface EmptyStateProps {
-  icon: LucideIcon;
-  title: string;
-  description?: string;
-  action?: { label: string; onClick: () => void };
-}
-```
+### Etapa 3 — Edge functions
 
-Visual: ícone grande circular com fundo `bg-muted/40`, título, descrição opcional, botão de ação opcional. Padding generoso, centralizado.
+**`supabase/functions/register-financial-user/index.ts`**:
 
-Aplicar em:
-- **KanbanColumn** quando `tasks.length === 0` (hoje só mostra coluna vazia) → "Nenhuma tarefa aqui ainda" + CTA "Nova tarefa"
-- **NotificationBell** quando lista vazia → "Tudo em dia" + descrição "Você verá aqui avisos de prazos e reuniões"
-- **MeetingMinutes**, **Ideas**, **KnowledgeBase** quando lista vazia → ícone + título + CTA do próprio módulo
+- Substituir `token !== '445'` hardcoded por `Deno.env.get('FINANCIAL_REGISTER_TOKEN')`.
+- Logar tentativas (sucesso e falha) com IP/UA em `console.log` estruturado.
+- Pedir ao usuário o secret `FINANCIAL_REGISTER_TOKEN` via `add_secret` na execução.
 
-### 4. Validação inline em formulários críticos
+**`supabase/functions/lookup-user-by-email/index.ts`**:
 
-**`src/pages/Auth.tsx`**: adicionar estado de erros por campo + render de `<p className="text-xs text-destructive">` abaixo de cada `Input`. Validações:
-- Email: regex válido + obrigatório
-- Senha: mínimo 6 caracteres + obrigatório
-- Nome (cadastro): obrigatório, mínimo 2 caracteres
+- Após `getClaims`, checar via `supabase.from('user_roles').select().eq('user_id', callerId).in('role', ['admin','solution_admin'])`. Se não tiver role, retornar `403`.
+- Padronizar respostas: tanto "encontrado" quanto "não encontrado" retornam `200` com `{found: boolean, user?: {...}}` em vez de `404` (reduz enumeração via status code).
 
-Mostrar erro `onBlur` (não a cada keystroke). Limpar erro ao digitar.
+### Etapa 4 — Limpeza do scanner
 
-**`src/components/kanban/CreateTaskDialog.tsx`**: 
-- Título obrigatório → erro inline "Informe um título" abaixo do input
-- Datas com ano fora de 1900-2100 → erro inline (substitui o toast atual)
-- Botão "Criar" desabilitado enquanto `!title.trim()`
+Marcar como **ignored** com justificativa as policies `service_role ... USING (true)` em: `subscriptions`, `invoices`, `billing_events`, `payment_methods`, `subscription_changes`, `email_send_log`, `notifications`, `email_unsubscribe_tokens`, `suppressed_emails`, `email_send_state`. Motivo: restritas ao role `service_role`, intencional.
 
-### 5. Filtro de responsável com chip + contagem
+Remover policy duplicada `Admin can view own billing profile` (já coberta por `Admin can manage own billing profile`).
 
-`src/pages/Index.tsx` — quando `filterAssigneeId` está ativo:
-- Mostrar chip removível ao lado do `Select`: `[Filtro: João Silva ✕]`
-- Substituir subtítulo "Gerencie suas atividades no quadro Kanban" por contagem dinâmica: `"42 tarefas visíveis"` (ou `"3 de 42 tarefas (filtradas por João Silva)"` quando filtrado)
-- A contagem vem de `KanbanBoard` via callback `onCountChange?: (visible: number, total: number) => void`
-
-### 6. Toasts de erro mais úteis
-
-Criar helper `src/lib/toast-helpers.ts`:
-
-```ts
-export function errorToast(action: string, error?: { message?: string }) {
-  toast({
-    title: `Não foi possível ${action}`,
-    description: error?.message 
-      ? `Detalhes: ${error.message}` 
-      : 'Verifique sua conexão e tente novamente.',
-    variant: 'destructive',
-  });
-}
-```
-
-Aplicar nos pontos de maior atrito identificados (escopo limitado à Fase 1, sem refatorar tudo):
-- `KanbanBoard` (mover tarefa)
-- `CreateTaskDialog` (criar)
-- `Auth` (entrar/cadastrar)
-- `NotificationBell` (marcar como lida)
+---
 
 ### Arquivos afetados
 
-**Novos:**
-- `src/components/ui/empty-state.tsx`
-- `src/lib/toast-helpers.ts`
+**Migrations novas (2)**
+- `supabase/migrations/<ts>_storage_hardening.sql` — etapa 1
+- `supabase/migrations/<ts>_realtime_authorization.sql` — etapa 2 + função `can_access_realtime_topic` + cleanup do duplicado em billing_profiles
 
-**Modificados:**
-- `src/components/AppSidebar.tsx` (agrupamento + AlertDialog logout)
-- `src/pages/Auth.tsx` (validação inline)
-- `src/components/kanban/CreateTaskDialog.tsx` (validação inline + EmptyState não se aplica aqui)
-- `src/components/kanban/KanbanColumn.tsx` (EmptyState quando vazio)
-- `src/components/kanban/KanbanBoard.tsx` (callback de contagem)
-- `src/pages/Index.tsx` (chip removível + contagem)
-- `src/components/NotificationBell.tsx` (EmptyState)
-- `src/pages/MeetingMinutes.tsx`, `src/pages/Ideas.tsx`, `src/pages/KnowledgeBase.tsx` (EmptyState quando vazio)
+**Edge functions modificadas (2)**
+- `supabase/functions/register-financial-user/index.ts`
+- `supabase/functions/lookup-user-by-email/index.ts`
 
-### Fora de escopo (vai para Fase 2/3)
+**Frontend (3)**
+- `src/hooks/useTasksRealtime.ts`
+- `src/components/NotificationBell.tsx`
+- `src/components/support/SupportChat.tsx`
 
-- Padronização de loading states (`<PageLoader />`, skeletons)
-- Breadcrumb no header
-- Agrupamento de notificações por data + filtro por tipo
-- Datas humanizadas ("Vence amanhã")
-- Microcopy global, mobile pass, atalhos de teclado, busca global
+**Secret a configurar**
+- `FINANCIAL_REGISTER_TOKEN` (string longa aleatória)
+
+---
+
+### Itens fora deste plano (consciente)
+
+- **Rate limiting** (Médio 4 e 5): backend não tem primitivo adequado hoje, será endereçado quando houver infra.
+- **Validação de leads via trigger**: parte do mesmo escopo de "leads/spam" — adiamos junto com rate-limit para evitar mudança parcial.
+- **Captcha (Turnstile)** no `LeadFormDialog`: requer secret externo + UX, fica para fase específica de hardening anti-bot.
+
+### Riscos e mitigação
+
+- **Realtime**: mudar nome de canal faz subscribers antigos pararem de receber até o reload. Risco baixo — o app é interno e os hooks recriam ao montar.
+- **Storage**: arquivos legados em `task-attachments` que não seguem `{user_id}/{task_id}/` precisam coexistir. Vamos manter policy permissiva via `OR` para paths antigos por 30 dias e adicionar TODO para limpeza posterior.
+- **Edge function `lookup-user-by-email`**: hoje é chamada por fluxos de convite. Restringir a admin/solution_admin precisa ser validado nos call sites (`InviteUserDialog`, fluxos financeiros). Vou auditar antes de aplicar — se algum caller for usuário comum, ajustamos a checagem.
 
