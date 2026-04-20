@@ -13,15 +13,12 @@ import { toast } from 'sonner';
 import { ShieldX, UserPlus, Loader2, ShieldCheck, ShieldOff, UserX, UserCheck } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { HelpButton } from '@/components/HelpButton';
+import { PageLoader, InlineLoader } from '@/components/ui/loaders';
 
 const SupportTicketList = lazy(() => import('@/components/support/SupportTicketList'));
 const EmailDashboard = lazy(() => import('@/components/admin/EmailDashboard'));
 
-const TabFallback = () => (
-  <div className="flex items-center justify-center py-12">
-    <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-  </div>
-);
+const TabFallback = () => <InlineLoader label="Carregando..." />;
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertTriangle } from 'lucide-react';
 import { RequestSeatsDialog } from '@/components/admin/RequestSeatsDialog';
@@ -217,11 +214,7 @@ export default function Admin() {
   const isCurrentUser = (userId: string) => userId === user?.id;
 
   if (loading) {
-    return (
-      <div className="flex h-full items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-      </div>
-    );
+    return <PageLoader />;
   }
 
   if (!isAdmin) {

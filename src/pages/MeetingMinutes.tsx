@@ -16,6 +16,7 @@ import { cn } from '@/lib/utils';
 import { CreateMeetingDialog } from '@/components/meetings/CreateMeetingDialog';
 import { HelpButton } from '@/components/HelpButton';
 import { EmptyState } from '@/components/ui/empty-state';
+import { ListSkeleton } from '@/components/ui/loaders';
 
 interface MeetingRow {
   id: string;
@@ -141,7 +142,7 @@ export default function MeetingMinutes() {
       </div>
 
       {loading ? (
-        <p className="text-muted-foreground">Carregando...</p>
+        <ListSkeleton variant="card" rows={6} />
       ) : filteredMeetings.length === 0 ? (
         <Card>
           <CardContent className="p-0">

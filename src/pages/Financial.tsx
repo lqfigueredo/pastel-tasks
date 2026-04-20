@@ -16,6 +16,7 @@ import ReplyLeadDialog from '@/components/financial/ReplyLeadDialog';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { HelpButton } from '@/components/HelpButton';
+import { PageLoader, InlineLoader } from '@/components/ui/loaders';
 
 const SupportTicketList = lazy(() => import('@/components/support/SupportTicketList'));
 const HelpTextsManager = lazy(() => import('@/components/financial/HelpTextsManager'));
@@ -24,11 +25,7 @@ const SubscriptionsTab = lazy(() => import('@/components/financial/Subscriptions
 const PlansTab = lazy(() => import('@/components/financial/PlansTab'));
 const VouchersTab = lazy(() => import('@/components/financial/VouchersTab'));
 
-const TabFallback = () => (
-  <div className="flex items-center justify-center py-12">
-    <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-  </div>
-);
+const TabFallback = () => <InlineLoader label="Carregando..." />;
 import {
   Table,
   TableBody,
@@ -228,11 +225,7 @@ const Financial = () => {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <p className="text-muted-foreground animate-pulse">Carregando...</p>
-      </div>
-    );
+    return <PageLoader />;
   }
 
   if (!isSolutionAdmin) {

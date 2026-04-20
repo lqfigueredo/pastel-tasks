@@ -10,6 +10,7 @@ import { Plus, Search, ExternalLink, FileText, Users, User } from 'lucide-react'
 import { CreateKnowledgeDialog } from '@/components/knowledge/CreateKnowledgeDialog';
 import { EditKnowledgeDialog } from '@/components/knowledge/EditKnowledgeDialog';
 import { EmptyState } from '@/components/ui/empty-state';
+import { ListSkeleton } from '@/components/ui/loaders';
 import { BookMarked } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -89,9 +90,7 @@ export default function KnowledgeBase() {
       </div>
 
       {isLoading ? (
-        <div className="flex h-32 items-center justify-center">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-        </div>
+        <ListSkeleton variant="card" rows={6} />
       ) : filtered.length === 0 ? (
         <EmptyState
           icon={BookMarked}
