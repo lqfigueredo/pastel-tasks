@@ -148,9 +148,14 @@ const Landing = () => {
             <img src={logo} alt="NEVVOH" className="h-9 w-9 rounded-xl" />
             <span className="text-lg font-bold font-display">NEVVOH</span>
           </div>
-          <Link to="/auth">
-            <Button variant="outline" size="sm">Já tenho conta</Button>
-          </Link>
+          <nav className="flex items-center gap-2">
+            <Link to="/precos" className="text-sm font-medium text-muted-foreground hover:text-foreground px-3 py-2">
+              Preços
+            </Link>
+            <Link to="/auth">
+              <Button variant="outline" size="sm">Já tenho conta</Button>
+            </Link>
+          </nav>
         </div>
       </header>
 
@@ -185,6 +190,13 @@ const Landing = () => {
             style={{ animationDelay: '300ms', animationFillMode: 'both' }}
           >
             <LeadFormTrigger />
+
+            <Link to="/precos">
+              <Button variant="outline" size="lg" className="text-base gap-2">
+                Ver preços
+                <ArrowRight className="h-4 w-4" />
+              </Button>
+            </Link>
 
             <Link to="/auth">
               <Button variant="ghost" size="lg" className="text-base gap-2">
