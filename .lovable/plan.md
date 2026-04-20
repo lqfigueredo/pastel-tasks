@@ -1,87 +1,119 @@
 
 
-## Remediação de segurança — plano completo
+## Fase 4 — Melhorias de alta prioridade
 
-Plano executado em 4 etapas: storage, realtime, edge functions e ajustes frontend. Sem rate-limiting de backend (não é suportado hoje).
+Três frentes em paralelo: **performance**, **observabilidade** e **UX**. Sem dependência entre elas, mas entregues numa única leva para reduzir overhead.
 
 ---
 
-### Etapa 1 — Storage hardening (Crítico 1 + Médio 3 + Médio 7)
+### 1. Code-splitting e lazy loading de rotas
 
-**Migration SQL** com:
+**Estado atual**: `src/App.tsx` já usa `lazy()` em todas as rotas + `Suspense` com `PageLoader`. ✅ Surpresa boa — isso já está feito.
 
-- **`idea-attachments`**: DROP da policy aberta `Authenticated can view idea attachments storage`. A policy estrita já existente (path `auth.uid()`) permanece.
-- **`knowledge-attachments`**: DROP `Users can view knowledge files` (aberta) e DROP `Auth users can upload knowledge files`. Recriar com path `(storage.foldername(name))[1] = auth.uid()::text` para SELECT/INSERT/UPDATE/DELETE. Acesso de time fica via signed URLs geradas pelo dono.
-- **`task-attachments`**: padronizar path `{user_id}/{task_id}/{filename}`. Reescrever policies SELECT/INSERT/UPDATE/DELETE para checar `(storage.foldername(name))[1] = auth.uid()::text` no INSERT e `can_access_task(auth.uid(), ((storage.foldername(name))[2])::uuid)` no SELECT. Frontend já usa `{user_id}/...` no upload, então não há migração de dados pesada — vamos aceitar coexistência via `OR` durante transição.
-- **`email-assets`**: DROP `Authenticated users can list email assets`. Bucket continua público para servir por URL direta (uso real em e-mails), mas bloqueia listagem.
+**O que falta de fato:**
 
-### Etapa 2 — Realtime authorization (Crítico 2)
+- **Manual chunks**: `vite.config.ts` já separa `vendor-react`, `vendor-query`, `vendor-ui`, `vendor-supabase`, `vendor-icons`. Adicionar:
+  - `vendor-charts` (recharts, usado só em Dashboard/TimeReport)
+  - `vendor-dnd` (libs de drag-and-drop do Kanban)
+  - `vendor-pdf` (qualquer lib de PDF usada em WorkInstructions)
+  - `vendor-date` (date-fns separado)
+- **Lazy de componentes pesados dentro de páginas** (não só rotas):
+  - `MeetingRecorder` (MediaRecorder API + UI grande) — lazy dentro de `MeetingMinuteDetail`
+  - `TimeReport` (recharts) — lazy dentro de `Dashboard`
+  - `EmailDashboard` — lazy dentro de `Admin`
+  - Diálogos pouco usados: `CompActivationDialog`, `DirectDiscountDialog`, `ManualPaymentDialog` em Financial
+- **Prefetch on hover**: `NavLink` faz prefetch do chunk da rota ao passar o mouse (melhora percepção sem aumentar JS inicial).
 
-**Migration SQL**:
+### 2. Error tracking com Sentry
 
-- Habilitar RLS em `realtime.messages` (se não estiver) e adicionar policy que valide o `topic` do canal:
-  - Topics no padrão `user:{uuid}` → exigir `topic = 'user:' || auth.uid()::text`
-  - Topics no padrão `team:{uuid}` → exigir `is_team_member(auth.uid(), uuid_part)`
-  - Topics no padrão `support:{ticket_id}` → exigir owner OU `solution_admin`
-  - Demais topics negados por padrão
-- Função helper `public.can_access_realtime_topic(topic text)` `SECURITY DEFINER` para encapsular a lógica.
+**Setup mínimo** (sem inflar bundle):
 
-**Ajustes frontend** para usar nomes de canal escopo-específicos:
+- Adicionar `@sentry/react` (~30KB gz, lazy-loaded só em produção).
+- Inicializar em `src/main.tsx` apenas quando `import.meta.env.PROD` E variável `VITE_SENTRY_DSN` estiver definida.
+- Configurar:
+  - `tracesSampleRate: 0.1` (10% das transações)
+  - `replaysSessionSampleRate: 0`, `replaysOnErrorSampleRate: 1.0` (replay só em erro)
+  - Ignorar erros conhecidos (ResizeObserver, network aborts).
+- **Contexto de usuário**: integrar em `AuthContext` — `Sentry.setUser({ id, email })` no login, `setUser(null)` no logout.
+- **ErrorBoundary global**: criar `src/components/ErrorBoundary.tsx` envolvendo `<Routes>` no `App.tsx`. Mostra fallback amigável + botão "Recarregar" + reporta ao Sentry.
+- **Source maps**: configurar upload no build (Sentry CLI) — opcional, requer auth token. Para começar, sem upload (stack trace minificado mas funcional).
 
-- `src/hooks/useTasksRealtime.ts` — canal passa de `tasks-realtime` para `user:{auth.uid()}`. Continuar ouvindo `postgres_changes` em `tasks` e `task_assignees`, mas o gate de autorização passa pelo nome do canal.
-- `src/components/NotificationBell.tsx` — canal `notifications-{userId}` → `user:{userId}`.
-- `src/components/support/SupportChat.tsx` — canal `support-{ticketId}` → `support:{ticketId}`.
+**Secret necessário**: `VITE_SENTRY_DSN` (público por design — DSN do Sentry é seguro no client).
 
-### Etapa 3 — Edge functions
+### 3. Busca global (Cmd/Ctrl+K)
 
-**`supabase/functions/register-financial-user/index.ts`**:
+Paleta de comandos unificada usando `cmdk` (já presente em `src/components/ui/command.tsx`).
 
-- Substituir `token !== '445'` hardcoded por `Deno.env.get('FINANCIAL_REGISTER_TOKEN')`.
-- Logar tentativas (sucesso e falha) com IP/UA em `console.log` estruturado.
-- Pedir ao usuário o secret `FINANCIAL_REGISTER_TOKEN` via `add_secret` na execução.
+**Componente**: `src/components/GlobalSearch.tsx`
 
-**`supabase/functions/lookup-user-by-email/index.ts`**:
+- Atalho global `⌘K` / `Ctrl+K` registrado em `AppLayout.tsx`.
+- Botão de busca discreto no header (mobile) e atalho visível no sidebar (desktop).
+- Dialog `CommandDialog` com:
+  - **Input** com debounce de 200ms
+  - **Grupos**:
+    - Tarefas (busca em `tasks.title` + `description`)
+    - Ideias (busca em `ideas.title` + `description`)
+    - Instruções (busca em `work_instructions.title`)
+    - Reuniões (busca em `meetings.title`)
+    - Knowledge (busca em `knowledge_sources.title`)
+    - **Ações rápidas**: "Nova tarefa", "Nova reunião", "Ir para Dashboard", etc.
+- **Hook**: `useGlobalSearch(query)` — React Query com `enabled: query.length >= 2`, executa 5 queries em paralelo limitadas a 5 resultados cada.
+- **Navegação**: ao selecionar um item, navega para a rota correspondente e abre o detalhe (ex: `/tarefas?taskId=xxx` que `Index.tsx` já trata).
+- **RLS**: usa o client autenticado normal — busca já vem filtrada pelo backend.
 
-- Após `getClaims`, checar via `supabase.from('user_roles').select().eq('user_id', callerId).in('role', ['admin','solution_admin'])`. Se não tiver role, retornar `403`.
-- Padronizar respostas: tanto "encontrado" quanto "não encontrado" retornam `200` com `{found: boolean, user?: {...}}` em vez de `404` (reduz enumeração via status code).
+### 4. ErrorBoundary + correções colaterais
 
-### Etapa 4 — Limpeza do scanner
-
-Marcar como **ignored** com justificativa as policies `service_role ... USING (true)` em: `subscriptions`, `invoices`, `billing_events`, `payment_methods`, `subscription_changes`, `email_send_log`, `notifications`, `email_unsubscribe_tokens`, `suppressed_emails`, `email_send_state`. Motivo: restritas ao role `service_role`, intencional.
-
-Remover policy duplicada `Admin can view own billing profile` (já coberta por `Admin can manage own billing profile`).
+- `ErrorBoundary` (mencionado em #2) também serve de rede de segurança independente do Sentry.
+- Fallback em PT-BR com botão "Recarregar página" e "Voltar ao início".
+- Reset automático ao mudar de rota (via `useLocation`).
 
 ---
 
 ### Arquivos afetados
 
-**Migrations novas (2)**
-- `supabase/migrations/<ts>_storage_hardening.sql` — etapa 1
-- `supabase/migrations/<ts>_realtime_authorization.sql` — etapa 2 + função `can_access_realtime_topic` + cleanup do duplicado em billing_profiles
+**Novos:**
+- `src/components/ErrorBoundary.tsx`
+- `src/components/GlobalSearch.tsx`
+- `src/hooks/useGlobalSearch.ts`
+- `src/lib/sentry.ts` (init helper)
 
-**Edge functions modificadas (2)**
-- `supabase/functions/register-financial-user/index.ts`
-- `supabase/functions/lookup-user-by-email/index.ts`
+**Modificados:**
+- `vite.config.ts` — adicionar manual chunks (charts, dnd, pdf, date)
+- `src/main.tsx` — init Sentry condicional
+- `src/App.tsx` — envolver `<Routes>` em `<ErrorBoundary>`
+- `src/contexts/AuthContext.tsx` — `Sentry.setUser` no login/logout
+- `src/components/AppLayout.tsx` — registrar atalho `⌘K` + montar `<GlobalSearch />`
+- `src/components/AppSidebar.tsx` — botão visual de busca com hint do atalho
+- `src/components/NavLink.tsx` — prefetch on hover
+- `src/pages/Dashboard.tsx` — lazy `TimeReport`
+- `src/pages/Admin.tsx` — lazy `EmailDashboard`
+- `src/pages/MeetingMinuteDetail.tsx` — lazy `MeetingRecorder`
+- `src/pages/Financial.tsx` — lazy diálogos pouco usados
+- `package.json` — adicionar `@sentry/react`
 
-**Frontend (3)**
-- `src/hooks/useTasksRealtime.ts`
-- `src/components/NotificationBell.tsx`
-- `src/components/support/SupportChat.tsx`
-
-**Secret a configurar**
-- `FINANCIAL_REGISTER_TOKEN` (string longa aleatória)
+**Secret a configurar:**
+- `VITE_SENTRY_DSN` (você cria projeto em sentry.io → copia DSN)
 
 ---
 
-### Itens fora deste plano (consciente)
+### Ordem de execução
 
-- **Rate limiting** (Médio 4 e 5): backend não tem primitivo adequado hoje, será endereçado quando houver infra.
-- **Validação de leads via trigger**: parte do mesmo escopo de "leads/spam" — adiamos junto com rate-limit para evitar mudança parcial.
-- **Captcha (Turnstile)** no `LeadFormDialog`: requer secret externo + UX, fica para fase específica de hardening anti-bot.
+1. **Code-splitting** (rápido, sem dependências externas) — entrega ganho de performance imediato.
+2. **ErrorBoundary** (sem dependências) — rede de segurança antes do Sentry.
+3. **Busca global** (médio porte, isolado) — alto impacto de UX.
+4. **Sentry** (requer DSN do usuário) — pedido de secret no fim, para não bloquear o resto.
 
 ### Riscos e mitigação
 
-- **Realtime**: mudar nome de canal faz subscribers antigos pararem de receber até o reload. Risco baixo — o app é interno e os hooks recriam ao montar.
-- **Storage**: arquivos legados em `task-attachments` que não seguem `{user_id}/{task_id}/` precisam coexistir. Vamos manter policy permissiva via `OR` para paths antigos por 30 dias e adicionar TODO para limpeza posterior.
-- **Edge function `lookup-user-by-email`**: hoje é chamada por fluxos de convite. Restringir a admin/solution_admin precisa ser validado nos call sites (`InviteUserDialog`, fluxos financeiros). Vou auditar antes de aplicar — se algum caller for usuário comum, ajustamos a checagem.
+- **Lazy de componentes pesados**: pode causar flash de loading. Mitigação: usar `Suspense` com `<Skeleton />` no contexto correto, não `PageLoader` fullscreen.
+- **Busca global**: 5 queries paralelas a cada digitação pode pesar. Mitigação: debounce 200ms + `staleTime: 60s` + limit 5 por entidade.
+- **Sentry sem DSN**: se o usuário não fornecer, o init é no-op silencioso — não quebra nada.
+- **Manual chunks**: divisão errada pode aumentar requests. Vou validar com `vite build` mentalmente antes (libs realmente independentes).
+
+### Fora deste plano (próxima leva)
+
+- **PWA / install prompt** (já listado como média)
+- **Preview inline de PDF/imagem** em anexos
+- **Filtros salvos no Kanban**
+- **Export CSV/PDF do TimeReport**
 
