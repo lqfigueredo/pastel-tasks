@@ -2,11 +2,13 @@ import { useState, useCallback, useImperativeHandle, forwardRef, useMemo, useEff
 import { supabase } from '@/integrations/supabase/client';
 
 import { KanbanColumn } from './KanbanColumn';
+import { KanbanMobileView } from './KanbanMobileView';
 import { errorToast } from '@/lib/toast-helpers';
 import { useTasksQuery, useInvalidateTasks, useOptimisticTaskUpdate } from '@/hooks/useTasksQuery';
 import { useStatusesQuery } from '@/hooks/useStatusesQuery';
 import { useColumnOrderQuery, useUpdateColumnOrder } from '@/hooks/useColumnOrderQuery';
 import { useTasksRealtime } from '@/hooks/useTasksRealtime';
+import { useIsMobile } from '@/hooks/use-mobile';
 import type { Task, TaskStatus } from '@/types/kanban';
 
 export type { Task, TaskStatus };
@@ -23,6 +25,7 @@ interface KanbanBoardProps {
 export const KanbanBoard = forwardRef<KanbanBoardRef, KanbanBoardProps>(({ filterAssigneeId, onCountChange }, ref) => {
   const [dragColIdx, setDragColIdx] = useState<number | null>(null);
   const [dragOverColIdx, setDragOverColIdx] = useState<number | null>(null);
+  const isMobile = useIsMobile();
 
   const { data: tasksData, isLoading: tasksLoading } = useTasksQuery();
   const { data: statusesData, isLoading: statusesLoading } = useStatusesQuery();
@@ -127,6 +130,17 @@ export const KanbanBoard = forwardRef<KanbanBoardRef, KanbanBoardProps>(({ filte
           <div key={i} className="flex-1 h-96 rounded-xl bg-muted/50 animate-pulse" />
         ))}
       </div>
+    );
+  }
+
+  if (isMobile) {
+    return (
+      <KanbanMobileView
+        statuses={orderedStatuses}
+        tasks={filteredTasks}
+        onMoveTask={moveTask}
+        onRefresh={refresh}
+      />
     );
   }
 

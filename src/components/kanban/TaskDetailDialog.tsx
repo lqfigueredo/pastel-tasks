@@ -12,12 +12,18 @@ import { Separator } from '@/components/ui/separator';
 import { AssigneeSelector } from './AssigneeSelector';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { MessageSquare, Send, AlertTriangle, X, FileText } from 'lucide-react';
+import { MessageSquare, Send, AlertTriangle, FileText } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { TaskAttachments } from './TaskAttachments';
 import { TaskChangeHistory } from './TaskChangeHistory';
 import { TaskTimer } from './TaskTimer';
 import { TaskLinkedIdeas } from './TaskLinkedIdeas';
+import {
+  ResponsiveDialog,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+  ResponsiveDialogDescription,
+} from '@/components/ui/responsive-dialog';
 
 interface Comment {
   id: string;
@@ -210,23 +216,16 @@ export function TaskDetailDialog({ task, allStatuses, open, onOpenChange, onRefr
     fetchComments();
   };
 
-  if (!open) return null;
-
   return (
     <>
-      <div className="fixed inset-0 z-50 flex items-center justify-center">
-        <div className="fixed inset-0 bg-black/60" onClick={() => onOpenChange(false)} />
-        <div className="relative z-50 w-full max-w-xl max-h-[85vh] overflow-y-auto rounded-xl border border-border bg-card p-6 shadow-xl animate-fade-in">
-          <button
-            onClick={() => onOpenChange(false)}
-            className="absolute right-4 top-4 rounded-sm opacity-70 hover:opacity-100"
-          >
-            <X className="h-4 w-4" />
-          </button>
-          <h2 className="text-lg font-semibold mb-1">Detalhes da Tarefa</h2>
-          <p className="text-sm text-muted-foreground mb-4">Edite os campos e salve as alterações</p>
+      <ResponsiveDialog open={open} onOpenChange={onOpenChange} contentClassName="max-w-xl">
+        <ResponsiveDialogHeader>
+          <ResponsiveDialogTitle>Detalhes da Tarefa</ResponsiveDialogTitle>
+          <ResponsiveDialogDescription>Edite os campos e salve as alterações</ResponsiveDialogDescription>
+        </ResponsiveDialogHeader>
 
           <div className="space-y-4">
+
             <div className="space-y-2">
               <Label>Título</Label>
               <Input value={title} onChange={(e) => setTitle(e.target.value)} />
@@ -273,7 +272,7 @@ export function TaskDetailDialog({ task, allStatuses, open, onOpenChange, onRefr
               <Switch id="critical-detail-toggle" checked={isCritical} onCheckedChange={setIsCritical} />
             </div>
 
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div className="space-y-2">
                 <Label>Início</Label>
                 <Input type="date" min="1900-01-01" max="2100-12-31" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
@@ -348,35 +347,31 @@ export function TaskDetailDialog({ task, allStatuses, open, onOpenChange, onRefr
               </div>
             </div>
           </div>
-        </div>
-      </div>
+      </ResponsiveDialog>
 
-      {justifyOpen && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center">
-          <div className="fixed inset-0 bg-black/60" onClick={() => { setJustifyOpen(false); setPendingDate(''); }} />
-          <div className="relative z-[60] w-full max-w-md rounded-xl border border-border bg-card p-6 shadow-xl animate-fade-in">
-            <h3 className="flex items-center gap-2 text-lg font-semibold mb-2">
-              <AlertTriangle className="h-5 w-5 text-destructive" />
-              Justificativa Obrigatória
-            </h3>
-            <p className="text-sm text-muted-foreground mb-4">
-              A data de previsão de entrega está sendo alterada. Informe o motivo da mudança.
-            </p>
-            <Textarea
-              value={justification}
-              onChange={(e) => setJustification(e.target.value)}
-              placeholder="Motivo da alteração da data..."
-              rows={3}
-            />
-            <div className="flex justify-end gap-2 mt-4">
-              <Button variant="outline" onClick={() => { setJustifyOpen(false); setPendingDate(''); }}>
-                Cancelar
-              </Button>
-              <Button onClick={handleJustifyConfirm}>Confirmar</Button>
-            </div>
-          </div>
+      <ResponsiveDialog open={justifyOpen} onOpenChange={(o) => { if (!o) { setJustifyOpen(false); setPendingDate(''); } }}>
+        <ResponsiveDialogHeader>
+          <ResponsiveDialogTitle className="flex items-center gap-2">
+            <AlertTriangle className="h-5 w-5 text-destructive" />
+            Justificativa Obrigatória
+          </ResponsiveDialogTitle>
+          <ResponsiveDialogDescription>
+            A data de previsão de entrega está sendo alterada. Informe o motivo da mudança.
+          </ResponsiveDialogDescription>
+        </ResponsiveDialogHeader>
+        <Textarea
+          value={justification}
+          onChange={(e) => setJustification(e.target.value)}
+          placeholder="Motivo da alteração da data..."
+          rows={3}
+        />
+        <div className="flex justify-end gap-2 mt-4">
+          <Button variant="outline" onClick={() => { setJustifyOpen(false); setPendingDate(''); }}>
+            Cancelar
+          </Button>
+          <Button onClick={handleJustifyConfirm}>Confirmar</Button>
         </div>
-      )}
+      </ResponsiveDialog>
     </>
   );
 }
