@@ -347,35 +347,31 @@ export function TaskDetailDialog({ task, allStatuses, open, onOpenChange, onRefr
               </div>
             </div>
           </div>
-        </div>
-      </div>
+      </ResponsiveDialog>
 
-      {justifyOpen && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center">
-          <div className="fixed inset-0 bg-black/60" onClick={() => { setJustifyOpen(false); setPendingDate(''); }} />
-          <div className="relative z-[60] w-full max-w-md rounded-xl border border-border bg-card p-6 shadow-xl animate-fade-in">
-            <h3 className="flex items-center gap-2 text-lg font-semibold mb-2">
-              <AlertTriangle className="h-5 w-5 text-destructive" />
-              Justificativa Obrigatória
-            </h3>
-            <p className="text-sm text-muted-foreground mb-4">
-              A data de previsão de entrega está sendo alterada. Informe o motivo da mudança.
-            </p>
-            <Textarea
-              value={justification}
-              onChange={(e) => setJustification(e.target.value)}
-              placeholder="Motivo da alteração da data..."
-              rows={3}
-            />
-            <div className="flex justify-end gap-2 mt-4">
-              <Button variant="outline" onClick={() => { setJustifyOpen(false); setPendingDate(''); }}>
-                Cancelar
-              </Button>
-              <Button onClick={handleJustifyConfirm}>Confirmar</Button>
-            </div>
-          </div>
+      <ResponsiveDialog open={justifyOpen} onOpenChange={(o) => { if (!o) { setJustifyOpen(false); setPendingDate(''); } }}>
+        <ResponsiveDialogHeader>
+          <ResponsiveDialogTitle className="flex items-center gap-2">
+            <AlertTriangle className="h-5 w-5 text-destructive" />
+            Justificativa Obrigatória
+          </ResponsiveDialogTitle>
+          <ResponsiveDialogDescription>
+            A data de previsão de entrega está sendo alterada. Informe o motivo da mudança.
+          </ResponsiveDialogDescription>
+        </ResponsiveDialogHeader>
+        <Textarea
+          value={justification}
+          onChange={(e) => setJustification(e.target.value)}
+          placeholder="Motivo da alteração da data..."
+          rows={3}
+        />
+        <div className="flex justify-end gap-2 mt-4">
+          <Button variant="outline" onClick={() => { setJustifyOpen(false); setPendingDate(''); }}>
+            Cancelar
+          </Button>
+          <Button onClick={handleJustifyConfirm}>Confirmar</Button>
         </div>
-      )}
+      </ResponsiveDialog>
     </>
   );
 }
