@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { Bell, BellOff } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { Bell, BellOff, CheckCheck, Filter } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -7,8 +7,8 @@ import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { differenceInCalendarDays } from 'date-fns';
+import { humanizeTimestamp } from '@/lib/date-humanize';
 import { EmptyState } from '@/components/ui/empty-state';
 import { errorToast } from '@/lib/toast-helpers';
 
@@ -22,11 +22,40 @@ interface Notification {
   created_at: string;
 }
 
+type NotificationFilter = 'all' | 'tasks' | 'meetings' | 'system';
+
+const FILTER_LABELS: Record<NotificationFilter, string> = {
+  all: 'Todas',
+  tasks: 'Tarefas',
+  meetings: 'Reuniões',
+  system: 'Sistema',
+};
+
+function categorize(type: string): Exclude<NotificationFilter, 'all'> {
+  if (type.startsWith('task')) return 'tasks';
+  if (type.startsWith('pendency') || type.startsWith('meeting')) return 'meetings';
+  return 'system';
+}
+
+function bucketFor(createdAt: string, now: Date): 'today' | 'this_week' | 'older' {
+  const diff = differenceInCalendarDays(now, new Date(createdAt));
+  if (diff <= 0) return 'today';
+  if (diff <= 7) return 'this_week';
+  return 'older';
+}
+
+const BUCKET_LABELS = {
+  today: 'Hoje',
+  this_week: 'Esta semana',
+  older: 'Anteriores',
+} as const;
+
 export const NotificationBell = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [open, setOpen] = useState(false);
+  const [filter, setFilter] = useState<NotificationFilter>('all');
 
   const unreadCount = notifications.filter((n) => !n.is_read).length;
 
@@ -37,7 +66,7 @@ export const NotificationBell = () => {
       .select('*')
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
-      .limit(30);
+      .limit(50);
     if (data) setNotifications(data as Notification[]);
   };
 
@@ -98,10 +127,36 @@ export const NotificationBell = () => {
     }
   };
 
+  // Categorize counts by filter so chips show distribution
+  const filterCounts = useMemo(() => {
+    const counts: Record<NotificationFilter, number> = { all: 0, tasks: 0, meetings: 0, system: 0 };
+    counts.all = notifications.length;
+    for (const n of notifications) counts[categorize(n.type)] += 1;
+    return counts;
+  }, [notifications]);
+
+  const filtered = useMemo(() => {
+    if (filter === 'all') return notifications;
+    return notifications.filter((n) => categorize(n.type) === filter);
+  }, [notifications, filter]);
+
+  const grouped = useMemo(() => {
+    const now = new Date();
+    const groups: Record<'today' | 'this_week' | 'older', Notification[]> = {
+      today: [],
+      this_week: [],
+      older: [],
+    };
+    for (const n of filtered) groups[bucketFor(n.created_at, now)].push(n);
+    return groups;
+  }, [filtered]);
+
+  const visibleFilters: NotificationFilter[] = ['all', 'tasks', 'meetings', 'system'];
+
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button variant="ghost" size="icon" className="relative">
+        <Button variant="ghost" size="icon" className="relative" aria-label="Notificações">
           <Bell className="h-5 w-5" />
           {unreadCount > 0 && (
             <span className="absolute -top-0.5 -right-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-[10px] font-bold text-destructive-foreground">
@@ -110,45 +165,100 @@ export const NotificationBell = () => {
           )}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-80 p-0" align="end">
-        <div className="flex items-center justify-between border-b px-4 py-3">
+      <PopoverContent className="w-[360px] p-0" align="end">
+        <div className="flex items-center justify-between border-b border-border/60 px-4 py-3">
           <h4 className="text-sm font-semibold">Notificações</h4>
           {unreadCount > 0 && (
-            <Button variant="ghost" size="sm" className="text-xs h-7" onClick={markAllAsRead}>
-              Marcar todas como lidas
+            <Button variant="ghost" size="sm" className="text-xs h-7 gap-1" onClick={markAllAsRead}>
+              <CheckCheck className="h-3.5 w-3.5" />
+              Marcar todas
             </Button>
           )}
         </div>
-        <ScrollArea className="max-h-80">
-          {notifications.length === 0 ? (
+
+        {notifications.length > 0 && (
+          <div className="flex items-center gap-1 overflow-x-auto border-b border-border/60 px-3 py-2">
+            <Filter className="mr-1 h-3 w-3 shrink-0 text-muted-foreground" />
+            {visibleFilters.map((f) => {
+              const active = filter === f;
+              const count = filterCounts[f];
+              return (
+                <button
+                  key={f}
+                  onClick={() => setFilter(f)}
+                  className={cn(
+                    'inline-flex shrink-0 items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-medium transition-colors',
+                    active
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-muted text-muted-foreground hover:bg-muted/70',
+                  )}
+                >
+                  {FILTER_LABELS[f]}
+                  <span
+                    className={cn(
+                      'rounded-full px-1 text-[10px]',
+                      active ? 'bg-primary-foreground/20' : 'bg-background/60',
+                    )}
+                  >
+                    {count}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        )}
+
+        <ScrollArea className="max-h-[420px]">
+          {filtered.length === 0 ? (
             <EmptyState
               icon={BellOff}
-              title="Tudo em dia"
-              description="Você verá aqui avisos de prazos e reuniões."
+              title={notifications.length === 0 ? 'Tudo em dia' : 'Nada nesta categoria'}
+              description={
+                notifications.length === 0
+                  ? 'Você verá aqui avisos de prazos e reuniões.'
+                  : 'Tente outra categoria para ver mais avisos.'
+              }
               compact
             />
           ) : (
-            notifications.map((n) => (
-              <button
-                key={n.id}
-                onClick={() => handleClick(n)}
-                className={cn(
-                  'flex w-full flex-col gap-1 border-b px-4 py-3 text-left transition-colors hover:bg-muted/50',
-                  !n.is_read && 'bg-muted/30'
-                )}
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <span className={cn('text-sm font-medium', !n.is_read && 'text-foreground', n.is_read && 'text-muted-foreground')}>
-                    {n.title}
-                  </span>
-                  {!n.is_read && <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-primary" />}
+            (['today', 'this_week', 'older'] as const).map((bucket) =>
+              grouped[bucket].length === 0 ? null : (
+                <div key={bucket}>
+                  <div className="sticky top-0 z-10 border-b border-border/40 bg-popover/95 px-4 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground backdrop-blur">
+                    {BUCKET_LABELS[bucket]}
+                  </div>
+                  {grouped[bucket].map((n) => (
+                    <button
+                      key={n.id}
+                      onClick={() => handleClick(n)}
+                      className={cn(
+                        'flex w-full flex-col gap-1 border-b border-border/40 px-4 py-3 text-left transition-colors hover:bg-muted/50',
+                        !n.is_read && 'bg-muted/30',
+                      )}
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <span
+                          className={cn(
+                            'text-sm font-medium',
+                            !n.is_read && 'text-foreground',
+                            n.is_read && 'text-muted-foreground',
+                          )}
+                        >
+                          {n.title}
+                        </span>
+                        {!n.is_read && (
+                          <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-primary" />
+                        )}
+                      </div>
+                      <span className="text-xs text-muted-foreground line-clamp-2">{n.message}</span>
+                      <span className="text-[10px] text-muted-foreground/70">
+                        {humanizeTimestamp(n.created_at) ?? ''}
+                      </span>
+                    </button>
+                  ))}
                 </div>
-                <span className="text-xs text-muted-foreground line-clamp-2">{n.message}</span>
-                <span className="text-[10px] text-muted-foreground/70">
-                  {format(new Date(n.created_at), "dd/MM 'às' HH:mm", { locale: ptBR })}
-                </span>
-              </button>
-            ))
+              ),
+            )
           )}
         </ScrollArea>
       </PopoverContent>
