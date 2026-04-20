@@ -9,6 +9,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Plus, Search, ExternalLink, FileText, Users, User } from 'lucide-react';
 import { CreateKnowledgeDialog } from '@/components/knowledge/CreateKnowledgeDialog';
 import { EditKnowledgeDialog } from '@/components/knowledge/EditKnowledgeDialog';
+import { EmptyState } from '@/components/ui/empty-state';
+import { BookMarked } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -91,9 +93,20 @@ export default function KnowledgeBase() {
           <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
         </div>
       ) : filtered.length === 0 ? (
-        <p className="py-12 text-center text-muted-foreground">
-          {search ? 'Nenhuma fonte encontrada.' : 'Nenhuma fonte de conhecimento cadastrada.'}
-        </p>
+        <EmptyState
+          icon={BookMarked}
+          title={search ? 'Nenhuma fonte encontrada' : 'Nenhuma fonte cadastrada'}
+          description={
+            search
+              ? 'Tente buscar por outro termo.'
+              : 'Centralize links e arquivos de referência da sua equipe em um só lugar.'
+          }
+          action={
+            search
+              ? undefined
+              : { label: 'Adicionar primeira fonte', onClick: () => setCreateOpen(true) }
+          }
+        />
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {filtered.map((source) => (

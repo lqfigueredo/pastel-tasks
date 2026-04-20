@@ -11,6 +11,8 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Switch } from '@/components/ui/switch';
 import { AssigneeSelector } from './AssigneeSelector';
 import { X, Users, Repeat, FileText, AlertTriangle } from 'lucide-react';
+import { errorToast } from '@/lib/toast-helpers';
+import { cn } from '@/lib/utils';
 
 interface Props {
   open: boolean;
@@ -40,6 +42,9 @@ export function CreateTaskDialog({ open, onOpenChange, onTaskCreated }: Props) {
   const [pendencies, setPendencies] = useState<{ id: string; description: string }[]>([]);
   const [selectedPendencyId, setSelectedPendencyId] = useState('');
   const [isCritical, setIsCritical] = useState(false);
+  const [titleError, setTitleError] = useState<string | undefined>();
+  const [startDateError, setStartDateError] = useState<string | undefined>();
+  const [estimatedDateError, setEstimatedDateError] = useState<string | undefined>();
 
   useEffect(() => {
     if (open) {
@@ -73,11 +78,16 @@ export function CreateTaskDialog({ open, onOpenChange, onTaskCreated }: Props) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user || !title.trim()) return;
-    if (!isValidDate(startDate) || !isValidDate(estimatedDate)) {
-      toast({ title: 'Data inválida', description: 'O ano deve estar entre 1900 e 2100.', variant: 'destructive' });
-      return;
-    }
+    if (!user) return;
+
+    const tErr = !title.trim() ? 'Informe um título.' : undefined;
+    const sErr = !isValidDate(startDate) ? 'Ano deve estar entre 1900 e 2100.' : undefined;
+    const eErr = !isValidDate(estimatedDate) ? 'Ano deve estar entre 1900 e 2100.' : undefined;
+    setTitleError(tErr);
+    setStartDateError(sErr);
+    setEstimatedDateError(eErr);
+    if (tErr || sErr || eErr) return;
+
     setSaving(true);
 
     if (isRecurring) {
@@ -113,7 +123,7 @@ export function CreateTaskDialog({ open, onOpenChange, onTaskCreated }: Props) {
       });
 
       if (error) {
-        toast({ title: 'Erro ao criar recorrência', description: error.message, variant: 'destructive' });
+        errorToast('criar a recorrência', error);
       } else {
         toast({ title: 'Tarefa recorrente criada!' });
         resetForm();
@@ -134,7 +144,7 @@ export function CreateTaskDialog({ open, onOpenChange, onTaskCreated }: Props) {
       }).select('id').single();
 
       if (error) {
-        toast({ title: 'Erro ao criar tarefa', description: error.message, variant: 'destructive' });
+        errorToast('criar a tarefa', error);
       } else {
         if (data && assigneeIds.length > 0) {
           await supabase.from('task_assignees').insert(
@@ -165,6 +175,9 @@ export function CreateTaskDialog({ open, onOpenChange, onTaskCreated }: Props) {
     setPendencies([]);
     setSelectedPendencyId('');
     setIsCritical(false);
+    setTitleError(undefined);
+    setStartDateError(undefined);
+    setEstimatedDateError(undefined);
   };
 
   if (!open) return null;
@@ -182,9 +195,20 @@ export function CreateTaskDialog({ open, onOpenChange, onTaskCreated }: Props) {
         <h2 className="text-lg font-semibold mb-1">Nova Tarefa</h2>
         <p className="text-sm text-muted-foreground mb-4">Preencha os detalhes da nova tarefa</p>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
+          <div className="space-y-1.5">
             <Label>Título *</Label>
-            <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Título da tarefa" required />
+            <Input
+              value={title}
+              onChange={(e) => {
+                setTitle(e.target.value);
+                if (titleError) setTitleError(undefined);
+              }}
+              onBlur={() => setTitleError(!title.trim() ? 'Informe um título.' : undefined)}
+              placeholder="Título da tarefa"
+              aria-invalid={!!titleError}
+              className={cn(titleError && 'border-destructive focus-visible:ring-destructive')}
+            />
+            {titleError && <p className="text-xs text-destructive">{titleError}</p>}
           </div>
           <div className="space-y-2">
             <Label>Descrição</Label>
@@ -347,20 +371,44 @@ export function CreateTaskDialog({ open, onOpenChange, onTaskCreated }: Props) {
             </div>
           ) : (
             <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 <Label>Data de Início</Label>
-                <Input type="date" min="1900-01-01" max="2100-12-31" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+                <Input
+                  type="date"
+                  min="1900-01-01"
+                  max="2100-12-31"
+                  value={startDate}
+                  onChange={(e) => {
+                    setStartDate(e.target.value);
+                    if (startDateError) setStartDateError(undefined);
+                  }}
+                  aria-invalid={!!startDateError}
+                  className={cn(startDateError && 'border-destructive focus-visible:ring-destructive')}
+                />
+                {startDateError && <p className="text-xs text-destructive">{startDateError}</p>}
               </div>
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 <Label>Previsão de Entrega</Label>
-                <Input type="date" min="1900-01-01" max="2100-12-31" value={estimatedDate} onChange={(e) => setEstimatedDate(e.target.value)} />
+                <Input
+                  type="date"
+                  min="1900-01-01"
+                  max="2100-12-31"
+                  value={estimatedDate}
+                  onChange={(e) => {
+                    setEstimatedDate(e.target.value);
+                    if (estimatedDateError) setEstimatedDateError(undefined);
+                  }}
+                  aria-invalid={!!estimatedDateError}
+                  className={cn(estimatedDateError && 'border-destructive focus-visible:ring-destructive')}
+                />
+                {estimatedDateError && <p className="text-xs text-destructive">{estimatedDateError}</p>}
               </div>
             </div>
           )}
 
           <div className="flex justify-end gap-2 pt-2">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-            <Button type="submit" disabled={saving}>
+            <Button type="submit" disabled={saving || !title.trim()}>
               {saving ? 'Criando...' : isRecurring ? 'Criar Recorrência' : 'Criar Tarefa'}
             </Button>
           </div>

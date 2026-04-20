@@ -15,6 +15,7 @@ import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { CreateMeetingDialog } from '@/components/meetings/CreateMeetingDialog';
 import { HelpButton } from '@/components/HelpButton';
+import { EmptyState } from '@/components/ui/empty-state';
 
 interface MeetingRow {
   id: string;
@@ -143,14 +144,21 @@ export default function MeetingMinutes() {
         <p className="text-muted-foreground">Carregando...</p>
       ) : filteredMeetings.length === 0 ? (
         <Card>
-          <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-            <FileText className="mb-4 h-12 w-12 text-muted-foreground/50" />
-            <p className="text-muted-foreground">{hasFilters ? 'Nenhuma ata encontrada com os filtros aplicados' : 'Nenhuma ata encontrada'}</p>
-            {!hasFilters && (
-              <Button variant="outline" className="mt-4" onClick={() => setDialogOpen(true)}>
-                Criar primeira ata
-              </Button>
-            )}
+          <CardContent className="p-0">
+            <EmptyState
+              icon={FileText}
+              title={hasFilters ? 'Nenhuma ata encontrada' : 'Nenhuma ata ainda'}
+              description={
+                hasFilters
+                  ? 'Tente ajustar os filtros para ver mais resultados.'
+                  : 'Registre suas reuniões e acompanhe pendências em um só lugar.'
+              }
+              action={
+                hasFilters
+                  ? { label: 'Limpar filtros', onClick: clearFilters }
+                  : { label: 'Criar primeira ata', onClick: () => setDialogOpen(true) }
+              }
+            />
           </CardContent>
         </Card>
       ) : (
