@@ -107,6 +107,18 @@ export const KanbanBoard = forwardRef<KanbanBoardRef, KanbanBoardProps>(({ filte
     [dragOverColIdx, handleColumnReorder]
   );
 
+  const filteredTasks = useMemo(
+    () =>
+      filterAssigneeId
+        ? tasks.filter((t) => t.assignees.some((a) => a.user_id === filterAssigneeId))
+        : tasks,
+    [tasks, filterAssigneeId],
+  );
+
+  // Notify parent of counts whenever they change. Must be declared before any early return.
+  useEffect(() => {
+    onCountChange?.(filteredTasks.length, tasks.length);
+  }, [filteredTasks.length, tasks.length, onCountChange]);
 
   if (loading) {
     return (
@@ -117,15 +129,6 @@ export const KanbanBoard = forwardRef<KanbanBoardRef, KanbanBoardProps>(({ filte
       </div>
     );
   }
-
-  const filteredTasks = filterAssigneeId
-    ? tasks.filter((t) => t.assignees.some((a) => a.user_id === filterAssigneeId))
-    : tasks;
-
-  // Notify parent of counts whenever they change.
-  useEffect(() => {
-    onCountChange?.(filteredTasks.length, tasks.length);
-  }, [filteredTasks.length, tasks.length, onCountChange]);
 
   return (
     <div className="flex gap-4 overflow-x-auto pb-4">
