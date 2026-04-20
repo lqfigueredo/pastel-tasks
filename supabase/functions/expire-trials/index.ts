@@ -22,6 +22,7 @@ Deno.serve(async (req) => {
   const result = {
     moved_to_past_due: 0,
     moved_to_suspended: 0,
+    comp_expired: 0,
     errors: [] as string[],
   };
 
@@ -88,6 +89,43 @@ Deno.serve(async (req) => {
         title: "Assinatura suspensa",
         message:
           "Sua assinatura foi suspensa por falta de pagamento. Ative para restaurar o acesso da equipe.",
+      });
+    }
+
+    // 3) active with current_period_end expired → past_due
+    //    Cobre cortesias com prazo definido (comp_activate_subscription com _months IS NOT NULL)
+    //    e qualquer outra assinatura ativa cujo ciclo expirou sem pagamento/avanço.
+    const { data: expiredActive, error: e3 } = await supabase
+      .from("subscriptions")
+      .select("id, admin_user_id, current_period_end")
+      .eq("status", "active")
+      .not("current_period_end", "is", null)
+      .lt("current_period_end", now);
+
+    if (e3) throw e3;
+
+    for (const sub of expiredActive ?? []) {
+      const { error: updErr } = await supabase
+        .from("subscriptions")
+        .update({
+          status: "past_due",
+          past_due_since: now,
+          updated_at: now,
+        })
+        .eq("id", sub.id);
+
+      if (updErr) {
+        result.errors.push(`comp_expired ${sub.id}: ${updErr.message}`);
+        continue;
+      }
+      result.comp_expired++;
+
+      await supabase.from("notifications").insert({
+        user_id: sub.admin_user_id,
+        type: "billing",
+        title: "Período da assinatura encerrado",
+        message:
+          "Seu período ativo terminou. Regularize o pagamento em até 7 dias para evitar a suspensão do acesso.",
       });
     }
 
