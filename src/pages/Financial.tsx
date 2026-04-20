@@ -81,6 +81,7 @@ const Financial = () => {
   const [editingUser, setEditingUser] = useState<UserApproval | null>(null);
   const [editingLimit, setEditingLimit] = useState<{ adminId: string; value: string } | null>(null);
   const [replyingLead, setReplyingLead] = useState<Lead | null>(null);
+  const [hotTicketsCount, setHotTicketsCount] = useState(0);
   const pendingCount = approvals.filter(a => a.status === 'pending').length;
 
   useEffect(() => {
@@ -89,11 +90,24 @@ const Financial = () => {
       setIsSolutionAdmin(!!data);
       if (data) {
         loadData();
+        loadHotTickets();
       } else {
         setLoading(false);
       }
     });
   }, [user]);
+
+  const loadHotTickets = async () => {
+    const { data } = await supabase
+      .from('support_tickets')
+      .select('id, subject, status')
+      .eq('status', 'open');
+    const hot = (data || []).filter((t) => {
+      const s = (t.subject || '').toLowerCase();
+      return s.includes('assento') || s.includes('ativar');
+    });
+    setHotTicketsCount(hot.length);
+  };
 
   const loadData = async () => {
     const [leadsRes, approvalsRes, adminSettingsRes] = await Promise.all([
@@ -272,7 +286,14 @@ const Financial = () => {
             Limites
           </TabsTrigger>
           <TabsTrigger value="emails">Emails</TabsTrigger>
-          <TabsTrigger value="support">Chamados</TabsTrigger>
+          <TabsTrigger value="support" className="relative">
+            Chamados
+            {hotTicketsCount > 0 && (
+              <Badge className="ml-2 bg-amber-500 text-white text-xs px-1.5 py-0 hover:bg-amber-500">
+                {hotTicketsCount}
+              </Badge>
+            )}
+          </TabsTrigger>
           <TabsTrigger value="help-texts">Textos de Ajuda</TabsTrigger>
         </TabsList>
 

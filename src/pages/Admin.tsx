@@ -14,6 +14,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import SupportTicketList from '@/components/support/SupportTicketList';
 import EmailDashboard from '@/components/admin/EmailDashboard';
 import { HelpButton } from '@/components/HelpButton';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { AlertTriangle } from 'lucide-react';
+import { RequestSeatsDialog } from '@/components/admin/RequestSeatsDialog';
 import {
   Tooltip,
   TooltipContent,
@@ -64,6 +67,7 @@ export default function Admin() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [teamId, setTeamId] = useState<string>('none');
+  const [requestSeatsOpen, setRequestSeatsOpen] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -248,6 +252,21 @@ export default function Admin() {
 
         <TabsContent value="users" className="space-y-8">
 
+      {userLimit && userLimit.current >= userLimit.max && (
+        <Alert className="border-amber-500/40 bg-amber-500/5">
+          <AlertTriangle className="h-4 w-4 text-amber-600" />
+          <AlertTitle>Limite de {userLimit.max} usuários atingido</AlertTitle>
+          <AlertDescription className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <span>
+              Você atingiu o limite do seu plano. Solicite ao Financeiro a liberação de assentos adicionais.
+            </span>
+            <Button size="sm" onClick={() => setRequestSeatsOpen(true)}>
+              Solicitar mais assentos
+            </Button>
+          </AlertDescription>
+        </Alert>
+      )}
+
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -291,11 +310,20 @@ export default function Admin() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="sm:col-span-2">
-              <Button type="submit" disabled={submitting} className="w-full sm:w-auto">
+            <div className="sm:col-span-2 flex flex-wrap items-center gap-3">
+              <Button
+                type="submit"
+                disabled={submitting || (userLimit ? userLimit.current >= userLimit.max : false)}
+                className="w-full sm:w-auto"
+              >
                 {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Cadastrar Usuário
               </Button>
+              {userLimit && userLimit.current >= userLimit.max && (
+                <span className="text-xs text-muted-foreground">
+                  Limite atingido — solicite mais assentos acima.
+                </span>
+              )}
             </div>
           </form>
         </CardContent>
@@ -427,6 +455,15 @@ export default function Admin() {
           <EmailDashboard scope="own" />
         </TabsContent>
       </Tabs>
+
+      {userLimit && (
+        <RequestSeatsDialog
+          open={requestSeatsOpen}
+          onOpenChange={setRequestSeatsOpen}
+          currentSeats={userLimit.max}
+          onSuccess={loadData}
+        />
+      )}
     </div>
   );
 }
