@@ -4,11 +4,12 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTasksQuery } from '@/hooks/useTasksQuery';
 import { useProfilesQuery } from '@/hooks/useProfilesQuery';
-import { Clock, ChevronDown, ChevronRight, Users, ListTodo, Download, CalendarIcon } from 'lucide-react';
+import { Clock, ChevronDown, ChevronRight, Users, ListTodo, Download, CalendarIcon, FileText, FileSpreadsheet } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 
