@@ -1,114 +1,83 @@
 
 
-User aprovou: implementar item 1 (convite de equipe por link mágico) agora, e depois seguir com 2-9. Foco no plano do item 1.
+User confirmou: vamos para o **item 2 — Onboarding wizard pós-primeiro-login**.
 
-Contexto que já sei:
-- `admin-create-user/index.ts` cria user com senha, bane, insere `user_approvals.pending`. Esse fluxo permanece para casos onde admin quer criar com senha definida.
-- Falta um fluxo de **convite por email** que: gera token, envia email, e quando convidado clica → define senha → entra direto no time, contando seat sem aprovação manual.
-- `admin_can_add_user` já valida seats — vou usar nele tanto na criação do convite quanto na aceitação (revalida porque seats podem mudar entre envio e aceite).
-- Email transacional: já temos `send-transactional-email` + registry de templates em `_shared/transactional-email-templates/`. Vou adicionar um template novo `team-invite.tsx`.
-- Tabela `user_approvals` continua: ao aceitar, inserir como `approved` (não `pending`) com `created_by_admin = inviter_id`.
+Deixa eu confirmar o que sei e checar uns detalhes antes de fechar o plano.
+<lov-tool-use id="toolu_vrtx_01G2wsTKswiLcmKxu3ogxcZG" name="code--search_files" integration-id="code" data="{\"query\": \"onboarding_completed\"}">
+</lov-tool-use>
 
-Decisões já tomadas (sem precisar perguntar):
-- Convite expira em 7 dias.
-- Email do convidado define a conta. Se já existe conta com esse email → erro "usuário já existe, peça para o admin adicioná-lo direto ao time".
-- Convite consome seat só ao aceitar (não na criação) — evita "reservar" seat indefinidamente. Mas valida disponibilidade na criação para feedback imediato.
-- Admin pode revogar convite pendente; pode reenviar (gera novo token, invalida o antigo).
+<lov-tool-use id="toolu_vrtx_01KgKwRADmrW1xPwyuJ2FNr6" name="code--view" integration-id="code" data="{\"file_path\": \"src/components/AppLayout.tsx\"}">
+</lov-tool-use>
+
+<lov-tool-use id="toolu_vrtx_016BmTdcnBXTCLuARY55SisH" name="code--search_files" integration-id="code" data="{\"query\": \"onboarding\", \"include_patterns\": \"src/**/*.tsx,src/**/*.ts,supabase/migrations/*.sql\"}">
+</lov-tool-use>
+
+<lov-tool-use id="toolu_vrtx_01QcQSW1MBSW1brgZc6G6o83" name="code--view" integration-id="code" data="{\"file_path\": \"src/components/AppLayout.tsx\"}">
+</lov-tool-use>
+
+<lov-tool-use id="toolu_vrtx_01UryGSu7cZe3cFdokkdBAZC" name="code--view" integration-id="code" data="{\"file_path\": \"src/pages/Team.tsx\", \"lines\": \"1-80\"}">
+</lov-tool-use>
+<lov-plan>
+
+User aprovou seguir com **item 2: Onboarding wizard pós-primeiro-login**.
+
+Contexto que já tenho:
+- `profiles` tem `user_id`, `display_name`, `theme`, `avatar_url`. Falta um campo `onboarding_completed_at`.
+- Não existe nenhum onboarding/wizard hoje. Admin novo cai direto em `/tarefas` em branco.
+- Trial automático já está em produção — então o público-alvo do wizard é exatamente o admin recém-criado.
+- `AppLayout` já gerencia auth e sidebar; é o ponto natural para gatear o wizard.
+- `billing_profile_missing_fields` já existe pra checar dados fiscais; vou aproveitar pra montar o passo "dados fiscais".
+
+Decisões já tomadas:
+- 4 passos: (1) Dados básicos (nome + dados fiscais essenciais), (2) Criar primeiro time, (3) Convidar 1-2 colegas (usa `invite-team-member` do item 1), (4) Criar primeira tarefa.
+- Wizard é **opcional skippable** em cada passo — mas marca `onboarding_completed_at` ao final ou ao "pular tudo".
+- Só dispara para admins (role `admin`), não para usuários convidados que entram via `/convite/:token`.
+- Wizard renderiza como `Dialog` em tela cheia sobre o app — não bloqueia rotas, só sobrepõe.
 
 ---
 
-## Plano — Convite de equipe por link mágico
+## Plano — Onboarding wizard pós-primeiro-login
 
-### 1. Schema novo
+### 1. Migração
 
-Tabela `team_invites`:
-- `id uuid pk`
-- `token text unique not null` (gerado via `gen_random_uuid()::text` ou similar)
-- `email text not null`
-- `inviter_id uuid not null` (admin que convidou)
-- `team_id uuid` (opcional — convidar para um time específico)
-- `display_name text` (opcional, sugestão de nome)
-- `expires_at timestamptz not null` (now + 7d)
-- `accepted_at timestamptz`
-- `accepted_user_id uuid`
-- `revoked_at timestamptz`
-- `created_at timestamptz default now()`
+Adicionar coluna em `profiles`:
+- `onboarding_completed_at timestamptz NULL`
 
-RLS:
-- `inviter_id = auth.uid()` → admin gerencia próprios convites (SELECT, INSERT via edge function, UPDATE para revogar)
-- `solution_admin` vê tudo
-- Aceitação é via edge function com service role (não precisa policy para anon)
+### 2. Componente novo `OnboardingWizard`
 
-### 2. Edge functions
+`src/components/onboarding/OnboardingWizard.tsx`:
+- Dialog não-fechável por click fora (só pelos botões "Pular" / "Próximo" / "Concluir").
+- Header: título + indicador de progresso (1/4, 2/4...).
+- Passos:
+  1. **Boas-vindas + dados fiscais mínimos**: nome de exibição, nome legal/CPF/CNPJ, email de cobrança. Salva em `profiles` + `billing_profiles` (upsert).
+  2. **Criar primeiro time**: input nome + descrição opcional. Insere em `teams`. Pode pular.
+  3. **Convidar colegas**: até 2 inputs de email. Chama `invite-team-member` para cada (associando ao time criado no passo 2, se houver). Pode pular.
+  4. **Criar primeira tarefa**: input título + status default. Insere em `tasks`. Pode pular ou "Ir direto pro Kanban".
+- Footer: "Pular tudo" (silencioso) / "Voltar" / "Próximo" / "Concluir".
+- Ao "Concluir" ou "Pular tudo": `UPDATE profiles SET onboarding_completed_at = now()`.
 
-**`invite-team-member`** (chamada pelo admin autenticado):
-1. Valida JWT, garante role `admin`.
-2. Recebe `{ email, displayName?, teamId? }`.
-3. Valida formato email; verifica se já existe user com esse email em `auth.users` → erro amigável.
-4. Verifica se já há convite pendente (não expirado, não aceito, não revogado) para esse email/inviter → erro "convite já enviado, reenvie ou revogue".
-5. Chama `admin_can_add_user(inviter_id)` → se false, erro de seats.
-6. Gera token (`crypto.randomUUID()`), insere em `team_invites` com `expires_at = now + 7d`.
-7. Dispara email transacional `team-invite` com link `https://nevvoh.com/convite/{token}`.
-8. Retorna `{ invite_id, expires_at }`.
+### 3. Disparo no `AppLayout`
 
-**`accept-team-invite`** (chamada pública, sem JWT):
-1. Recebe `{ token, password, displayName }`.
-2. Busca convite por token. Valida: não expirado, não aceito, não revogado.
-3. Revalida `admin_can_add_user(inviter_id)` (seats podem ter mudado).
-4. Cria user via `auth.admin.createUser` com `email_confirm: true`, sem ban.
-5. Insere em `user_approvals` com `status='approved'`, `created_by_admin=inviter_id`, `approved_at=now`.
-6. Se `teamId` no convite, insere em `team_members`.
-7. Marca `team_invites.accepted_at=now`, `accepted_user_id=newUserId`.
-8. Retorna sucesso → frontend redireciona para `/auth` com mensagem "conta criada, faça login".
+Após `useAuth` carregar:
+- Buscar perfil + role do user logado.
+- Se role `admin` **e** `onboarding_completed_at` é null **e** subscription é `trialing` → renderizar `<OnboardingWizard />` por cima do app.
+- Hook novo: `src/hooks/useOnboardingStatus.ts` para encapsular essa query.
 
-**`revoke-team-invite`** (admin autenticado):
-- Marca `revoked_at=now` se inviter_id == caller. Convite vira inválido.
+### 4. Reabertura manual (bônus pequeno)
 
-### 3. Template de email
+Adicionar botão "Refazer tour" em `/configuracoes` que limpa `onboarding_completed_at` e reabre o wizard. Útil pra testes e pra usuários que queiram revisitar.
 
-Criar `supabase/functions/_shared/transactional-email-templates/team-invite.tsx`:
-- Saudação personalizada com nome do admin que convidou.
-- Botão grande: "Aceitar convite" → `https://nevvoh.com/convite/{token}`.
-- Aviso: expira em 7 dias.
-- Registrar no `registry.ts`.
+### 5. Compatibilidade
 
-### 4. UI nova
-
-**Página pública `/convite/:token`** (`src/pages/AcceptInvite.tsx`):
-- Busca convite (via edge function `get-invite-info` ou inline em `accept-team-invite` com modo "preview"). Mostra email, nome do convidador, time.
-- Form: nome (pré-preenchido com sugestão), senha, confirmação de senha.
-- Submit → chama `accept-team-invite` → toast sucesso → redireciona para `/auth?invited=1`.
-- Trata estados: convite inválido, expirado, revogado, já aceito.
-
-**Componente `InviteUserDialog`** (em `src/components/team/`):
-- Substitui ou complementa o atual fluxo de criação direta. Form: email, nome opcional, time opcional.
-- Botão "Enviar convite" → chama `invite-team-member`.
-- Toast: "Convite enviado para {email}".
-
-**Lista de convites pendentes** (em `TeamList.tsx` ou seção dedicada):
-- Mostra convites pendentes do admin: email, enviado em, expira em, status.
-- Ações: "Reenviar" (gera novo token, invalida antigo, envia email de novo) e "Revogar".
-
-### 5. Roteamento
-
-`App.tsx`: adicionar rota pública `/convite/:token` → `AcceptInvite`.
-
-### 6. Compatibilidade
-
-- `admin-create-user` continua funcionando para casos em que admin prefere definir senha direto.
-- `user_approvals` continua o fluxo de aprovação para casos legados/diretos.
-- Convidados via link mágico nascem `approved`, sem passar pela tela de aprovação do solution_admin.
+- Admins legados (sem `onboarding_completed_at`): seriam atingidos pelo wizard. Para evitar isso, na migração já popular `onboarding_completed_at = created_at` para todos os profiles existentes — só novos admins a partir daqui veem o wizard.
+- Usuários convidados (não-admin): nunca acionam o wizard porque a regra checa role `admin`.
 
 ### Arquivos afetados
 
-- **Migração**: criar tabela `team_invites` + RLS
-- **Novo**: `supabase/functions/invite-team-member/index.ts`
-- **Novo**: `supabase/functions/accept-team-invite/index.ts`
-- **Novo**: `supabase/functions/revoke-team-invite/index.ts`
-- **Novo**: `supabase/functions/_shared/transactional-email-templates/team-invite.tsx`
-- **Editado**: `supabase/functions/_shared/transactional-email-templates/registry.ts`
-- **Novo**: `src/pages/AcceptInvite.tsx`
-- **Novo**: `src/components/team/InviteUserDialog.tsx`
-- **Editado**: `src/pages/TeamList.tsx` — botão "Convidar por email" + lista de convites pendentes
-- **Editado**: `src/App.tsx` — rota `/convite/:token`
+- **Migração**: adicionar `onboarding_completed_at` em `profiles` + backfill
+- **Novo**: `src/components/onboarding/OnboardingWizard.tsx`
+- **Novo**: `src/components/onboarding/steps/Step1Profile.tsx`, `Step2Team.tsx`, `Step3Invites.tsx`, `Step4Task.tsx`
+- **Novo**: `src/hooks/useOnboardingStatus.ts`
+- **Editado**: `src/components/AppLayout.tsx` — montar wizard condicional
+- **Editado**: `src/pages/Settings.tsx` — botão "Refazer tour"
 
