@@ -76,7 +76,7 @@ Deno.serve(async (req) => {
       const seats = sub?.seats_purchased ?? 10
       const msg = sub?.status === 'suspended' || sub?.status === 'canceled'
         ? 'Assinatura suspensa ou cancelada. Regularize o pagamento para criar novos usuários.'
-        : `Limite de assentos atingido (${currentCount ?? 0}/${seats}). Faça upgrade da assinatura para adicionar mais usuários.`
+        : `Limite de ${seats} assentos atingido (${currentCount ?? 0}/${seats}). Solicite a liberação de mais assentos pelo botão "Solicitar mais assentos" na página de Administração.`
       return new Response(JSON.stringify({ error: msg }), { status: 403, headers: corsHeaders })
     }
 

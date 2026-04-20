@@ -11,6 +11,7 @@ import { ptBR } from 'date-fns/locale';
 import BillingProfileForm from '@/components/billing/BillingProfileForm';
 import InvoiceHistory from '@/components/billing/InvoiceHistory';
 import { ActivateSubscriptionDialog } from '@/components/billing/ActivateSubscriptionDialog';
+import { RequestSeatsDialog } from '@/components/admin/RequestSeatsDialog';
 
 interface Subscription {
   id: string;
@@ -47,6 +48,7 @@ export default function Billing() {
     subject: 'Quero ativar minha assinatura',
     label: 'ativação de assinatura',
   });
+  const [requestSeatsOpen, setRequestSeatsOpen] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -73,9 +75,17 @@ export default function Billing() {
   };
 
   const handleUpgrade = async () => {
-    const diff = pendingSeats - (sub?.seats_purchased ?? 0);
-    const action = diff > 0 ? `aumentar para ${pendingSeats} assentos (+${diff})` : `reduzir para ${pendingSeats} assentos (${diff})`;
-    openActivate(`Ajuste de assentos: ${action}`, `ajuste de assentos para ${pendingSeats}`);
+    const current = sub?.seats_purchased ?? 0;
+    if (pendingSeats > current) {
+      // Aumento: usa fluxo unificado de solicitação ao Financeiro
+      setRequestSeatsOpen(true);
+      return;
+    }
+    // Redução: mantém o fluxo livre de mensagem
+    openActivate(
+      `Ajuste de assentos: reduzir para ${pendingSeats} assentos (${pendingSeats - current})`,
+      `redução de assentos para ${pendingSeats}`,
+    );
   };
 
   const handleManagePayment = async () => {
@@ -316,6 +326,14 @@ export default function Billing() {
         onOpenChange={setActivateOpen}
         defaultSubject={activateContext.subject}
         contextLabel={activateContext.label}
+        onSuccess={load}
+      />
+
+      <RequestSeatsDialog
+        open={requestSeatsOpen}
+        onOpenChange={setRequestSeatsOpen}
+        currentSeats={sub.seats_purchased}
+        suggestedSeats={pendingSeats}
         onSuccess={load}
       />
     </div>
