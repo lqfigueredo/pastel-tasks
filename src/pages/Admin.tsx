@@ -185,14 +185,8 @@ export default function Admin() {
       toast.success(data.message);
 
       // Update local state
-      if (action === 'promote') {
-        setAdminRoles(prev => new Set([...prev, targetUserId]));
-      } else if (action === 'demote') {
-        setAdminRoles(prev => {
-          const next = new Set(prev);
-          next.delete(targetUserId);
-          return next;
-        });
+      if (action === 'promote' || action === 'demote') {
+        loadData();
       } else if (action === 'deactivate') {
         setBannedUsers(prev => new Set([...prev, targetUserId]));
       } else if (action === 'activate') {
