@@ -99,7 +99,7 @@ const Financial = () => {
       setIsSolutionAdmin(!!data);
       if (data) {
         loadData();
-        loadHotTickets();
+        // hotTicketsCount handled via useSupportTicketsQuery
       } else {
         setLoading(false);
       }
