@@ -1,9 +1,11 @@
-import { useState, useEffect, useRef, type ReactNode } from 'react';
-import FeaturePreviewDialog from '@/components/landing/FeaturePreviewDialog';
-import FloatingTasksBackground from '@/components/landing/FloatingTasksBackground';
-import FeatureMiniPreview from '@/components/landing/FeatureMiniPreview';
-import TaskMarquee from '@/components/landing/TaskMarquee';
+import { useState, useEffect, useRef, lazy, Suspense, type ReactNode } from 'react';
 import { KanbanPreview } from '@/components/landing/featurePreviews';
+
+// Lazy-load heavy below-the-fold pieces — keeps initial Landing bundle light
+const FeaturePreviewDialog = lazy(() => import('@/components/landing/FeaturePreviewDialog'));
+const FloatingTasksBackground = lazy(() => import('@/components/landing/FloatingTasksBackground'));
+const FeatureMiniPreview = lazy(() => import('@/components/landing/FeatureMiniPreview'));
+const TaskMarquee = lazy(() => import('@/components/landing/TaskMarquee'));
 import {
   LayoutDashboard,
   Users,
@@ -167,7 +169,9 @@ const Landing = () => {
       {/* Hero */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-mint-light/40 via-transparent to-transparent pointer-events-none" />
-        <FloatingTasksBackground />
+        <Suspense fallback={null}>
+          <FloatingTasksBackground />
+        </Suspense>
 
         <div className="relative mx-auto max-w-6xl px-6 py-24 lg:py-28">
           <div className="grid items-center gap-12 lg:grid-cols-2">
@@ -263,7 +267,9 @@ const Landing = () => {
                   className="group rounded-xl border border-border bg-card p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg h-full cursor-pointer"
                   onClick={() => setPreviewFeature(f.title)}
                 >
-                  <FeatureMiniPreview featureTitle={f.title} />
+                  <Suspense fallback={<div className="h-24" />}>
+                    <FeatureMiniPreview featureTitle={f.title} />
+                  </Suspense>
                   <div className="mt-5 flex items-start gap-3">
                     <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10">
                       <f.icon className="h-5 w-5 text-primary" />
@@ -284,7 +290,9 @@ const Landing = () => {
       </section>
 
       {/* Marquee transition */}
-      <TaskMarquee />
+      <Suspense fallback={null}>
+        <TaskMarquee />
+      </Suspense>
 
       {/* How it works */}
       <section className="relative py-24 overflow-hidden">
@@ -420,11 +428,15 @@ const Landing = () => {
           </Link>
         </div>
       </footer>
-      <FeaturePreviewDialog
-        open={!!previewFeature}
-        onOpenChange={(open) => !open && setPreviewFeature(null)}
-        featureTitle={previewFeature}
-      />
+      {previewFeature && (
+        <Suspense fallback={null}>
+          <FeaturePreviewDialog
+            open={!!previewFeature}
+            onOpenChange={(open) => !open && setPreviewFeature(null)}
+            featureTitle={previewFeature}
+          />
+        </Suspense>
+      )}
     </div>
   );
 };

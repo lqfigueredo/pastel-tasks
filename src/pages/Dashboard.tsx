@@ -98,8 +98,42 @@ export default function Dashboard() {
   const calendarEnd = endOfWeek(monthEnd);
   const days = eachDayOfInterval({ start: calendarStart, end: calendarEnd });
 
-  const statusColorMap = new Map(statuses.map((s) => [s.id, s.color]));
-  const statusNameMap = new Map(statuses.map((s) => [s.id, s.name]));
+  const statusColorMap = useMemo(
+    () => new Map(statuses.map((s) => [s.id, s.color])),
+    [statuses]
+  );
+  const statusNameMap = useMemo(
+    () => new Map(statuses.map((s) => [s.id, s.name])),
+    [statuses]
+  );
+
+  // Pre-index single-day tasks by date key — avoids filtering 42 times per render
+  const singleDayTasksByDate = useMemo(() => {
+    const map = new Map<string, Task[]>();
+    for (const t of tasks) {
+      if (isMultiDay(t)) continue;
+      const interval = getTaskInterval(t);
+      if (!interval) continue;
+      const key = format(interval.start, 'yyyy-MM-dd');
+      const arr = map.get(key);
+      if (arr) arr.push(t);
+      else map.set(key, [t]);
+    }
+    return map;
+  }, [tasks]);
+
+  // Pre-index completed tasks by actual_end_date
+  const completedTasksByDate = useMemo(() => {
+    const map = new Map<string, Task[]>();
+    for (const t of tasks) {
+      if (!t.actual_end_date) continue;
+      const key = t.actual_end_date.slice(0, 10);
+      const arr = map.get(key);
+      if (arr) arr.push(t);
+      else map.set(key, [t]);
+    }
+    return map;
+  }, [tasks]);
 
   const weeks = useMemo(() => {
     const result: Date[][] = [];
@@ -166,14 +200,8 @@ export default function Dashboard() {
   );
 
   const getSingleDayTasks = useCallback(
-    (day: Date) =>
-      tasks.filter((t) => {
-        if (isMultiDay(t)) return false;
-        const interval = getTaskInterval(t);
-        if (!interval) return false;
-        return isSameDay(day, interval.start);
-      }),
-    [tasks]
+    (day: Date) => singleDayTasksByDate.get(format(day, 'yyyy-MM-dd')) || [],
+    [singleDayTasksByDate]
   );
 
   return (
@@ -254,7 +282,7 @@ export default function Dashboard() {
                 const inMonth = isSameMonth(day, currentMonth);
                 const today = isToday(day);
                 const singleTasks = getSingleDayTasks(day);
-                const completedOnDay = tasks.filter((t) => t.actual_end_date && isSameDay(day, parseISO(t.actual_end_date)));
+                const completedOnDay = completedTasksByDate.get(format(day, 'yyyy-MM-dd')) || [];
                 const overflowCount = overflow.get(di) || 0;
 
                 return (
