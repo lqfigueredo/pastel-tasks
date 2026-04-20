@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
+import { Turnstile, type TurnstileInstance } from '@marsidev/react-turnstile';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -17,32 +18,52 @@ interface LeadFormDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
+// Cloudflare's testing site key — always passes. Replace by setting VITE_TURNSTILE_SITE_KEY.
+const TURNSTILE_TEST_KEY = '1x00000000000000000000AA';
+const SITE_KEY = (import.meta.env.VITE_TURNSTILE_SITE_KEY as string | undefined) || TURNSTILE_TEST_KEY;
+
 const LeadFormDialog = ({ open, onOpenChange }: LeadFormDialogProps) => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
+  const [token, setToken] = useState<string>('');
   const [loading, setLoading] = useState(false);
+  const turnstileRef = useRef<TurnstileInstance | null>(null);
+
+  const reset = () => {
+    setName('');
+    setEmail('');
+    setToken('');
+    turnstileRef.current?.reset();
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim() || !email.trim()) return;
+    if (!token) {
+      toast.error('Aguarde a verificação anti-bot.');
+      return;
+    }
 
     setLoading(true);
-    const { error } = await supabase.from('leads').insert({ name: name.trim(), email: email.trim() });
+    const { data, error } = await supabase.functions.invoke('submit-lead', {
+      body: { name: name.trim(), email: email.trim(), turnstile_token: token },
+    });
     setLoading(false);
 
-    if (error) {
-      toast.error('Erro ao enviar. Tente novamente.');
+    if (error || (data as any)?.error) {
+      toast.error((data as any)?.error || 'Erro ao enviar. Tente novamente.');
+      turnstileRef.current?.reset();
+      setToken('');
       return;
     }
 
     toast.success('Obrigado pelo interesse! Entraremos em contato.');
-    setName('');
-    setEmail('');
+    reset();
     onOpenChange(false);
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={(o) => { if (!o) reset(); onOpenChange(o); }}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Demonstre seu interesse</DialogTitle>
@@ -74,7 +95,17 @@ const LeadFormDialog = ({ open, onOpenChange }: LeadFormDialogProps) => {
               maxLength={255}
             />
           </div>
-          <Button type="submit" className="w-full" disabled={loading}>
+          <div className="flex justify-center">
+            <Turnstile
+              ref={turnstileRef}
+              siteKey={SITE_KEY}
+              onSuccess={setToken}
+              onError={() => setToken('')}
+              onExpire={() => setToken('')}
+              options={{ theme: 'auto', size: 'flexible' }}
+            />
+          </div>
+          <Button type="submit" className="w-full" disabled={loading || !token}>
             {loading ? 'Enviando...' : 'Enviar'}
           </Button>
         </form>

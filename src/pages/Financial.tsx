@@ -24,6 +24,7 @@ const EmailDashboard = lazy(() => import('@/components/admin/EmailDashboard'));
 const SubscriptionsTab = lazy(() => import('@/components/financial/SubscriptionsTab'));
 const PlansTab = lazy(() => import('@/components/financial/PlansTab'));
 const VouchersTab = lazy(() => import('@/components/financial/VouchersTab'));
+const LegalDocumentsEditor = lazy(() => import('@/components/financial/LegalDocumentsEditor'));
 
 const TabFallback = () => <InlineLoader label="Carregando..." />;
 import {
@@ -293,6 +294,7 @@ const Financial = () => {
             )}
           </TabsTrigger>
           <TabsTrigger value="help-texts">Textos de Ajuda</TabsTrigger>
+          <TabsTrigger value="legal">Documentos Legais</TabsTrigger>
         </TabsList>
 
         <TabsContent value="subscriptions">
@@ -615,6 +617,12 @@ const Financial = () => {
         <TabsContent value="help-texts">
           <Suspense fallback={<TabFallback />}>
             <HelpTextsManager />
+          </Suspense>
+        </TabsContent>
+
+        <TabsContent value="legal">
+          <Suspense fallback={<TabFallback />}>
+            <LegalDocumentsEditor />
           </Suspense>
         </TabsContent>
       </Tabs>
