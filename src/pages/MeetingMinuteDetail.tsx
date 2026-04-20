@@ -161,7 +161,9 @@ export default function MeetingMinuteDetail() {
             <CardTitle className="text-lg mt-1">Descrição da Reunião</CardTitle>
           </div>
           <div className="flex items-center gap-2">
-            <MeetingRecorder meetingId={meetingId!} onRecorded={refreshData} />
+            <Suspense fallback={null}>
+              <MeetingRecorder meetingId={meetingId!} onRecorded={refreshData} />
+            </Suspense>
             {meeting.created_by === user?.id && (
               <Button size="sm" variant="outline" onClick={() => setEditDialogOpen(true)}>
                 <Pencil className="mr-2 h-4 w-4" /> Editar

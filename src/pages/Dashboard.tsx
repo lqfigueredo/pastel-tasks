@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, lazy, Suspense } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTasksQuery, useInvalidateTasks } from '@/hooks/useTasksQuery';
 import { useStatusesQuery } from '@/hooks/useStatusesQuery';
@@ -8,7 +8,8 @@ import { TaskDetailDialog } from '@/components/kanban/TaskDetailDialog';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight, CheckCircle2, UserCircle } from 'lucide-react';
 import { HelpButton } from '@/components/HelpButton';
-import { TimeReport } from '@/components/dashboard/TimeReport';
+import { Skeleton } from '@/components/ui/skeleton';
+const TimeReport = lazy(() => import('@/components/dashboard/TimeReport').then(m => ({ default: m.TimeReport })));
 import {
   startOfMonth,
   endOfMonth,
@@ -363,7 +364,9 @@ export default function Dashboard() {
         })}
       </div>
 
-      <TimeReport />
+      <Suspense fallback={<Skeleton className="h-64 w-full rounded-xl" />}>
+        <TimeReport />
+      </Suspense>
 
       {selectedTask && (
         <TaskDetailDialog
