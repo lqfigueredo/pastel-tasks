@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Bell } from 'lucide-react';
+import { Bell, BellOff } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -9,6 +9,8 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { EmptyState } from '@/components/ui/empty-state';
+import { errorToast } from '@/lib/toast-helpers';
 
 interface Notification {
   id: string;
@@ -65,7 +67,11 @@ export const NotificationBell = () => {
   }, [user]);
 
   const markAsRead = async (id: string) => {
-    await supabase.from('notifications').update({ is_read: true }).eq('id', id);
+    const { error } = await supabase.from('notifications').update({ is_read: true }).eq('id', id);
+    if (error) {
+      errorToast('marcar a notificação como lida', error);
+      return;
+    }
     setNotifications((prev) =>
       prev.map((n) => (n.id === id ? { ...n, is_read: true } : n))
     );
@@ -74,7 +80,11 @@ export const NotificationBell = () => {
   const markAllAsRead = async () => {
     const unreadIds = notifications.filter((n) => !n.is_read).map((n) => n.id);
     if (!unreadIds.length) return;
-    await supabase.from('notifications').update({ is_read: true }).in('id', unreadIds);
+    const { error } = await supabase.from('notifications').update({ is_read: true }).in('id', unreadIds);
+    if (error) {
+      errorToast('marcar as notificações como lidas', error);
+      return;
+    }
     setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
   };
 
@@ -111,9 +121,12 @@ export const NotificationBell = () => {
         </div>
         <ScrollArea className="max-h-80">
           {notifications.length === 0 ? (
-            <div className="p-4 text-center text-sm text-muted-foreground">
-              Nenhuma notificação
-            </div>
+            <EmptyState
+              icon={BellOff}
+              title="Tudo em dia"
+              description="Você verá aqui avisos de prazos e reuniões."
+              compact
+            />
           ) : (
             notifications.map((n) => (
               <button

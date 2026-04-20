@@ -1,8 +1,9 @@
 import { memo, useState } from 'react';
-import { ChevronDown, ChevronRight, GripVertical } from 'lucide-react';
+import { ChevronDown, ChevronRight, GripVertical, Inbox } from 'lucide-react';
 import type { Task, TaskStatus } from '@/types/kanban';
 import { KanbanCard } from './KanbanCard';
 import { cn } from '@/lib/utils';
+import { EmptyState } from '@/components/ui/empty-state';
 
 interface KanbanColumnProps {
   status: TaskStatus;
@@ -131,7 +132,12 @@ function KanbanColumnImpl({
           <KanbanCard key={task.id} task={task} allStatuses={allStatuses} onRefresh={onRefresh} onMoveTask={onMoveTask} />
         ))}
         {tasks.length === 0 && (
-          <p className="py-8 text-center text-xs text-muted-foreground">Nenhuma tarefa</p>
+          <EmptyState
+            icon={Inbox}
+            title="Nenhuma tarefa aqui"
+            description="Arraste cartões para esta coluna ou crie uma nova tarefa."
+            compact
+          />
         )}
       </div>
     </div>

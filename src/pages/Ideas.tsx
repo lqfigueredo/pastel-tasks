@@ -10,6 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Plus, Search, Lightbulb } from 'lucide-react';
 import { CreateIdeaDialog } from '@/components/ideas/CreateIdeaDialog';
 import { EditIdeaDialog } from '@/components/ideas/EditIdeaDialog';
+import { EmptyState } from '@/components/ui/empty-state';
 import { format } from 'date-fns';
 
 interface Idea {
@@ -108,10 +109,20 @@ export default function Ideas() {
       </div>
 
       {filtered.length === 0 ? (
-        <div className="text-center py-12 text-muted-foreground">
-          <Lightbulb className="h-12 w-12 mx-auto mb-3 opacity-30" />
-          <p>Nenhuma ideia encontrada</p>
-        </div>
+        <EmptyState
+          icon={Lightbulb}
+          title={search || filter !== 'all' ? 'Nenhuma ideia encontrada' : 'Nenhuma ideia ainda'}
+          description={
+            search || filter !== 'all'
+              ? 'Tente ajustar a busca ou o filtro.'
+              : 'Capture insights e melhorias do dia a dia. Você pode transformá-las em tarefas depois.'
+          }
+          action={
+            search || filter !== 'all'
+              ? undefined
+              : { label: 'Registrar primeira ideia', onClick: () => setCreateOpen(true) }
+          }
+        />
       ) : (
         <div className="rounded-lg border">
           <Table>

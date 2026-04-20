@@ -1,8 +1,8 @@
-import { useState, useCallback, useImperativeHandle, forwardRef, useMemo } from 'react';
+import { useState, useCallback, useImperativeHandle, forwardRef, useMemo, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
 import { KanbanColumn } from './KanbanColumn';
-import { useToast } from '@/hooks/use-toast';
+import { errorToast } from '@/lib/toast-helpers';
 import { useTasksQuery, useInvalidateTasks, useOptimisticTaskUpdate } from '@/hooks/useTasksQuery';
 import { useStatusesQuery } from '@/hooks/useStatusesQuery';
 import { useColumnOrderQuery, useUpdateColumnOrder } from '@/hooks/useColumnOrderQuery';
@@ -17,10 +17,10 @@ export interface KanbanBoardRef {
 
 interface KanbanBoardProps {
   filterAssigneeId?: string | null;
+  onCountChange?: (visible: number, total: number) => void;
 }
 
-export const KanbanBoard = forwardRef<KanbanBoardRef, KanbanBoardProps>(({ filterAssigneeId }, ref) => {
-  const { toast } = useToast();
+export const KanbanBoard = forwardRef<KanbanBoardRef, KanbanBoardProps>(({ filterAssigneeId, onCountChange }, ref) => {
   const [dragColIdx, setDragColIdx] = useState<number | null>(null);
   const [dragOverColIdx, setDragOverColIdx] = useState<number | null>(null);
 
@@ -77,10 +77,10 @@ export const KanbanBoard = forwardRef<KanbanBoardRef, KanbanBoardProps>(({ filte
 
       if (error) {
         rollback();
-        toast({ title: 'Erro ao mover tarefa', variant: 'destructive' });
+        errorToast('mover a tarefa', error);
       }
     },
-    [tasks, optimisticUpdate, toast]
+    [tasks, optimisticUpdate]
   );
 
   const handleColumnReorder = useCallback(
@@ -107,6 +107,18 @@ export const KanbanBoard = forwardRef<KanbanBoardRef, KanbanBoardProps>(({ filte
     [dragOverColIdx, handleColumnReorder]
   );
 
+  const filteredTasks = useMemo(
+    () =>
+      filterAssigneeId
+        ? tasks.filter((t) => t.assignees.some((a) => a.user_id === filterAssigneeId))
+        : tasks,
+    [tasks, filterAssigneeId],
+  );
+
+  // Notify parent of counts whenever they change. Must be declared before any early return.
+  useEffect(() => {
+    onCountChange?.(filteredTasks.length, tasks.length);
+  }, [filteredTasks.length, tasks.length, onCountChange]);
 
   if (loading) {
     return (
@@ -117,10 +129,6 @@ export const KanbanBoard = forwardRef<KanbanBoardRef, KanbanBoardProps>(({ filte
       </div>
     );
   }
-
-  const filteredTasks = filterAssigneeId
-    ? tasks.filter((t) => t.assignees.some((a) => a.user_id === filterAssigneeId))
-    : tasks;
 
   return (
     <div className="flex gap-4 overflow-x-auto pb-4">
