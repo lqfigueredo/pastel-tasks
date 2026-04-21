@@ -1,70 +1,120 @@
 
+## Solução proposta para a tela branca em produção
 
-## Tela branca em produção — fix do chunk de charts
+### Diagnóstico mais provável
 
-### Causa raiz (confirmada)
+A correção anterior focou só em `vendor-charts`, mas o problema persiste porque a aplicação ainda usa uma estratégia de `manualChunks` muito agressiva em `vite.config.ts`.
 
-Console de produção (`https://nevvoh.com/auth`) mostra erro fatal no carregamento:
+Hoje o build separa várias bibliotecas críticas manualmente:
+- React / router
+- query
+- Radix
+- Supabase client
+- icons
+- charts
+- cmdk
+- pdf
+- dnd
+- sentry
+- date-fns
 
-```
-ReferenceError: Cannot access 'P' before initialization
-  at vendor-charts-CGpoBNme.js
-```
+Em produção, esse tipo de divisão manual pode gerar ordem de inicialização instável entre chunks e causar erro fatal antes do React montar. Quando isso acontece:
+- a tela fica 100% branca
+- o `ErrorBoundary` não ajuda
+- o erro acontece cedo demais, no bootstrap/import dos módulos
 
-Isso acontece **antes** do React montar — daí a tela 100% branca. O `ErrorBoundary` nem chega a executar.
+Isso combina com o comportamento atual: `/auth` é uma tela simples, mas o app inteiro depende do bootstrap inicial e dos chunks-base.
 
-A regra de `manualChunks` em `vite.config.ts` separa o `recharts` das suas dependências `d3-*` em **chunks que se referenciam mutuamente**. Quando o Rollup minifica e renomeia bindings (`P`), uma das partes é executada antes da outra estar inicializada (TDZ — Temporal Dead Zone). É um problema clássico de divisão errada de chunk com módulos que têm dependência circular interna (recharts/d3-shape/d3-scale).
+### Correção recomendada
 
-### Por que só agora apareceu
+#### 1. Remover o `manualChunks` customizado
+Arquivo:
+- `vite.config.ts`
 
-O bundle agora carrega `vendor-charts` mais cedo (via grafo de imports a partir do `Landing`/`AppLayout` lazy chains após adições recentes — react-markdown, turnstile mexeram na ordem dos chunks). Em dev funciona porque não há minificação/code-split agressivo.
+Ajuste:
+- remover a função `manualChunks` inteira
+- deixar o Vite/Rollup cuidar do code splitting padrão
 
-### Fix
+Motivo:
+- é a forma mais segura para eliminar conflitos de inicialização entre chunks
+- reduz risco de TDZ/circular init entre dependências compartilhadas
+- evita quebrar novamente quando a árvore de imports muda
 
-Unificar `recharts` + `d3-*` no **mesmo chunk** para o Rollup respeitar a ordem de inicialização. É a correção padrão deste tipo de TDZ.
+#### 2. Fortalecer o bootstrap do app
+Arquivo:
+- `src/main.tsx`
 
-**Mudança em `vite.config.ts`:**
+Ajuste:
+- trocar o bootstrap estático por um bootstrap protegido
+- carregar `App` via `import('./App')` dentro de `try/catch`
+- registrar `window.onerror` e `window.onunhandledrejection`
+- em caso de falha antes do React montar, renderizar um fallback mínimo no `#root` em vez de deixar a tela branca
+- enviar o erro para o monitoramento
 
+Resultado:
+- mesmo se houver erro de import/chunk, o usuário não verá uma tela totalmente branca
+- fica mais fácil identificar a causa real se algo ainda falhar
+
+#### 3. Manter o `ErrorBoundary` apenas para falhas pós-montagem
+Arquivo:
+- `src/components/ErrorBoundary.tsx`
+
+Ajuste:
+- manter a proteção para erros de runtime depois que a aplicação já carregou
+- não confiar nele para falhas de bootstrap
+
+### Implementação esperada
+
+#### `vite.config.ts`
+- simplificar `build.rollupOptions.output`
+- remover o `manualChunks`
+
+#### `src/main.tsx`
+Criar fluxo parecido com:
 ```ts
-// antes
-if (id.includes('recharts') || id.includes('d3-')) return 'vendor-charts';
-
-// depois — apenas garante recharts e d3 juntos; remove split desnecessário
-if (
-  id.includes('recharts') ||
-  id.includes('/d3-') ||
-  id.includes('victory-vendor') ||  // dep interna do recharts que também usa d3
-  id.includes('internmap') ||
-  id.includes('delaunator') ||
-  id.includes('robust-predicates')
-) {
-  return 'vendor-charts';
+async function bootstrap() {
+  try {
+    initSentry();
+    const [{ default: App }, { createRoot }] = await Promise.all([
+      import('./App'),
+      import('react-dom/client'),
+    ]);
+    createRoot(document.getElementById('root')!).render(<App />);
+  } catch (error) {
+    // captura + fallback visual
+  }
 }
 ```
 
-Adiciono também as dependências transitivas do recharts (`victory-vendor`, `internmap`, etc.) que herdam do mesmo grafo do d3 e podem cair em outro chunk genérico se não forem explicitadas.
+Também incluir:
+- listener global para `error`
+- listener global para `unhandledrejection`
 
-### Hardening adicional
+### Validação
 
-- Remover `src/App.css` morto (não é importado em lugar nenhum, mas tem `#root { max-width: 1280px }` que quebraria layout se alguém o re-importasse no futuro).
-- No `ErrorBoundary`, adicionar fallback para `ReferenceError` de chunks também (logar e tentar `window.location.reload()` automático uma vez), para que erros futuros de chunk não deixem o usuário com tela branca permanente.
+Depois da implementação:
 
-### Como vou validar
+1. publicar novamente
+2. testar em produção:
+   - `/`
+   - `/auth`
+   - login e redirecionamento para `/tarefas`
+3. confirmar que:
+   - não há mais tela branca
+   - o app ao menos mostra fallback se algo falhar
+   - console não exibe mais erro fatal de inicialização de chunk
+4. se ainda houver falha, o novo bootstrap vai expor o erro exato e não mais um branco total
 
-1. Aplicar a mudança no `vite.config.ts`.
-2. Pedir ao usuário para clicar em **Publicar → Atualizar** (mudanças de frontend só vão ao ar com deploy).
-3. Confirmar via browser tool que `/auth` em produção carrega o formulário de login.
+### Arquivos que serão alterados
 
-### Arquivos
+- `vite.config.ts`
+- `src/main.tsx`
+- possivelmente ajuste pequeno em `src/components/ErrorBoundary.tsx`
 
-**Modificados:**
-- `vite.config.ts` — agrupar recharts + d3 + deps transitivas no mesmo chunk
-- `src/components/ErrorBoundary.tsx` — recovery automático para erros de chunk
+### Resultado esperado
 
-**Removidos:**
-- `src/App.css` (morto, risco futuro)
+A solução real não é “mexer só no chunk de charts”, e sim:
+- parar de forçar split manual entre dependências sensíveis
+- proteger o carregamento inicial do app
 
-### Riscos
-
-- Nenhum — a mudança apenas une chunks que já existem juntos no grafo de dependências. Tamanho do bundle final é praticamente o mesmo (talvez ~5KB de overhead de gzip economizado por evitar duplicação).
-
+Isso ataca a causa estrutural mais provável do branco total em produção.
