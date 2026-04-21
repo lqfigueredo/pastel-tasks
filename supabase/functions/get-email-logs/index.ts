@@ -129,8 +129,8 @@ Deno.serve(async (req) => {
     const { data: allLogs, error: logsError } = await query;
 
     if (logsError) {
-      console.error("Logs query error:", logsError.message);
-      return new Response(JSON.stringify({ error: logsError.message }), {
+      console.error("Logs query error:", logsError);
+      return new Response(JSON.stringify({ error: "Failed to retrieve logs" }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -188,7 +188,7 @@ Deno.serve(async (req) => {
   } catch (err) {
     console.error("Unhandled error:", err);
     return new Response(
-      JSON.stringify({ error: err.message || "Internal error" }),
+      JSON.stringify({ error: "Internal server error" }),
       {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
