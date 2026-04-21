@@ -24,11 +24,17 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: 'Token inválido' }), { status: 400, headers: corsHeaders })
     }
 
-    // Busca convite
+    // Hash do token recebido para lookup (tokens são armazenados apenas como hash)
+    const tokenHashBuffer = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(token))
+    const tokenHash = Array.from(new Uint8Array(tokenHashBuffer))
+      .map(b => b.toString(16).padStart(2, '0'))
+      .join('')
+
+    // Busca convite pelo hash
     const { data: invite, error: inviteError } = await supabaseAdmin
       .from('team_invites')
       .select('id, email, inviter_id, team_id, display_name, expires_at, accepted_at, revoked_at')
-      .eq('token', token)
+      .eq('token_hash', tokenHash)
       .maybeSingle()
 
     if (inviteError || !invite) {
