@@ -101,14 +101,18 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Gera token e cria convite
+    // Gera token (plaintext só vai pro email) + hash (armazenado no banco)
     const inviteToken = crypto.randomUUID().replace(/-/g, '') + crypto.randomUUID().replace(/-/g, '')
+    const tokenHashBuffer = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(inviteToken))
+    const tokenHash = Array.from(new Uint8Array(tokenHashBuffer))
+      .map(b => b.toString(16).padStart(2, '0'))
+      .join('')
     const expiresAt = new Date(Date.now() + TRIAL_INVITE_DAYS * 24 * 60 * 60 * 1000)
 
     const { data: invite, error: insertError } = await supabaseAdmin
       .from('team_invites')
       .insert({
-        token: inviteToken,
+        token_hash: tokenHash,
         email,
         inviter_id: inviterId,
         team_id: teamId,
