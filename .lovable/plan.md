@@ -1,98 +1,99 @@
 
 
-## Fase A — Soft launch
+## Plano — 2 semanas de soft launch (MVP em produção)
 
-Quatro frentes para liberar o produto a clientes beta pagantes com segurança.
-
----
-
-### 1. Anti-bot na captura de leads (Cloudflare Turnstile)
-
-- Integrar widget **Cloudflare Turnstile** no `LeadFormDialog.tsx` (free, sem custo, sem fricção tipo CAPTCHA visual).
-- Adicionar `VITE_TURNSTILE_SITE_KEY` (público, vai no client) e `TURNSTILE_SECRET_KEY` (privado, edge function).
-- Nova edge function `submit-lead`:
-  - Recebe `{ name, email, turnstile_token }`
-  - Valida token na API do Cloudflare
-  - Insere em `leads` via service role
-  - Retorna sucesso/erro
-- Remover policy `Anyone can insert leads` da tabela `leads` (ninguém mais insere direto — só via edge function).
-- Manter `LeadFormTrigger` e dialog com a mesma UX, só trocando a chamada Supabase por `supabase.functions.invoke('submit-lead', ...)`.
-
-### 2. Termos de Uso + Política de Privacidade (editáveis no Financeiro)
-
-**Tabela nova `legal_documents`:**
-- `id`, `doc_type` ('terms' | 'privacy'), `content` (text/markdown), `version` (int), `published_at`, `updated_by`
-- RLS: leitura pública (anon + authenticated), escrita só `solution_admin`
-- Seed inicial com versão 1 de cada doc (texto base PT-BR adequado a LGPD; usuário ajusta depois)
-
-**Páginas públicas:**
-- `/termos` e `/privacidade` — renderiza markdown da última versão publicada usando `react-markdown` (lib leve, ~30KB).
-- Links no footer da `Landing.tsx` e na página de `Auth.tsx` ("Ao se cadastrar você aceita nossos Termos e Política de Privacidade").
-
-**Editor no Financeiro:**
-- Nova aba "Documentos Legais" em `Financial.tsx` (visível só para `solution_admin`).
-- Componente `LegalDocumentsEditor.tsx`:
-  - Tabs: "Termos de Uso" | "Política de Privacidade"
-  - `Textarea` grande com markdown
-  - Preview ao lado (renderiza markdown em tempo real)
-  - Botão "Publicar nova versão" (incrementa `version`, atualiza `published_at`)
-  - Lista das versões anteriores (read-only, para histórico)
-
-### 3. Sentry DSN — instrução clara ao usuário
-
-- Já entregue no código. Documentar no chat:
-  - Criar projeto em sentry.io → React → copiar DSN
-  - Workspace Settings → Build Secrets → adicionar `VITE_SENTRY_DSN`
-  - Próximo build em produção ativa o tracking
-- Sem mudanças no código nesta fase.
-
-### 4. Checklist de teste end-to-end (entregue como documento)
-
-- Criar `docs/launch-checklist.md` na raiz do projeto, em PT-BR, com passos manuais para validar antes do go-live:
-  - **Fluxo 1**: Cadastro → aprovação pelo admin → onboarding → primeira tarefa
-  - **Fluxo 2**: Trial → conversão (registrar pagamento manual) → fatura gerada
-  - **Fluxo 3**: Esqueci senha → e-mail recebido → reset → login
-  - **Fluxo 4**: Convidar usuário até atingir limite de assentos → bloqueio correto
-  - **Fluxo 5**: Captura de lead na landing com Turnstile ativo
-  - **Fluxo 6**: Acessar `/termos` e `/privacidade` (anon + autenticado)
+Foco: rodar com beta pagantes, observar, corrigir só o que doer. **Sem grandes features novas.**
 
 ---
 
-### Arquivos
+### Antes do dia 1 (pré-voo)
 
-**Novos:**
-- `supabase/functions/submit-lead/index.ts`
-- `supabase/functions/submit-lead/deno.json`
-- `src/pages/legal/Terms.tsx`
-- `src/pages/legal/Privacy.tsx`
-- `src/components/financial/LegalDocumentsEditor.tsx`
-- `docs/launch-checklist.md`
-- Migration: criar `legal_documents` + RLS + seed inicial; remover policy anônima de `leads`
+Execução manual sua, sem código:
 
-**Modificados:**
-- `src/components/landing/LeadFormDialog.tsx` — Turnstile + chamada edge function
-- `src/pages/Landing.tsx` — footer com links legais
-- `src/pages/Auth.tsx` — disclaimer com links legais
-- `src/pages/Financial.tsx` — nova aba "Documentos Legais"
-- `src/App.tsx` — rotas `/termos` e `/privacidade`
-- `package.json` — `react-markdown`, `@marsidev/react-turnstile`
-
-**Secrets a configurar:**
-- `VITE_TURNSTILE_SITE_KEY` (build secret, público)
-- `TURNSTILE_SECRET_KEY` (edge function secret)
+1. **Configurar `VITE_TURNSTILE_SITE_KEY`** em Workspace Settings → Build Secrets (chave já gerada na Cloudflare; se ainda não fez, criar conta free e gerar par de chaves).
+2. **Configurar `VITE_SENTRY_DSN`** (sentry.io → projeto React → DSN).
+3. **Editar Termos + Privacidade** no Financeiro → aba "Documentos Legais" → publicar v1 revisada.
+4. **Rodar o `docs/launch-checklist.md`** com conta de teste nova — todos os 7 fluxos.
+5. **Build de produção** depois de adicionar os secrets.
+6. **Convidar 5–10 clientes beta** com voucher/comp ativado pelo Financeiro.
 
 ---
 
-### Ordem
+### Semana 1 — Observação ativa
 
-1. Migration `legal_documents` + páginas públicas + editor no Financeiro
-2. Edge function `submit-lead` + integração Turnstile no LeadForm
-3. Remover policy anônima de `leads` (só depois da edge function estar funcionando)
-4. Checklist de testes em markdown
+**Rotina diária (15 min/dia):**
 
-### Riscos
+- **Sentry**: revisar erros novos. Triagem: crítico (corrige hoje) / médio (anota) / ruído (ignora).
+- **Painel Financeiro**: leads novos, suporte aberto, trials ativos.
+- **`email_send_log`**: bounces > 2% = problema de deliverability.
+- **Logs de edge functions** (`submit-lead`, `process-recurring-tasks`, `check-notifications`): erros recorrentes.
 
-- **Turnstile sem chaves**: o usuário precisa criar conta em Cloudflare (free) e gerar par de chaves. Sem isso, captura de leads para de funcionar — vou pedir as chaves antes de remover a policy anônima.
-- **Markdown injection**: `react-markdown` é seguro por padrão (escapa HTML), mas vou desabilitar `rehype-raw` para garantir.
-- **LGPD**: o texto inicial dos documentos é genérico — o usuário **deve** revisar com advogado antes do go-live público. Vou deixar disclaimer no topo do editor.
+**Ações de código que provavelmente vão aparecer (reativas):**
+- Ajuste de copy/textos confusos relatados pelo cliente
+- Correção de bugs específicos do Sentry
+- Ajustes de RLS se algum cliente reportar "não consigo ver X"
+
+**Não fazer nesta semana:**
+- Adicionar features novas
+- Refatorar código
+- Mudar UI principal
+
+---
+
+### Semana 2 — Iteração leve + decisão
+
+**Coletar feedback estruturado:**
+- Mensagem manual aos beta clientes (e-mail ou WhatsApp): 3 perguntas curtas
+  1. O que mais te ajudou?
+  2. O que travou ou confundiu?
+  3. O que faltou?
+
+**Ajustes táticos baseados no feedback:**
+- Help texts (já editáveis no Financeiro — sem código)
+- Copy de onboarding
+- Textos de e-mails transacionais
+- Pequenos bugs de UX
+
+**Decisão no fim da semana 2:**
+
+| Sinal | Próximo passo |
+|---|---|
+| ≥70% dos beta querem continuar pagando | Lançamento aberto + começar Stripe |
+| 30–70% engajados, alguns problemas | +2 semanas de iteração antes de abrir |
+| <30% engajados | Reavaliar proposta de valor com clientes antes de gastar com aquisição |
+
+---
+
+### O que monitorar (resumo)
+
+```text
+Diário:        Sentry, suporte, leads
+Semanal:       email_send_log, uso real (tarefas criadas, timer iniciado)
+Final S2:      NPS informal dos beta (3 perguntas)
+```
+
+### Riscos e mitigações
+
+- **Cliente reporta bug sério fora do horário**: Sentry te avisa por e-mail; suporte chat funciona no app.
+- **Bot passa pelo Turnstile**: improvável (Turnstile bloqueia >99%), mas se acontecer, dá pra subir nível para "Managed Challenge" no painel da Cloudflare sem mexer no código.
+- **Trial vence sem cliente converter**: edge function `expire-trials` já roda; cliente fica bloqueado e abre suporte — você converte manualmente pelo Financeiro.
+
+---
+
+### Entregáveis nesta leva (mínimos, só se necessário)
+
+Nenhuma alteração de código planejada agora. Vou ficar disponível para:
+- Corrigir bugs que aparecerem no Sentry
+- Ajustar copy/textos
+- Aplicar pequenos refinamentos de UX baseados em feedback
+
+**Se durante as 2 semanas algum padrão de feedback emergir** (ex: 5 clientes pedindo a mesma coisa), aí abrimos um plano específico para resolver.
+
+### Próximo plano (depois das 2 semanas)
+
+Dependendo do resultado, candidatos para Fase B:
+- Pagamento automático (Stripe ou Paddle)
+- PostHog para analytics
+- Status page (UptimeRobot)
+- Conteúdo SEO
 
