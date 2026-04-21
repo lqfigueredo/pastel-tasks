@@ -25,7 +25,7 @@ export function useTasksRealtime() {
     };
 
     const channel = supabase
-      .channel(`user:${user.id}`)
+      .channel(`user:${user.id}:tasks`)
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'tasks' },
