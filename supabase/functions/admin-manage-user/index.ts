@@ -34,9 +34,10 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     )
 
-    // Verify caller is admin
+    // Verify caller is admin or solution_admin
     const { data: isAdmin } = await supabaseAdmin.rpc('has_role', { _user_id: callerUserId, _role: 'admin' })
-    if (!isAdmin) {
+    const { data: isSolutionAdmin } = await supabaseAdmin.rpc('has_role', { _user_id: callerUserId, _role: 'solution_admin' })
+    if (!isAdmin && !isSolutionAdmin) {
       return new Response(JSON.stringify({ error: 'Apenas administradores podem gerenciar usuários' }), { status: 403, headers: corsHeaders })
     }
 
@@ -51,12 +52,44 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: 'Você não pode realizar esta ação em si mesmo' }), { status: 400, headers: corsHeaders })
     }
 
+    // Tenant isolation: regular admins can ONLY act on users they approved.
+    // solution_admin bypasses this check (cross-tenant management is intentional).
+    if (!isSolutionAdmin) {
+      const { data: approval, error: approvalError } = await supabaseAdmin
+        .from('user_approvals')
+        .select('user_id')
+        .eq('user_id', targetUserId)
+        .eq('created_by_admin', callerUserId)
+        .maybeSingle()
+
+      if (approvalError) {
+        console.error('Tenant check failed:', approvalError)
+        return new Response(JSON.stringify({ error: 'Erro ao validar permissão sobre o usuário' }), { status: 500, headers: corsHeaders })
+      }
+
+      if (!approval) {
+        return new Response(
+          JSON.stringify({ error: 'Você não tem permissão para gerenciar este usuário' }),
+          { status: 403, headers: corsHeaders }
+        )
+      }
+    }
+
+    // Extra guard: only solution_admin can promote/demote admins
+    if ((action === 'promote' || action === 'demote') && !isSolutionAdmin) {
+      return new Response(
+        JSON.stringify({ error: 'Apenas o administrador da solução pode promover ou rebaixar usuários' }),
+        { status: 403, headers: corsHeaders }
+      )
+    }
+
     switch (action) {
       case 'deactivate': {
         const { error } = await supabaseAdmin.auth.admin.updateUserById(targetUserId, {
           ban_duration: '876000h',
         })
         if (error) {
+          console.error('Deactivate user error:', error)
           return new Response(JSON.stringify({ error: 'Erro ao inativar usuário' }), { status: 500, headers: corsHeaders })
         }
         return new Response(JSON.stringify({ success: true, message: 'Usuário inativado' }), {
@@ -69,6 +102,7 @@ Deno.serve(async (req) => {
           ban_duration: 'none',
         })
         if (error) {
+          console.error('Activate user error:', error)
           return new Response(JSON.stringify({ error: 'Erro ao reativar usuário' }), { status: 500, headers: corsHeaders })
         }
         return new Response(JSON.stringify({ success: true, message: 'Usuário reativado' }), {
@@ -85,6 +119,7 @@ Deno.serve(async (req) => {
           .from('user_roles')
           .insert({ user_id: targetUserId, role: 'admin' })
         if (error) {
+          console.error('Promote user error:', error)
           return new Response(JSON.stringify({ error: 'Erro ao promover usuário' }), { status: 500, headers: corsHeaders })
         }
         return new Response(JSON.stringify({ success: true, message: 'Usuário promovido a admin' }), {
@@ -99,6 +134,7 @@ Deno.serve(async (req) => {
           .eq('user_id', targetUserId)
           .eq('role', 'admin')
         if (error) {
+          console.error('Demote user error:', error)
           return new Response(JSON.stringify({ error: 'Erro ao remover admin' }), { status: 500, headers: corsHeaders })
         }
         return new Response(JSON.stringify({ success: true, message: 'Admin removido' }), {
@@ -109,7 +145,8 @@ Deno.serve(async (req) => {
       case 'delete_user': {
         const { error } = await supabaseAdmin.auth.admin.deleteUser(targetUserId)
         if (error) {
-          return new Response(JSON.stringify({ error: 'Erro ao deletar usuário: ' + error.message }), { status: 500, headers: corsHeaders })
+          console.error('Delete user error:', error)
+          return new Response(JSON.stringify({ error: 'Erro ao deletar usuário' }), { status: 500, headers: corsHeaders })
         }
         return new Response(JSON.stringify({ success: true, message: 'Usuário deletado do auth' }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
