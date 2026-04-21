@@ -29,6 +29,29 @@ export class ErrorBoundary extends Component<Props, State> {
       error?.message?.includes('after `subscribe()`')
     ) {
       this.setState({ hasError: false, error: null });
+      return;
+    }
+
+    // Chunk-loading / TDZ errors (e.g. "Cannot access 'X' before initialization",
+    // "Failed to fetch dynamically imported module") are usually transient or
+    // caused by a stale cached chunk after a deploy. Auto-reload once.
+    const isChunkError =
+      error instanceof ReferenceError ||
+      /Cannot access '.+' before initialization/.test(error?.message ?? '') ||
+      /Failed to fetch dynamically imported module/.test(error?.message ?? '') ||
+      /Loading chunk \d+ failed/.test(error?.message ?? '') ||
+      /ChunkLoadError/.test(error?.name ?? '');
+
+    if (isChunkError && typeof window !== 'undefined') {
+      const KEY = '__lovable_chunk_reload__';
+      try {
+        if (!sessionStorage.getItem(KEY)) {
+          sessionStorage.setItem(KEY, '1');
+          window.location.reload();
+        }
+      } catch {
+        window.location.reload();
+      }
     }
   }
 
