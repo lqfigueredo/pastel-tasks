@@ -21,6 +21,15 @@ export class ErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: Error, info: ErrorInfo) {
     captureSentryError(error, { componentStack: info.componentStack });
+
+    // Realtime channel collisions are recoverable — don't keep the user stuck
+    // on the error screen. Log and reset so the UI re-renders.
+    if (
+      error?.message?.includes('postgres_changes') ||
+      error?.message?.includes('after `subscribe()`')
+    ) {
+      this.setState({ hasError: false, error: null });
+    }
   }
 
   handleReload = () => {
