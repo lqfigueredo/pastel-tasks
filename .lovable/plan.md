@@ -1,50 +1,70 @@
 
 
-## Corrigir tela branca após login (conflito de canais Realtime)
+## Tela branca em produção — fix do chunk de charts
 
-### Causa raiz
+### Causa raiz (confirmada)
 
-`useTasksRealtime` (no Kanban) e `NotificationBell` criam canais Realtime com **o mesmo nome** (`user:${user.id}`). O Supabase Realtime reusa a instância do canal por nome — o segundo hook a montar tenta adicionar listeners num canal já `subscribe()`-ado, lança erro fatal e o `ErrorBoundary` mostra "Algo deu errado" (tela branca pro usuário).
+Console de produção (`https://nevvoh.com/auth`) mostra erro fatal no carregamento:
 
-Erro exato:
 ```
-cannot add `postgres_changes` callbacks for realtime:user:<uuid> after `subscribe()`.
+ReferenceError: Cannot access 'P' before initialization
+  at vendor-charts-CGpoBNme.js
 ```
 
-### Solução
+Isso acontece **antes** do React montar — daí a tela 100% branca. O `ErrorBoundary` nem chega a executar.
 
-Dar nomes únicos por feature aos canais, mantendo o padrão `user:<uuid>:<feature>` exigido pela policy `can_access_realtime_topic` (o prefixo `user:<uuid>` continua presente para autorização — verifico a policy antes de aplicar).
+A regra de `manualChunks` em `vite.config.ts` separa o `recharts` das suas dependências `d3-*` em **chunks que se referenciam mutuamente**. Quando o Rollup minifica e renomeia bindings (`P`), uma das partes é executada antes da outra estar inicializada (TDZ — Temporal Dead Zone). É um problema clássico de divisão errada de chunk com módulos que têm dependência circular interna (recharts/d3-shape/d3-scale).
 
-**Mudanças:**
+### Por que só agora apareceu
 
-1. `src/hooks/useTasksRealtime.ts` — canal vira `user:${user.id}:tasks`
-2. `src/components/NotificationBell.tsx` — canal vira `user:${user.id}:notifications`
+O bundle agora carrega `vendor-charts` mais cedo (via grafo de imports a partir do `Landing`/`AppLayout` lazy chains após adições recentes — react-markdown, turnstile mexeram na ordem dos chunks). Em dev funciona porque não há minificação/code-split agressivo.
 
-Se a policy `can_access_realtime_topic` exigir match exato `user:<uuid>` (sem sufixo), faço o ajuste alternativo:
-- Unificar num único canal compartilhado via Context, OU
-- Atualizar a policy para aceitar `user:<uuid>%` (LIKE prefix)
+### Fix
 
-Vou inspecionar a policy antes para escolher o caminho seguro.
+Unificar `recharts` + `d3-*` no **mesmo chunk** para o Rollup respeitar a ordem de inicialização. É a correção padrão deste tipo de TDZ.
+
+**Mudança em `vite.config.ts`:**
+
+```ts
+// antes
+if (id.includes('recharts') || id.includes('d3-')) return 'vendor-charts';
+
+// depois — apenas garante recharts e d3 juntos; remove split desnecessário
+if (
+  id.includes('recharts') ||
+  id.includes('/d3-') ||
+  id.includes('victory-vendor') ||  // dep interna do recharts que também usa d3
+  id.includes('internmap') ||
+  id.includes('delaunator') ||
+  id.includes('robust-predicates')
+) {
+  return 'vendor-charts';
+}
+```
+
+Adiciono também as dependências transitivas do recharts (`victory-vendor`, `internmap`, etc.) que herdam do mesmo grafo do d3 e podem cair em outro chunk genérico se não forem explicitadas.
 
 ### Hardening adicional
 
-- No `useTasksRealtime`, adicionar guarda contra StrictMode (double-mount em dev): se `channel.state === 'joined'`, não re-adicionar listeners.
-- Pequeno ajuste no `ErrorBoundary` para que erros de Realtime não derrubem a tela inteira — apenas logar no Sentry e seguir (UX continua funcional, só sem live updates).
+- Remover `src/App.css` morto (não é importado em lugar nenhum, mas tem `#root { max-width: 1280px }` que quebraria layout se alguém o re-importasse no futuro).
+- No `ErrorBoundary`, adicionar fallback para `ReferenceError` de chunks também (logar e tentar `window.location.reload()` automático uma vez), para que erros futuros de chunk não deixem o usuário com tela branca permanente.
+
+### Como vou validar
+
+1. Aplicar a mudança no `vite.config.ts`.
+2. Pedir ao usuário para clicar em **Publicar → Atualizar** (mudanças de frontend só vão ao ar com deploy).
+3. Confirmar via browser tool que `/auth` em produção carrega o formulário de login.
 
 ### Arquivos
 
 **Modificados:**
-- `src/hooks/useTasksRealtime.ts`
-- `src/components/NotificationBell.tsx`
-- `src/components/ErrorBoundary.tsx` (ajuste leve para tolerar erro de canal duplicado)
+- `vite.config.ts` — agrupar recharts + d3 + deps transitivas no mesmo chunk
+- `src/components/ErrorBoundary.tsx` — recovery automático para erros de chunk
 
-**Possível migration** (só se policy exigir):
-- Atualizar `can_access_realtime_topic` para aceitar prefixo `user:<uuid>:*`
+**Removidos:**
+- `src/App.css` (morto, risco futuro)
 
-### Validação
+### Riscos
 
-Após a mudança, fazer login novamente e confirmar que:
-1. `/tarefas` carrega sem cair no ErrorBoundary
-2. Console não mostra mais o erro `cannot add postgres_changes`
-3. Notificações e atualizações de tarefas em tempo real continuam funcionando
+- Nenhum — a mudança apenas une chunks que já existem juntos no grafo de dependências. Tamanho do bundle final é praticamente o mesmo (talvez ~5KB de overhead de gzip economizado por evitar duplicação).
 
