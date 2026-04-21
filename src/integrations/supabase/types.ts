@@ -1796,7 +1796,7 @@ export type Database = {
           inviter_id: string
           revoked_at: string | null
           team_id: string | null
-          token: string
+          token_hash: string
         }
         Insert: {
           accepted_at?: string | null
@@ -1809,7 +1809,7 @@ export type Database = {
           inviter_id: string
           revoked_at?: string | null
           team_id?: string | null
-          token: string
+          token_hash: string
         }
         Update: {
           accepted_at?: string | null
@@ -1822,7 +1822,7 @@ export type Database = {
           inviter_id?: string
           revoked_at?: string | null
           team_id?: string | null
-          token?: string
+          token_hash?: string
         }
         Relationships: [
           {
