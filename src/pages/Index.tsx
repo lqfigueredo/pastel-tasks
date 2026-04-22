@@ -62,6 +62,12 @@ const Index = () => {
     }
   }, [isSolutionAdmin, isAdmin, isRegularUser, navigate]);
 
+  // When auth resolves after first render, default the filter to the logged-in user
+  // (only if user hasn't manually changed it yet — i.e. it's still null).
+  useEffect(() => {
+    setFilterAssigneeId((current) => (current === null && user?.id ? user.id : current));
+  }, [user?.id]);
+
   const handleTaskCreated = () => {
     boardRef.current?.refresh();
   };
