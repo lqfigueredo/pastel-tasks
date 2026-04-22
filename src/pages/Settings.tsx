@@ -87,11 +87,25 @@ const Settings = () => {
     if (!newName.trim()) return;
     setSaving(true);
     const maxPos = statuses.length > 0 ? Math.max(...statuses.map(s => s.position)) : 0;
+
+    // Resolve team_id from current user's team memberships.
+    // If user belongs to exactly one team, attach the new column to it so all
+    // teammates can see it (RLS requires team_id for non-default columns).
+    let teamId: string | null = null;
+    const { data: memberships } = await supabase
+      .from('team_members')
+      .select('team_id')
+      .eq('user_id', user!.id);
+    if (memberships && memberships.length === 1) {
+      teamId = memberships[0].team_id;
+    }
+
     const { error } = await supabase.from('task_statuses').insert({
       name: newName.trim(),
       color: newColor,
       position: maxPos + 1,
       created_by: user!.id,
+      team_id: teamId,
     });
     if (error) {
       toast({ title: 'Erro ao criar status', variant: 'destructive' });
