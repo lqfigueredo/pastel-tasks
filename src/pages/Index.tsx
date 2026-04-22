@@ -16,12 +16,14 @@ import { KanbanSavedFilters } from '@/components/kanban/KanbanSavedFilters';
 
 const Index = () => {
   const [createOpen, setCreateOpen] = useState(false);
-  const [filterAssigneeId, setFilterAssigneeId] = useState<string | null>(null);
+  const { user } = useAuth();
+  // Default filter: show only the logged-in user's tasks. Users can switch to
+  // "Todos os responsáveis" via the existing selector to see the full team board.
+  const [filterAssigneeId, setFilterAssigneeId] = useState<string | null>(user?.id ?? null);
   const [counts, setCounts] = useState<{ visible: number; total: number }>({ visible: 0, total: 0 });
   const boardRef = useRef<KanbanBoardRef>(null);
   const { isSolutionAdmin, isAdmin, isRegularUser } = useUserRoles();
   const navigate = useNavigate();
-  const { user } = useAuth();
   const { data: profilesMap } = useProfilesQuery();
 
   const { data: visibleIds } = useQuery({
@@ -59,6 +61,12 @@ const Index = () => {
       navigate('/financeiro', { replace: true });
     }
   }, [isSolutionAdmin, isAdmin, isRegularUser, navigate]);
+
+  // When auth resolves after first render, default the filter to the logged-in user
+  // (only if user hasn't manually changed it yet — i.e. it's still null).
+  useEffect(() => {
+    setFilterAssigneeId((current) => (current === null && user?.id ? user.id : current));
+  }, [user?.id]);
 
   const handleTaskCreated = () => {
     boardRef.current?.refresh();
