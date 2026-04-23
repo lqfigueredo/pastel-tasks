@@ -10,6 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useOptimisticTaskUpdate } from '@/hooks/useTasksQuery';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface KanbanCardProps {
   task: Task;
@@ -21,6 +22,8 @@ interface KanbanCardProps {
 function KanbanCardImpl({ task, allStatuses, onRefresh, onMoveTask }: KanbanCardProps) {
   const [detailOpen, setDetailOpen] = useState(false);
   const optimisticUpdate = useOptimisticTaskUpdate();
+  const { user } = useAuth();
+  const isMine = !!user && !!task.assignees?.some((a) => a.user_id === user.id);
 
   const sortedStatuses = useMemo(
     () => [...allStatuses].sort((a, b) => a.position - b.position),
@@ -73,6 +76,8 @@ function KanbanCardImpl({ task, allStatuses, onRefresh, onMoveTask }: KanbanCard
         className={cn(
           "group/card cursor-grab border-border/30 bg-card shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5 active:cursor-grabbing",
           minimized && "opacity-70",
+          isMine && !task.is_critical && "border-l-4 border-l-primary",
+          isMine && "bg-primary/5",
           task.is_critical && "border-l-4 border-l-destructive"
         )}
       >
