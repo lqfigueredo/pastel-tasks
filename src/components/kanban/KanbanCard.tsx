@@ -22,6 +22,8 @@ interface KanbanCardProps {
 function KanbanCardImpl({ task, allStatuses, onRefresh, onMoveTask }: KanbanCardProps) {
   const [detailOpen, setDetailOpen] = useState(false);
   const optimisticUpdate = useOptimisticTaskUpdate();
+  const { user } = useAuth();
+  const isMine = !!user && !!task.assignees?.some((a) => a.user_id === user.id);
 
   const sortedStatuses = useMemo(
     () => [...allStatuses].sort((a, b) => a.position - b.position),
