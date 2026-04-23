@@ -10,6 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useOptimisticTaskUpdate } from '@/hooks/useTasksQuery';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface KanbanCardProps {
   task: Task;
