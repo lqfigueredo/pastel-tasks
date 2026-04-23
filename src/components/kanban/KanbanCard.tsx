@@ -76,6 +76,8 @@ function KanbanCardImpl({ task, allStatuses, onRefresh, onMoveTask }: KanbanCard
         className={cn(
           "group/card cursor-grab border-border/30 bg-card shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5 active:cursor-grabbing",
           minimized && "opacity-70",
+          isMine && !task.is_critical && "border-l-4 border-l-primary",
+          isMine && "bg-primary/5",
           task.is_critical && "border-l-4 border-l-destructive"
         )}
       >
