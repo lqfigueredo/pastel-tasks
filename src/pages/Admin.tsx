@@ -411,6 +411,24 @@ export default function Admin() {
                           </Tooltip>
                         )}
 
+                        {/* Edit user */}
+                        {!isSelf && (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8"
+                                disabled={actionLoading !== null}
+                                onClick={() => setEditingUser(p)}
+                              >
+                                <Pencil className="h-4 w-4 text-muted-foreground" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Editar usuário</TooltipContent>
+                          </Tooltip>
+                        )}
+
                         {/* Activate / Deactivate */}
                         {!isSelf && (
                           <Tooltip>
