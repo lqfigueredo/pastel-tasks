@@ -94,6 +94,15 @@ export function CreateTaskDialog({ open, onOpenChange, onTaskCreated }: Props) {
     setEstimatedDateError(eErr);
     if (tErr || sErr || eErr) return;
 
+    if (!statusId) {
+      toast({
+        title: 'Selecione um status',
+        description: 'Escolha um status para a tarefa antes de salvar.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     setSaving(true);
 
     if (isRecurring) {
@@ -169,6 +178,7 @@ export function CreateTaskDialog({ open, onOpenChange, onTaskCreated }: Props) {
   const resetForm = () => {
     setTitle('');
     setDescription('');
+    setStatusId('');
     setStartDate('');
     setEstimatedDate('');
     setAssigneeIds([]);
@@ -216,9 +226,11 @@ export function CreateTaskDialog({ open, onOpenChange, onTaskCreated }: Props) {
             <Textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Breve descrição..." rows={3} />
           </div>
           <div className="space-y-2">
-            <Label>Status</Label>
+            <Label>Status *</Label>
             <Select value={statusId} onValueChange={setStatusId}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectTrigger disabled={statuses.length === 0}>
+                <SelectValue placeholder="Selecione um status" />
+              </SelectTrigger>
               <SelectContent>
                 {statuses.map((s) => (
                   <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>

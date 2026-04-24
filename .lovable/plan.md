@@ -1,52 +1,29 @@
+## Corrigir erro de UUID vazio ao criar tarefa sem status
 
-## Edição de usuários para o admin (em `/admin`)
+### Problema
+Ao submeter o formulário de nova tarefa sem um status selecionado, o app envia `status_id: ""` para o Postgres, gerando o erro `invalid input syntax for type uuid: ""`.
 
-Hoje a tela `/admin` (Luciano) permite **promover/rebaixar** e **ativar/inativar** usuários, mas não permite editar nome, e-mail ou trocar de time. Toda a edição de perfil hoje é exclusiva do `solution_admin` (via `approve-user` em `/financial`). Vou estender a função `admin-manage-user` e adicionar um diálogo de edição na tela do admin, mantendo o isolamento por `created_by_admin` que já existe.
+### Alterações em `src/components/kanban/CreateTaskDialog.tsx`
 
-### O que será adicionado
+1. **Validação no `handleSubmit`**: bloquear submissão e exibir toast caso `statusId` esteja vazio (antes do `setSaving(true)`).
+   ```ts
+   if (!statusId) {
+     toast({ title: 'Selecione um status', description: 'Escolha um status para a tarefa antes de salvar.', variant: 'destructive' });
+     return;
+   }
+   ```
 
-#### 1. Backend — `supabase/functions/admin-manage-user/index.ts`
+2. **Reset do status no `resetForm`**: adicionar `setStatusId('')` para evitar estado obsoleto entre aberturas do diálogo (mantendo o auto-seleção do primeiro status no `useEffect` quando o diálogo abre novamente).
 
-Adicionar três novas actions, todas reaproveitando a verificação de tenant já existente (admin só age sobre usuários que ele aprovou; `solution_admin` age em qualquer um):
+3. **UX no `<Select>` de Status**:
+   - Adicionar `placeholder="Selecione um status"` no `<SelectValue />`.
+   - Desabilitar o `SelectTrigger` quando `statuses.length === 0`.
 
-- **`get_user_info`** — retorna o e-mail atual do `auth.users` (necessário para preencher o form).
-- **`update_profile`** — atualiza:
-  - `profiles.display_name` (sanitizado, max 100)
-  - `auth.users.email` (validação de regex; usa `auth.admin.updateUserById`; trata erro de e-mail duplicado com mensagem amigável)
-- **`assign_team`** — define o time do usuário em `team_members`:
-  - Se `teamId === null` → remove o usuário de qualquer time.
-  - Caso contrário → faz upsert (remove o vínculo anterior e insere o novo).
-  - Valida que o time pertence ao mesmo admin (consultando `teams.created_by`).
+4. **Cobertura para tarefa recorrente**: a mesma validação atende ao fluxo `isRecurring`, pois `status_id` é compartilhado.
 
-A action `promote/demote` continua restrita a `solution_admin` (sem mudança).
+### Resultado
+- Nenhum erro 400 do banco quando o usuário esquecer de selecionar status.
+- Mensagem clara em PT-BR orientando o usuário.
+- Estado de status limpo entre criações.
 
-#### 2. Frontend — novo componente `src/components/admin/EditUserDialog.tsx`
-
-Diálogo com três campos:
-- **Nome de exibição** (`Input`)
-- **E-mail** (`Input` type=email)
-- **Time** (`Select` com a lista de `teams` carregada no `Admin.tsx` + opção "Sem time")
-
-Botão **Salvar** dispara em sequência:
-1. `admin-manage-user` action `update_profile` (nome + e-mail).
-2. Se o time mudou, `admin-manage-user` action `assign_team`.
-3. Toast de sucesso e `loadData()` para refrescar a tabela.
-
-Erros do edge function são extraídos via `error.context.json()` (padrão já usado no projeto, conforme memória `api-error-handling`).
-
-#### 3. Tela `src/pages/Admin.tsx`
-
-- Adicionar import e estado: `const [editingUser, setEditingUser] = useState<Profile | null>(null)`.
-- Na coluna **Ações** da tabela de usuários, adicionar um botão de lápis (`Pencil` do lucide) ao lado dos botões existentes — visível para qualquer linha, exceto a do próprio usuário logado.
-- Ao clicar, abre `EditUserDialog` com os dados pré-carregados (nome vem do `profiles`; e-mail é buscado on-open via `get_user_info`; time é derivado de `teamMembers`).
-- Após salvar, `loadData()` atualiza a tabela.
-
-### O que NÃO muda
-
-- RLS, schema do banco, `approve-user`, `EditUserProfileDialog.tsx` (usado apenas pelo financeiro) — todos permanecem como estão.
-- Promoção/rebaixamento continua sendo privilégio exclusivo do `solution_admin` (regra explícita no `admin-manage-user`).
-- Os build errors listados em outros edge functions (`process-email-queue`, `check-notifications`, `process-recurring-tasks`) são **pré-existentes e não relacionados** a esta feature; serão tratados separadamente se você pedir.
-
-### Resultado esperado
-
-Luciano (admin) entra em `/admin`, vê o ícone de lápis ao lado de cada usuário criado por ele (incluindo Angelo), clica, ajusta nome/e-mail/time e salva — tudo sem precisar pedir intervenção do solution_admin.
+Posso aplicar?
