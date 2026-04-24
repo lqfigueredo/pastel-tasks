@@ -213,6 +213,11 @@ export default function Admin() {
     return member?.teams?.name || null;
   };
 
+  const getTeamIdForUser = (userId: string): string | null => {
+    const member = teamMembers.find(m => m.user_id === userId);
+    return member?.team_id || null;
+  };
+
   const isCurrentUser = (userId: string) => userId === user?.id;
 
   if (loading) {
