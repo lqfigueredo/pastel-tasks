@@ -71,6 +71,11 @@ const Settings = () => {
     });
   }, [user]);
 
+  // Clear optimistic state when server data refreshes
+  useEffect(() => {
+    setOptimisticStatuses(null);
+  }, [statuses]);
+
   const getFallbackStatus = () =>
     displayedStatuses.find((s) => s.is_default && s.position === 0) ||
     displayedStatuses.find((s) => s.is_default);
