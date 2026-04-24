@@ -1,5 +1,12 @@
 import { useEffect, useMemo, useState, lazy, Suspense } from 'react';
 import { useSupportTicketsQuery } from '@/hooks/useSupportTicketsQuery';
+import {
+  useFinancialDataQuery,
+  useInvalidateFinancialData,
+  type FinancialLead as Lead,
+  type FinancialApproval as UserApproval,
+  type FinancialAdminLimit as AdminLimit,
+} from '@/hooks/useFinancialDataQuery';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { format, isPast } from 'date-fns';
@@ -76,18 +83,25 @@ interface AdminLimit {
   current_users: number;
 }
 
+interface AdminLimitLocal extends AdminLimit {}
+
 const Financial = () => {
   const { user } = useAuth();
-  const [leads, setLeads] = useState<Lead[]>([]);
-  const [approvals, setApprovals] = useState<UserApproval[]>([]);
-  const [adminLimits, setAdminLimits] = useState<AdminLimit[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [isSolutionAdmin, setIsSolutionAdmin] = useState(false);
+  const [isSolutionAdmin, setIsSolutionAdmin] = useState<boolean | null>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [editingUser, setEditingUser] = useState<UserApproval | null>(null);
   const [editingLimit, setEditingLimit] = useState<{ adminId: string; value: string } | null>(null);
   const [replyingLead, setReplyingLead] = useState<Lead | null>(null);
   const { data: supportTickets } = useSupportTicketsQuery();
+  const { data: financialData, isLoading: financialLoading } = useFinancialDataQuery(
+    isSolutionAdmin === true,
+  );
+  const invalidateFinancialData = useInvalidateFinancialData();
+
+  const leads = financialData?.leads ?? [];
+  const approvals = financialData?.approvals ?? [];
+  const adminLimits = financialData?.adminLimits ?? [];
+  const loading = isSolutionAdmin === null || (isSolutionAdmin && financialLoading);
   const hotTicketsCount = useMemo(() => {
     if (!supportTickets) return 0;
     return supportTickets.filter((t) => {
