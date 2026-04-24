@@ -17,6 +17,7 @@ import { PageLoader, InlineLoader } from '@/components/ui/loaders';
 
 const SupportTicketList = lazy(() => import('@/components/support/SupportTicketList'));
 const EmailDashboard = lazy(() => import('@/components/admin/EmailDashboard'));
+const EditUserDialog = lazy(() => import('@/components/admin/EditUserDialog'));
 
 const TabFallback = () => <InlineLoader label="Carregando..." />;
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
