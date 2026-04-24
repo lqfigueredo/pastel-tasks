@@ -10,13 +10,14 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { ShieldX, UserPlus, Loader2, ShieldCheck, ShieldOff, UserX, UserCheck } from 'lucide-react';
+import { ShieldX, UserPlus, Loader2, ShieldCheck, ShieldOff, UserX, UserCheck, Pencil } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { HelpButton } from '@/components/HelpButton';
 import { PageLoader, InlineLoader } from '@/components/ui/loaders';
 
 const SupportTicketList = lazy(() => import('@/components/support/SupportTicketList'));
 const EmailDashboard = lazy(() => import('@/components/admin/EmailDashboard'));
+const EditUserDialog = lazy(() => import('@/components/admin/EditUserDialog'));
 
 const TabFallback = () => <InlineLoader label="Carregando..." />;
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -61,6 +62,7 @@ export default function Admin() {
   const [submitting, setSubmitting] = useState(false);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [bannedUsers, setBannedUsers] = useState<Set<string>>(new Set());
+  const [editingUser, setEditingUser] = useState<Profile | null>(null);
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -209,6 +211,11 @@ export default function Admin() {
   const getTeamForUser = (userId: string) => {
     const member = teamMembers.find(m => m.user_id === userId);
     return member?.teams?.name || null;
+  };
+
+  const getTeamIdForUser = (userId: string): string | null => {
+    const member = teamMembers.find(m => m.user_id === userId);
+    return member?.team_id || null;
   };
 
   const isCurrentUser = (userId: string) => userId === user?.id;
@@ -404,6 +411,24 @@ export default function Admin() {
                           </Tooltip>
                         )}
 
+                        {/* Edit user */}
+                        {!isSelf && (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8"
+                                disabled={actionLoading !== null}
+                                onClick={() => setEditingUser(p)}
+                              >
+                                <Pencil className="h-4 w-4 text-muted-foreground" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Editar usuário</TooltipContent>
+                          </Tooltip>
+                        )}
+
                         {/* Activate / Deactivate */}
                         {!isSelf && (
                           <Tooltip>
@@ -461,6 +486,20 @@ export default function Admin() {
           currentSeats={userLimit.max}
           onSuccess={loadData}
         />
+      )}
+
+      {editingUser && (
+        <Suspense fallback={null}>
+          <EditUserDialog
+            open={!!editingUser}
+            onOpenChange={(o) => { if (!o) setEditingUser(null); }}
+            userId={editingUser.user_id}
+            currentDisplayName={editingUser.display_name}
+            currentTeamId={getTeamIdForUser(editingUser.user_id)}
+            teams={teams}
+            onSaved={loadData}
+          />
+        </Suspense>
       )}
     </div>
   );
