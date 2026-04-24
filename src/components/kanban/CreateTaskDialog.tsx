@@ -178,6 +178,7 @@ export function CreateTaskDialog({ open, onOpenChange, onTaskCreated }: Props) {
   const resetForm = () => {
     setTitle('');
     setDescription('');
+    setStatusId('');
     setStartDate('');
     setEstimatedDate('');
     setAssigneeIds([]);
