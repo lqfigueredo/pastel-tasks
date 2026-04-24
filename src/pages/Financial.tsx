@@ -55,36 +55,6 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Progress } from '@/components/ui/progress';
 
-interface Lead {
-  id: string;
-  name: string;
-  email: string;
-  created_at: string;
-  replied_at: string | null;
-  reply_message: string | null;
-}
-
-interface UserApproval {
-  id: string;
-  user_id: string;
-  status: string;
-  requested_at: string;
-  reviewed_at: string | null;
-  license_expires_at: string | null;
-  display_name: string;
-  email: string;
-  created_by_admin: string | null;
-}
-
-interface AdminLimit {
-  admin_user_id: string;
-  display_name: string;
-  max_users: number;
-  current_users: number;
-}
-
-interface AdminLimitLocal extends AdminLimit {}
-
 const Financial = () => {
   const { user } = useAuth();
   const [isSolutionAdmin, setIsSolutionAdmin] = useState<boolean | null>(null);
