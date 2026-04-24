@@ -111,7 +111,7 @@ const Settings = () => {
     } else {
       setNewName('');
       toast({ title: 'Status criado!' });
-      await fetchStatuses();
+      invalidateStatuses();
     }
     setSaving(false);
   };
@@ -167,7 +167,7 @@ const Settings = () => {
         title: 'Status arquivado',
         description: taskCount > 0 ? `${taskCount} tarefa(s) movida(s) para "${fallback.name}".` : undefined,
       });
-      await fetchStatuses();
+      invalidateStatuses();
     }
     setDeleting(false);
     setDeleteTarget(null);
@@ -184,7 +184,7 @@ const Settings = () => {
       toast({ title: 'Erro ao restaurar', variant: 'destructive' });
     } else {
       toast({ title: `Status "${status.name}" restaurado!` });
-      await fetchStatuses();
+      invalidateStatuses();
     }
   };
 
@@ -213,7 +213,7 @@ const Settings = () => {
     } else {
       toast({ title: 'Status atualizado!' });
       cancelEdit();
-      await fetchStatuses();
+      invalidateStatuses();
     }
     setEditSaving(false);
   };
@@ -239,7 +239,7 @@ const Settings = () => {
     reordered.splice(dragOverIdx, 0, moved);
 
     const updated = reordered.map((s, i) => ({ ...s, position: i }));
-    setStatuses(updated);
+    setOptimisticStatuses(updated);
     setDragIdx(null);
     setDragOverIdx(null);
 
@@ -249,7 +249,7 @@ const Settings = () => {
     const results = await Promise.all(promises);
     if (results.some((r) => r.error)) {
       toast({ title: 'Erro ao reordenar', variant: 'destructive' });
-      await fetchStatuses();
+      invalidateStatuses();
     }
   };
 
