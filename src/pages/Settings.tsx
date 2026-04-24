@@ -288,13 +288,13 @@ const Settings = () => {
 
         {loading ? (
           <div className="flex justify-center py-4"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>
-        ) : statuses.length === 0 ? (
+        ) : displayedStatuses.length === 0 ? (
           <div className="text-sm text-muted-foreground text-center py-6 bg-muted/20 rounded-lg">
             Nenhum status disponível. Crie o primeiro abaixo.
           </div>
         ) : (
           <div className="space-y-1">
-            {statuses.map((s, idx) => (
+            {displayedStatuses.map((s, idx) => (
               <div
                 key={s.id}
                 draggable={editingId !== s.id}
