@@ -1,56 +1,52 @@
-## Corrigir visibilidade de perfis criados pelo admin
 
-### Problema
-O Angelo foi aprovado e está corretamente vinculado ao Luciano via `user_approvals.created_by_admin`, mas **não aparece no painel admin** do Luciano. A função `can_view_profile` (usada pela RLS de `profiles`) só permite ver perfis de pessoas que compartilham um time ou tarefas com o viewer. Como o Angelo é novo e ainda não tem time/tarefas, seu profile fica invisível — criando um catch-22 em que o admin não consegue ver o usuário que ele mesmo criou.
+## Edição de usuários para o admin (em `/admin`)
 
-### Correção
+Hoje a tela `/admin` (Luciano) permite **promover/rebaixar** e **ativar/inativar** usuários, mas não permite editar nome, e-mail ou trocar de time. Toda a edição de perfil hoje é exclusiva do `solution_admin` (via `approve-user` em `/financial`). Vou estender a função `admin-manage-user` e adicionar um diálogo de edição na tela do admin, mantendo o isolamento por `created_by_admin` que já existe.
 
-**Migração SQL:** atualizar `public.can_view_profile` adicionando uma cláusula que permite visibilidade quando existe um vínculo admin↔usuário em `user_approvals`:
+### O que será adicionado
 
-```sql
-CREATE OR REPLACE FUNCTION public.can_view_profile(_viewer_id uuid, _target_id uuid)
-RETURNS boolean
-LANGUAGE sql
-STABLE SECURITY DEFINER
-SET search_path = public
-AS $$
-  SELECT
-    _viewer_id = _target_id
-    OR has_role(_viewer_id, 'solution_admin'::app_role)
-    -- NOVO: admin pode ver perfis de usuários que ele criou (e vice-versa)
-    OR EXISTS (
-      SELECT 1 FROM public.user_approvals ua
-      WHERE (ua.created_by_admin = _viewer_id AND ua.user_id = _target_id)
-         OR (ua.created_by_admin = _target_id AND ua.user_id = _viewer_id)
-    )
-    OR EXISTS (
-      SELECT 1
-      FROM public.team_members tm1
-      JOIN public.team_members tm2 ON tm1.team_id = tm2.team_id
-      WHERE tm1.user_id = _viewer_id AND tm2.user_id = _target_id
-    )
-    OR EXISTS (
-      SELECT 1 FROM public.tasks t
-      WHERE t.created_by = _target_id
-        AND (t.created_by = _viewer_id
-             OR is_task_assignee(t.id, _viewer_id)
-             OR (t.team_id IS NOT NULL AND is_team_member(_viewer_id, t.team_id)))
-    )
-    OR EXISTS (
-      SELECT 1 FROM public.task_assignees ta
-      JOIN public.tasks t ON t.id = ta.task_id
-      WHERE ta.user_id = _target_id
-        AND (t.created_by = _viewer_id
-             OR is_task_assignee(t.id, _viewer_id)
-             OR (t.team_id IS NOT NULL AND is_team_member(_viewer_id, t.team_id)))
-    )
-$$;
-```
+#### 1. Backend — `supabase/functions/admin-manage-user/index.ts`
+
+Adicionar três novas actions, todas reaproveitando a verificação de tenant já existente (admin só age sobre usuários que ele aprovou; `solution_admin` age em qualquer um):
+
+- **`get_user_info`** — retorna o e-mail atual do `auth.users` (necessário para preencher o form).
+- **`update_profile`** — atualiza:
+  - `profiles.display_name` (sanitizado, max 100)
+  - `auth.users.email` (validação de regex; usa `auth.admin.updateUserById`; trata erro de e-mail duplicado com mensagem amigável)
+- **`assign_team`** — define o time do usuário em `team_members`:
+  - Se `teamId === null` → remove o usuário de qualquer time.
+  - Caso contrário → faz upsert (remove o vínculo anterior e insere o novo).
+  - Valida que o time pertence ao mesmo admin (consultando `teams.created_by`).
+
+A action `promote/demote` continua restrita a `solution_admin` (sem mudança).
+
+#### 2. Frontend — novo componente `src/components/admin/EditUserDialog.tsx`
+
+Diálogo com três campos:
+- **Nome de exibição** (`Input`)
+- **E-mail** (`Input` type=email)
+- **Time** (`Select` com a lista de `teams` carregada no `Admin.tsx` + opção "Sem time")
+
+Botão **Salvar** dispara em sequência:
+1. `admin-manage-user` action `update_profile` (nome + e-mail).
+2. Se o time mudou, `admin-manage-user` action `assign_team`.
+3. Toast de sucesso e `loadData()` para refrescar a tabela.
+
+Erros do edge function são extraídos via `error.context.json()` (padrão já usado no projeto, conforme memória `api-error-handling`).
+
+#### 3. Tela `src/pages/Admin.tsx`
+
+- Adicionar import e estado: `const [editingUser, setEditingUser] = useState<Profile | null>(null)`.
+- Na coluna **Ações** da tabela de usuários, adicionar um botão de lápis (`Pencil` do lucide) ao lado dos botões existentes — visível para qualquer linha, exceto a do próprio usuário logado.
+- Ao clicar, abre `EditUserDialog` com os dados pré-carregados (nome vem do `profiles`; e-mail é buscado on-open via `get_user_info`; time é derivado de `teamMembers`).
+- Após salvar, `loadData()` atualiza a tabela.
+
+### O que NÃO muda
+
+- RLS, schema do banco, `approve-user`, `EditUserProfileDialog.tsx` (usado apenas pelo financeiro) — todos permanecem como estão.
+- Promoção/rebaixamento continua sendo privilégio exclusivo do `solution_admin` (regra explícita no `admin-manage-user`).
+- Os build errors listados em outros edge functions (`process-email-queue`, `check-notifications`, `process-recurring-tasks`) são **pré-existentes e não relacionados** a esta feature; serão tratados separadamente se você pedir.
 
 ### Resultado esperado
-- Luciano abre `/admin` e passa a ver o Angelo (e qualquer outro usuário aprovado que ele tenha cadastrado).
-- A relação é simétrica: o usuário recém-criado também consegue ver o perfil do admin que o cadastrou.
-- Nenhuma alteração em código frontend ou em outras políticas RLS.
 
-### Risco
-Baixo. A nova condição apenas amplia visibilidade entre admin e seus próprios usuários — não expõe dados a terceiros nem afeta o isolamento entre admins distintos (que continua intacto via `created_by_admin`).
+Luciano (admin) entra em `/admin`, vê o ícone de lápis ao lado de cada usuário criado por ele (incluindo Angelo), clica, ajusta nome/e-mail/time e salva — tudo sem precisar pedir intervenção do solution_admin.
