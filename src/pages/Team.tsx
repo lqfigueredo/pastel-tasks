@@ -118,7 +118,7 @@ const Team = () => {
     } else {
       toast({ title: 'Membro adicionado!', description: `${data.display_name} foi adicionado ao time.` });
       setInviteEmail('');
-      loadTeam();
+      reload();
     }
     setInviting(false);
   };
@@ -142,7 +142,7 @@ const Team = () => {
     if (!team) return;
     await supabase.from('team_members').delete().eq('team_id', team.id).eq('user_id', userId);
     toast({ title: 'Membro removido' });
-    loadTeam();
+    reload();
   };
 
   if (loading) {
