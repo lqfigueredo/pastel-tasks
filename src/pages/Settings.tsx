@@ -13,6 +13,11 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { HelpButton } from '@/components/HelpButton';
+import {
+  useStatusesQuery,
+  useArchivedStatusesQuery,
+  useInvalidateStatuses,
+} from '@/hooks/useStatusesQuery';
 
 interface Status {
   id: string;
@@ -34,11 +39,14 @@ const Settings = () => {
   const { user } = useAuth();
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const { toast } = useToast();
-  const [statuses, setStatuses] = useState<Status[]>([]);
-  const [archivedStatuses, setArchivedStatuses] = useState<Status[]>([]);
+  const { data: statuses = [], isLoading: statusesLoading } = useStatusesQuery();
+  const { data: archivedStatuses = [] } = useArchivedStatusesQuery();
+  const invalidateStatuses = useInvalidateStatuses();
+  const [optimisticStatuses, setOptimisticStatuses] = useState<Status[] | null>(null);
+  const displayedStatuses = optimisticStatuses ?? (statuses as Status[]);
   const [newName, setNewName] = useState('');
   const [newColor, setNewColor] = useState(PASTEL_COLORS[0]);
-  const [loading, setLoading] = useState(true);
+  const loading = statusesLoading;
   const [saving, setSaving] = useState(false);
   const [archivedOpen, setArchivedOpen] = useState(false);
 
@@ -56,15 +64,6 @@ const Settings = () => {
   const [deleteTarget, setDeleteTarget] = useState<{ status: Status; taskCount: number } | null>(null);
   const [deleting, setDeleting] = useState(false);
 
-  const fetchStatuses = async () => {
-    const { data } = await supabase.from('task_statuses').select('*').order('position');
-    if (data) {
-      setStatuses(data.filter(s => !s.deleted_at));
-      setArchivedStatuses(data.filter(s => !!s.deleted_at));
-    }
-    setLoading(false);
-  };
-
   useEffect(() => {
     if (!user) return;
     supabase.rpc('has_role', { _user_id: user.id, _role: 'admin' }).then(({ data }) => {
@@ -72,9 +71,9 @@ const Settings = () => {
     });
   }, [user]);
 
-  useEffect(() => { fetchStatuses(); }, []);
-
-  const getFallbackStatus = () => statuses.find(s => s.is_default && s.position === 0) || statuses.find(s => s.is_default);
+  const getFallbackStatus = () =>
+    displayedStatuses.find((s) => s.is_default && s.position === 0) ||
+    displayedStatuses.find((s) => s.is_default);
 
   if (isAdmin === null) {
     return <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>;
