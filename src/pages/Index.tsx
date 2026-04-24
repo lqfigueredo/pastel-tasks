@@ -30,27 +30,8 @@ const Index = () => {
     queryKey: ['visible-user-ids', user?.id],
     queryFn: async () => {
       if (!user) return new Set<string>();
-
-      const [{ data: myTeams }, { data: approvals }] = await Promise.all([
-        supabase.from('team_members').select('team_id').eq('user_id', user.id),
-        supabase.from('user_approvals').select('user_id').eq('created_by_admin', user.id),
-      ]);
-
-      const teamIds = myTeams?.map(t => t.team_id) || [];
-      let teammateIds: string[] = [];
-      if (teamIds.length > 0) {
-        const { data: teammates } = await supabase
-          .from('team_members')
-          .select('user_id')
-          .in('team_id', teamIds);
-        teammateIds = teammates?.map(t => t.user_id) || [];
-      }
-
-      return new Set([
-        user.id,
-        ...(approvals?.map(a => a.user_id) || []),
-        ...teammateIds,
-      ]);
+      const { data } = await supabase.rpc('get_visible_user_ids', { _user_id: user.id });
+      return new Set<string>((data as string[] | null) ?? []);
     },
     enabled: !!user,
     staleTime: 120_000,
