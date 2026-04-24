@@ -108,7 +108,7 @@ const Financial = () => {
         'confirm-email': 'E-mail confirmado com sucesso!',
       };
       toast.success(messages[action] || 'Ação realizada.');
-      await loadData();
+      invalidateFinancialData();
     } catch (err: any) {
       toast.error(err.message || 'Erro ao processar ação');
     } finally {
@@ -134,7 +134,7 @@ const Financial = () => {
       if (error) throw error;
       toast.success('Limite atualizado com sucesso!');
       setEditingLimit(null);
-      await loadData();
+      invalidateFinancialData();
     } catch (err: any) {
       toast.error(err.message || 'Erro ao salvar limite');
     } finally {
@@ -550,7 +550,7 @@ const Financial = () => {
           onOpenChange={(open) => !open && setEditingUser(null)}
           userId={editingUser.user_id}
           currentDisplayName={editingUser.display_name}
-          onSaved={loadData}
+          onSaved={() => invalidateFinancialData()}
         />
       )}
 
@@ -558,7 +558,7 @@ const Financial = () => {
         lead={replyingLead}
         open={!!replyingLead}
         onOpenChange={(open) => !open && setReplyingLead(null)}
-        onSuccess={loadData}
+        onSuccess={() => invalidateFinancialData()}
       />
     </div>
   );
