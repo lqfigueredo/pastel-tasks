@@ -153,6 +153,112 @@ Deno.serve(async (req) => {
         })
       }
 
+
+      case 'get_user_info': {
+        const { data: userData, error: getErr } = await supabaseAdmin.auth.admin.getUserById(targetUserId)
+        if (getErr || !userData?.user) {
+          return new Response(JSON.stringify({ error: 'Usuário não encontrado' }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+        }
+        return new Response(JSON.stringify({ email: userData.user.email }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
+
+      case 'update_profile': {
+        const trimmedName = typeof displayName === 'string' ? displayName.trim().slice(0, 100) : ''
+        const trimmedEmail = typeof email === 'string' ? email.trim() : ''
+
+        if (!trimmedName) {
+          return new Response(JSON.stringify({ error: 'Nome de exibição é obrigatório' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+        }
+
+        // Update display_name in profiles
+        const { error: profileErr } = await supabaseAdmin
+          .from('profiles')
+          .update({ display_name: trimmedName })
+          .eq('user_id', targetUserId)
+
+        if (profileErr) {
+          console.error('Update profile error:', profileErr)
+          return new Response(JSON.stringify({ error: 'Erro ao atualizar nome' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+        }
+
+        // Optionally update email
+        if (trimmedEmail) {
+          const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+          if (!emailRegex.test(trimmedEmail)) {
+            return new Response(JSON.stringify({ error: 'Formato de e-mail inválido' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+          }
+
+          const { error: emailErr } = await supabaseAdmin.auth.admin.updateUserById(targetUserId, {
+            email: trimmedEmail,
+            email_confirm: true,
+          })
+          if (emailErr) {
+            console.error('Update email error:', emailErr)
+            const msg = (emailErr.message || '').toLowerCase()
+            if (msg.includes('already') || msg.includes('exists') || msg.includes('registered') || msg.includes('duplicate')) {
+              return new Response(JSON.stringify({ error: 'Este e-mail já está cadastrado em outro usuário' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+            }
+            return new Response(JSON.stringify({ error: 'Erro ao atualizar e-mail' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+          }
+        }
+
+        return new Response(JSON.stringify({ success: true, message: 'Perfil atualizado' }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
+
+      case 'assign_team': {
+        // teamId === null/undefined => remove from all teams
+        // teamId === string => move user to that team (must belong to caller, unless solution_admin)
+        if (teamId) {
+          if (typeof teamId !== 'string') {
+            return new Response(JSON.stringify({ error: 'teamId inválido' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+          }
+
+          const { data: teamRow, error: teamErr } = await supabaseAdmin
+            .from('teams')
+            .select('id, created_by')
+            .eq('id', teamId)
+            .maybeSingle()
+
+          if (teamErr || !teamRow) {
+            return new Response(JSON.stringify({ error: 'Time não encontrado' }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+          }
+
+          if (!isSolutionAdmin && teamRow.created_by !== callerUserId) {
+            return new Response(JSON.stringify({ error: 'Você não tem permissão sobre este time' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+          }
+        }
+
+        // Remove existing memberships
+        const { error: delErr } = await supabaseAdmin
+          .from('team_members')
+          .delete()
+          .eq('user_id', targetUserId)
+
+        if (delErr) {
+          console.error('Remove team membership error:', delErr)
+          return new Response(JSON.stringify({ error: 'Erro ao atualizar time' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+        }
+
+        if (teamId) {
+          const { error: insErr } = await supabaseAdmin
+            .from('team_members')
+            .insert({ user_id: targetUserId, team_id: teamId })
+
+          if (insErr) {
+            console.error('Add team membership error:', insErr)
+            return new Response(JSON.stringify({ error: 'Erro ao adicionar ao time' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+          }
+        }
+
+        return new Response(JSON.stringify({ success: true, message: 'Time atualizado' }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
+
       default:
         return new Response(JSON.stringify({ error: 'Ação inválida' }), { status: 400, headers: corsHeaders })
     }
