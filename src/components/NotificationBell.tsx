@@ -49,26 +49,16 @@ const BUCKET_LABELS = {
 export const NotificationBell = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [filter, setFilter] = useState<NotificationFilter>('all');
 
+  const { data: notifications = [] } = useNotificationsQuery();
+  const invalidateNotifications = useInvalidateNotifications();
+
   const unreadCount = notifications.filter((n) => !n.is_read).length;
 
-  const fetchNotifications = async () => {
-    if (!user) return;
-    const { data } = await supabase
-      .from('notifications')
-      .select('*')
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: false })
-      .limit(50);
-    if (data) setNotifications(data as Notification[]);
-  };
-
   useEffect(() => {
-    fetchNotifications();
-
     if (!user) return;
     const channel = supabase
       .channel(`user:${user.id}:notifications`)
@@ -80,8 +70,8 @@ export const NotificationBell = () => {
           table: 'notifications',
           filter: `user_id=eq.${user.id}`,
         },
-        (payload) => {
-          setNotifications((prev) => [payload.new as Notification, ...prev]);
+        () => {
+          invalidateNotifications();
         }
       )
       .subscribe();
@@ -89,7 +79,14 @@ export const NotificationBell = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user]);
+  }, [user, invalidateNotifications]);
+
+  const setNotificationsCache = (updater: (prev: Notification[]) => Notification[]) => {
+    queryClient.setQueryData<Notification[]>(
+      ['notifications', user?.id],
+      (prev) => updater(prev ?? []),
+    );
+  };
 
   const markAsRead = async (id: string) => {
     const { error } = await supabase.from('notifications').update({ is_read: true }).eq('id', id);
@@ -97,7 +94,7 @@ export const NotificationBell = () => {
       errorToast('marcar a notificação como lida', error);
       return;
     }
-    setNotifications((prev) =>
+    setNotificationsCache((prev) =>
       prev.map((n) => (n.id === id ? { ...n, is_read: true } : n))
     );
   };
@@ -110,7 +107,7 @@ export const NotificationBell = () => {
       errorToast('marcar as notificações como lidas', error);
       return;
     }
-    setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
+    setNotificationsCache((prev) => prev.map((n) => ({ ...n, is_read: true })));
   };
 
   const handleClick = (n: Notification) => {
