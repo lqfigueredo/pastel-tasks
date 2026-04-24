@@ -41,7 +41,7 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: 'Apenas administradores podem gerenciar usuários' }), { status: 403, headers: corsHeaders })
     }
 
-    const { action, targetUserId } = await req.json()
+    const { action, targetUserId, displayName, email, teamId } = await req.json()
 
     if (!action || !targetUserId) {
       return new Response(JSON.stringify({ error: 'action e targetUserId são obrigatórios' }), { status: 400, headers: corsHeaders })
