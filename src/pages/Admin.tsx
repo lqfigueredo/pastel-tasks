@@ -10,7 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { ShieldX, UserPlus, Loader2, ShieldCheck, ShieldOff, UserX, UserCheck } from 'lucide-react';
+import { ShieldX, UserPlus, Loader2, ShieldCheck, ShieldOff, UserX, UserCheck, Pencil } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { HelpButton } from '@/components/HelpButton';
 import { PageLoader, InlineLoader } from '@/components/ui/loaders';
