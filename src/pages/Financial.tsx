@@ -1,5 +1,12 @@
 import { useEffect, useMemo, useState, lazy, Suspense } from 'react';
 import { useSupportTicketsQuery } from '@/hooks/useSupportTicketsQuery';
+import {
+  useFinancialDataQuery,
+  useInvalidateFinancialData,
+  type FinancialLead as Lead,
+  type FinancialApproval as UserApproval,
+  type FinancialAdminLimit as AdminLimit,
+} from '@/hooks/useFinancialDataQuery';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { format, isPast } from 'date-fns';
@@ -48,46 +55,23 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Progress } from '@/components/ui/progress';
 
-interface Lead {
-  id: string;
-  name: string;
-  email: string;
-  created_at: string;
-  replied_at: string | null;
-  reply_message: string | null;
-}
-
-interface UserApproval {
-  id: string;
-  user_id: string;
-  status: string;
-  requested_at: string;
-  reviewed_at: string | null;
-  license_expires_at: string | null;
-  display_name: string;
-  email: string;
-  created_by_admin: string | null;
-}
-
-interface AdminLimit {
-  admin_user_id: string;
-  display_name: string;
-  max_users: number;
-  current_users: number;
-}
-
 const Financial = () => {
   const { user } = useAuth();
-  const [leads, setLeads] = useState<Lead[]>([]);
-  const [approvals, setApprovals] = useState<UserApproval[]>([]);
-  const [adminLimits, setAdminLimits] = useState<AdminLimit[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [isSolutionAdmin, setIsSolutionAdmin] = useState(false);
+  const [isSolutionAdmin, setIsSolutionAdmin] = useState<boolean | null>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [editingUser, setEditingUser] = useState<UserApproval | null>(null);
   const [editingLimit, setEditingLimit] = useState<{ adminId: string; value: string } | null>(null);
   const [replyingLead, setReplyingLead] = useState<Lead | null>(null);
   const { data: supportTickets } = useSupportTicketsQuery();
+  const { data: financialData, isLoading: financialLoading } = useFinancialDataQuery(
+    isSolutionAdmin === true,
+  );
+  const invalidateFinancialData = useInvalidateFinancialData();
+
+  const leads = financialData?.leads ?? [];
+  const approvals = financialData?.approvals ?? [];
+  const adminLimits = financialData?.adminLimits ?? [];
+  const loading = isSolutionAdmin === null || (isSolutionAdmin && financialLoading);
   const hotTicketsCount = useMemo(() => {
     if (!supportTickets) return 0;
     return supportTickets.filter((t) => {
@@ -102,76 +86,9 @@ const Financial = () => {
     if (!user) return;
     supabase.rpc('has_role', { _user_id: user.id, _role: 'solution_admin' }).then(({ data }) => {
       setIsSolutionAdmin(!!data);
-      if (data) {
-        loadData();
-        // hotTicketsCount handled via useSupportTicketsQuery
-      } else {
-        setLoading(false);
-      }
     });
   }, [user]);
 
-
-  const loadData = async () => {
-    const [leadsRes, approvalsRes, adminSettingsRes] = await Promise.all([
-      supabase.from('leads').select('*').order('created_at', { ascending: false }),
-      supabase.from('user_approvals').select('*').order('requested_at', { ascending: false }),
-      supabase.from('admin_settings').select('*'),
-    ]);
-
-    setLeads((leadsRes.data as Lead[]) || []);
-
-    const rawApprovals = (approvalsRes.data || []) as any[];
-    if (rawApprovals.length > 0) {
-      const userIds = rawApprovals.map(a => a.user_id);
-      const { data: profiles } = await supabase
-        .from('profiles')
-        .select('user_id, display_name')
-        .in('user_id', userIds);
-
-      const profileMap = new Map((profiles || []).map(p => [p.user_id, p.display_name]));
-
-      setApprovals(rawApprovals.map(a => ({
-        ...a,
-        display_name: profileMap.get(a.user_id) || 'Sem nome',
-        email: '',
-      })));
-
-      // Build admin limits
-      const { data: adminRoles } = await supabase
-        .from('user_roles')
-        .select('user_id')
-        .eq('role', 'admin');
-
-      const adminUserIds = (adminRoles || []).map(r => r.user_id);
-      const settingsMap = new Map((adminSettingsRes.data || []).map((s: any) => [s.admin_user_id, s.max_users]));
-
-      // Get admin profiles
-      const adminProfileIds = adminUserIds.filter(id => !profileMap.has(id));
-      let fullProfileMap = new Map(profileMap);
-      if (adminProfileIds.length > 0) {
-        const { data: adminProfiles } = await supabase
-          .from('profiles')
-          .select('user_id, display_name')
-          .in('user_id', adminProfileIds);
-        (adminProfiles || []).forEach(p => fullProfileMap.set(p.user_id, p.display_name));
-      }
-
-      const limits: AdminLimit[] = adminUserIds.map(adminId => ({
-        admin_user_id: adminId,
-        display_name: fullProfileMap.get(adminId) || 'Sem nome',
-        max_users: settingsMap.get(adminId) ?? 10,
-        current_users: rawApprovals.filter(a => a.created_by_admin === adminId).length,
-      }));
-
-      setAdminLimits(limits);
-    } else {
-      setApprovals([]);
-      setAdminLimits([]);
-    }
-
-    setLoading(false);
-  };
 
   const handleAction = async (userId: string, action: string, extra?: Record<string, any>) => {
     setActionLoading(userId);
@@ -191,7 +108,7 @@ const Financial = () => {
         'confirm-email': 'E-mail confirmado com sucesso!',
       };
       toast.success(messages[action] || 'Ação realizada.');
-      await loadData();
+      invalidateFinancialData();
     } catch (err: any) {
       toast.error(err.message || 'Erro ao processar ação');
     } finally {
@@ -217,7 +134,7 @@ const Financial = () => {
       if (error) throw error;
       toast.success('Limite atualizado com sucesso!');
       setEditingLimit(null);
-      await loadData();
+      invalidateFinancialData();
     } catch (err: any) {
       toast.error(err.message || 'Erro ao salvar limite');
     } finally {
@@ -633,7 +550,7 @@ const Financial = () => {
           onOpenChange={(open) => !open && setEditingUser(null)}
           userId={editingUser.user_id}
           currentDisplayName={editingUser.display_name}
-          onSaved={loadData}
+          onSaved={() => invalidateFinancialData()}
         />
       )}
 
@@ -641,7 +558,7 @@ const Financial = () => {
         lead={replyingLead}
         open={!!replyingLead}
         onOpenChange={(open) => !open && setReplyingLead(null)}
-        onSuccess={loadData}
+        onSuccess={() => invalidateFinancialData()}
       />
     </div>
   );

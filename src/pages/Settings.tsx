@@ -13,6 +13,11 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { HelpButton } from '@/components/HelpButton';
+import {
+  useStatusesQuery,
+  useArchivedStatusesQuery,
+  useInvalidateStatuses,
+} from '@/hooks/useStatusesQuery';
 
 interface Status {
   id: string;
@@ -34,11 +39,14 @@ const Settings = () => {
   const { user } = useAuth();
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const { toast } = useToast();
-  const [statuses, setStatuses] = useState<Status[]>([]);
-  const [archivedStatuses, setArchivedStatuses] = useState<Status[]>([]);
+  const { data: statuses = [], isLoading: statusesLoading } = useStatusesQuery();
+  const { data: archivedStatuses = [] } = useArchivedStatusesQuery();
+  const invalidateStatuses = useInvalidateStatuses();
+  const [optimisticStatuses, setOptimisticStatuses] = useState<Status[] | null>(null);
+  const displayedStatuses = optimisticStatuses ?? (statuses as Status[]);
   const [newName, setNewName] = useState('');
   const [newColor, setNewColor] = useState(PASTEL_COLORS[0]);
-  const [loading, setLoading] = useState(true);
+  const loading = statusesLoading;
   const [saving, setSaving] = useState(false);
   const [archivedOpen, setArchivedOpen] = useState(false);
 
@@ -56,15 +64,6 @@ const Settings = () => {
   const [deleteTarget, setDeleteTarget] = useState<{ status: Status; taskCount: number } | null>(null);
   const [deleting, setDeleting] = useState(false);
 
-  const fetchStatuses = async () => {
-    const { data } = await supabase.from('task_statuses').select('*').order('position');
-    if (data) {
-      setStatuses(data.filter(s => !s.deleted_at));
-      setArchivedStatuses(data.filter(s => !!s.deleted_at));
-    }
-    setLoading(false);
-  };
-
   useEffect(() => {
     if (!user) return;
     supabase.rpc('has_role', { _user_id: user.id, _role: 'admin' }).then(({ data }) => {
@@ -72,9 +71,14 @@ const Settings = () => {
     });
   }, [user]);
 
-  useEffect(() => { fetchStatuses(); }, []);
+  // Clear optimistic state when server data refreshes
+  useEffect(() => {
+    setOptimisticStatuses(null);
+  }, [statuses]);
 
-  const getFallbackStatus = () => statuses.find(s => s.is_default && s.position === 0) || statuses.find(s => s.is_default);
+  const getFallbackStatus = () =>
+    displayedStatuses.find((s) => s.is_default && s.position === 0) ||
+    displayedStatuses.find((s) => s.is_default);
 
   if (isAdmin === null) {
     return <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>;
@@ -112,7 +116,7 @@ const Settings = () => {
     } else {
       setNewName('');
       toast({ title: 'Status criado!' });
-      await fetchStatuses();
+      invalidateStatuses();
     }
     setSaving(false);
   };
@@ -168,7 +172,7 @@ const Settings = () => {
         title: 'Status arquivado',
         description: taskCount > 0 ? `${taskCount} tarefa(s) movida(s) para "${fallback.name}".` : undefined,
       });
-      await fetchStatuses();
+      invalidateStatuses();
     }
     setDeleting(false);
     setDeleteTarget(null);
@@ -185,7 +189,7 @@ const Settings = () => {
       toast({ title: 'Erro ao restaurar', variant: 'destructive' });
     } else {
       toast({ title: `Status "${status.name}" restaurado!` });
-      await fetchStatuses();
+      invalidateStatuses();
     }
   };
 
@@ -214,7 +218,7 @@ const Settings = () => {
     } else {
       toast({ title: 'Status atualizado!' });
       cancelEdit();
-      await fetchStatuses();
+      invalidateStatuses();
     }
     setEditSaving(false);
   };
@@ -240,7 +244,7 @@ const Settings = () => {
     reordered.splice(dragOverIdx, 0, moved);
 
     const updated = reordered.map((s, i) => ({ ...s, position: i }));
-    setStatuses(updated);
+    setOptimisticStatuses(updated);
     setDragIdx(null);
     setDragOverIdx(null);
 
@@ -250,7 +254,7 @@ const Settings = () => {
     const results = await Promise.all(promises);
     if (results.some((r) => r.error)) {
       toast({ title: 'Erro ao reordenar', variant: 'destructive' });
-      await fetchStatuses();
+      invalidateStatuses();
     }
   };
 
@@ -284,13 +288,13 @@ const Settings = () => {
 
         {loading ? (
           <div className="flex justify-center py-4"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>
-        ) : statuses.length === 0 ? (
+        ) : displayedStatuses.length === 0 ? (
           <div className="text-sm text-muted-foreground text-center py-6 bg-muted/20 rounded-lg">
             Nenhum status disponível. Crie o primeiro abaixo.
           </div>
         ) : (
           <div className="space-y-1">
-            {statuses.map((s, idx) => (
+            {displayedStatuses.map((s, idx) => (
               <div
                 key={s.id}
                 draggable={editingId !== s.id}

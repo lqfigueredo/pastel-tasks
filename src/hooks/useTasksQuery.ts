@@ -17,7 +17,7 @@ async function fetchTasksWithAssignees() {
   const [taskRes, assigneeRes, profileRes] = await Promise.all([
     supabase
       .from('tasks')
-      .select('*')
+      .select('id, title, description, status_id, start_date, end_date, estimated_delivery_date, actual_end_date, is_critical, is_minimized, recurring_task_id, meeting_pendency_id, team_id, created_by, created_at, updated_at')
       .order('created_at', { ascending: false }),
     supabase.from('task_assignees').select('task_id, user_id').order('assigned_at'),
     supabase.from('profiles').select('user_id, display_name, avatar_url'),

@@ -16,7 +16,7 @@ const SUPPORT_TICKETS_KEY = ['support-tickets'] as const;
 async function fetchSupportTickets(): Promise<SupportTicket[]> {
   const { data } = await supabase
     .from('support_tickets')
-    .select('*')
+    .select('id, subject, status, created_by, created_at, closed_at')
     .order('created_at', { ascending: false });
 
   if (!data) return [];

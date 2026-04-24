@@ -14,6 +14,8 @@ export interface TaskStatus {
   deleted_at: string | null;
 }
 
+const STATUS_COLUMNS = 'id, name, color, position, is_default, team_id, created_by, created_at, deleted_at';
+
 export function useStatusesQuery() {
   const { user } = useAuth();
 
@@ -22,8 +24,26 @@ export function useStatusesQuery() {
     queryFn: async () => {
       const { data } = await supabase
         .from('task_statuses')
-        .select('*')
+        .select(STATUS_COLUMNS)
         .is('deleted_at', null)
+        .order('position');
+      return (data || []) as TaskStatus[];
+    },
+    enabled: !!user,
+    staleTime: 60_000,
+  });
+}
+
+export function useArchivedStatusesQuery() {
+  const { user } = useAuth();
+
+  return useQuery({
+    queryKey: ['task-statuses-archived'],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('task_statuses')
+        .select(STATUS_COLUMNS)
+        .not('deleted_at', 'is', null)
         .order('position');
       return (data || []) as TaskStatus[];
     },
@@ -34,5 +54,8 @@ export function useStatusesQuery() {
 
 export function useInvalidateStatuses() {
   const queryClient = useQueryClient();
-  return () => queryClient.invalidateQueries({ queryKey: ['task-statuses'] });
+  return () => {
+    queryClient.invalidateQueries({ queryKey: ['task-statuses'] });
+    queryClient.invalidateQueries({ queryKey: ['task-statuses-archived'] });
+  };
 }

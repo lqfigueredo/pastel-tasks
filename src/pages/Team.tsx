@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -13,6 +13,7 @@ import { Users, Plus, Trash2, Loader2, Mail, Crown, Calendar, FileText, Save, Ar
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { TeamAttachments } from '@/components/team/TeamAttachments';
+import { useTeamDetailQuery, useInvalidateTeamDetail } from '@/hooks/useTeamDetailQuery';
 
 interface TeamData {
   id: string;
@@ -44,10 +45,11 @@ const Team = () => {
   const { user } = useAuth();
   const { toast } = useToast();
 
-  const [loading, setLoading] = useState(true);
-  const [team, setTeam] = useState<TeamData | null>(null);
-  const [members, setMembers] = useState<Member[]>([]);
-  const [tasks, setTasks] = useState<TeamTask[]>([]);
+  const { data: teamDetail, isLoading: loading } = useTeamDetailQuery(teamId);
+  const invalidateTeamDetail = useInvalidateTeamDetail();
+  const team = teamDetail?.team ?? null;
+  const members = teamDetail?.members ?? [];
+  const tasks = teamDetail?.tasks ?? [];
 
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviting, setInviting] = useState(false);
@@ -59,6 +61,14 @@ const Team = () => {
   const [deleteConfirmName, setDeleteConfirmName] = useState('');
 
   const isCreator = team?.created_by === user?.id;
+
+  useEffect(() => {
+    if (team) setDescription(team.description || '');
+  }, [team?.id]);
+
+  const reload = () => {
+    if (teamId) invalidateTeamDetail(teamId);
+  };
 
   const handleDeleteTeam = async () => {
     if (!team) return;
@@ -72,103 +82,6 @@ const Team = () => {
       navigate('/equipe');
     }
   };
-
-  const loadTeam = useCallback(async () => {
-    if (!user || !teamId) return;
-    setLoading(true);
-
-    // Load team directly by ID
-    const { data: teamData } = await supabase
-      .from('teams')
-      .select('*')
-      .eq('id', teamId)
-      .single();
-
-    if (!teamData) {
-      setTeam(null);
-      setLoading(false);
-      return;
-    }
-    setTeam(teamData);
-    setDescription(teamData.description || '');
-
-    // Load members with profiles
-    const { data: memberRows } = await supabase
-      .from('team_members')
-      .select('user_id, joined_at')
-      .eq('team_id', teamData.id);
-
-    if (memberRows && memberRows.length > 0) {
-      const userIds = memberRows.map(m => m.user_id);
-      const { data: profiles } = await supabase
-        .from('profiles')
-        .select('user_id, display_name, avatar_url')
-        .in('user_id', userIds);
-
-      const merged: Member[] = memberRows.map(m => {
-        const p = profiles?.find(p => p.user_id === m.user_id);
-        return {
-          user_id: m.user_id,
-          display_name: p?.display_name || 'Usuário',
-          avatar_url: p?.avatar_url || null,
-          joined_at: m.joined_at,
-        };
-      });
-      setMembers(merged);
-    } else {
-      setMembers([]);
-    }
-
-    // Load team tasks
-    const { data: taskRows } = await supabase
-      .from('tasks')
-      .select('id, title, status_id, estimated_delivery_date')
-      .eq('team_id', teamData.id)
-      .order('created_at', { ascending: false });
-
-    if (taskRows && taskRows.length > 0) {
-      const statusIds = [...new Set(taskRows.map(t => t.status_id))];
-      const { data: statuses } = await supabase
-        .from('task_statuses')
-        .select('id, name, color')
-        .in('id', statusIds);
-
-      const taskIds = taskRows.map(t => t.id);
-      const { data: assigneeRows } = await supabase
-        .from('task_assignees')
-        .select('task_id, user_id')
-        .in('task_id', taskIds);
-
-      const assigneeUserIds = [...new Set(assigneeRows?.map(a => a.user_id) || [])];
-      const { data: assigneeProfiles } = assigneeUserIds.length > 0
-        ? await supabase.from('profiles').select('user_id, display_name').in('user_id', assigneeUserIds)
-        : { data: [] };
-
-      const teamTasks: TeamTask[] = taskRows.map(t => {
-        const s = statuses?.find(s => s.id === t.status_id);
-        const taskAssignees = assigneeRows?.filter(a => a.task_id === t.id) || [];
-        const names = taskAssignees.map(a => {
-          const p = assigneeProfiles?.find(p => p.user_id === a.user_id);
-          return p?.display_name || 'Usuário';
-        });
-        return {
-          id: t.id,
-          title: t.title,
-          status_name: s?.name || 'Desconhecido',
-          status_color: s?.color || '#94A3B8',
-          estimated_delivery_date: t.estimated_delivery_date,
-          assignees: names,
-        };
-      });
-      setTasks(teamTasks);
-    } else {
-      setTasks([]);
-    }
-
-    setLoading(false);
-  }, [user, teamId]);
-
-  useEffect(() => { loadTeam(); }, [loadTeam]);
 
   const handleInvite = async () => {
     if (!team || !inviteEmail.trim()) return;
@@ -205,7 +118,7 @@ const Team = () => {
     } else {
       toast({ title: 'Membro adicionado!', description: `${data.display_name} foi adicionado ao time.` });
       setInviteEmail('');
-      loadTeam();
+      reload();
     }
     setInviting(false);
   };
@@ -229,7 +142,7 @@ const Team = () => {
     if (!team) return;
     await supabase.from('team_members').delete().eq('team_id', team.id).eq('user_id', userId);
     toast({ title: 'Membro removido' });
-    loadTeam();
+    reload();
   };
 
   if (loading) {

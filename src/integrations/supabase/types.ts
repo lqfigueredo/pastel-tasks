@@ -2168,6 +2168,7 @@ export type Database = {
         Returns: number
       }
       get_user_team_ids: { Args: { _user_id: string }; Returns: string[] }
+      get_visible_user_ids: { Args: { _user_id: string }; Returns: string[] }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
