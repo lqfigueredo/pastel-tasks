@@ -1,28 +1,56 @@
+## Corrigir visibilidade de perfis criados pelo admin
 
+### Problema
+O Angelo foi aprovado e está corretamente vinculado ao Luciano via `user_approvals.created_by_admin`, mas **não aparece no painel admin** do Luciano. A função `can_view_profile` (usada pela RLS de `profiles`) só permite ver perfis de pessoas que compartilham um time ou tarefas com o viewer. Como o Angelo é novo e ainda não tem time/tarefas, seu profile fica invisível — criando um catch-22 em que o admin não consegue ver o usuário que ele mesmo criou.
 
-## Destaque visual para cards do usuário logado
+### Correção
 
-Adicionar um indicador visual sutil nos cards do Kanban quando a tarefa estiver atribuída ao usuário que está logado, facilitando a identificação rápida das demandas próprias mesmo quando o filtro "Todos" está ativo.
+**Migração SQL:** atualizar `public.can_view_profile` adicionando uma cláusula que permite visibilidade quando existe um vínculo admin↔usuário em `user_approvals`:
 
-### Estilo proposto
-
-- **Borda lateral esquerda colorida** (4px) na cor `primary` (verde Mint da identidade), igual ao padrão já usado para tarefas críticas (que usa `border-l-destructive`).
-- **Fundo levemente tingido** (`bg-primary/5`) para reforçar a distinção sem competir com o conteúdo.
-- Quando o card for **crítico E do usuário logado**, a borda crítica (vermelha) tem prioridade — apenas o leve tingimento de fundo do "minha tarefa" permanece, mantendo o alerta visual da criticidade.
-
-### Alterações técnicas
-
-**Arquivo único:** `src/components/kanban/KanbanCard.tsx`
-
-1. Importar `useAuth` de `@/contexts/AuthContext`.
-2. Calcular `isMine = task.assignees?.some(a => a.user_id === user?.id)`.
-3. No `className` do `<Card>`:
-   - Adicionar `isMine && !task.is_critical && "border-l-4 border-l-primary"`.
-   - Adicionar `isMine && "bg-primary/5"` (sobrescreve o `bg-card` base de forma sutil).
-
-Nenhuma mudança em queries, RLS ou tipos. Sem impacto em performance — `useAuth` já está disponível no contexto e o cálculo é O(n) sobre os assignees (geralmente 1–3 itens).
+```sql
+CREATE OR REPLACE FUNCTION public.can_view_profile(_viewer_id uuid, _target_id uuid)
+RETURNS boolean
+LANGUAGE sql
+STABLE SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT
+    _viewer_id = _target_id
+    OR has_role(_viewer_id, 'solution_admin'::app_role)
+    -- NOVO: admin pode ver perfis de usuários que ele criou (e vice-versa)
+    OR EXISTS (
+      SELECT 1 FROM public.user_approvals ua
+      WHERE (ua.created_by_admin = _viewer_id AND ua.user_id = _target_id)
+         OR (ua.created_by_admin = _target_id AND ua.user_id = _viewer_id)
+    )
+    OR EXISTS (
+      SELECT 1
+      FROM public.team_members tm1
+      JOIN public.team_members tm2 ON tm1.team_id = tm2.team_id
+      WHERE tm1.user_id = _viewer_id AND tm2.user_id = _target_id
+    )
+    OR EXISTS (
+      SELECT 1 FROM public.tasks t
+      WHERE t.created_by = _target_id
+        AND (t.created_by = _viewer_id
+             OR is_task_assignee(t.id, _viewer_id)
+             OR (t.team_id IS NOT NULL AND is_team_member(_viewer_id, t.team_id)))
+    )
+    OR EXISTS (
+      SELECT 1 FROM public.task_assignees ta
+      JOIN public.tasks t ON t.id = ta.task_id
+      WHERE ta.user_id = _target_id
+        AND (t.created_by = _viewer_id
+             OR is_task_assignee(t.id, _viewer_id)
+             OR (t.team_id IS NOT NULL AND is_team_member(_viewer_id, t.team_id)))
+    )
+$$;
+```
 
 ### Resultado esperado
+- Luciano abre `/admin` e passa a ver o Angelo (e qualquer outro usuário aprovado que ele tenha cadastrado).
+- A relação é simétrica: o usuário recém-criado também consegue ver o perfil do admin que o cadastrou.
+- Nenhuma alteração em código frontend ou em outras políticas RLS.
 
-No board, o usuário identifica imediatamente seus próprios cards por uma faixa verde à esquerda + fundo levemente esverdeado, mesmo ao visualizar o board completo do time.
-
+### Risco
+Baixo. A nova condição apenas amplia visibilidade entre admin e seus próprios usuários — não expõe dados a terceiros nem afeta o isolamento entre admins distintos (que continua intacto via `created_by_admin`).
