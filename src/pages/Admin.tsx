@@ -62,6 +62,7 @@ export default function Admin() {
   const [submitting, setSubmitting] = useState(false);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [bannedUsers, setBannedUsers] = useState<Set<string>>(new Set());
+  const [editingUser, setEditingUser] = useState<Profile | null>(null);
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
