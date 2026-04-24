@@ -94,6 +94,15 @@ export function CreateTaskDialog({ open, onOpenChange, onTaskCreated }: Props) {
     setEstimatedDateError(eErr);
     if (tErr || sErr || eErr) return;
 
+    if (!statusId) {
+      toast({
+        title: 'Selecione um status',
+        description: 'Escolha um status para a tarefa antes de salvar.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     setSaving(true);
 
     if (isRecurring) {
