@@ -86,76 +86,9 @@ const Financial = () => {
     if (!user) return;
     supabase.rpc('has_role', { _user_id: user.id, _role: 'solution_admin' }).then(({ data }) => {
       setIsSolutionAdmin(!!data);
-      if (data) {
-        loadData();
-        // hotTicketsCount handled via useSupportTicketsQuery
-      } else {
-        setLoading(false);
-      }
     });
   }, [user]);
 
-
-  const loadData = async () => {
-    const [leadsRes, approvalsRes, adminSettingsRes] = await Promise.all([
-      supabase.from('leads').select('*').order('created_at', { ascending: false }),
-      supabase.from('user_approvals').select('*').order('requested_at', { ascending: false }),
-      supabase.from('admin_settings').select('*'),
-    ]);
-
-    setLeads((leadsRes.data as Lead[]) || []);
-
-    const rawApprovals = (approvalsRes.data || []) as any[];
-    if (rawApprovals.length > 0) {
-      const userIds = rawApprovals.map(a => a.user_id);
-      const { data: profiles } = await supabase
-        .from('profiles')
-        .select('user_id, display_name')
-        .in('user_id', userIds);
-
-      const profileMap = new Map((profiles || []).map(p => [p.user_id, p.display_name]));
-
-      setApprovals(rawApprovals.map(a => ({
-        ...a,
-        display_name: profileMap.get(a.user_id) || 'Sem nome',
-        email: '',
-      })));
-
-      // Build admin limits
-      const { data: adminRoles } = await supabase
-        .from('user_roles')
-        .select('user_id')
-        .eq('role', 'admin');
-
-      const adminUserIds = (adminRoles || []).map(r => r.user_id);
-      const settingsMap = new Map((adminSettingsRes.data || []).map((s: any) => [s.admin_user_id, s.max_users]));
-
-      // Get admin profiles
-      const adminProfileIds = adminUserIds.filter(id => !profileMap.has(id));
-      let fullProfileMap = new Map(profileMap);
-      if (adminProfileIds.length > 0) {
-        const { data: adminProfiles } = await supabase
-          .from('profiles')
-          .select('user_id, display_name')
-          .in('user_id', adminProfileIds);
-        (adminProfiles || []).forEach(p => fullProfileMap.set(p.user_id, p.display_name));
-      }
-
-      const limits: AdminLimit[] = adminUserIds.map(adminId => ({
-        admin_user_id: adminId,
-        display_name: fullProfileMap.get(adminId) || 'Sem nome',
-        max_users: settingsMap.get(adminId) ?? 10,
-        current_users: rawApprovals.filter(a => a.created_by_admin === adminId).length,
-      }));
-
-      setAdminLimits(limits);
-    } else {
-      setApprovals([]);
-      setAdminLimits([]);
-    }
-
-    setLoading(false);
-  };
 
   const handleAction = async (userId: string, action: string, extra?: Record<string, any>) => {
     setActionLoading(userId);
