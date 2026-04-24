@@ -487,6 +487,20 @@ export default function Admin() {
           onSuccess={loadData}
         />
       )}
+
+      {editingUser && (
+        <Suspense fallback={null}>
+          <EditUserDialog
+            open={!!editingUser}
+            onOpenChange={(o) => { if (!o) setEditingUser(null); }}
+            userId={editingUser.user_id}
+            currentDisplayName={editingUser.display_name}
+            currentTeamId={getTeamIdForUser(editingUser.user_id)}
+            teams={teams}
+            onSaved={loadData}
+          />
+        </Suspense>
+      )}
     </div>
   );
 }
