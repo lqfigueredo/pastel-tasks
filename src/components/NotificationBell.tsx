@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Bell, BellOff, CheckCheck, Filter } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -11,16 +12,11 @@ import { differenceInCalendarDays } from 'date-fns';
 import { humanizeTimestamp } from '@/lib/date-humanize';
 import { EmptyState } from '@/components/ui/empty-state';
 import { errorToast } from '@/lib/toast-helpers';
-
-interface Notification {
-  id: string;
-  type: string;
-  title: string;
-  message: string;
-  reference_id: string | null;
-  is_read: boolean;
-  created_at: string;
-}
+import {
+  useNotificationsQuery,
+  useInvalidateNotifications,
+  type Notification,
+} from '@/hooks/useNotificationsQuery';
 
 type NotificationFilter = 'all' | 'tasks' | 'meetings' | 'system';
 
