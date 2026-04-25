@@ -174,17 +174,17 @@ const Financial = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 min-w-0">
       <div>
         <div className="flex items-center gap-2">
-          <h1 className="text-2xl font-bold">Financeiro</h1>
+          <h1 className="text-xl md:text-2xl font-bold">Financeiro</h1>
           <HelpButton pageKey="financial" />
         </div>
         <p className="text-muted-foreground">Gerencie leads e aprovações de usuários.</p>
       </div>
 
       <Tabs defaultValue="subscriptions">
-        <TabsList className="flex-wrap h-auto">
+        <TabsList className="flex w-full overflow-x-auto no-scrollbar h-auto justify-start md:flex-wrap md:overflow-visible">
           <TabsTrigger value="subscriptions">Assinaturas</TabsTrigger>
           <TabsTrigger value="plans">Planos</TabsTrigger>
           <TabsTrigger value="vouchers">Vouchers</TabsTrigger>

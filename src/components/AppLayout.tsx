@@ -70,19 +70,19 @@ const AppLayout = () => {
       <SidebarProvider>
         <div className="min-h-screen flex w-full">
           <AppSidebar />
-          <div className="flex-1 flex flex-col">
+          <div className="flex-1 flex flex-col min-w-0">
             <Suspense fallback={null}>
               <SubscriptionStatusBanner />
               <TrialBanner />
             </Suspense>
-            <header className="h-14 flex items-center border-b border-border/50 px-4 bg-background/80 backdrop-blur-sm gap-3">
+            <header className="h-14 flex items-center border-b border-border/50 px-4 bg-background/80 backdrop-blur-sm gap-3 min-w-0">
               <SidebarTrigger />
               {pageTitle && (
-                <h2 className="font-display text-sm font-semibold text-foreground/90 truncate">
+                <h2 className="font-display text-sm font-semibold text-foreground/90 truncate min-w-0">
                   {pageTitle}
                 </h2>
               )}
-              <div className="flex-1" />
+              <div className="flex-1 min-w-0" />
               <Button
                 variant="outline"
                 size="sm"
@@ -108,7 +108,7 @@ const AppLayout = () => {
                 <NotificationBell />
               </Suspense>
             </header>
-            <main className="flex-1 overflow-auto p-6">
+            <main className="flex-1 overflow-y-auto overflow-x-hidden min-w-0 p-4 md:p-6">
               <Outlet />
             </main>
           </div>
