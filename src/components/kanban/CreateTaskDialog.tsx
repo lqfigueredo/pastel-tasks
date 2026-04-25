@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -13,6 +14,8 @@ import { AssigneeSelector } from './AssigneeSelector';
 import { Users, Repeat, FileText, AlertTriangle } from 'lucide-react';
 import { errorToast } from '@/lib/toast-helpers';
 import { cn } from '@/lib/utils';
+import { getCurrentLocale } from '@/lib/date';
+import { format as formatDate } from 'date-fns';
 import {
   ResponsiveDialog,
   ResponsiveDialogHeader,
@@ -29,6 +32,7 @@ interface Props {
 export function CreateTaskDialog({ open, onOpenChange, onTaskCreated }: Props) {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { t } = useTranslation('kanban');
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [statusId, setStatusId] = useState('');
@@ -86,9 +90,9 @@ export function CreateTaskDialog({ open, onOpenChange, onTaskCreated }: Props) {
     e.preventDefault();
     if (!user) return;
 
-    const tErr = !title.trim() ? 'Informe um título.' : undefined;
-    const sErr = !isValidDate(startDate) ? 'Ano deve estar entre 1900 e 2100.' : undefined;
-    const eErr = !isValidDate(estimatedDate) ? 'Ano deve estar entre 1900 e 2100.' : undefined;
+    const tErr = !title.trim() ? t('create.validation.titleRequired') : undefined;
+    const sErr = !isValidDate(startDate) ? t('create.validation.yearRange') : undefined;
+    const eErr = !isValidDate(estimatedDate) ? t('create.validation.yearRange') : undefined;
     setTitleError(tErr);
     setStartDateError(sErr);
     setEstimatedDateError(eErr);
@@ -96,8 +100,8 @@ export function CreateTaskDialog({ open, onOpenChange, onTaskCreated }: Props) {
 
     if (!statusId) {
       toast({
-        title: 'Selecione um status',
-        description: 'Escolha um status para a tarefa antes de salvar.',
+        title: t('create.validation.selectStatus'),
+        description: t('create.validation.selectStatusDesc'),
         variant: 'destructive',
       });
       return;
@@ -138,9 +142,9 @@ export function CreateTaskDialog({ open, onOpenChange, onTaskCreated }: Props) {
       });
 
       if (error) {
-        errorToast('criar a recorrência', error);
+        errorToast(t('create.errors.createRecurring'), error);
       } else {
-        toast({ title: 'Tarefa recorrente criada!' });
+        toast({ title: t('create.successRecurring') });
         resetForm();
         onOpenChange(false);
         onTaskCreated?.();
@@ -159,14 +163,14 @@ export function CreateTaskDialog({ open, onOpenChange, onTaskCreated }: Props) {
       }).select('id').single();
 
       if (error) {
-        errorToast('criar a tarefa', error);
+        errorToast(t('create.errors.create'), error);
       } else {
         if (data && assigneeIds.length > 0) {
           await supabase.from('task_assignees').insert(
             assigneeIds.map((user_id) => ({ task_id: data.id, user_id }))
           );
         }
-        toast({ title: 'Tarefa criada!' });
+        toast({ title: t('create.success') });
         resetForm();
         onOpenChange(false);
         onTaskCreated?.();
@@ -199,22 +203,22 @@ export function CreateTaskDialog({ open, onOpenChange, onTaskCreated }: Props) {
   return (
     <ResponsiveDialog open={open} onOpenChange={onOpenChange}>
       <ResponsiveDialogHeader>
-        <ResponsiveDialogTitle>Nova Tarefa</ResponsiveDialogTitle>
+        <ResponsiveDialogTitle>{t('create.title')}</ResponsiveDialogTitle>
         <ResponsiveDialogDescription>
-          Preencha os detalhes da nova tarefa
+          {t('create.description')}
         </ResponsiveDialogDescription>
       </ResponsiveDialogHeader>
       <form onSubmit={handleSubmit} className="space-y-4">
 
           <div className="space-y-1.5">
-            <Label>Título *</Label>
+            <Label>{t('create.fields.title')} *</Label>
             <Input
               value={title}
               onChange={(e) => {
                 setTitle(e.target.value);
                 if (titleError) setTitleError(undefined);
               }}
-              onBlur={() => setTitleError(!title.trim() ? 'Informe um título.' : undefined)}
+              onBlur={() => setTitleError(!title.trim() ? t('create.validation.titleRequired') : undefined)}
               placeholder="Título da tarefa"
               aria-invalid={!!titleError}
               className={cn(titleError && 'border-destructive focus-visible:ring-destructive')}
@@ -226,10 +230,10 @@ export function CreateTaskDialog({ open, onOpenChange, onTaskCreated }: Props) {
             <Textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Breve descrição..." rows={3} />
           </div>
           <div className="space-y-2">
-            <Label>Status *</Label>
+            <Label>{t('create.fields.status')} *</Label>
             <Select value={statusId} onValueChange={setStatusId}>
               <SelectTrigger disabled={statuses.length === 0}>
-                <SelectValue placeholder="Selecione um status" />
+                <SelectValue placeholder={t('create.fields.statusPlaceholder')} />
               </SelectTrigger>
               <SelectContent>
                 {statuses.map((s) => (
@@ -239,7 +243,7 @@ export function CreateTaskDialog({ open, onOpenChange, onTaskCreated }: Props) {
             </Select>
           </div>
           <div className="space-y-2">
-            <Label>Responsáveis</Label>
+            <Label>{t('create.fields.assignees')}</Label>
             <AssigneeSelector selectedIds={assigneeIds} onChange={setAssigneeIds} />
           </div>
           {userTeam && (
@@ -251,7 +255,7 @@ export function CreateTaskDialog({ open, onOpenChange, onTaskCreated }: Props) {
               />
               <label htmlFor="team-task" className="text-sm flex items-center gap-1.5 cursor-pointer">
                 <Users className="h-3.5 w-3.5 text-muted-foreground" />
-                Associar ao time <span className="font-medium">{userTeam.name}</span>
+                {t('create.fields.linkTeam')} <span className="font-medium">{userTeam.name}</span>
               </label>
             </div>
           )}
@@ -260,12 +264,12 @@ export function CreateTaskDialog({ open, onOpenChange, onTaskCreated }: Props) {
           <div className="grid grid-cols-3 gap-2">
             <div className={`flex flex-col items-center gap-1.5 rounded-lg border p-2 text-center ${isCritical ? 'border-destructive/50 bg-destructive/5' : 'border-border/50'}`}>
               <AlertTriangle className={`h-4 w-4 ${isCritical ? 'text-destructive' : 'text-muted-foreground'}`} />
-              <Label htmlFor="critical-toggle" className="cursor-pointer text-xs leading-tight">Crítica</Label>
+              <Label htmlFor="critical-toggle" className="cursor-pointer text-xs leading-tight">{t('create.fields.critical')}</Label>
               <Switch id="critical-toggle" checked={isCritical} onCheckedChange={setIsCritical} />
             </div>
             <div className={`flex flex-col items-center gap-1.5 rounded-lg border p-2 text-center ${fromMeeting ? 'border-primary/50 bg-primary/5' : 'border-border/50'}`}>
               <FileText className={`h-4 w-4 ${fromMeeting ? 'text-primary' : 'text-muted-foreground'}`} />
-              <Label htmlFor="meeting-toggle" className="cursor-pointer text-xs leading-tight">Reunião</Label>
+              <Label htmlFor="meeting-toggle" className="cursor-pointer text-xs leading-tight">{t('create.fields.fromMeeting')}</Label>
               <Switch id="meeting-toggle" checked={fromMeeting} onCheckedChange={(checked) => {
                 setFromMeeting(checked);
                 if (checked && meetings.length === 0 && user) {
@@ -282,7 +286,7 @@ export function CreateTaskDialog({ open, onOpenChange, onTaskCreated }: Props) {
             </div>
             <div className={`flex flex-col items-center gap-1.5 rounded-lg border p-2 text-center ${isRecurring ? 'border-primary/50 bg-primary/5' : 'border-border/50'}`}>
               <Repeat className={`h-4 w-4 ${isRecurring ? 'text-primary' : 'text-muted-foreground'}`} />
-              <Label htmlFor="recurring-toggle" className="cursor-pointer text-xs leading-tight">Recorrente</Label>
+              <Label htmlFor="recurring-toggle" className="cursor-pointer text-xs leading-tight">{t('create.fields.recurring')}</Label>
               <Switch id="recurring-toggle" checked={isRecurring} onCheckedChange={setIsRecurring} />
             </div>
           </div>
@@ -290,7 +294,7 @@ export function CreateTaskDialog({ open, onOpenChange, onTaskCreated }: Props) {
           {fromMeeting && (
             <div className="space-y-3 rounded-lg border border-border/50 bg-muted/20 p-3">
               <div className="space-y-2">
-                <Label>Ata de Reunião</Label>
+                <Label>{t('create.fields.meeting')}</Label>
                 <Select value={selectedMeetingId} onValueChange={(meetingId) => {
                   setSelectedMeetingId(meetingId);
                   setSelectedPendencyId('');
@@ -300,11 +304,11 @@ export function CreateTaskDialog({ open, onOpenChange, onTaskCreated }: Props) {
                     .eq('is_completed', false)
                     .then(({ data }) => setPendencies(data || []));
                 }}>
-                  <SelectTrigger><SelectValue placeholder="Selecione uma ata..." /></SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder={t('create.fields.selectMeeting')} /></SelectTrigger>
                   <SelectContent>
                     {meetings.map((m) => (
                       <SelectItem key={m.id} value={m.id}>
-                        {m.description} ({new Date(m.meeting_date).toLocaleDateString('pt-BR')})
+                        {m.description} ({formatDate(new Date(m.meeting_date), 'P', { locale: getCurrentLocale() })})
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -312,9 +316,9 @@ export function CreateTaskDialog({ open, onOpenChange, onTaskCreated }: Props) {
               </div>
               {pendencies.length > 0 && (
                 <div className="space-y-2">
-                  <Label>Pendência</Label>
+                  <Label>{t('create.fields.pendency')}</Label>
                   <Select value={selectedPendencyId} onValueChange={setSelectedPendencyId}>
-                    <SelectTrigger><SelectValue placeholder="Selecione uma pendência..." /></SelectTrigger>
+                    <SelectTrigger><SelectValue placeholder={t('create.fields.selectPendency')} /></SelectTrigger>
                     <SelectContent>
                       {pendencies.map((p) => (
                         <SelectItem key={p.id} value={p.id}>{p.description}</SelectItem>
@@ -329,26 +333,26 @@ export function CreateTaskDialog({ open, onOpenChange, onTaskCreated }: Props) {
           {isRecurring ? (
             <div className="space-y-3 rounded-lg border border-border/50 bg-muted/20 p-3">
               <div className="space-y-2">
-                <Label>Frequência</Label>
+                <Label>{t('create.fields.frequency')}</Label>
                 <Select value={recurrenceType} onValueChange={(v) => { setRecurrenceType(v); setRecurrenceDay(v === 'weekly' ? 1 : 1); }}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                    <SelectContent>
-                    <SelectItem value="daily">Diária</SelectItem>
-                    <SelectItem value="weekly">Semanal</SelectItem>
-                    <SelectItem value="monthly">Mensal</SelectItem>
-                    <SelectItem value="yearly">Anual</SelectItem>
+                    <SelectItem value="daily">{t('create.frequencyOptions.daily')}</SelectItem>
+                    <SelectItem value="weekly">{t('create.frequencyOptions.weekly')}</SelectItem>
+                    <SelectItem value="monthly">{t('create.frequencyOptions.monthly')}</SelectItem>
+                    <SelectItem value="yearly">{t('create.frequencyOptions.yearly')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
                 {recurrenceType === 'weekly' && (
                   <>
-                    <Label>Dia da semana</Label>
+                    <Label>{t('create.fields.weekday')}</Label>
                     <Select value={String(recurrenceDay)} onValueChange={(v) => setRecurrenceDay(Number(v))}>
                       <SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>
-                        {['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'].map((d, i) => (
-                          <SelectItem key={i} value={String(i)}>{d}</SelectItem>
+                        {[0,1,2,3,4,5,6].map((i) => (
+                          <SelectItem key={i} value={String(i)}>{t(`create.weekdays.${i}`)}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
@@ -356,12 +360,12 @@ export function CreateTaskDialog({ open, onOpenChange, onTaskCreated }: Props) {
                 )}
                 {recurrenceType === 'monthly' && (
                   <>
-                    <Label>Dia do mês</Label>
+                    <Label>{t('create.fields.monthDay')}</Label>
                     <Select value={String(recurrenceDay)} onValueChange={(v) => setRecurrenceDay(Number(v))}>
                       <SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>
                         {Array.from({ length: 28 }, (_, i) => (
-                          <SelectItem key={i + 1} value={String(i + 1)}>Dia {i + 1}</SelectItem>
+                          <SelectItem key={i + 1} value={String(i + 1)}>{t('create.fields.dayN', { day: i + 1 })}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
@@ -369,12 +373,12 @@ export function CreateTaskDialog({ open, onOpenChange, onTaskCreated }: Props) {
                 )}
                 {recurrenceType === 'yearly' && (
                   <>
-                    <Label>Mês</Label>
+                    <Label>{t('create.fields.month')}</Label>
                     <Select value={String(recurrenceDay)} onValueChange={(v) => setRecurrenceDay(Number(v))}>
                       <SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>
-                        {['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'].map((m, i) => (
-                          <SelectItem key={i} value={String(i)}>{m}</SelectItem>
+                        {Array.from({ length: 12 }, (_, i) => (
+                          <SelectItem key={i} value={String(i)}>{t(`create.months.${i}`)}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
@@ -385,7 +389,7 @@ export function CreateTaskDialog({ open, onOpenChange, onTaskCreated }: Props) {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label>Data de Início</Label>
+                <Label>{t('create.fields.startDate')}</Label>
                 <Input
                   type="date"
                   min="1900-01-01"
@@ -401,7 +405,7 @@ export function CreateTaskDialog({ open, onOpenChange, onTaskCreated }: Props) {
                 {startDateError && <p className="text-xs text-destructive">{startDateError}</p>}
               </div>
               <div className="space-y-1.5">
-                <Label>Previsão de Entrega</Label>
+                <Label>{t('create.fields.estimatedDate')}</Label>
                 <Input
                   type="date"
                   min="1900-01-01"
@@ -420,9 +424,9 @@ export function CreateTaskDialog({ open, onOpenChange, onTaskCreated }: Props) {
           )}
 
           <div className="flex justify-end gap-2 pt-2">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>{t('detail.cancel')}</Button>
             <Button type="submit" disabled={saving || !title.trim()}>
-              {saving ? 'Criando...' : isRecurring ? 'Criar Recorrência' : 'Criar Tarefa'}
+              {saving ? t('create.submitting') : isRecurring ? t('create.submitRecurring') : t('create.submit')}
             </Button>
           </div>
         </form>

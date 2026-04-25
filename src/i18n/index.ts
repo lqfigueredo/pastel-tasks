@@ -14,6 +14,10 @@ import ptCalendar from './locales/pt-BR/calendar.json';
 import ptTimer from './locales/pt-BR/timer.json';
 import ptTeam from './locales/pt-BR/team.json';
 import ptSettings from './locales/pt-BR/settings.json';
+import ptIdeas from './locales/pt-BR/ideas.json';
+import ptMeetings from './locales/pt-BR/meetings.json';
+import ptKnowledge from './locales/pt-BR/knowledge.json';
+import ptWorkInstructions from './locales/pt-BR/workInstructions.json';
 
 import enCommon from './locales/en/common.json';
 import enNav from './locales/en/nav.json';
@@ -25,6 +29,10 @@ import enCalendar from './locales/en/calendar.json';
 import enTimer from './locales/en/timer.json';
 import enTeam from './locales/en/team.json';
 import enSettings from './locales/en/settings.json';
+import enIdeas from './locales/en/ideas.json';
+import enMeetings from './locales/en/meetings.json';
+import enKnowledge from './locales/en/knowledge.json';
+import enWorkInstructions from './locales/en/workInstructions.json';
 
 export const SUPPORTED_LOCALES = ['pt-BR', 'en'] as const;
 export type SupportedLocale = (typeof SUPPORTED_LOCALES)[number];
@@ -42,6 +50,10 @@ const NAMESPACES = [
   'timer',
   'team',
   'settings',
+  'ideas',
+  'meetings',
+  'knowledge',
+  'workInstructions',
 ] as const;
 
 const resources = {
@@ -56,6 +68,10 @@ const resources = {
     timer: ptTimer,
     team: ptTeam,
     settings: ptSettings,
+    ideas: ptIdeas,
+    meetings: ptMeetings,
+    knowledge: ptKnowledge,
+    workInstructions: ptWorkInstructions,
   },
   en: {
     common: enCommon,
@@ -68,6 +84,10 @@ const resources = {
     timer: enTimer,
     team: enTeam,
     settings: enSettings,
+    ideas: enIdeas,
+    meetings: enMeetings,
+    knowledge: enKnowledge,
+    workInstructions: enWorkInstructions,
   },
 } as const;
 

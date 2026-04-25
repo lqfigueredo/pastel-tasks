@@ -1,0 +1,21 @@
+{
+  "page": {
+    "title": "Fonte de Conhecimento",
+    "newSource": "Nova Fonte",
+    "searchPlaceholder": "Filtrar por título..."
+  },
+  "scope": {
+    "team": "Equipe",
+    "individual": "Individual"
+  },
+  "badges": {
+    "link": "Link"
+  },
+  "empty": {
+    "noResultsTitle": "Nenhuma fonte encontrada",
+    "noResultsDesc": "Tente buscar por outro termo.",
+    "noSourcesTitle": "Nenhuma fonte cadastrada",
+    "noSourcesDesc": "Centralize links e arquivos de referência da sua equipe em um só lugar.",
+    "addFirst": "Adicionar primeira fonte"
+  }
+}

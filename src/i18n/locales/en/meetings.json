@@ -1,0 +1,55 @@
+{
+  "list": {
+    "title": "Meeting Minutes",
+    "subtitle": "Manage your minutes and pending items",
+    "newMeeting": "New Minute",
+    "searchPlaceholder": "Search by description...",
+    "dateFrom": "Start date",
+    "dateTo": "End date",
+    "withPendencies": "With pending items",
+    "clear": "Clear",
+    "participants_one": "{{count}} participant",
+    "participants_other": "{{count}} participants",
+    "pendencies_one": "{{count}} pending item",
+    "pendencies_other": "{{count}} pending items",
+    "noPendencies": "No pending items",
+    "loading": "Loading..."
+  },
+  "empty": {
+    "noResultsTitle": "No minutes found",
+    "noResultsDesc": "Try adjusting filters to see more results.",
+    "clearFilters": "Clear filters",
+    "noMeetingsTitle": "No minutes yet",
+    "noMeetingsDesc": "Record your meetings and track pending items in one place.",
+    "createFirst": "Create first minute"
+  },
+  "detail": {
+    "back": "Back",
+    "edit": "Edit",
+    "description": "Meeting Description",
+    "participants": "Participants",
+    "external": "External",
+    "pendencies": "Pending Items",
+    "addPendency": "Add",
+    "noPendencies": "No pending items recorded.",
+    "attachments": "Attachments",
+    "loading": "Loading...",
+    "notFound": "Minute not found.",
+    "noNameFallback": "No name",
+    "unknown": "Unknown",
+    "notDefined": "Not defined",
+    "errorUpdate": "Failed to update pending item",
+    "pendencyClosed": "Pending item closed",
+    "pendencyReopened": "Pending item reopened",
+    "table": {
+      "description": "Description",
+      "responsible": "Responsible",
+      "dueDate": "Completion Date",
+      "status": "Status"
+    },
+    "status": {
+      "closed": "Closed",
+      "open": "Open"
+    }
+  }
+}

@@ -1,0 +1,55 @@
+{
+  "list": {
+    "title": "Atas de Reunião",
+    "subtitle": "Gerencie suas atas e pendências",
+    "newMeeting": "Nova Ata",
+    "searchPlaceholder": "Buscar por descrição...",
+    "dateFrom": "Data início",
+    "dateTo": "Data fim",
+    "withPendencies": "Com pendências",
+    "clear": "Limpar",
+    "participants_one": "{{count}} participante",
+    "participants_other": "{{count}} participantes",
+    "pendencies_one": "{{count}} pendência",
+    "pendencies_other": "{{count}} pendências",
+    "noPendencies": "Sem pendências",
+    "loading": "Carregando..."
+  },
+  "empty": {
+    "noResultsTitle": "Nenhuma ata encontrada",
+    "noResultsDesc": "Tente ajustar os filtros para ver mais resultados.",
+    "clearFilters": "Limpar filtros",
+    "noMeetingsTitle": "Nenhuma ata ainda",
+    "noMeetingsDesc": "Registre suas reuniões e acompanhe pendências em um só lugar.",
+    "createFirst": "Criar primeira ata"
+  },
+  "detail": {
+    "back": "Voltar",
+    "edit": "Editar",
+    "description": "Descrição da Reunião",
+    "participants": "Participantes",
+    "external": "Externo",
+    "pendencies": "Pendências",
+    "addPendency": "Adicionar",
+    "noPendencies": "Nenhuma pendência registrada.",
+    "attachments": "Anexos",
+    "loading": "Carregando...",
+    "notFound": "Ata não encontrada.",
+    "noNameFallback": "Sem nome",
+    "unknown": "Desconhecido",
+    "notDefined": "Não definido",
+    "errorUpdate": "Erro ao atualizar pendência",
+    "pendencyClosed": "Pendência encerrada",
+    "pendencyReopened": "Pendência reaberta",
+    "table": {
+      "description": "Descrição",
+      "responsible": "Responsável",
+      "dueDate": "Data Conclusão",
+      "status": "Status"
+    },
+    "status": {
+      "closed": "Encerrada",
+      "open": "Aberta"
+    }
+  }
+}

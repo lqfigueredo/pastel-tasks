@@ -1,0 +1,68 @@
+{
+  "page": {
+    "title": "Work Instructions",
+    "subtitle": "Manage team documents and procedures",
+    "newInstruction": "New Instruction",
+    "searchPlaceholder": "Search by title or team...",
+    "filterTeam": "Team",
+    "allTeams": "All teams",
+    "filterStatus": "Status",
+    "all": "All",
+    "active": "Active",
+    "inactive": "Inactive",
+    "loading": "Loading...",
+    "empty": "No work instructions found"
+  },
+  "status": {
+    "active": "Active",
+    "inactive": "Inactive"
+  },
+  "table": {
+    "title": "Title",
+    "team": "Team",
+    "status": "Status",
+    "createdBy": "Created by",
+    "file": "File",
+    "actions": "Actions"
+  },
+  "actions": {
+    "edit": "Edit",
+    "updatePdf": "Update PDF",
+    "versions": "Versions",
+    "log": "Log",
+    "delete": "Delete"
+  },
+  "messages": {
+    "confirmDelete": "Are you sure you want to delete this work instruction?",
+    "errorDownload": "Failed to download file",
+    "errorDelete": "Failed to delete",
+    "deleted": "Instruction deleted",
+    "deletedLog": "Instruction \"{{title}}\" deleted"
+  },
+  "edit": {
+    "title": "Edit Instruction",
+    "titleField": "Title *",
+    "descField": "Short description",
+    "active": "Active",
+    "save": "Save",
+    "saving": "Saving...",
+    "errorTitle": "Title is required",
+    "errorUpdate": "Failed to update",
+    "updated": "Instruction updated",
+    "updatedLog": "Metadata updated (title, description, status)"
+  },
+  "update": {
+    "title": "Update Document — {{title}}",
+    "currentInfo": "The current document ({{name}}) will be saved to the version history.",
+    "newFile": "New PDF file *",
+    "reason": "Reason for change *",
+    "reasonPlaceholder": "Describe the reason for the update",
+    "submit": "Update Document",
+    "submitting": "Updating...",
+    "errorRequired": "Select the new PDF and provide a reason for the change",
+    "errorPdfOnly": "Only PDF files are allowed",
+    "errorUpload": "Failed to upload file",
+    "errorUpdate": "Failed to update",
+    "success": "Document updated successfully"
+  }
+}

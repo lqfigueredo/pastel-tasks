@@ -1,0 +1,68 @@
+{
+  "page": {
+    "title": "Instruções de Trabalho",
+    "subtitle": "Gerencie documentos e procedimentos da equipe",
+    "newInstruction": "Nova Instrução",
+    "searchPlaceholder": "Buscar por título ou equipe...",
+    "filterTeam": "Equipe",
+    "allTeams": "Todas as equipes",
+    "filterStatus": "Status",
+    "all": "Todos",
+    "active": "Ativos",
+    "inactive": "Inativos",
+    "loading": "Carregando...",
+    "empty": "Nenhuma instrução de trabalho encontrada"
+  },
+  "status": {
+    "active": "Ativo",
+    "inactive": "Inativo"
+  },
+  "table": {
+    "title": "Título",
+    "team": "Equipe",
+    "status": "Status",
+    "createdBy": "Criado por",
+    "file": "Arquivo",
+    "actions": "Ações"
+  },
+  "actions": {
+    "edit": "Editar",
+    "updatePdf": "Atualizar PDF",
+    "versions": "Versões",
+    "log": "Log",
+    "delete": "Excluir"
+  },
+  "messages": {
+    "confirmDelete": "Tem certeza que deseja excluir esta instrução de trabalho?",
+    "errorDownload": "Erro ao baixar arquivo",
+    "errorDelete": "Erro ao excluir",
+    "deleted": "Instrução excluída",
+    "deletedLog": "Instrução \"{{title}}\" excluída"
+  },
+  "edit": {
+    "title": "Editar Instrução",
+    "titleField": "Título *",
+    "descField": "Descrição resumida",
+    "active": "Ativo",
+    "save": "Salvar",
+    "saving": "Salvando...",
+    "errorTitle": "Título é obrigatório",
+    "errorUpdate": "Erro ao atualizar",
+    "updated": "Instrução atualizada",
+    "updatedLog": "Metadados atualizados (título, descrição, status)"
+  },
+  "update": {
+    "title": "Atualizar Documento — {{title}}",
+    "currentInfo": "O documento atual ({{name}}) será salvo no histórico de versões.",
+    "newFile": "Novo arquivo PDF *",
+    "reason": "Motivo da alteração *",
+    "reasonPlaceholder": "Descreva o motivo da atualização",
+    "submit": "Atualizar Documento",
+    "submitting": "Atualizando...",
+    "errorRequired": "Selecione o novo PDF e informe o motivo da alteração",
+    "errorPdfOnly": "Apenas arquivos PDF são permitidos",
+    "errorUpload": "Erro ao enviar arquivo",
+    "errorUpdate": "Erro ao atualizar",
+    "success": "Documento atualizado com sucesso"
+  }
+}
