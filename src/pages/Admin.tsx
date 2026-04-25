@@ -57,6 +57,8 @@ interface BannedUser {
 }
 
 export default function Admin() {
+  const { t } = useTranslation('admin');
+  const TabFallback = () => <InlineLoader label={t('loading')} />;
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [submitting, setSubmitting] = useState(false);
