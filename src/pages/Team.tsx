@@ -13,7 +13,7 @@ import { Users, Plus, Trash2, Loader2, Mail, Crown, Calendar, FileText, Save, Ar
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { TeamAttachments } from '@/components/team/TeamAttachments';
-import { useTeamDetailQuery, useInvalidateTeamDetail } from '@/hooks/useTeamDetailQuery';
+import { useTeamDetailQuery } from '@/hooks/useTeamDetailQuery';
 
 interface TeamData {
   id: string;
