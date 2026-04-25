@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
 import { History } from 'lucide-react';
 import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { getCurrentLocale } from '@/lib/date';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Button } from '@/components/ui/button';
 
@@ -20,18 +21,8 @@ interface Profile {
   display_name: string;
 }
 
-const FIELD_LABELS: Record<string, string> = {
-  title: 'Título',
-  description: 'Descrição',
-  status: 'Status',
-  start_date: 'Data início',
-  actual_end_date: 'Data fim real',
-  estimated_delivery_date: 'Previsão entrega',
-  assignee_added: 'Responsável adicionado',
-  assignee_removed: 'Responsável removido',
-};
-
 export function TaskChangeHistory({ taskId }: { taskId: string }) {
+  const { t, i18n } = useTranslation('kanban');
   const [logs, setLogs] = useState<ChangeLog[]>([]);
   const [profiles, setProfiles] = useState<Map<string, string>>(new Map());
   const [open, setOpen] = useState(false);
@@ -65,31 +56,40 @@ export function TaskChangeHistory({ taskId }: { taskId: string }) {
     }
   };
 
+  const fieldLabel = (name: string) => {
+    const key = `history.fields.${name}`;
+    const translated = t(key);
+    return translated === key ? name : translated;
+  };
+
+  const isEn = (i18n.language || 'pt-BR').startsWith('en');
+  const dateFormat = isEn ? "MM/dd/yyyy 'at' HH:mm" : "dd/MM/yyyy 'às' HH:mm";
+
   return (
     <Collapsible open={open} onOpenChange={setOpen}>
       <CollapsibleTrigger asChild>
         <Button variant="ghost" size="sm" className="w-full justify-start gap-2 text-sm font-semibold">
           <History className="h-4 w-4" />
-          Histórico de Alterações ({open ? 'ocultar' : 'expandir'})
+          {t('history.title')} ({open ? t('history.hide') : t('history.show')})
         </Button>
       </CollapsibleTrigger>
       <CollapsibleContent>
         <div className="space-y-2 max-h-48 overflow-y-auto mt-2">
           {logs.length === 0 && (
-            <p className="text-xs text-muted-foreground text-center py-4">Nenhuma alteração registrada</p>
+            <p className="text-xs text-muted-foreground text-center py-4">{t('history.empty')}</p>
           )}
           {logs.map((log) => (
             <div key={log.id} className="rounded-lg bg-muted/50 p-3 text-sm">
               <p className="text-foreground">
-                <span className="font-medium">{FIELD_LABELS[log.field_name] || log.field_name}</span>
+                <span className="font-medium">{fieldLabel(log.field_name)}</span>
                 {log.old_value && log.new_value && (
                   <>: <span className="text-muted-foreground line-through">{log.old_value}</span> → <span>{log.new_value}</span></>
                 )}
                 {!log.old_value && log.new_value && <>: <span>{log.new_value}</span></>}
-                {log.old_value && !log.new_value && <>: <span className="text-muted-foreground line-through">{log.old_value}</span> → <span className="italic">vazio</span></>}
+                {log.old_value && !log.new_value && <>: <span className="text-muted-foreground line-through">{log.old_value}</span> → <span className="italic">{t('history.empty_value')}</span></>}
               </p>
               <p className="mt-1 text-xs text-muted-foreground">
-                {profiles.get(log.user_id) || 'Usuário'} • {format(new Date(log.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+                {profiles.get(log.user_id) || t('history.userFallback')} • {format(new Date(log.created_at), dateFormat, { locale: getCurrentLocale() })}
               </p>
             </div>
           ))}
