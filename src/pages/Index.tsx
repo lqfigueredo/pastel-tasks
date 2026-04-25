@@ -155,22 +155,22 @@ const Index = () => {
 
 
   return (
-    <div className="animate-fade-in">
-      <div className="mb-6 flex items-center justify-between gap-3 flex-wrap">
+    <div className="animate-fade-in min-w-0">
+      <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div className="min-w-0">
           <div className="flex items-center gap-2">
-            <h1 className="font-display text-2xl font-bold text-foreground">Minhas Tarefas</h1>
+            <h1 className="font-display text-xl md:text-2xl font-bold text-foreground truncate">Minhas Tarefas</h1>
             <HelpButton pageKey="tasks" />
           </div>
           <div className="mt-1 flex items-center gap-2 flex-wrap">
-            <p className="text-sm text-muted-foreground">{subtitle}</p>
+            <p className="text-sm text-muted-foreground truncate">{subtitle}</p>
             {filteredAssignee && (
               <Badge variant="secondary" className="gap-1 pl-2 pr-1">
-                <span className="text-xs">Filtro: {filteredAssignee.display_name || 'Sem nome'}</span>
+                <span className="text-xs truncate max-w-[160px]">Filtro: {filteredAssignee.display_name || 'Sem nome'}</span>
                 <button
                   type="button"
                   onClick={() => setFilterAssigneeId(null)}
-                  className="rounded-full p-0.5 hover:bg-muted-foreground/20 transition-colors"
+                  className="rounded-full p-0.5 hover:bg-muted-foreground/20 transition-colors shrink-0"
                   aria-label="Remover filtro"
                 >
                   <X className="h-3 w-3" />
@@ -179,7 +179,7 @@ const Index = () => {
             )}
           </div>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2 md:gap-3 w-full md:w-auto">
           <KanbanSavedFilters
             current={{ assigneeId: filterAssigneeId }}
             onApply={(f) => setFilterAssigneeId(f.assigneeId ?? null)}
@@ -188,7 +188,7 @@ const Index = () => {
             value={filterAssigneeId ?? 'all'}
             onValueChange={(v) => setFilterAssigneeId(v === 'all' ? null : v)}
           >
-            <SelectTrigger className="w-[200px]">
+            <SelectTrigger className="w-full sm:w-[200px]">
               <SelectValue placeholder="Filtrar por responsável" />
             </SelectTrigger>
             <SelectContent>
