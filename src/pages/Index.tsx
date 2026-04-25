@@ -94,12 +94,24 @@ const Index = () => {
     const statusMap = new Map((statuses ?? []).map((s) => [s.id, s.name]));
 
     // Match the same filter applied to the visible board
-    const tasks = filterAssigneeId
+    let tasks = filterAssigneeId
       ? allTasks.filter((t) => t.assignees.some((a) => a.user_id === filterAssigneeId))
       : allTasks;
 
+    // Apply date range filter on created_at (inclusive). End date covers the
+    // entire day by extending to 23:59:59.999.
+    if (exportStartDate || exportEndDate) {
+      const startMs = exportStartDate ? new Date(exportStartDate).setHours(0, 0, 0, 0) : -Infinity;
+      const endMs = exportEndDate ? new Date(exportEndDate).setHours(23, 59, 59, 999) : Infinity;
+      tasks = tasks.filter((t) => {
+        if (!t.created_at) return false;
+        const ms = new Date(t.created_at).getTime();
+        return ms >= startMs && ms <= endMs;
+      });
+    }
+
     if (tasks.length === 0) {
-      toast.info('Nenhuma tarefa para exportar');
+      toast.info('Nenhuma tarefa para exportar no período selecionado');
       return;
     }
 
@@ -133,7 +145,13 @@ const Index = () => {
     const filename = `tarefas_${format(new Date(), 'yyyy-MM-dd')}.csv`;
     downloadCsv(filename, csv);
     toast.success(`CSV exportado com ${tasks.length} tarefa${tasks.length === 1 ? '' : 's'}`);
-  }, [tasksData, statuses, filterAssigneeId]);
+    setExportPopoverOpen(false);
+  }, [tasksData, statuses, filterAssigneeId, exportStartDate, exportEndDate]);
+
+  const clearExportDates = useCallback(() => {
+    setExportStartDate(undefined);
+    setExportEndDate(undefined);
+  }, []);
 
 
   return (
