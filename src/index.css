@@ -105,6 +105,13 @@
     @apply border-border;
   }
 
+  /* Safety net: prevent any rogue element from creating a horizontal page scrollbar.
+     Internal containers can still opt-in with overflow-x-auto. */
+  html,
+  body {
+    overflow-x: hidden;
+  }
+
   body {
     @apply bg-background text-foreground font-sans;
   }
