@@ -31,6 +31,9 @@ const Index = () => {
   // "Todos os responsáveis" via the existing selector to see the full team board.
   const [filterAssigneeId, setFilterAssigneeId] = useState<string | null>(user?.id ?? null);
   const [counts, setCounts] = useState<{ visible: number; total: number }>({ visible: 0, total: 0 });
+  const [exportStartDate, setExportStartDate] = useState<Date | undefined>(undefined);
+  const [exportEndDate, setExportEndDate] = useState<Date | undefined>(undefined);
+  const [exportPopoverOpen, setExportPopoverOpen] = useState(false);
   const boardRef = useRef<KanbanBoardRef>(null);
   const { isSolutionAdmin, isAdmin, isRegularUser } = useUserRoles();
   const navigate = useNavigate();
