@@ -8,16 +8,41 @@ import ptCommon from './locales/pt-BR/common.json';
 import ptNav from './locales/pt-BR/nav.json';
 import ptAuth from './locales/pt-BR/auth.json';
 import ptNotifications from './locales/pt-BR/notifications.json';
+import ptKanban from './locales/pt-BR/kanban.json';
+import ptDashboard from './locales/pt-BR/dashboard.json';
+import ptCalendar from './locales/pt-BR/calendar.json';
+import ptTimer from './locales/pt-BR/timer.json';
+import ptTeam from './locales/pt-BR/team.json';
+import ptSettings from './locales/pt-BR/settings.json';
 
 import enCommon from './locales/en/common.json';
 import enNav from './locales/en/nav.json';
 import enAuth from './locales/en/auth.json';
 import enNotifications from './locales/en/notifications.json';
+import enKanban from './locales/en/kanban.json';
+import enDashboard from './locales/en/dashboard.json';
+import enCalendar from './locales/en/calendar.json';
+import enTimer from './locales/en/timer.json';
+import enTeam from './locales/en/team.json';
+import enSettings from './locales/en/settings.json';
 
 export const SUPPORTED_LOCALES = ['pt-BR', 'en'] as const;
 export type SupportedLocale = (typeof SUPPORTED_LOCALES)[number];
 export const DEFAULT_LOCALE: SupportedLocale = 'pt-BR';
 export const LOCALE_STORAGE_KEY = 'app_locale';
+
+const NAMESPACES = [
+  'common',
+  'nav',
+  'auth',
+  'notifications',
+  'kanban',
+  'dashboard',
+  'calendar',
+  'timer',
+  'team',
+  'settings',
+] as const;
 
 const resources = {
   'pt-BR': {
@@ -25,12 +50,24 @@ const resources = {
     nav: ptNav,
     auth: ptAuth,
     notifications: ptNotifications,
+    kanban: ptKanban,
+    dashboard: ptDashboard,
+    calendar: ptCalendar,
+    timer: ptTimer,
+    team: ptTeam,
+    settings: ptSettings,
   },
   en: {
     common: enCommon,
     nav: enNav,
     auth: enAuth,
     notifications: enNotifications,
+    kanban: enKanban,
+    dashboard: enDashboard,
+    calendar: enCalendar,
+    timer: enTimer,
+    team: enTeam,
+    settings: enSettings,
   },
 } as const;
 
@@ -43,7 +80,7 @@ i18n
     supportedLngs: SUPPORTED_LOCALES as unknown as string[],
     nonExplicitSupportedLngs: true, // accept "en-US" as "en"
     defaultNS: 'common',
-    ns: ['common', 'nav', 'auth', 'notifications'],
+    ns: NAMESPACES as unknown as string[],
     detection: {
       order: ['localStorage', 'navigator'],
       lookupLocalStorage: LOCALE_STORAGE_KEY,
