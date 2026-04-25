@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { KanbanCard } from './KanbanCard';
@@ -21,6 +22,7 @@ export function KanbanMobileView({
   onMoveTask,
   onRefresh,
 }: KanbanMobileViewProps) {
+  const { t } = useTranslation('kanban');
   const [active, setActive] = useState<string>(statuses[0]?.id ?? '');
 
   const tasksByStatus = useMemo(() => {
@@ -60,7 +62,7 @@ export function KanbanMobileView({
           <TabsContent key={s.id} value={s.id} className="mt-4 space-y-2">
             {list.length === 0 ? (
               <div className="rounded-lg border border-dashed bg-muted/20 py-12 text-center text-sm text-muted-foreground">
-                Sem tarefas neste status
+                {t('mobile.emptyStatus')}
               </div>
             ) : (
               list.map((task) => (

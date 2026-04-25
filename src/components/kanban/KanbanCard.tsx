@@ -1,5 +1,7 @@
 import { memo, useCallback, useMemo, useState } from 'react';
 import { Calendar, Minimize2, Maximize2, Repeat, FileText, AlertTriangle, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import i18nInstance from '@/i18n';
 
 import { Card, CardContent } from '@/components/ui/card';
 import type { Task, TaskStatus } from '@/types/kanban';
@@ -20,6 +22,7 @@ interface KanbanCardProps {
 }
 
 function KanbanCardImpl({ task, allStatuses, onRefresh, onMoveTask }: KanbanCardProps) {
+  const { t } = useTranslation('kanban');
   const [detailOpen, setDetailOpen] = useState(false);
   const optimisticUpdate = useOptimisticTaskUpdate();
   const { user } = useAuth();
@@ -89,7 +92,7 @@ function KanbanCardImpl({ task, allStatuses, onRefresh, onMoveTask }: KanbanCard
                   <TooltipTrigger asChild>
                     <Repeat className="h-3 w-3 shrink-0 text-primary" />
                   </TooltipTrigger>
-                  <TooltipContent>Tarefa recorrente</TooltipContent>
+                  <TooltipContent>{t('card.recurring')}</TooltipContent>
                 </Tooltip>
               )}
               {task.is_critical && (
@@ -97,7 +100,7 @@ function KanbanCardImpl({ task, allStatuses, onRefresh, onMoveTask }: KanbanCard
                   <TooltipTrigger asChild>
                     <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-destructive animate-pulse" />
                   </TooltipTrigger>
-                  <TooltipContent>Tarefa crítica</TooltipContent>
+                  <TooltipContent>{t('card.critical')}</TooltipContent>
                 </Tooltip>
               )}
               {task.meeting_pendency_id && (
@@ -105,7 +108,7 @@ function KanbanCardImpl({ task, allStatuses, onRefresh, onMoveTask }: KanbanCard
                   <TooltipTrigger asChild>
                     <FileText className="h-3 w-3 shrink-0 text-primary" />
                   </TooltipTrigger>
-                  <TooltipContent>Vinculada a uma ata de reunião</TooltipContent>
+                  <TooltipContent>{t('card.fromMeeting')}</TooltipContent>
                 </Tooltip>
               )}
               <h4 className={cn(
@@ -120,12 +123,12 @@ function KanbanCardImpl({ task, allStatuses, onRefresh, onMoveTask }: KanbanCard
                 <button
                   onClick={toggleMinimize}
                   className="shrink-0 rounded p-0.5 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-                  aria-label={minimized ? 'Expandir' : 'Minimizar'}
+                  aria-label={minimized ? t('card.expand') : t('card.minimize')}
                 >
                   {minimized ? <Maximize2 className="h-3 w-3" /> : <Minimize2 className="h-3 w-3" />}
                 </button>
               </TooltipTrigger>
-              <TooltipContent>{minimized ? 'Expandir card' : 'Minimizar card'}</TooltipContent>
+              <TooltipContent>{minimized ? t('card.expandCard') : t('card.minimizeCard')}</TooltipContent>
             </Tooltip>
           </div>
           {!minimized && (
@@ -150,8 +153,13 @@ function KanbanCardImpl({ task, allStatuses, onRefresh, onMoveTask }: KanbanCard
                 {task.estimated_delivery_date && (() => {
                   const deadlineLabel = humanizeDate(task.estimated_delivery_date, { prefix: 'deadline' });
                   if (!deadlineLabel) return null;
-                  const isOverdue = deadlineLabel.startsWith('Atrasada') || deadlineLabel.startsWith('Venceu');
-                  const isDueSoon = deadlineLabel === 'Vence hoje' || deadlineLabel === 'Vence amanhã';
+                  const isEn = (i18nInstance.language || 'pt-BR').startsWith('en');
+                  const isOverdue = isEn
+                    ? deadlineLabel.startsWith('Overdue') || deadlineLabel.startsWith('Due yesterday')
+                    : deadlineLabel.startsWith('Atrasada') || deadlineLabel.startsWith('Venceu');
+                  const isDueSoon = isEn
+                    ? deadlineLabel === 'Due today' || deadlineLabel === 'Due tomorrow'
+                    : deadlineLabel === 'Vence hoje' || deadlineLabel === 'Vence amanhã';
                   return (
                     <div
                       className={cn(
@@ -173,16 +181,16 @@ function KanbanCardImpl({ task, allStatuses, onRefresh, onMoveTask }: KanbanCard
                     disabled={!canMoveLeft}
                     onClick={(e) => handleMove(e, 'left')}
                     className="rounded p-1 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-                    title="Mover para status anterior"
+                    title={t('card.movePrev')}
                   >
                     <ChevronLeft className="h-4 w-4" />
                   </button>
-                  <span className="text-[10px] text-muted-foreground">Mover</span>
+                  <span className="text-[10px] text-muted-foreground">{t('card.moveLabel')}</span>
                   <button
                     disabled={!canMoveRight}
                     onClick={(e) => handleMove(e, 'right')}
                     className="rounded p-1 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-                    title="Mover para próximo status"
+                    title={t('card.moveNext')}
                   >
                     <ChevronRight className="h-4 w-4" />
                   </button>
