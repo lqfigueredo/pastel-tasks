@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTimer } from '@/contexts/TimerContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -11,7 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Play, Square, Check, Clock, Trash2, Pause, BarChart3 } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { getCurrentLocale } from '@/lib/date';
 import TimerDashboard from '@/components/timer/TimerDashboard';
 
 const formatTime = (totalSeconds: number) => {
@@ -28,6 +29,7 @@ const formatDuration = (seconds: number) => {
 };
 
 const Timer = () => {
+  const { t, i18n } = useTranslation('timer');
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const {
@@ -61,7 +63,7 @@ const Timer = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['timer-sessions'] });
-      toast.success('Sessão salva com sucesso!');
+      toast.success(t('savedToast'));
     },
   });
 
@@ -72,7 +74,7 @@ const Timer = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['timer-sessions'] });
-      toast.success('Sessão removida.');
+      toast.success(t('removedToast'));
     },
   });
 
@@ -91,17 +93,19 @@ const Timer = () => {
     ? ((totalSeconds - secondsLeft) / totalSeconds) * 100
     : 0;
 
+  const dateFormat = i18n.language === 'en' ? "MM/dd/yyyy 'at' HH:mm" : "dd/MM/yyyy 'às' HH:mm";
+
   return (
     <div className="space-y-6 max-w-2xl mx-auto">
-      <h1 className="text-2xl font-bold text-foreground">Temporizador</h1>
+      <h1 className="text-2xl font-bold text-foreground">{t('title')}</h1>
 
       <Tabs defaultValue="timer" className="w-full">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="timer" className="gap-2">
-            <Clock className="h-4 w-4" /> Temporizador
+            <Clock className="h-4 w-4" /> {t('tabs.timer')}
           </TabsTrigger>
           <TabsTrigger value="dashboard" className="gap-2">
-            <BarChart3 className="h-4 w-4" /> Dashboard
+            <BarChart3 className="h-4 w-4" /> {t('tabs.dashboard')}
           </TabsTrigger>
         </TabsList>
 
@@ -112,7 +116,7 @@ const Timer = () => {
             <>
               <div className="space-y-3">
                 <label className="text-sm font-medium text-foreground">
-                  Tempo: {minutes} minuto{minutes > 1 ? 's' : ''}
+                  {t('timeLabel', { count: minutes, minutes })}
                 </label>
                 <Slider
                   value={[minutes]}
@@ -123,7 +127,7 @@ const Timer = () => {
                 />
               </div>
               <Button onClick={start} className="w-full gap-2">
-                <Play className="h-4 w-4" /> Iniciar
+                <Play className="h-4 w-4" /> {t('start')}
               </Button>
             </>
           )}
@@ -144,22 +148,22 @@ const Timer = () => {
                 <div className="flex flex-col items-center">
                   <span className="text-4xl font-mono font-bold text-foreground">{formatTime(secondsLeft)}</span>
                   {timerState === 'paused' && (
-                    <span className="text-sm text-muted-foreground mt-1">Pausado</span>
+                    <span className="text-sm text-muted-foreground mt-1">{t('paused')}</span>
                   )}
                 </div>
               </div>
               <div className="flex gap-2">
                 {timerState === 'running' ? (
                   <Button variant="outline" onClick={pause} className="gap-2">
-                    <Pause className="h-4 w-4" /> Pausar
+                    <Pause className="h-4 w-4" /> {t('pause')}
                   </Button>
                 ) : (
                   <Button onClick={resume} className="gap-2">
-                    <Play className="h-4 w-4" /> Retomar
+                    <Play className="h-4 w-4" /> {t('resume')}
                   </Button>
                 )}
                 <Button variant="destructive" onClick={stop} className="gap-2">
-                  <Square className="h-4 w-4" /> Interromper
+                  <Square className="h-4 w-4" /> {t('stop')}
                 </Button>
               </div>
             </div>
@@ -168,22 +172,22 @@ const Timer = () => {
           {timerState === 'finished' && (
             <div className="space-y-4">
               <div className="text-center">
-                <p className="text-lg font-semibold text-foreground">Tempo finalizado!</p>
+                <p className="text-lg font-semibold text-foreground">{t('finished')}</p>
                 <p className="text-muted-foreground">
-                  Duração: {formatDuration(elapsedSeconds || totalSeconds)}
+                  {t('duration', { value: formatDuration(elapsedSeconds || totalSeconds) })}
                 </p>
               </div>
               <Textarea
-                placeholder="Descrição do tempo utilizado (opcional)"
+                placeholder={t('descriptionPlaceholder')}
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
               />
               <div className="flex gap-2">
                 <Button variant="outline" onClick={handleCancel} className="flex-1">
-                  Descartar
+                  {t('discard')}
                 </Button>
                 <Button onClick={handleFinish} disabled={saveMutation.isPending} className="flex-1 gap-2">
-                  <Check className="h-4 w-4" /> Finalizar
+                  <Check className="h-4 w-4" /> {t('finish')}
                 </Button>
               </div>
             </div>
@@ -194,14 +198,14 @@ const Timer = () => {
       <Card>
         <CardHeader>
           <CardTitle className="text-lg flex items-center gap-2">
-            <Clock className="h-5 w-5" /> Histórico
+            <Clock className="h-5 w-5" /> {t('history')}
           </CardTitle>
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <p className="text-muted-foreground text-sm">Carregando...</p>
+            <p className="text-muted-foreground text-sm">{t('loading')}</p>
           ) : sessions.length === 0 ? (
-            <p className="text-muted-foreground text-sm">Nenhuma sessão registrada.</p>
+            <p className="text-muted-foreground text-sm">{t('noSessions')}</p>
           ) : (
             <div className="space-y-3">
               {sessions.map((s) => (
@@ -210,7 +214,7 @@ const Timer = () => {
                     <div className="flex items-center gap-2 text-sm">
                       <span className="font-medium text-foreground">{formatDuration(s.duration_seconds)}</span>
                       <span className="text-muted-foreground">
-                        {format(new Date(s.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+                        {format(new Date(s.created_at), dateFormat, { locale: getCurrentLocale() })}
                       </span>
                     </div>
                     {s.description && (
