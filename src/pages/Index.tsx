@@ -200,10 +200,94 @@ const Index = () => {
               ))}
             </SelectContent>
           </Select>
-          <Button variant="outline" onClick={handleExportCsv} className="gap-2">
-            <Download className="h-4 w-4" />
-            Exportar CSV
-          </Button>
+          <Popover open={exportPopoverOpen} onOpenChange={setExportPopoverOpen}>
+            <PopoverTrigger asChild>
+              <Button variant="outline" className="gap-2">
+                <Download className="h-4 w-4" />
+                Exportar CSV
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-80" align="end">
+              <div className="space-y-4">
+                <div>
+                  <h4 className="text-sm font-semibold">Exportar tarefas</h4>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Filtre pelo período de criação. Deixe em branco para exportar todas.
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs">Data inicial</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          'w-full justify-start text-left font-normal',
+                          !exportStartDate && 'text-muted-foreground',
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {exportStartDate ? format(exportStartDate, 'dd/MM/yyyy') : 'Selecionar'}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={exportStartDate}
+                        onSelect={setExportStartDate}
+                        locale={ptBR}
+                        disabled={(date) => (exportEndDate ? date > exportEndDate : false)}
+                        initialFocus
+                        className={cn('p-3 pointer-events-auto')}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs">Data final</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          'w-full justify-start text-left font-normal',
+                          !exportEndDate && 'text-muted-foreground',
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {exportEndDate ? format(exportEndDate, 'dd/MM/yyyy') : 'Selecionar'}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={exportEndDate}
+                        onSelect={setExportEndDate}
+                        locale={ptBR}
+                        disabled={(date) => (exportStartDate ? date < exportStartDate : false)}
+                        initialFocus
+                        className={cn('p-3 pointer-events-auto')}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+                <div className="flex justify-between gap-2 pt-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={clearExportDates}
+                    disabled={!exportStartDate && !exportEndDate}
+                  >
+                    Limpar
+                  </Button>
+                  <Button size="sm" onClick={handleExportCsv} className="gap-2">
+                    <Download className="h-4 w-4" />
+                    Baixar CSV
+                  </Button>
+                </div>
+              </div>
+            </PopoverContent>
+          </Popover>
           <Button onClick={() => setCreateOpen(true)} className="gap-2">
             <Plus className="h-4 w-4" />
             Nova Tarefa
