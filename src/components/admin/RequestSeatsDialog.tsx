@@ -8,6 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { Loader2, Users } from 'lucide-react';
+import { useTranslation, Trans } from 'react-i18next';
 
 interface Props {
   open: boolean;
@@ -24,6 +25,7 @@ export const RequestSeatsDialog = ({
   suggestedSeats,
   onSuccess,
 }: Props) => {
+  const { t } = useTranslation('billing');
   const { user } = useAuth();
   const [requested, setRequested] = useState<number>(suggestedSeats ?? currentSeats + 5);
   const [reason, setReason] = useState('');
@@ -41,11 +43,11 @@ export const RequestSeatsDialog = ({
   const submit = async () => {
     if (!user) return;
     if (requested <= currentSeats) {
-      toast.error(`A quantidade solicitada deve ser maior que ${currentSeats}.`);
+      toast.error(t('requestSeats.errors.tooLow', { current: currentSeats }));
       return;
     }
     if (reason.trim().length < 10) {
-      toast.error('Descreva o motivo (mínimo 10 caracteres).');
+      toast.error(t('requestSeats.errors.reasonShort'));
       return;
     }
     setSubmitting(true);
@@ -56,12 +58,12 @@ export const RequestSeatsDialog = ({
         .eq('user_id', user.id)
         .maybeSingle();
 
-      const adminName = profile?.display_name || user.email || 'Administrador';
+      const adminName = profile?.display_name || user.email || t('requestSeats.labels.defaultAdmin');
 
       const { data: ticket, error: tErr } = await supabase
         .from('support_tickets')
         .insert({
-          subject: 'Solicitação de aumento de assentos',
+          subject: t('requestSeats.subject'),
           created_by: user.id,
           status: 'open',
         })
@@ -70,14 +72,14 @@ export const RequestSeatsDialog = ({
       if (tErr) throw tErr;
 
       const content = [
-        `[Solicitação de assentos adicionais]`,
+        t('requestSeats.header'),
         ``,
-        `Administrador: ${adminName}`,
-        `Assentos atuais: ${currentSeats}`,
-        `Assentos solicitados: ${requested}`,
-        `Diferença: +${diff}`,
+        `${t('requestSeats.labels.admin')}: ${adminName}`,
+        `${t('requestSeats.labels.current')}: ${currentSeats}`,
+        `${t('requestSeats.labels.requested')}: ${requested}`,
+        `${t('requestSeats.labels.diff')}: +${diff}`,
         ``,
-        `Motivo:`,
+        `${t('requestSeats.labels.reason')}:`,
         reason.trim(),
       ].join('\n');
 
@@ -88,12 +90,12 @@ export const RequestSeatsDialog = ({
       });
       if (mErr) throw mErr;
 
-      toast.success('Pedido enviado ao Financeiro. Entraremos em contato em breve.');
+      toast.success(t('requestSeats.success'));
       onOpenChange(false);
       onSuccess?.();
     } catch (err) {
-      const m = err instanceof Error ? err.message : 'Erro inesperado';
-      toast.error(`Não foi possível enviar: ${m}`);
+      const m = err instanceof Error ? err.message : t('activate.errorSubmit', { message: '' });
+      toast.error(t('requestSeats.errors.submit', { message: m }));
     } finally {
       setSubmitting(false);
     }
@@ -104,17 +106,16 @@ export const RequestSeatsDialog = ({
       <DialogContent>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Users className="h-5 w-5" /> Solicitar mais assentos
+            <Users className="h-5 w-5" /> {t('requestSeats.title')}
           </DialogTitle>
           <DialogDescription>
-            Seu plano atual permite {currentSeats} usuários. Informe quantos assentos adicionais você precisa
-            e o motivo. O Financeiro analisará e entrará em contato.
+            {t('requestSeats.description', { seats: currentSeats })}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="seats">Quantidade total desejada</Label>
+            <Label htmlFor="seats">{t('requestSeats.fields.totalLabel')}</Label>
             <Input
               id="seats"
               type="number"
@@ -124,17 +125,21 @@ export const RequestSeatsDialog = ({
             />
             {diff > 0 && (
               <p className="text-xs text-muted-foreground">
-                Você está pedindo <span className="font-semibold text-foreground">+{diff}</span> assentos
-                além dos {currentSeats} atuais.
+                <Trans
+                  i18nKey="requestSeats.fields.diffHelp"
+                  t={t}
+                  values={{ diff, current: currentSeats }}
+                  components={{ bold: <span className="font-semibold text-foreground" /> }}
+                />
               </p>
             )}
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="reason">Motivo da solicitação</Label>
+            <Label htmlFor="reason">{t('requestSeats.fields.reasonLabel')}</Label>
             <Textarea
               id="reason"
-              placeholder="Ex.: Estamos contratando 3 novos colaboradores para o time de vendas no próximo mês."
+              placeholder={t('requestSeats.fields.reasonPlaceholder')}
               value={reason}
               onChange={(e) => setReason(e.target.value)}
               rows={4}
@@ -144,11 +149,11 @@ export const RequestSeatsDialog = ({
 
         <DialogFooter>
           <Button variant="ghost" onClick={() => onOpenChange(false)} disabled={submitting}>
-            Cancelar
+            {t('requestSeats.cancel')}
           </Button>
           <Button onClick={submit} disabled={submitting}>
             {submitting && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-            Enviar solicitação
+            {t('requestSeats.submit')}
           </Button>
         </DialogFooter>
       </DialogContent>

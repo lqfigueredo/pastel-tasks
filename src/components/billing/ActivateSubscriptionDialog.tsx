@@ -7,6 +7,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { Loader2, MessageCircle } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface Props {
   open: boolean;
@@ -19,18 +20,22 @@ interface Props {
 export const ActivateSubscriptionDialog = ({
   open,
   onOpenChange,
-  defaultSubject = 'Quero ativar minha assinatura',
-  contextLabel = 'ativação de assinatura',
+  defaultSubject,
+  contextLabel,
   onSuccess,
 }: Props) => {
+  const { t } = useTranslation('billing');
   const { user } = useAuth();
   const [message, setMessage] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
+  const subject = defaultSubject ?? t('payment.activateSubject');
+  const ctxLabel = contextLabel ?? t('payment.activateLabel');
+
   const submit = async () => {
     if (!user) return;
     if (!message.trim()) {
-      toast.error('Conte um pouco sobre seu pedido para o time comercial.');
+      toast.error(t('activate.errorEmpty'));
       return;
     }
     setSubmitting(true);
@@ -38,7 +43,7 @@ export const ActivateSubscriptionDialog = ({
       const { data: ticket, error: tErr } = await supabase
         .from('support_tickets')
         .insert({
-          subject: defaultSubject,
+          subject,
           created_by: user.id,
           status: 'open',
         })
@@ -49,17 +54,17 @@ export const ActivateSubscriptionDialog = ({
       const { error: mErr } = await supabase.from('support_messages').insert({
         ticket_id: ticket.id,
         user_id: user.id,
-        content: `[${contextLabel}]\n\n${message.trim()}`,
+        content: `[${ctxLabel}]\n\n${message.trim()}`,
       });
       if (mErr) throw mErr;
 
-      toast.success('Pedido enviado! Nosso time entrará em contato em breve.');
+      toast.success(t('activate.success'));
       setMessage('');
       onOpenChange(false);
       onSuccess?.();
     } catch (err) {
-      const m = err instanceof Error ? err.message : 'Erro inesperado';
-      toast.error(`Não foi possível enviar: ${m}`);
+      const m = err instanceof Error ? err.message : '';
+      toast.error(t('activate.errorSubmit', { message: m }));
     } finally {
       setSubmitting(false);
     }
@@ -70,18 +75,16 @@ export const ActivateSubscriptionDialog = ({
       <DialogContent>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <MessageCircle className="h-5 w-5" /> Falar com o time comercial
+            <MessageCircle className="h-5 w-5" /> {t('activate.title')}
           </DialogTitle>
-          <DialogDescription>
-            Como ainda não temos checkout automático, abrimos um chamado para o nosso time comercial entrar em contato e ativar sua assinatura.
-          </DialogDescription>
+          <DialogDescription>{t('activate.description')}</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-2">
-          <Label htmlFor="msg">Sua mensagem</Label>
+          <Label htmlFor="msg">{t('activate.messageLabel')}</Label>
           <Textarea
             id="msg"
-            placeholder="Ex.: Quero ativar minha conta com 15 assentos a partir do próximo mês."
+            placeholder={t('activate.messagePlaceholder')}
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             rows={5}
@@ -90,11 +93,11 @@ export const ActivateSubscriptionDialog = ({
 
         <DialogFooter>
           <Button variant="ghost" onClick={() => onOpenChange(false)} disabled={submitting}>
-            Cancelar
+            {t('activate.cancel')}
           </Button>
           <Button onClick={submit} disabled={submitting}>
             {submitting && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-            Enviar pedido
+            {t('activate.submit')}
           </Button>
         </DialogFooter>
       </DialogContent>

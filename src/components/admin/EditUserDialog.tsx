@@ -19,6 +19,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Loader2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface Team {
   id: string;
@@ -56,6 +57,7 @@ export default function EditUserDialog({
   teams,
   onSaved,
 }: EditUserDialogProps) {
+  const { t } = useTranslation('admin');
   const [displayName, setDisplayName] = useState(currentDisplayName);
   const [email, setEmail] = useState('');
   const [teamId, setTeamId] = useState<string>(currentTeamId ?? NO_TEAM);
@@ -74,36 +76,35 @@ export default function EditUserDialog({
           body: { action: 'get_user_info', targetUserId: userId },
         });
         if (error) {
-          const msg = (await extractFunctionError(error)) || 'Erro ao carregar e-mail';
+          const msg = (await extractFunctionError(error)) || t('editDialog.errors.loadEmail');
           toast.error(msg);
           setEmail('');
         } else if (data?.email) {
           setEmail(data.email);
         }
       } catch {
-        toast.error('Erro ao carregar dados do usuário');
+        toast.error(t('editDialog.errors.loadUser'));
       } finally {
         setLoadingInfo(false);
       }
     })();
-  }, [open, userId, currentDisplayName, currentTeamId]);
+  }, [open, userId, currentDisplayName, currentTeamId, t]);
 
   const handleSave = async () => {
     const trimmedName = displayName.trim();
     const trimmedEmail = email.trim();
 
     if (!trimmedName) {
-      toast.error('Nome de exibição é obrigatório');
+      toast.error(t('editDialog.errors.nameRequired'));
       return;
     }
     if (trimmedEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
-      toast.error('Formato de e-mail inválido');
+      toast.error(t('editDialog.errors.invalidEmail'));
       return;
     }
 
     setSaving(true);
     try {
-      // 1) Update profile (name + email)
       const { error: profileError } = await supabase.functions.invoke('admin-manage-user', {
         body: {
           action: 'update_profile',
@@ -113,12 +114,11 @@ export default function EditUserDialog({
         },
       });
       if (profileError) {
-        const msg = (await extractFunctionError(profileError)) || 'Erro ao atualizar perfil';
+        const msg = (await extractFunctionError(profileError)) || t('editDialog.errors.updateProfile');
         toast.error(msg);
         return;
       }
 
-      // 2) Update team only if changed
       const newTeamValue = teamId === NO_TEAM ? null : teamId;
       const oldTeamValue = currentTeamId ?? null;
       if (newTeamValue !== oldTeamValue) {
@@ -130,17 +130,17 @@ export default function EditUserDialog({
           },
         });
         if (teamError) {
-          const msg = (await extractFunctionError(teamError)) || 'Erro ao atualizar time';
+          const msg = (await extractFunctionError(teamError)) || t('editDialog.errors.updateTeam');
           toast.error(msg);
           return;
         }
       }
 
-      toast.success('Usuário atualizado com sucesso');
+      toast.success(t('editDialog.success'));
       onSaved();
       onOpenChange(false);
     } catch {
-      toast.error('Erro ao salvar alterações');
+      toast.error(t('editDialog.errors.saveFailed'));
     } finally {
       setSaving(false);
     }
@@ -150,10 +150,8 @@ export default function EditUserDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Editar usuário</DialogTitle>
-          <DialogDescription>
-            Atualize o nome, e-mail ou time deste usuário.
-          </DialogDescription>
+          <DialogTitle>{t('editDialog.title')}</DialogTitle>
+          <DialogDescription>{t('editDialog.description')}</DialogDescription>
         </DialogHeader>
 
         {loadingInfo ? (
@@ -163,7 +161,7 @@ export default function EditUserDialog({
         ) : (
           <div className="space-y-4 pt-2">
             <div className="space-y-2">
-              <Label htmlFor="edit-name">Nome de exibição</Label>
+              <Label htmlFor="edit-name">{t('editDialog.displayName')}</Label>
               <Input
                 id="edit-name"
                 value={displayName}
@@ -173,7 +171,7 @@ export default function EditUserDialog({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="edit-email">E-mail</Label>
+              <Label htmlFor="edit-email">{t('editDialog.email')}</Label>
               <Input
                 id="edit-email"
                 type="email"
@@ -181,22 +179,20 @@ export default function EditUserDialog({
                 onChange={(e) => setEmail(e.target.value)}
                 maxLength={255}
               />
-              <p className="text-xs text-muted-foreground">
-                Alterar o e-mail muda também o login do usuário.
-              </p>
+              <p className="text-xs text-muted-foreground">{t('editDialog.emailHint')}</p>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="edit-team">Time</Label>
+              <Label htmlFor="edit-team">{t('editDialog.team')}</Label>
               <Select value={teamId} onValueChange={setTeamId}>
                 <SelectTrigger id="edit-team">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value={NO_TEAM}>Sem time</SelectItem>
-                  {teams.map((t) => (
-                    <SelectItem key={t.id} value={t.id}>
-                      {t.name}
+                  <SelectItem value={NO_TEAM}>{t('editDialog.noTeam')}</SelectItem>
+                  {teams.map((tm) => (
+                    <SelectItem key={tm.id} value={tm.id}>
+                      {tm.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -209,11 +205,11 @@ export default function EditUserDialog({
                 onClick={() => onOpenChange(false)}
                 disabled={saving}
               >
-                Cancelar
+                {t('editDialog.cancel')}
               </Button>
               <Button onClick={handleSave} disabled={saving || !displayName.trim()}>
                 {saving && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-                Salvar
+                {t('editDialog.save')}
               </Button>
             </div>
           </div>
