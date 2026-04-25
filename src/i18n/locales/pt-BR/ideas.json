@@ -1,0 +1,30 @@
+{
+  "page": {
+    "title": "Registro de Ideias",
+    "newIdea": "Nova Ideia",
+    "searchPlaceholder": "Buscar ideias...",
+    "filterAll": "Todas",
+    "filterImplemented": "Implementadas",
+    "filterPending": "Não implementadas"
+  },
+  "table": {
+    "title": "Título",
+    "description": "Descrição",
+    "status": "Status",
+    "team": "Equipe",
+    "author": "Autor",
+    "date": "Data",
+    "userFallback": "Usuário"
+  },
+  "status": {
+    "implemented": "Implementada",
+    "pending": "Pendente"
+  },
+  "empty": {
+    "noResultsTitle": "Nenhuma ideia encontrada",
+    "noResultsDesc": "Tente ajustar a busca ou o filtro.",
+    "noIdeasTitle": "Nenhuma ideia ainda",
+    "noIdeasDesc": "Capture insights e melhorias do dia a dia. Você pode transformá-las em tarefas depois.",
+    "registerFirst": "Registrar primeira ideia"
+  }
+}

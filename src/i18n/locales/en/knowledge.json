@@ -1,0 +1,21 @@
+{
+  "page": {
+    "title": "Knowledge Source",
+    "newSource": "New Source",
+    "searchPlaceholder": "Filter by title..."
+  },
+  "scope": {
+    "team": "Team",
+    "individual": "Individual"
+  },
+  "badges": {
+    "link": "Link"
+  },
+  "empty": {
+    "noResultsTitle": "No sources found",
+    "noResultsDesc": "Try a different search term.",
+    "noSourcesTitle": "No sources registered",
+    "noSourcesDesc": "Centralize your team's reference links and files in one place.",
+    "addFirst": "Add first source"
+  }
+}

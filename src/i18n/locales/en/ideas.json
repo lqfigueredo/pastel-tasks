@@ -1,0 +1,30 @@
+{
+  "page": {
+    "title": "Idea Registry",
+    "newIdea": "New Idea",
+    "searchPlaceholder": "Search ideas...",
+    "filterAll": "All",
+    "filterImplemented": "Implemented",
+    "filterPending": "Not implemented"
+  },
+  "table": {
+    "title": "Title",
+    "description": "Description",
+    "status": "Status",
+    "team": "Team",
+    "author": "Author",
+    "date": "Date",
+    "userFallback": "User"
+  },
+  "status": {
+    "implemented": "Implemented",
+    "pending": "Pending"
+  },
+  "empty": {
+    "noResultsTitle": "No ideas found",
+    "noResultsDesc": "Try adjusting your search or filter.",
+    "noIdeasTitle": "No ideas yet",
+    "noIdeasDesc": "Capture insights and improvements from your day-to-day. You can turn them into tasks later.",
+    "registerFirst": "Register first idea"
+  }
+}
