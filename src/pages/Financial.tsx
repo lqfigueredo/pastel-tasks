@@ -258,7 +258,7 @@ const Financial = () => {
                           {approval.license_expires_at ? (
                             <>
                               <span className="text-sm">
-                                {format(new Date(approval.license_expires_at), 'dd/MM/yyyy', { locale: ptBR })}
+                                {format(new Date(approval.license_expires_at), 'dd/MM/yyyy', { locale: getCurrentLocale() })}
                               </span>
                               {licenseBadge(approval.license_expires_at, approval.status)}
                             </>
@@ -287,7 +287,7 @@ const Financial = () => {
                         </div>
                       </TableCell>
                       <TableCell>
-                        {format(new Date(approval.requested_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+                        {format(new Date(approval.requested_at), "dd/MM/yyyy 'às' HH:mm", { locale: getCurrentLocale() })}
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex gap-2 justify-end">
@@ -410,7 +410,7 @@ const Financial = () => {
                       <TableCell className="font-medium">{lead.name}</TableCell>
                       <TableCell>{lead.email}</TableCell>
                       <TableCell>
-                        {format(new Date(lead.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+                        {format(new Date(lead.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: getCurrentLocale() })}
                       </TableCell>
                       <TableCell>
                         {lead.replied_at ? (
