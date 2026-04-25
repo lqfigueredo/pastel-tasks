@@ -1,0 +1,54 @@
+{
+  "meta": {
+    "title": "NEVVOH Pricing — Task management starting from a low per-user price",
+    "description": "Discover NEVVOH plans: monthly billing per user, minimum of 10 seats and 14-day free trial without a credit card."
+  },
+  "header": {
+    "home": "Home",
+    "haveAccount": "I have an account"
+  },
+  "hero": {
+    "badge": "14 days free, no credit card",
+    "title1": "Transparent pricing,",
+    "titleHighlight": "per user",
+    "subtitle": "No fine print. Pay only for your team's seats and cancel anytime."
+  },
+  "noPlans": "No plans available at the moment.",
+  "plan": {
+    "perSeatMonth": "/user/month",
+    "fromSeats": "From {{n}} seats",
+    "minValue": "minimum {{value}}/month",
+    "howManyUsers": "How many users?",
+    "monthlyEstimate": "Estimated monthly",
+    "startTrial": "Start free trial"
+  },
+  "faq": {
+    "title": "Frequently asked questions",
+    "items": [
+      {
+        "q": "Can I cancel anytime?",
+        "a": "Yes. You can cancel your subscription anytime from the billing panel. Access continues until the end of the paid period."
+      },
+      {
+        "q": "How does the free trial work?",
+        "a": "14 full days with access to all modules, no credit card required. At the end, you decide whether to activate the subscription."
+      },
+      {
+        "q": "Why is the minimum 10 seats?",
+        "a": "NEVVOH was designed for teams. The 10-seat minimum ensures room to grow and effective collaboration between members from day one."
+      },
+      {
+        "q": "Can I increase or decrease seats later?",
+        "a": "Yes. From the billing panel you adjust the number of seats when needed and the next invoice is automatically recalculated."
+      },
+      {
+        "q": "Which payment methods are accepted?",
+        "a": "Currently payments are processed manually by our sales team. Automatic checkout with card and Pix is coming soon."
+      }
+    ]
+  },
+  "footer": {
+    "copyright": "© {{year}} NEVVOH. All rights reserved.",
+    "access": "Open platform"
+  }
+}
