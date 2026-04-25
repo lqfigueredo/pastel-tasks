@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
-import { Plus, X } from 'lucide-react';
+import { Plus, X, Download } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -13,6 +13,11 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { KanbanSavedFilters } from '@/components/kanban/KanbanSavedFilters';
+import { useTasksQuery } from '@/hooks/useTasksQuery';
+import { useStatusesQuery } from '@/hooks/useStatusesQuery';
+import { buildCsv, downloadCsv } from '@/lib/csv-export';
+import { toast } from 'sonner';
+import { format } from 'date-fns';
 
 const Index = () => {
   const [createOpen, setCreateOpen] = useState(false);
