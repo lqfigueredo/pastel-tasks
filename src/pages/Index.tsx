@@ -174,6 +174,10 @@ const Index = () => {
               ))}
             </SelectContent>
           </Select>
+          <Button variant="outline" onClick={handleExportCsv} className="gap-2">
+            <Download className="h-4 w-4" />
+            Exportar CSV
+          </Button>
           <Button onClick={() => setCreateOpen(true)} className="gap-2">
             <Plus className="h-4 w-4" />
             Nova Tarefa
