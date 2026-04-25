@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   LayoutDashboard, Users, Settings, LogOut, ShieldCheck, CalendarDays,
   FileText, TrendingUp, BookOpen, Calendar, Lightbulb, BookMarked, Timer, CreditCard,
@@ -33,49 +34,53 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 
-type NavItem = { title: string; url: string; icon: typeof LayoutDashboard; end?: boolean };
+type NavItem = { key: string; url: string; icon: typeof LayoutDashboard; end?: boolean };
 
 const workItems: NavItem[] = [
-  { title: 'Dashboard', url: '/dashboard', icon: CalendarDays },
-  { title: 'Minhas Tarefas', url: '/tarefas', icon: LayoutDashboard, end: true },
-  { title: 'Equipe', url: '/equipe', icon: Users },
-  { title: 'Agenda', url: '/agenda', icon: Calendar },
-  { title: 'Temporizador', url: '/temporizador', icon: Timer },
+  { key: 'items.dashboard', url: '/dashboard', icon: CalendarDays },
+  { key: 'items.myTasks', url: '/tarefas', icon: LayoutDashboard, end: true },
+  { key: 'items.team', url: '/equipe', icon: Users },
+  { key: 'items.agenda', url: '/agenda', icon: Calendar },
+  { key: 'items.timer', url: '/temporizador', icon: Timer },
 ];
 
 const docItems: NavItem[] = [
-  { title: 'Atas de Reunião', url: '/atas', icon: FileText },
-  { title: 'Instruções de Trabalho', url: '/instrucoes', icon: BookOpen },
-  { title: 'Registro de Ideias', url: '/ideias', icon: Lightbulb },
-  { title: 'Fonte de Conhecimento', url: '/conhecimento', icon: BookMarked },
+  { key: 'items.meetings', url: '/atas', icon: FileText },
+  { key: 'items.instructions', url: '/instrucoes', icon: BookOpen },
+  { key: 'items.ideas', url: '/ideias', icon: Lightbulb },
+  { key: 'items.knowledge', url: '/conhecimento', icon: BookMarked },
 ];
 
 const adminItems: NavItem[] = [
-  { title: 'Configurações', url: '/configuracoes', icon: Settings },
-  { title: 'Administração', url: '/admin', icon: ShieldCheck },
-  { title: 'Cobrança', url: '/cobranca', icon: CreditCard },
+  { key: 'items.settings', url: '/configuracoes', icon: Settings },
+  { key: 'items.admin', url: '/admin', icon: ShieldCheck },
+  { key: 'items.billing', url: '/cobranca', icon: CreditCard },
 ];
 
 const operationItems: NavItem[] = [
-  { title: 'Financeiro', url: '/financeiro', icon: TrendingUp },
+  { key: 'items.financial', url: '/financeiro', icon: TrendingUp },
 ];
 
-function renderItem(item: NavItem, collapsed: boolean) {
-  return (
-    <SidebarMenuItem key={item.title}>
-      <SidebarMenuButton asChild>
-        <NavLink
-          to={item.url}
-          end={item.end}
-          className="hover:bg-sidebar-accent/60"
-          activeClassName="bg-sidebar-accent text-primary font-medium"
-        >
-          <item.icon className="mr-2 h-4 w-4" />
-          {!collapsed && <span>{item.title}</span>}
-        </NavLink>
-      </SidebarMenuButton>
-    </SidebarMenuItem>
-  );
+function useRenderItem(collapsed: boolean) {
+  const { t } = useTranslation('nav');
+  return (item: NavItem) => {
+    const label = t(item.key);
+    return (
+      <SidebarMenuItem key={item.key}>
+        <SidebarMenuButton asChild>
+          <NavLink
+            to={item.url}
+            end={item.end}
+            className="hover:bg-sidebar-accent/60"
+            activeClassName="bg-sidebar-accent text-primary font-medium"
+          >
+            <item.icon className="mr-2 h-4 w-4" />
+            {!collapsed && <span>{label}</span>}
+          </NavLink>
+        </SidebarMenuButton>
+      </SidebarMenuItem>
+    );
+  };
 }
 
 export function AppSidebar() {
@@ -84,6 +89,8 @@ export function AppSidebar() {
   const { signOut, user } = useAuth();
   const { isAdmin, isSolutionAdmin, isRegularUser } = useUserRoles();
   const [logoutOpen, setLogoutOpen] = useState(false);
+  const { t } = useTranslation('nav');
+  const renderItem = useRenderItem(collapsed);
 
   const isOnlySolutionAdmin = isSolutionAdmin && !isAdmin && !isRegularUser;
 
@@ -102,20 +109,16 @@ export function AppSidebar() {
         {!isOnlySolutionAdmin && (
           <>
             <SidebarGroup>
-              {!collapsed && <SidebarGroupLabel>Trabalho</SidebarGroupLabel>}
+              {!collapsed && <SidebarGroupLabel>{t('groups.work')}</SidebarGroupLabel>}
               <SidebarGroupContent>
-                <SidebarMenu>
-                  {workItems.map((i) => renderItem(i, collapsed))}
-                </SidebarMenu>
+                <SidebarMenu>{workItems.map(renderItem)}</SidebarMenu>
               </SidebarGroupContent>
             </SidebarGroup>
 
             <SidebarGroup>
-              {!collapsed && <SidebarGroupLabel>Documentação</SidebarGroupLabel>}
+              {!collapsed && <SidebarGroupLabel>{t('groups.documentation')}</SidebarGroupLabel>}
               <SidebarGroupContent>
-                <SidebarMenu>
-                  {docItems.map((i) => renderItem(i, collapsed))}
-                </SidebarMenu>
+                <SidebarMenu>{docItems.map(renderItem)}</SidebarMenu>
               </SidebarGroupContent>
             </SidebarGroup>
           </>
@@ -123,22 +126,18 @@ export function AppSidebar() {
 
         {isAdmin && (
           <SidebarGroup>
-            {!collapsed && <SidebarGroupLabel>Administração</SidebarGroupLabel>}
+            {!collapsed && <SidebarGroupLabel>{t('groups.administration')}</SidebarGroupLabel>}
             <SidebarGroupContent>
-              <SidebarMenu>
-                {adminItems.map((i) => renderItem(i, collapsed))}
-              </SidebarMenu>
+              <SidebarMenu>{adminItems.map(renderItem)}</SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
         )}
 
         {isSolutionAdmin && (
           <SidebarGroup>
-            {!collapsed && <SidebarGroupLabel>Operação</SidebarGroupLabel>}
+            {!collapsed && <SidebarGroupLabel>{t('groups.operation')}</SidebarGroupLabel>}
             <SidebarGroupContent>
-              <SidebarMenu>
-                {operationItems.map((i) => renderItem(i, collapsed))}
-              </SidebarMenu>
+              <SidebarMenu>{operationItems.map(renderItem)}</SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
         )}
@@ -156,20 +155,18 @@ export function AppSidebar() {
           className="w-full justify-start text-muted-foreground hover:text-destructive"
         >
           <LogOut className="h-4 w-4" />
-          {!collapsed && <span className="ml-2">Sair</span>}
+          {!collapsed && <span className="ml-2">{t('logout.trigger')}</span>}
         </Button>
       </SidebarFooter>
 
       <AlertDialog open={logoutOpen} onOpenChange={setLogoutOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Sair da conta?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Você precisará entrar novamente para acessar sua conta.
-            </AlertDialogDescription>
+            <AlertDialogTitle>{t('logout.confirmTitle')}</AlertDialogTitle>
+            <AlertDialogDescription>{t('logout.confirmDescription')}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogCancel>{t('logout.cancel')}</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => {
                 setLogoutOpen(false);
@@ -177,7 +174,7 @@ export function AppSidebar() {
               }}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              Sair
+              {t('logout.confirm')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
