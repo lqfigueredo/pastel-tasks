@@ -127,11 +127,11 @@ export default function Admin() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim() || !email.trim() || !password.trim()) {
-      toast.error('Preencha todos os campos obrigatórios');
+      toast.error(t('register.errors.required'));
       return;
     }
     if (password.length < 6) {
-      toast.error('A senha deve ter pelo menos 6 caracteres');
+      toast.error(t('register.errors.passwordShort'));
       return;
     }
 
@@ -147,7 +147,7 @@ export default function Admin() {
       });
 
       if (error) {
-        let msg = 'Erro ao cadastrar usuário';
+        let msg = t('register.errors.createFailed');
         try {
           const errBody = await (error as any).context?.json?.();
           if (errBody?.error) msg = errBody.error;
@@ -165,14 +165,14 @@ export default function Admin() {
         return;
       }
 
-      toast.success('Usuário cadastrado com sucesso!');
+      toast.success(t('register.success'));
       setName('');
       setEmail('');
       setPassword('');
       setTeamId('none');
       await loadData();
     } catch {
-      toast.error('Erro ao cadastrar usuário');
+      toast.error(t('register.errors.createFailed'));
     }
     setSubmitting(false);
   };
@@ -185,7 +185,7 @@ export default function Admin() {
       });
 
       if (error || data?.error) {
-        toast.error(data?.error || 'Erro ao executar ação');
+        toast.error(data?.error || t('actions.actionError'));
         setActionLoading(null);
         return;
       }
@@ -205,7 +205,7 @@ export default function Admin() {
         });
       }
     } catch {
-      toast.error('Erro ao executar ação');
+      toast.error(t('actions.actionError'));
     }
     setActionLoading(null);
   };
@@ -230,8 +230,8 @@ export default function Admin() {
     return (
       <div className="flex h-full flex-col items-center justify-center gap-4 text-muted-foreground">
         <ShieldX className="h-16 w-16" />
-        <h2 className="text-xl font-semibold">Acesso Negado</h2>
-        <p>Você não tem permissão para acessar esta página.</p>
+        <h2 className="text-xl font-semibold">{t('denied.title')}</h2>
+        <p>{t('denied.description')}</p>
       </div>
     );
   }
@@ -240,17 +240,17 @@ export default function Admin() {
     <div className="mx-auto max-w-5xl space-y-8 p-6">
       <div>
         <div className="flex items-center gap-2">
-          <h1 className="font-display text-2xl font-bold text-foreground">Administração</h1>
+          <h1 className="font-display text-2xl font-bold text-foreground">{t('page.title')}</h1>
           <HelpButton pageKey="admin" />
         </div>
-        <p className="text-sm text-muted-foreground">Cadastre novos usuários e gerencie o sistema.</p>
+        <p className="text-sm text-muted-foreground">{t('page.subtitle')}</p>
       </div>
 
       <Tabs defaultValue="users">
         <TabsList>
-          <TabsTrigger value="users">Usuários</TabsTrigger>
-          <TabsTrigger value="support">Suporte</TabsTrigger>
-          <TabsTrigger value="emails">Emails</TabsTrigger>
+          <TabsTrigger value="users">{t('tabs.users')}</TabsTrigger>
+          <TabsTrigger value="support">{t('tabs.support')}</TabsTrigger>
+          <TabsTrigger value="emails">{t('tabs.emails')}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="users" className="space-y-8">
@@ -258,13 +258,11 @@ export default function Admin() {
       {userLimit && userLimit.current >= userLimit.max && (
         <Alert className="border-amber-500/40 bg-amber-500/5">
           <AlertTriangle className="h-4 w-4 text-amber-600" />
-          <AlertTitle>Limite de {userLimit.max} usuários atingido</AlertTitle>
+          <AlertTitle>{t('limit.title', { n: userLimit.max })}</AlertTitle>
           <AlertDescription className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <span>
-              Você atingiu o limite do seu plano. Solicite ao Financeiro a liberação de assentos adicionais.
-            </span>
+            <span>{t('limit.description')}</span>
             <Button size="sm" onClick={() => setRequestSeatsOpen(true)}>
-              Solicitar mais assentos
+              {t('limit.request')}
             </Button>
           </AlertDescription>
         </Alert>
@@ -274,13 +272,13 @@ export default function Admin() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <UserPlus className="h-5 w-5" />
-            Cadastrar Usuário
+            {t('register.title')}
           </CardTitle>
           <CardDescription>
-            O usuário poderá fazer login imediatamente após o cadastro.
+            {t('register.description')}
             {userLimit && (
               <span className="ml-2 font-medium">
-                ({userLimit.current}/{userLimit.max} usuários utilizados)
+                {t('register.usage', { current: userLimit.current, max: userLimit.max })}
               </span>
             )}
           </CardDescription>
@@ -288,27 +286,27 @@ export default function Admin() {
         <CardContent>
           <form onSubmit={handleSubmit} className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="name">Nome *</Label>
-              <Input id="name" value={name} onChange={e => setName(e.target.value)} placeholder="Nome completo" />
+              <Label htmlFor="name">{t('register.name')} *</Label>
+              <Input id="name" value={name} onChange={e => setName(e.target.value)} placeholder={t('register.namePlaceholder')} />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="email">Email *</Label>
-              <Input id="email" type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="email@exemplo.com" />
+              <Label htmlFor="email">{t('register.email')} *</Label>
+              <Input id="email" type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder={t('register.emailPlaceholder')} />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Senha *</Label>
-              <Input id="password" type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Mínimo 6 caracteres" />
+              <Label htmlFor="password">{t('register.password')} *</Label>
+              <Input id="password" type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder={t('register.passwordPlaceholder')} />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="team">Time (opcional)</Label>
+              <Label htmlFor="team">{t('register.team')}</Label>
               <Select value={teamId} onValueChange={setTeamId}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Selecione um time" />
+                  <SelectValue placeholder={t('register.teamPlaceholder')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">Nenhum</SelectItem>
-                  {teams.map(t => (
-                    <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
+                  <SelectItem value="none">{t('register.noTeam')}</SelectItem>
+                  {teams.map(team => (
+                    <SelectItem key={team.id} value={team.id}>{team.name}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -320,11 +318,11 @@ export default function Admin() {
                 className="w-full sm:w-auto"
               >
                 {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Cadastrar Usuário
+                {t('register.submit')}
               </Button>
               {userLimit && userLimit.current >= userLimit.max && (
                 <span className="text-xs text-muted-foreground">
-                  Limite atingido — solicite mais assentos acima.
+                  {t('limit.reachedHint')}
                 </span>
               )}
             </div>
@@ -334,19 +332,19 @@ export default function Admin() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Usuários Cadastrados</CardTitle>
-          <CardDescription>{profiles.length} usuário(s) no sistema</CardDescription>
+          <CardTitle>{t('list.title')}</CardTitle>
+          <CardDescription>{t('list.count', { n: profiles.length })}</CardDescription>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Nome</TableHead>
-                <TableHead>Time</TableHead>
-                <TableHead>Papel</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Cadastrado em</TableHead>
-                <TableHead className="text-right">Ações</TableHead>
+                <TableHead>{t('list.name')}</TableHead>
+                <TableHead>{t('list.team')}</TableHead>
+                <TableHead>{t('list.role')}</TableHead>
+                <TableHead>{t('list.status')}</TableHead>
+                <TableHead>{t('list.createdAt')}</TableHead>
+                <TableHead className="text-right">{t('list.actions')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -359,7 +357,7 @@ export default function Admin() {
                   <TableRow key={p.user_id} className={isBanned ? 'opacity-60' : ''}>
                     <TableCell className="font-medium">
                       {p.display_name || '—'}
-                      {isSelf && <span className="ml-2 text-xs text-muted-foreground">(você)</span>}
+                      {isSelf && <span className="ml-2 text-xs text-muted-foreground">{t('list.you')}</span>}
                     </TableCell>
                     <TableCell>
                       {getTeamForUser(p.user_id) ? (
@@ -370,20 +368,20 @@ export default function Admin() {
                     </TableCell>
                     <TableCell>
                       {isUserAdmin ? (
-                        <Badge className="bg-primary/15 text-primary border-primary/30">Admin</Badge>
+                        <Badge className="bg-primary/15 text-primary border-primary/30">{t('list.admin')}</Badge>
                       ) : (
-                        <Badge variant="outline">Usuário</Badge>
+                        <Badge variant="outline">{t('list.user')}</Badge>
                       )}
                     </TableCell>
                     <TableCell>
                       {isBanned ? (
-                        <Badge variant="destructive">Inativo</Badge>
+                        <Badge variant="destructive">{t('list.inactive')}</Badge>
                       ) : (
-                        <Badge className="bg-emerald-500/15 text-emerald-700 border-emerald-500/30">Ativo</Badge>
+                        <Badge className="bg-emerald-500/15 text-emerald-700 border-emerald-500/30">{t('list.active')}</Badge>
                       )}
                     </TableCell>
                     <TableCell className="text-muted-foreground">
-                      {new Date(p.created_at).toLocaleDateString('pt-BR')}
+                      {new Date(p.created_at).toLocaleDateString(getCurrentLocale().code || 'pt-BR')}
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-1">
