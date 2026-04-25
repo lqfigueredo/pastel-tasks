@@ -32,6 +32,7 @@ interface Props {
 export function CreateTaskDialog({ open, onOpenChange, onTaskCreated }: Props) {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { t } = useTranslation('kanban');
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [statusId, setStatusId] = useState('');
