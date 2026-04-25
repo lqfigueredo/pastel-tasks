@@ -381,7 +381,7 @@ export default function Admin() {
                       )}
                     </TableCell>
                     <TableCell className="text-muted-foreground">
-                      {new Date(p.created_at).toLocaleDateString(getCurrentLocale().code || 'pt-BR')}
+                      {new Date(p.created_at).toLocaleDateString(getCurrentLocale() === enUS ? 'en-US' : 'pt-BR')}
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-1">
