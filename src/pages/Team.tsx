@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -40,6 +41,7 @@ interface TeamTask {
 }
 
 const Team = () => {
+  const { t } = useTranslation('team');
   const { teamId } = useParams<{ teamId: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -74,10 +76,10 @@ const Team = () => {
     setDeleting(true);
     const { error } = await supabase.from('teams').delete().eq('id', team.id);
     if (error) {
-      toast({ title: 'Erro ao excluir time', description: error.message, variant: 'destructive' });
+      toast({ title: t('detail.errorDelete'), description: error.message, variant: 'destructive' });
       setDeleting(false);
     } else {
-      toast({ title: 'Time excluído com sucesso' });
+      toast({ title: t('detail.successDelete') });
       navigate('/equipe');
     }
   };
@@ -87,7 +89,7 @@ const Team = () => {
     setInviting(true);
 
     if (members.length >= team.max_members) {
-      toast({ title: 'Limite atingido', description: `O time já tem ${team.max_members} membros.`, variant: 'destructive' });
+      toast({ title: t('detail.memberLimit'), description: t('detail.memberLimitDesc', { max: team.max_members }), variant: 'destructive' });
       setInviting(false);
       return;
     }
@@ -97,13 +99,13 @@ const Team = () => {
     });
 
     if (error || !data || data.found === false || data.error) {
-      toast({ title: 'Erro', description: data?.error || 'Usuário não encontrado', variant: 'destructive' });
+      toast({ title: 'Erro', description: data?.error || t('detail.userNotFound'), variant: 'destructive' });
       setInviting(false);
       return;
     }
 
     if (members.some(m => m.user_id === data.user_id)) {
-      toast({ title: 'Já é membro', description: 'Este usuário já faz parte do time.', variant: 'destructive' });
+      toast({ title: t('detail.alreadyMember'), description: t('detail.alreadyMemberDesc'), variant: 'destructive' });
       setInviting(false);
       return;
     }
@@ -113,9 +115,9 @@ const Team = () => {
       .insert({ team_id: team.id, user_id: data.user_id });
 
     if (insertErr) {
-      toast({ title: 'Erro ao adicionar membro', description: insertErr.message, variant: 'destructive' });
+      toast({ title: t('detail.errorAddMember'), description: insertErr.message, variant: 'destructive' });
     } else {
-      toast({ title: 'Membro adicionado!', description: `${data.display_name} foi adicionado ao time.` });
+      toast({ title: t('detail.memberAdded'), description: t('detail.memberAddedDesc', { name: data.display_name }) });
       setInviteEmail('');
       reload();
     }
@@ -130,9 +132,9 @@ const Team = () => {
       .update({ description: description.trim() || null })
       .eq('id', team.id);
     if (error) {
-      toast({ title: 'Erro ao salvar descrição', description: error.message, variant: 'destructive' });
+      toast({ title: t('detail.errorDescription'), description: error.message, variant: 'destructive' });
     } else {
-      toast({ title: 'Descrição salva!' });
+      toast({ title: t('detail.successDescription') });
     }
     setSavingDescription(false);
   };
@@ -140,7 +142,7 @@ const Team = () => {
   const handleRemoveMember = async (userId: string) => {
     if (!team) return;
     await supabase.from('team_members').delete().eq('team_id', team.id).eq('user_id', userId);
-    toast({ title: 'Membro removido' });
+    toast({ title: t('detail.memberRemoved') });
     reload();
   };
 
@@ -155,9 +157,9 @@ const Team = () => {
   if (!team) {
     return (
       <div className="animate-fade-in text-center py-20">
-        <p className="text-muted-foreground">Time não encontrado.</p>
+        <p className="text-muted-foreground">{t('detail.notFound')}</p>
         <Button variant="ghost" className="mt-4" onClick={() => navigate('/equipe')}>
-          <ArrowLeft className="h-4 w-4 mr-2" /> Voltar
+          <ArrowLeft className="h-4 w-4 mr-2" /> {t('detail.back')}
         </Button>
       </div>
     );
@@ -172,7 +174,7 @@ const Team = () => {
         <div>
           <h1 className="font-display text-2xl font-bold text-foreground mb-1">{team.name}</h1>
           <p className="text-sm text-muted-foreground">
-            {members.length}/{team.max_members} membros
+            {t('detail.members', { count: members.length, max: team.max_members })}
           </p>
         </div>
         {isCreator && (
@@ -186,15 +188,15 @@ const Team = () => {
         <DialogContent>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5 text-destructive" /> Excluir Time
+              <AlertTriangle className="h-5 w-5 text-destructive" /> {t('detail.deleteTitle')}
             </DialogTitle>
             <DialogDescription>
-              Tem certeza que deseja excluir o time <strong>{team.name}</strong>? Todos os membros, anexos e dados associados serão removidos permanentemente.
+              <span dangerouslySetInnerHTML={{ __html: t('detail.deleteDesc', { name: team.name }) }} />
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-2 py-2">
             <p className="text-sm text-muted-foreground">
-              Para confirmar, digite <strong className="text-foreground">{team.name}</strong> abaixo:
+              <span dangerouslySetInnerHTML={{ __html: t('detail.confirmType', { name: team.name }) }} />
             </p>
             <Input
               value={deleteConfirmName}
@@ -203,10 +205,10 @@ const Team = () => {
             />
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)} disabled={deleting}>Cancelar</Button>
+            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)} disabled={deleting}>{t('detail.cancel')}</Button>
             <Button variant="destructive" onClick={handleDeleteTeam} disabled={deleting || deleteConfirmName !== team.name}>
               {deleting ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : null}
-              Excluir
+              {t('detail.delete')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -214,7 +216,7 @@ const Team = () => {
       <Card>
         <CardHeader>
           <CardTitle className="text-lg flex items-center gap-2">
-            <Users className="h-5 w-5" /> Membros
+            <Users className="h-5 w-5" /> {t('detail.membersTitle')}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -231,7 +233,7 @@ const Team = () => {
                       <span className="text-sm font-medium">{m.display_name}</span>
                       {m.user_id === team.created_by && (
                         <Badge variant="secondary" className="text-xs gap-1">
-                          <Crown className="h-3 w-3" /> Criador
+                          <Crown className="h-3 w-3" /> {t('detail.creator')}
                         </Badge>
                       )}
                     </div>
@@ -252,7 +254,7 @@ const Team = () => {
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   className="pl-9"
-                  placeholder="Email do membro..."
+                  placeholder={t('detail.emailPlaceholder')}
                   value={inviteEmail}
                   onChange={e => setInviteEmail(e.target.value)}
                   onKeyDown={e => e.key === 'Enter' && handleInvite()}
@@ -270,27 +272,27 @@ const Team = () => {
       <Card>
         <CardHeader>
           <CardTitle className="text-lg flex items-center gap-2">
-            <FileText className="h-5 w-5" /> Sobre o Time
+            <FileText className="h-5 w-5" /> {t('detail.aboutTeam')}
           </CardTitle>
-          <CardDescription>Descrição e informações sobre o time</CardDescription>
+          <CardDescription>{t('detail.aboutTeamDesc')}</CardDescription>
         </CardHeader>
         <CardContent>
           {isCreator ? (
             <div className="space-y-3">
               <Textarea
-                placeholder="Descreva o propósito e objetivos do time..."
+                placeholder={t('detail.descriptionPlaceholder')}
                 value={description}
                 onChange={e => setDescription(e.target.value)}
                 rows={4}
               />
               <Button size="sm" onClick={handleSaveDescription} disabled={savingDescription}>
                 {savingDescription ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Save className="h-4 w-4 mr-1" />}
-                Salvar
+                {t('detail.save')}
               </Button>
             </div>
           ) : (
             <p className="text-sm text-muted-foreground whitespace-pre-wrap">
-              {description || 'Nenhuma descrição adicionada.'}
+              {description || t('detail.noDescription')}
             </p>
           )}
         </CardContent>
@@ -300,9 +302,9 @@ const Team = () => {
       <Card>
         <CardHeader>
           <CardTitle className="text-lg flex items-center gap-2">
-            <FileText className="h-5 w-5" /> Anexos do Time
+            <FileText className="h-5 w-5" /> {t('detail.attachments')}
           </CardTitle>
-          <CardDescription>Arquivos compartilhados com a equipe</CardDescription>
+          <CardDescription>{t('detail.attachmentsDesc')}</CardDescription>
         </CardHeader>
         <CardContent>
           <TeamAttachments teamId={team.id} />
@@ -313,39 +315,39 @@ const Team = () => {
       <Card>
         <CardHeader>
           <CardTitle className="text-lg flex items-center gap-2">
-            <Calendar className="h-5 w-5" /> Tarefas da Equipe
+            <Calendar className="h-5 w-5" /> {t('detail.tasks')}
           </CardTitle>
-          <CardDescription>Tarefas associadas ao time</CardDescription>
+          <CardDescription>{t('detail.tasksDesc')}</CardDescription>
         </CardHeader>
         <CardContent>
           {tasks.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-6">
-              Nenhuma tarefa associada ao time ainda. Ao criar tarefas, selecione este time.
+              {t('detail.noTasks')}
             </p>
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Título</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Responsáveis</TableHead>
-                  <TableHead>Previsão</TableHead>
+                  <TableHead>{t('detail.table.title')}</TableHead>
+                  <TableHead>{t('detail.table.status')}</TableHead>
+                  <TableHead>{t('detail.table.assignees')}</TableHead>
+                  <TableHead>{t('detail.table.estimated')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {tasks.map(t => (
-                  <TableRow key={t.id}>
-                    <TableCell className="font-medium">{t.title}</TableCell>
+                {tasks.map(t2 => (
+                  <TableRow key={t2.id}>
+                    <TableCell className="font-medium">{t2.title}</TableCell>
                     <TableCell>
-                      <Badge variant="outline" style={{ borderColor: t.status_color, color: t.status_color }}>
-                        {t.status_name}
+                      <Badge variant="outline" style={{ borderColor: t2.status_color, color: t2.status_color }}>
+                        {t2.status_name}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">
-                      {t.assignees.length > 0 ? t.assignees.join(', ') : '—'}
+                      {t2.assignees.length > 0 ? t2.assignees.join(', ') : '—'}
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">
-                      {t.estimated_delivery_date || '—'}
+                      {t2.estimated_delivery_date || '—'}
                     </TableCell>
                   </TableRow>
                 ))}

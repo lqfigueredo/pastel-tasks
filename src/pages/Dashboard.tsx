@@ -1,4 +1,5 @@
 import { useState, useCallback, useMemo, lazy, Suspense } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTasksQuery, useInvalidateTasks } from '@/hooks/useTasksQuery';
 import { useStatusesQuery } from '@/hooks/useStatusesQuery';
@@ -29,9 +30,7 @@ import {
   max as dateMax,
   min as dateMin,
 } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
-
-const WEEKDAYS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+import { getCurrentLocale } from '@/lib/date';
 const MAX_BAR_SLOTS = 3;
 const BAR_HEIGHT = 22;
 const BAR_GAP = 2;
@@ -67,10 +66,12 @@ function isMultiDay(t: Task): boolean {
 type TaskFilter = 'all' | 'created' | 'assigned';
 
 export default function Dashboard() {
+  const { t } = useTranslation('dashboard');
   const { user } = useAuth();
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [filter, setFilter] = useState<TaskFilter>('all');
+  const WEEKDAYS = t('weekdays', { returnObjects: true }) as string[];
 
   const { data: tasksData } = useTasksQuery();
   const { data: statuses = [] } = useStatusesQuery();
@@ -210,16 +211,16 @@ export default function Dashboard() {
       <div className="flex items-center justify-between">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
+            <h1 className="text-2xl font-bold text-foreground">{t('title')}</h1>
             <HelpButton pageKey="dashboard" />
           </div>
-          <p className="text-sm text-muted-foreground">Calendário mensal de atividades</p>
+          <p className="text-sm text-muted-foreground">{t('subtitle')}</p>
         </div>
         <div className="flex gap-1 rounded-lg border border-border bg-muted/50 p-1">
           {([
-            { value: 'all' as TaskFilter, label: 'Todas' },
-            { value: 'created' as TaskFilter, label: 'Minhas tarefas' },
-            { value: 'assigned' as TaskFilter, label: 'Atribuídas a mim' },
+            { value: 'all' as TaskFilter, label: t('filter.all') },
+            { value: 'created' as TaskFilter, label: t('filter.created') },
+            { value: 'assigned' as TaskFilter, label: t('filter.assigned') },
           ]).map((opt) => (
             <button
               key={opt.value}
@@ -235,17 +236,17 @@ export default function Dashboard() {
           ))}
         </div>
         <div className="flex items-center gap-4 rounded-lg border border-border bg-muted/30 px-3 py-1.5 text-[11px] text-muted-foreground">
-          <span className="font-medium text-foreground/70">Legenda:</span>
+          <span className="font-medium text-foreground/70">{t('legend.title')}</span>
           <div className="flex items-center gap-1.5">
             <span className="inline-block h-4 w-6 rounded border-l-[3px] border-solid border-primary bg-primary/20" />
-            <span>Tarefa criada por mim</span>
+            <span>{t('legend.created')}</span>
           </div>
           <div className="flex items-center gap-1.5">
             <span className="inline-flex items-center gap-0.5">
               <span className="inline-block h-4 w-6 rounded border-l-[3px] border-dashed border-primary bg-primary/20" />
               <UserCircle className="h-3 w-3 text-primary" />
             </span>
-            <span>Atribuída a mim por outro</span>
+            <span>{t('legend.assigned')}</span>
           </div>
         </div>
       </div>
@@ -256,7 +257,7 @@ export default function Dashboard() {
             <ChevronLeft className="h-5 w-5" />
           </Button>
           <h2 className="text-lg font-semibold capitalize text-foreground">
-            {format(currentMonth, 'MMMM yyyy', { locale: ptBR })}
+            {format(currentMonth, 'MMMM yyyy', { locale: getCurrentLocale() })}
           </h2>
           <Button variant="ghost" size="icon" onClick={() => setCurrentMonth((m) => addMonths(m, 1))}>
             <ChevronRight className="h-5 w-5" />
@@ -304,7 +305,7 @@ export default function Dashboard() {
                       {singleTasks.map((task) => {
                         const isAssignedByOther = myAssignedIds.has(task.id) && task.created_by !== user?.id;
                         return (
-                          <TaskTooltip key={task.id} task={task} statusName={statusNameMap.get(task.status_id) || 'Sem status'} statusColor={statusColorMap.get(task.status_id) || 'hsl(var(--muted))'}>
+                          <TaskTooltip key={task.id} task={task} statusName={statusNameMap.get(task.status_id) || t('noStatus')} statusColor={statusColorMap.get(task.status_id) || 'hsl(var(--muted))'}>
                             <button onClick={() => setSelectedTask(task)} className="flex w-full items-center gap-1 rounded px-1.5 py-0.5 text-left text-[11px] leading-tight transition-colors hover:bg-accent/40">
                               <span className="mt-0.5 h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: statusColorMap.get(task.status_id) || 'hsl(var(--muted))' }} />
                               {isAssignedByOther && <UserCircle className="h-2.5 w-2.5 shrink-0 text-primary" />}
@@ -314,13 +315,13 @@ export default function Dashboard() {
                         );
                       })}
                       {overflowCount > 0 && (
-                        <span className="block px-1.5 text-[10px] text-muted-foreground">+{overflowCount} mais</span>
+                        <span className="block px-1.5 text-[10px] text-muted-foreground">{t('moreCount', { count: overflowCount })}</span>
                       )}
                       {completedOnDay.map((task) => {
                         const color = statusColorMap.get(task.status_id) || 'hsl(var(--muted))';
                         const isAssignedByOther = myAssignedIds.has(task.id) && task.created_by !== user?.id;
                         return (
-                          <TaskTooltip key={`done-${task.id}`} task={task} statusName={statusNameMap.get(task.status_id) || 'Sem status'} statusColor={color}>
+                          <TaskTooltip key={`done-${task.id}`} task={task} statusName={statusNameMap.get(task.status_id) || t('noStatus')} statusColor={color}>
                             <button onClick={() => setSelectedTask(task)} className="flex w-full items-center gap-1 rounded px-1.5 py-0.5 text-left text-[11px] font-semibold leading-tight transition-colors hover:bg-accent/40" style={{ backgroundColor: color + '25' }}>
                               <CheckCircle2 className="h-3 w-3 shrink-0" style={{ color }} />
                               {isAssignedByOther && <UserCircle className="h-2.5 w-2.5 shrink-0 text-primary" />}
@@ -342,7 +343,7 @@ export default function Dashboard() {
                 const top = TOP_OFFSET + bar.row * (BAR_HEIGHT + BAR_GAP);
 
                 return (
-                  <TaskTooltip key={`${bar.task.id}-${bi}`} task={bar.task} statusName={statusNameMap.get(bar.task.status_id) || 'Sem status'} statusColor={color}>
+                  <TaskTooltip key={`${bar.task.id}-${bi}`} task={bar.task} statusName={statusNameMap.get(bar.task.status_id) || t('noStatus')} statusColor={color}>
                     <button
                       onClick={() => setSelectedTask(bar.task)}
                       className="absolute z-10 flex items-center overflow-hidden px-2 text-[11px] font-medium leading-tight transition-opacity hover:opacity-80"

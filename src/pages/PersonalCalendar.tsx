@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -9,12 +10,10 @@ import {
   eachDayOfInterval, isSameMonth, isSameDay, isToday,
   format, addMonths, subMonths,
 } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { getCurrentLocale } from '@/lib/date';
 import { CreateEventDialog } from '@/components/calendar/CreateEventDialog';
 import { EventDetailDialog } from '@/components/calendar/EventDetailDialog';
 import { HelpButton } from '@/components/HelpButton';
-
-const WEEKDAYS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 
 interface CalendarEvent {
   id: string;
@@ -29,6 +28,7 @@ interface CalendarEvent {
 }
 
 export default function PersonalCalendar() {
+  const { t } = useTranslation('calendar');
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [currentMonth, setCurrentMonth] = useState(new Date());
@@ -36,6 +36,7 @@ export default function PersonalCalendar() {
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>();
+  const WEEKDAYS = t('weekdays', { returnObjects: true }) as string[];
 
   const monthKey = format(currentMonth, 'yyyy-MM');
 
@@ -92,13 +93,13 @@ export default function PersonalCalendar() {
       <div className="flex items-center justify-between">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold text-foreground">Agenda</h1>
+            <h1 className="text-2xl font-bold text-foreground">{t('title')}</h1>
             <HelpButton pageKey="calendar" />
           </div>
-          <p className="text-sm text-muted-foreground">Seus compromissos e reuniões</p>
+          <p className="text-sm text-muted-foreground">{t('subtitle')}</p>
         </div>
         <Button onClick={() => { setSelectedDate(undefined); setCreateDialogOpen(true); }}>
-          <Plus className="mr-2 h-4 w-4" /> Novo Evento
+          <Plus className="mr-2 h-4 w-4" /> {t('newEvent')}
         </Button>
       </div>
 
@@ -108,7 +109,7 @@ export default function PersonalCalendar() {
             <ChevronLeft className="h-5 w-5" />
           </Button>
           <h2 className="text-lg font-semibold capitalize text-foreground">
-            {format(currentMonth, 'MMMM yyyy', { locale: ptBR })}
+            {format(currentMonth, 'MMMM yyyy', { locale: getCurrentLocale() })}
           </h2>
           <Button variant="ghost" size="icon" onClick={() => setCurrentMonth(m => addMonths(m, 1))}>
             <ChevronRight className="h-5 w-5" />
@@ -156,7 +157,7 @@ export default function PersonalCalendar() {
                       </button>
                     ))}
                     {dayEvents.length > 3 && (
-                      <span className="block px-1.5 text-[10px] text-muted-foreground">+{dayEvents.length - 3} mais</span>
+                      <span className="block px-1.5 text-[10px] text-muted-foreground">{t('moreCount', { count: dayEvents.length - 3 })}</span>
                     )}
                   </div>
                 </div>

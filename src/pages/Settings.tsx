@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -36,6 +37,7 @@ const PASTEL_COLORS = [
 ];
 
 const Settings = () => {
+  const { t } = useTranslation('settings');
   const { user } = useAuth();
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const { toast } = useToast();
@@ -262,35 +264,35 @@ const Settings = () => {
     <div className="animate-fade-in max-w-2xl space-y-8">
       <div>
         <div className="flex items-center gap-2">
-          <h1 className="font-display text-2xl font-bold text-foreground mb-2">Configurações</h1>
+          <h1 className="font-display text-2xl font-bold text-foreground mb-2">{t('title')}</h1>
           <HelpButton pageKey="settings" />
         </div>
-        <p className="text-sm text-muted-foreground mb-6">Gerencie seu perfil e preferências</p>
+        <p className="text-sm text-muted-foreground mb-6">{t('subtitle')}</p>
       </div>
 
       {/* Profile */}
       <div className="rounded-xl border border-border/50 bg-card p-6 space-y-4">
-        <h2 className="text-lg font-semibold text-foreground">Perfil</h2>
+        <h2 className="text-lg font-semibold text-foreground">{t('profile.title')}</h2>
         <div>
-          <label className="text-sm font-medium text-foreground">E-mail</label>
+          <label className="text-sm font-medium text-foreground">{t('profile.email')}</label>
           <p className="text-sm text-muted-foreground">{user?.email}</p>
         </div>
         <div>
-          <label className="text-sm font-medium text-foreground">Nome</label>
-          <p className="text-sm text-muted-foreground">{user?.user_metadata?.display_name || '—'}</p>
+          <label className="text-sm font-medium text-foreground">{t('profile.name')}</label>
+          <p className="text-sm text-muted-foreground">{user?.user_metadata?.display_name || t('profile.empty')}</p>
         </div>
       </div>
 
       {/* Kanban Statuses */}
       <div className="rounded-xl border border-border/50 bg-card p-6 space-y-4">
-        <h2 className="text-lg font-semibold text-foreground">Status do Kanban</h2>
-        <p className="text-sm text-muted-foreground">Gerencie as colunas do seu quadro Kanban. Arraste para reordenar.</p>
+        <h2 className="text-lg font-semibold text-foreground">{t('statuses.title')}</h2>
+        <p className="text-sm text-muted-foreground">{t('statuses.subtitle')}</p>
 
         {loading ? (
           <div className="flex justify-center py-4"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>
         ) : displayedStatuses.length === 0 ? (
           <div className="text-sm text-muted-foreground text-center py-6 bg-muted/20 rounded-lg">
-            Nenhum status disponível. Crie o primeiro abaixo.
+            {t('statuses.empty')}
           </div>
         ) : (
           <div className="space-y-1">
@@ -357,7 +359,7 @@ const Settings = () => {
 
         {/* Create new */}
         <div className="pt-2 border-t border-border/50 space-y-3">
-          <p className="text-sm font-medium text-foreground">Novo status</p>
+          <p className="text-sm font-medium text-foreground">{t('statuses.newTitle')}</p>
           <div className="flex flex-wrap gap-2">
             {PASTEL_COLORS.map((c) => (
               <button
@@ -373,7 +375,7 @@ const Settings = () => {
           </div>
           <div className="flex gap-2">
             <Input
-              placeholder="Nome do status"
+              placeholder={t('statuses.namePlaceholder')}
               value={newName}
               onChange={(e) => setNewName(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleCreate()}
@@ -381,7 +383,7 @@ const Settings = () => {
             />
             <Button onClick={handleCreate} disabled={saving || !newName.trim()} size="sm">
               {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
-              Criar
+              {t('statuses.create')}
             </Button>
           </div>
         </div>
@@ -424,9 +426,9 @@ const Settings = () => {
 
       {/* Restart onboarding */}
       <div className="border border-border/50 rounded-xl p-6 bg-card">
-        <h2 className="text-lg font-semibold mb-2">Tour de boas-vindas</h2>
+        <h2 className="text-lg font-semibold mb-2">{t('tour.title')}</h2>
         <p className="text-sm text-muted-foreground mb-4">
-          Refaça o tour inicial para revisar a configuração da conta.
+          {t('tour.subtitle')}
         </p>
         <Button
           variant="outline"
@@ -437,15 +439,15 @@ const Settings = () => {
               .update({ onboarding_completed_at: null })
               .eq('user_id', user.id);
             if (error) {
-              toast({ title: 'Erro', description: error.message, variant: 'destructive' });
+              toast({ title: t('tour.errorToast'), description: error.message, variant: 'destructive' });
               return;
             }
-            toast({ title: 'Tour reiniciado — recarregue a página' });
+            toast({ title: t('tour.successToast') });
             setTimeout(() => window.location.reload(), 800);
           }}
         >
           <RotateCcw className="h-4 w-4" />
-          Refazer tour
+          {t('tour.restart')}
         </Button>
       </div>
 
