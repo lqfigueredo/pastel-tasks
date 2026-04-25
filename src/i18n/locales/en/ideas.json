@@ -26,5 +26,39 @@
     "noIdeasTitle": "No ideas yet",
     "noIdeasDesc": "Capture insights and improvements from your day-to-day. You can turn them into tasks later.",
     "registerFirst": "Register first idea"
+  },
+  "create": {
+    "title": "New Idea",
+    "titleLabel": "Title *",
+    "titlePlaceholder": "Idea title",
+    "descLabel": "Description",
+    "descPlaceholder": "Describe the idea...",
+    "team": "Team (optional)",
+    "noTeam": "No team",
+    "attachments": "Attachments",
+    "selectFiles": "Select files",
+    "filesSelected_one": "{{count}} file selected",
+    "filesSelected_other": "{{count}} files selected",
+    "cancel": "Cancel",
+    "save": "Create",
+    "saving": "Saving...",
+    "errorCreate": "Failed to create idea",
+    "success": "Idea registered!"
+  },
+  "edit": {
+    "titleEdit": "Edit Idea",
+    "titleView": "Idea Details",
+    "titleLabel": "Title",
+    "descLabel": "Description",
+    "implemented": "Idea implemented",
+    "team": "Team",
+    "noTeam": "No team",
+    "delete": "Delete",
+    "cancel": "Cancel",
+    "save": "Save",
+    "saving": "Saving...",
+    "errorSave": "Failed to save",
+    "updated": "Idea updated!",
+    "deleted": "Idea deleted"
   }
 }

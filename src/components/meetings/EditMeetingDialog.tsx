@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import {
@@ -12,7 +13,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { CalendarIcon, Plus, X } from 'lucide-react';
 import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { getCurrentLocale } from '@/lib/date';
 import { cn } from '@/lib/utils';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
@@ -38,6 +39,7 @@ interface Profile {
 
 export function EditMeetingDialog({ open, onOpenChange, onUpdated, meeting, currentParticipantIds }: Props) {
   const { user } = useAuth();
+  const { t } = useTranslation('meetings');
   const [date, setDate] = useState<Date>();
   const [description, setDescription] = useState('');
   const [profiles, setProfiles] = useState<Profile[]>([]);
@@ -82,7 +84,7 @@ export function EditMeetingDialog({ open, onOpenChange, onUpdated, meeting, curr
     const name = externalName.trim();
     if (!name) return;
     if (externalParticipants.includes(name)) {
-      toast.error('Nome já adicionado');
+      toast.error(t('create.duplicateName'));
       return;
     }
     setExternalParticipants((prev) => [...prev, name]);
@@ -99,7 +101,7 @@ export function EditMeetingDialog({ open, onOpenChange, onUpdated, meeting, curr
 
   const handleSave = async () => {
     if (!user || !date || !description.trim()) {
-      toast.error('Preencha todos os campos obrigatórios');
+      toast.error(t('create.requiredFields'));
       return;
     }
     setSaving(true);
@@ -114,7 +116,7 @@ export function EditMeetingDialog({ open, onOpenChange, onUpdated, meeting, curr
       .eq('id', meeting.id);
 
     if (error) {
-      toast.error('Erro ao atualizar ata');
+      toast.error(t('editMeeting.errorUpdate'));
       setSaving(false);
       return;
     }
@@ -128,7 +130,7 @@ export function EditMeetingDialog({ open, onOpenChange, onUpdated, meeting, curr
       await supabase.from('meeting_participants').insert(rows);
     }
 
-    toast.success('Ata atualizada com sucesso');
+    toast.success(t('editMeeting.success'));
     onOpenChange(false);
     onUpdated();
     setSaving(false);
@@ -138,13 +140,13 @@ export function EditMeetingDialog({ open, onOpenChange, onUpdated, meeting, curr
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>Editar Ata de Reunião</DialogTitle>
-          <DialogDescription>Altere os dados da reunião</DialogDescription>
+          <DialogTitle>{t('editMeeting.title')}</DialogTitle>
+          <DialogDescription>{t('editMeeting.description')}</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label>Data da Reunião *</Label>
+            <Label>{t('create.dateLabel')}</Label>
             <Popover>
               <PopoverTrigger asChild>
                 <Button
@@ -152,7 +154,7 @@ export function EditMeetingDialog({ open, onOpenChange, onUpdated, meeting, curr
                   className={cn('w-full justify-start text-left font-normal', !date && 'text-muted-foreground')}
                 >
                   <CalendarIcon className="mr-2 h-4 w-4" />
-                  {date ? format(date, "dd 'de' MMMM 'de' yyyy", { locale: ptBR }) : 'Selecione uma data'}
+                  {date ? format(date, 'PPP', { locale: getCurrentLocale() }) : t('create.selectDate')}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0" align="start">
@@ -160,7 +162,7 @@ export function EditMeetingDialog({ open, onOpenChange, onUpdated, meeting, curr
                   mode="single"
                   selected={date}
                   onSelect={setDate}
-                  locale={ptBR}
+                  locale={getCurrentLocale()}
                   className="p-3 pointer-events-auto"
                 />
               </PopoverContent>
@@ -168,9 +170,9 @@ export function EditMeetingDialog({ open, onOpenChange, onUpdated, meeting, curr
           </div>
 
           <div className="space-y-2">
-            <Label>Descrição *</Label>
+            <Label>{t('create.descLabel')}</Label>
             <Textarea
-              placeholder="Descreva os assuntos tratados na reunião..."
+              placeholder={t('create.descPlaceholder')}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={4}
@@ -178,10 +180,10 @@ export function EditMeetingDialog({ open, onOpenChange, onUpdated, meeting, curr
           </div>
 
           <div className="space-y-2">
-            <Label>Participantes</Label>
+            <Label>{t('create.participants')}</Label>
             <div className="max-h-40 space-y-1 overflow-y-auto rounded-md border p-2">
               {profiles.length === 0 ? (
-                <p className="text-xs text-muted-foreground">Nenhum usuário disponível</p>
+                <p className="text-xs text-muted-foreground">{t('create.noUsers')}</p>
               ) : (
                 profiles.map((p) => (
                   <label key={p.user_id} className="flex items-center gap-2 rounded p-1 text-sm hover:bg-accent cursor-pointer">
@@ -189,7 +191,7 @@ export function EditMeetingDialog({ open, onOpenChange, onUpdated, meeting, curr
                       checked={selectedUsers.includes(p.user_id)}
                       onCheckedChange={() => toggleUser(p.user_id)}
                     />
-                    {p.display_name || 'Sem nome'}
+                    {p.display_name || t('create.noName')}
                   </label>
                 ))
               )}
@@ -197,10 +199,10 @@ export function EditMeetingDialog({ open, onOpenChange, onUpdated, meeting, curr
           </div>
 
           <div className="space-y-2">
-            <Label>Participantes Externos</Label>
+            <Label>{t('create.externalParticipants')}</Label>
             <div className="flex gap-2">
               <Input
-                placeholder="Nome do participante externo"
+                placeholder={t('create.externalPlaceholder')}
                 value={externalName}
                 onChange={(e) => setExternalName(e.target.value)}
                 onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addExternal(); } }}
@@ -226,10 +228,10 @@ export function EditMeetingDialog({ open, onOpenChange, onUpdated, meeting, curr
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancelar
+            {t('editMeeting.cancel')}
           </Button>
           <Button onClick={handleSave} disabled={saving}>
-            {saving ? 'Salvando...' : 'Salvar Alterações'}
+            {saving ? t('editMeeting.saving') : t('editMeeting.save')}
           </Button>
         </DialogFooter>
       </DialogContent>

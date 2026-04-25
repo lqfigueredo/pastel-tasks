@@ -64,5 +64,24 @@
     "errorUpload": "Failed to upload file",
     "errorUpdate": "Failed to update",
     "success": "Document updated successfully"
+  },
+  "create": {
+    "title": "New Work Instruction",
+    "titleField": "Title *",
+    "titlePlaceholder": "Document title",
+    "descField": "Brief description",
+    "descPlaceholder": "Brief description",
+    "teamField": "Team *",
+    "selectTeam": "Select team",
+    "active": "Active",
+    "fileField": "PDF file *",
+    "save": "Create Instruction",
+    "saving": "Saving...",
+    "requiredFields": "Fill in all required fields",
+    "errorPdfOnly": "Only PDF files are allowed",
+    "errorUpload": "Failed to upload file",
+    "errorCreate": "Failed to create instruction",
+    "createdLog": "Instruction \"{{title}}\" created",
+    "success": "Instruction created successfully"
   }
 }

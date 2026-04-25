@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -31,6 +32,7 @@ interface Props {
 export function EditIdeaDialog({ idea, open, onOpenChange, onUpdated }: Props) {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { t } = useTranslation('ideas');
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [isImplemented, setIsImplemented] = useState(false);
@@ -73,12 +75,12 @@ export function EditIdeaDialog({ idea, open, onOpenChange, onUpdated }: Props) {
 
     setSaving(false);
     if (error) {
-      toast({ title: 'Erro ao salvar', variant: 'destructive' });
+      toast({ title: t('edit.errorSave'), variant: 'destructive' });
       return;
     }
     onOpenChange(false);
     onUpdated();
-    toast({ title: 'Ideia atualizada!' });
+    toast({ title: t('edit.updated') });
   };
 
   const handleDelete = async () => {
@@ -86,7 +88,7 @@ export function EditIdeaDialog({ idea, open, onOpenChange, onUpdated }: Props) {
     await supabase.from('ideas').delete().eq('id', idea.id);
     onOpenChange(false);
     onUpdated();
-    toast({ title: 'Ideia excluída' });
+    toast({ title: t('edit.deleted') });
   };
 
   if (!idea) return null;
@@ -95,31 +97,31 @@ export function EditIdeaDialog({ idea, open, onOpenChange, onUpdated }: Props) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{isOwner ? 'Editar Ideia' : 'Detalhes da Ideia'}</DialogTitle>
+          <DialogTitle>{isOwner ? t('edit.titleEdit') : t('edit.titleView')}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
           <div>
-            <Label>Título</Label>
+            <Label>{t('edit.titleLabel')}</Label>
             <Input value={title} onChange={(e) => setTitle(e.target.value)} disabled={!isOwner} />
           </div>
           <div>
-            <Label>Descrição</Label>
+            <Label>{t('edit.descLabel')}</Label>
             <Textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={4} disabled={!isOwner} />
           </div>
           <div className="flex items-center gap-3">
             <Switch checked={isImplemented} onCheckedChange={setIsImplemented} disabled={!isOwner} />
-            <Label>Ideia implementada</Label>
+            <Label>{t('edit.implemented')}</Label>
           </div>
           <div>
-            <Label>Equipe</Label>
+            <Label>{t('edit.team')}</Label>
             <Select value={teamId} onValueChange={setTeamId} disabled={!isOwner}>
               <SelectTrigger>
-                <SelectValue placeholder="Sem equipe" />
+                <SelectValue placeholder={t('edit.noTeam')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="none">Sem equipe</SelectItem>
-                {teams.map((t) => (
-                  <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
+                <SelectItem value="none">{t('edit.noTeam')}</SelectItem>
+                {teams.map((tm) => (
+                  <SelectItem key={tm.id} value={tm.id}>{tm.name}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -129,11 +131,11 @@ export function EditIdeaDialog({ idea, open, onOpenChange, onUpdated }: Props) {
         </div>
         {isOwner && (
           <DialogFooter className="flex-col sm:flex-row gap-2">
-            <Button variant="destructive" size="sm" onClick={handleDelete}>Excluir</Button>
+            <Button variant="destructive" size="sm" onClick={handleDelete}>{t('edit.delete')}</Button>
             <div className="flex-1" />
-            <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
+            <Button variant="outline" onClick={() => onOpenChange(false)}>{t('edit.cancel')}</Button>
             <Button onClick={handleSave} disabled={!title.trim() || saving}>
-              {saving ? 'Salvando...' : 'Salvar'}
+              {saving ? t('edit.saving') : t('edit.save')}
             </Button>
           </DialogFooter>
         )}

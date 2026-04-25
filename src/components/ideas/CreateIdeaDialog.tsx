@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -19,6 +20,7 @@ interface Props {
 export function CreateIdeaDialog({ open, onOpenChange, onCreated }: Props) {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { t } = useTranslation('ideas');
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [files, setFiles] = useState<File[]>([]);
@@ -52,7 +54,7 @@ export function CreateIdeaDialog({ open, onOpenChange, onCreated }: Props) {
       .single();
 
     if (error || !idea) {
-      toast({ title: 'Erro ao criar ideia', variant: 'destructive' });
+      toast({ title: t('create.errorCreate'), variant: 'destructive' });
       setSaving(false);
       return;
     }
@@ -79,32 +81,32 @@ export function CreateIdeaDialog({ open, onOpenChange, onCreated }: Props) {
     setTeamId('none');
     onOpenChange(false);
     onCreated();
-    toast({ title: 'Ideia registrada!' });
+    toast({ title: t('create.success') });
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Nova Ideia</DialogTitle>
+          <DialogTitle>{t('create.title')}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
           <div>
-            <Label htmlFor="idea-title">Título *</Label>
-            <Input id="idea-title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Título da ideia" />
+            <Label htmlFor="idea-title">{t('create.titleLabel')}</Label>
+            <Input id="idea-title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder={t('create.titlePlaceholder')} />
           </div>
           <div>
-            <Label htmlFor="idea-desc">Descrição</Label>
-            <Textarea id="idea-desc" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Descreva a ideia..." rows={4} />
+            <Label htmlFor="idea-desc">{t('create.descLabel')}</Label>
+            <Textarea id="idea-desc" value={description} onChange={(e) => setDescription(e.target.value)} placeholder={t('create.descPlaceholder')} rows={4} />
           </div>
           <div>
-            <Label>Equipe (opcional)</Label>
+            <Label>{t('create.team')}</Label>
             <Select value={teamId} onValueChange={setTeamId}>
               <SelectTrigger>
-                <SelectValue placeholder="Sem equipe" />
+                <SelectValue placeholder={t('create.noTeam')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="none">Sem equipe</SelectItem>
+                <SelectItem value="none">{t('create.noTeam')}</SelectItem>
                 {teams.map((t) => (
                   <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
                 ))}
@@ -112,20 +114,20 @@ export function CreateIdeaDialog({ open, onOpenChange, onCreated }: Props) {
             </Select>
           </div>
           <div>
-            <Label>Anexos</Label>
+            <Label>{t('create.attachments')}</Label>
             <input ref={fileRef} type="file" multiple className="hidden" onChange={(e) => { if (e.target.files) setFiles(Array.from(e.target.files)); }} />
             <Button type="button" variant="outline" size="sm" className="mt-1 gap-1" onClick={() => fileRef.current?.click()}>
-              <Upload className="h-3 w-3" /> Selecionar arquivos
+              <Upload className="h-3 w-3" /> {t('create.selectFiles')}
             </Button>
             {files.length > 0 && (
-              <p className="text-xs text-muted-foreground mt-1">{files.length} arquivo(s) selecionado(s)</p>
+              <p className="text-xs text-muted-foreground mt-1">{t('create.filesSelected', { count: files.length })}</p>
             )}
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>{t('create.cancel')}</Button>
           <Button onClick={handleSubmit} disabled={!title.trim() || saving}>
-            {saving ? 'Salvando...' : 'Criar'}
+            {saving ? t('create.saving') : t('create.save')}
           </Button>
         </DialogFooter>
       </DialogContent>

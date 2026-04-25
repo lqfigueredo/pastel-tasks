@@ -51,5 +51,54 @@
       "closed": "Encerrada",
       "open": "Aberta"
     }
+  },
+  "create": {
+    "title": "Nova Ata de Reunião",
+    "description": "Preencha os dados da reunião",
+    "dateLabel": "Data da Reunião *",
+    "selectDate": "Selecione uma data",
+    "descLabel": "Descrição *",
+    "descPlaceholder": "Descreva os assuntos tratados na reunião...",
+    "participants": "Participantes",
+    "noUsers": "Nenhum usuário disponível",
+    "noName": "Sem nome",
+    "externalParticipants": "Participantes Externos",
+    "externalPlaceholder": "Nome do participante externo",
+    "attachments": "Anexos",
+    "selectFiles": "Selecionar arquivos",
+    "cancel": "Cancelar",
+    "save": "Criar Ata",
+    "saving": "Salvando...",
+    "requiredFields": "Preencha todos os campos obrigatórios",
+    "duplicateName": "Nome já adicionado",
+    "errorCreate": "Erro ao criar ata",
+    "success": "Ata criada com sucesso"
+  },
+  "editMeeting": {
+    "title": "Editar Ata de Reunião",
+    "description": "Altere os dados da reunião",
+    "save": "Salvar Alterações",
+    "saving": "Salvando...",
+    "cancel": "Cancelar",
+    "errorUpdate": "Erro ao atualizar ata",
+    "success": "Ata atualizada com sucesso"
+  },
+  "pendency": {
+    "title": "Nova Pendência",
+    "description": "Adicione uma pendência à ata",
+    "descLabel": "Descrição *",
+    "descPlaceholder": "Descreva a pendência...",
+    "responsibleLabel": "Responsável *",
+    "selectResponsible": "Selecione o responsável",
+    "externalGroup": "Externos",
+    "externalSuffix": "(Externo)",
+    "dueDateLabel": "Data de Conclusão",
+    "selectDate": "Selecione uma data",
+    "cancel": "Cancelar",
+    "save": "Adicionar",
+    "saving": "Salvando...",
+    "requiredFields": "Preencha descrição e responsável",
+    "errorCreate": "Erro ao criar pendência",
+    "success": "Pendência adicionada"
   }
 }

@@ -219,15 +219,15 @@ export function CreateTaskDialog({ open, onOpenChange, onTaskCreated }: Props) {
                 if (titleError) setTitleError(undefined);
               }}
               onBlur={() => setTitleError(!title.trim() ? t('create.validation.titleRequired') : undefined)}
-              placeholder="Título da tarefa"
+              placeholder={t('create.fields.titlePlaceholder')}
               aria-invalid={!!titleError}
               className={cn(titleError && 'border-destructive focus-visible:ring-destructive')}
             />
             {titleError && <p className="text-xs text-destructive">{titleError}</p>}
           </div>
           <div className="space-y-2">
-            <Label>Descrição</Label>
-            <Textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Breve descrição..." rows={3} />
+            <Label>{t('create.fields.descLabel')}</Label>
+            <Textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder={t('create.fields.descPlaceholder')} rows={3} />
           </div>
           <div className="space-y-2">
             <Label>{t('create.fields.status')} *</Label>
