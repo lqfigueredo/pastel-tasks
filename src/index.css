@@ -139,3 +139,16 @@
     }
   }
 }
+
+@layer utilities {
+  /* Hide scrollbar but keep scrollability — used by horizontally-scrolling tab
+     bars (e.g. Financial tabs, Kanban mobile tabs) so they don't add vertical
+     thickness or horizontal page scroll. */
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+}
