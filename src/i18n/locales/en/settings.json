@@ -1,0 +1,68 @@
+{
+  "title": "Settings",
+  "subtitle": "Manage your profile and preferences",
+  "profile": {
+    "title": "Profile",
+    "email": "Email",
+    "name": "Name",
+    "empty": "—"
+  },
+  "statuses": {
+    "title": "Kanban Statuses",
+    "subtitle": "Manage your Kanban board columns. Drag to reorder.",
+    "empty": "No statuses available. Create the first one below.",
+    "newTitle": "New status",
+    "namePlaceholder": "Status name",
+    "create": "Create",
+    "errorCreate": "Failed to create status",
+    "successCreate": "Status created!",
+    "errorUpdate": "Failed to update status",
+    "successUpdate": "Status updated!",
+    "errorReorder": "Failed to reorder",
+    "errorArchive": "Failed to archive",
+    "errorMigrate": "Failed to migrate tasks",
+    "successArchive": "Status archived",
+    "movedDesc": "{{count}} task(s) moved to \"{{fallback}}\".",
+    "cantArchiveDefault": "Cannot archive the default status",
+    "errorRestore": "Failed to restore",
+    "successRestore": "Status \"{{name}}\" restored!",
+    "archived": "Archived statuses ({{count}})",
+    "restore": "Restore",
+    "fallbackName": "Unassigned",
+    "deleteTitle": "Archive status \"{{name}}\"?",
+    "deleteDescOne": "There is 1 task using this status. It will be moved to \"{{fallback}}\".",
+    "deleteDescMany": "There are {{count}} tasks using this status. They will be moved to \"{{fallback}}\".",
+    "archiveAndMigrate": "Archive and migrate"
+  },
+  "recurring": {
+    "title": "Recurring Tasks",
+    "subtitle": "Manage your tasks that repeat automatically.",
+    "empty": "No recurring tasks created.",
+    "active": "Active",
+    "paused": "Paused",
+    "next": "Next: {{date}}",
+    "errorUpdate": "Failed to update",
+    "pausedToast": "Recurrence paused",
+    "activatedToast": "Recurrence activated",
+    "errorDelete": "Failed to delete",
+    "deletedToast": "Recurrence deleted",
+    "deleteTitle": "Delete recurrence \"{{title}}\"?",
+    "deleteDesc": "The recurrence will be removed. Already-created tasks won't be affected.",
+    "delete": "Delete",
+    "frequency": {
+      "daily": "Daily",
+      "weekly": "Weekly — {{day}}",
+      "monthly": "Monthly — Day {{day}}",
+      "yearly": "Yearly — {{month}}"
+    },
+    "weekdays": ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
+    "months": ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
+  },
+  "tour": {
+    "title": "Welcome tour",
+    "subtitle": "Replay the initial tour to review your account setup.",
+    "restart": "Restart tour",
+    "successToast": "Tour restarted — please reload the page",
+    "errorToast": "Error"
+  }
+}

@@ -1,0 +1,60 @@
+{
+  "title": "Dashboard",
+  "subtitle": "Monthly activity calendar",
+  "filter": {
+    "all": "All",
+    "created": "My tasks",
+    "assigned": "Assigned to me"
+  },
+  "legend": {
+    "title": "Legend:",
+    "created": "Task created by me",
+    "assigned": "Assigned to me by someone else"
+  },
+  "weekdays": ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
+  "moreCount": "+{{count}} more",
+  "noStatus": "No status",
+  "tooltip": {
+    "critical": "Critical",
+    "completed": "Completed: {{date}}",
+    "estimated": "Due: {{date}}"
+  },
+  "timeReport": {
+    "title": "Time Report",
+    "loading": "Loading report...",
+    "empty": "No work sessions recorded yet.",
+    "startDate": "Start Date",
+    "endDate": "End Date",
+    "clear": "Clear",
+    "total": "Total:",
+    "export": "Export",
+    "byTask": "By Task",
+    "byUser": "By User",
+    "users": "{{count}} user",
+    "users_plural": "{{count}} users",
+    "tasks": "{{count}} task",
+    "tasks_plural": "{{count}} tasks",
+    "noEntries": "No records in the selected period.",
+    "deletedTask": "Deleted task",
+    "userFallback": "User",
+    "csvHeaders": {
+      "user": "User",
+      "task": "Task",
+      "start": "Start",
+      "end": "End",
+      "duration": "Duration (hh:mm:ss)"
+    },
+    "pdf": {
+      "title": "Time Report",
+      "period": "Period: {{period}}",
+      "allTime": "All time",
+      "grandTotal": "Grand total: {{total}}",
+      "generatedAt": "Generated at: {{at}}",
+      "byTask": "By Task",
+      "byUser": "By User",
+      "tasksCol": "Tasks",
+      "usersCol": "Users",
+      "totalCol": "Total"
+    }
+  }
+}

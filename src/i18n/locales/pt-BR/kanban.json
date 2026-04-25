@@ -1,0 +1,239 @@
+{
+  "page": {
+    "title": "Minhas Tarefas",
+    "subtitleFiltered": "{{visible}} de {{total}} tarefa",
+    "subtitleFiltered_plural": "{{visible}} de {{total}} tarefas",
+    "subtitleAll": "{{count}} tarefa no total",
+    "subtitleAll_plural": "{{count}} tarefas no total",
+    "filterPrefix": "Filtro: {{name}}",
+    "removeFilter": "Remover filtro",
+    "filterByAssignee": "Filtrar por responsável",
+    "allAssignees": "Todos os responsáveis",
+    "noName": "Sem nome",
+    "newTask": "Nova Tarefa"
+  },
+  "export": {
+    "trigger": "Exportar CSV",
+    "title": "Exportar tarefas",
+    "description": "Filtre pelo período de criação. Deixe em branco para exportar todas.",
+    "startDate": "Data inicial",
+    "endDate": "Data final",
+    "select": "Selecionar",
+    "clear": "Limpar",
+    "download": "Baixar CSV",
+    "empty": "Nenhuma tarefa para exportar no período selecionado",
+    "success": "CSV exportado com {{count}} tarefa",
+    "success_plural": "CSV exportado com {{count}} tarefas",
+    "headers": {
+      "id": "ID",
+      "title": "Título",
+      "description": "Descrição",
+      "status": "Status",
+      "assignees": "Responsáveis",
+      "startDate": "Data início",
+      "estimatedDate": "Prazo estimado",
+      "endDate": "Data fim",
+      "critical": "Crítica",
+      "createdAt": "Criada em"
+    },
+    "yes": "Sim",
+    "no": "Não",
+    "noAssigneeName": "Sem nome"
+  },
+  "savedFilters": {
+    "trigger": "Filtros salvos",
+    "label": "Meus filtros",
+    "empty": "Nenhum filtro salvo ainda",
+    "saveCurrent": "Salvar filtro atual",
+    "delete": "Excluir filtro",
+    "saveTitle": "Salvar filtro atual",
+    "nameLabel": "Nome do filtro",
+    "namePlaceholder": "Ex: Minhas tarefas, Time Marketing...",
+    "savedToast": "Filtro salvo!",
+    "errorSave": "Erro ao salvar filtro",
+    "errorDelete": "Erro ao excluir"
+  },
+  "column": {
+    "dragHandle": "Arrastar para reordenar",
+    "minimize": "Minimizar coluna",
+    "emptyTitle": "Nenhuma tarefa aqui",
+    "emptyDescription": "Arraste cartões para esta coluna ou crie uma nova tarefa."
+  },
+  "card": {
+    "recurring": "Tarefa recorrente",
+    "critical": "Tarefa crítica",
+    "fromMeeting": "Vinculada a uma ata de reunião",
+    "expand": "Expandir",
+    "minimize": "Minimizar",
+    "expandCard": "Expandir card",
+    "minimizeCard": "Minimizar card",
+    "movePrev": "Mover para status anterior",
+    "moveNext": "Mover para próximo status",
+    "moveLabel": "Mover"
+  },
+  "mobile": {
+    "emptyStatus": "Sem tarefas neste status"
+  },
+  "create": {
+    "title": "Nova Tarefa",
+    "description": "Preencha os detalhes da nova tarefa",
+    "fields": {
+      "title": "Título",
+      "titlePlaceholder": "Título da tarefa",
+      "descLabel": "Descrição",
+      "descPlaceholder": "Breve descrição...",
+      "status": "Status",
+      "statusPlaceholder": "Selecione um status",
+      "assignees": "Responsáveis",
+      "linkTeam": "Associar ao time",
+      "critical": "Crítica",
+      "fromMeeting": "Reunião",
+      "recurring": "Recorrente",
+      "meeting": "Ata de Reunião",
+      "selectMeeting": "Selecione uma ata...",
+      "pendency": "Pendência",
+      "selectPendency": "Selecione uma pendência...",
+      "frequency": "Frequência",
+      "weekday": "Dia da semana",
+      "monthDay": "Dia do mês",
+      "dayN": "Dia {{day}}",
+      "month": "Mês",
+      "startDate": "Data de Início",
+      "estimatedDate": "Previsão de Entrega"
+    },
+    "frequencyOptions": {
+      "daily": "Diária",
+      "weekly": "Semanal",
+      "monthly": "Mensal",
+      "yearly": "Anual"
+    },
+    "weekdays": {
+      "0": "Domingo",
+      "1": "Segunda",
+      "2": "Terça",
+      "3": "Quarta",
+      "4": "Quinta",
+      "5": "Sexta",
+      "6": "Sábado"
+    },
+    "months": {
+      "0": "Janeiro",
+      "1": "Fevereiro",
+      "2": "Março",
+      "3": "Abril",
+      "4": "Maio",
+      "5": "Junho",
+      "6": "Julho",
+      "7": "Agosto",
+      "8": "Setembro",
+      "9": "Outubro",
+      "10": "Novembro",
+      "11": "Dezembro"
+    },
+    "validation": {
+      "titleRequired": "Informe um título.",
+      "yearRange": "Ano deve estar entre 1900 e 2100.",
+      "selectStatus": "Selecione um status",
+      "selectStatusDesc": "Escolha um status para a tarefa antes de salvar."
+    },
+    "submit": "Criar Tarefa",
+    "submitRecurring": "Criar Recorrência",
+    "submitting": "Criando...",
+    "errors": {
+      "create": "criar a tarefa",
+      "createRecurring": "criar a recorrência"
+    },
+    "success": "Tarefa criada!",
+    "successRecurring": "Tarefa recorrente criada!"
+  },
+  "detail": {
+    "title": "Detalhes da Tarefa",
+    "description": "Edite os campos e salve as alterações",
+    "copyId": "Copiar ID da tarefa",
+    "clickToCopy": "Clique para copiar",
+    "idCopied": "ID copiado!",
+    "errorCopy": "Erro ao copiar ID",
+    "fields": {
+      "title": "Título",
+      "fullDescription": "Descrição Completa",
+      "status": "Status",
+      "assignees": "Responsáveis",
+      "critical": "Tarefa Crítica",
+      "start": "Início",
+      "estimated": "Previsão",
+      "actualEnd": "Fim Real"
+    },
+    "fromMeetingLabel": "Origem: Reunião",
+    "invalidDate": "Data inválida",
+    "yearRange": "O ano deve estar entre 1900 e 2100.",
+    "errorSave": "Erro ao salvar",
+    "updated": "Tarefa atualizada!",
+    "saving": "Salvando...",
+    "save": "Salvar",
+    "cancel": "Cancelar",
+    "moveTask": "mover a tarefa",
+    "justifyTitle": "Justificativa Obrigatória",
+    "justifyDescription": "A data de previsão de entrega está sendo alterada. Informe o motivo da mudança.",
+    "justifyPlaceholder": "Motivo da alteração da data...",
+    "justifyRequired": "Justificativa obrigatória",
+    "justifyConfirm": "Confirmar",
+    "dateChanged": "📅 Data de previsão alterada: {{reason}}",
+    "comments": "Comentários",
+    "noComments": "Nenhum comentário",
+    "addComment": "Adicionar comentário...",
+    "errorComment": "Erro ao adicionar comentário",
+    "errorCommentDesc": "Você pode não ter permissão para comentar nesta tarefa."
+  },
+  "attachments": {
+    "title": "Anexos",
+    "upload": "Enviar arquivo",
+    "uploading": "Enviando...",
+    "empty": "Nenhum anexo",
+    "preview": "Pré-visualizar",
+    "delete": "Excluir",
+    "errorUpload": "Erro ao enviar {{name}}",
+    "uploaded": "Anexo(s) enviado(s)!"
+  },
+  "timer": {
+    "title": "Timer de Horas",
+    "stop": "Parar",
+    "start": "Iniciar Timer",
+    "consolidate": "Consolidar Horas",
+    "totalsByUser": "Total de Horas por Usuário",
+    "grandTotal": "Total Geral",
+    "previousSessions": "Sessões anteriores",
+    "noSessions": "Nenhuma sessão registrada",
+    "errorStart": "Erro ao iniciar timer",
+    "errorStop": "Erro ao parar timer",
+    "userFallback": "Usuário"
+  },
+  "history": {
+    "title": "Histórico de Alterações",
+    "show": "expandir",
+    "hide": "ocultar",
+    "empty": "Nenhuma alteração registrada",
+    "userFallback": "Usuário",
+    "empty_value": "vazio",
+    "fields": {
+      "title": "Título",
+      "description": "Descrição",
+      "status": "Status",
+      "start_date": "Data início",
+      "actual_end_date": "Data fim real",
+      "estimated_delivery_date": "Previsão entrega",
+      "assignee_added": "Responsável adicionado",
+      "assignee_removed": "Responsável removido"
+    }
+  },
+  "linkedIdeas": {
+    "label": "Ideias Vinculadas",
+    "searchPlaceholder": "Buscar ideia para vincular...",
+    "empty": "Nenhuma ideia vinculada",
+    "implemented": "Implementada",
+    "pending": "Pendente"
+  },
+  "assignee": {
+    "add": "Adicionar",
+    "empty": "Nenhum perfil encontrado"
+  }
+}

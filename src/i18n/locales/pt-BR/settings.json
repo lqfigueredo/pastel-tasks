@@ -1,0 +1,68 @@
+{
+  "title": "Configurações",
+  "subtitle": "Gerencie seu perfil e preferências",
+  "profile": {
+    "title": "Perfil",
+    "email": "E-mail",
+    "name": "Nome",
+    "empty": "—"
+  },
+  "statuses": {
+    "title": "Status do Kanban",
+    "subtitle": "Gerencie as colunas do seu quadro Kanban. Arraste para reordenar.",
+    "empty": "Nenhum status disponível. Crie o primeiro abaixo.",
+    "newTitle": "Novo status",
+    "namePlaceholder": "Nome do status",
+    "create": "Criar",
+    "errorCreate": "Erro ao criar status",
+    "successCreate": "Status criado!",
+    "errorUpdate": "Erro ao atualizar status",
+    "successUpdate": "Status atualizado!",
+    "errorReorder": "Erro ao reordenar",
+    "errorArchive": "Erro ao arquivar",
+    "errorMigrate": "Erro ao migrar tarefas",
+    "successArchive": "Status arquivado",
+    "movedDesc": "{{count}} tarefa(s) movida(s) para \"{{fallback}}\".",
+    "cantArchiveDefault": "Não é possível arquivar o status padrão",
+    "errorRestore": "Erro ao restaurar",
+    "successRestore": "Status \"{{name}}\" restaurado!",
+    "archived": "Status arquivados ({{count}})",
+    "restore": "Restaurar",
+    "fallbackName": "Não Afiliado",
+    "deleteTitle": "Arquivar status \"{{name}}\"?",
+    "deleteDescOne": "Existe 1 tarefa usando este status. Ela será movida para \"{{fallback}}\".",
+    "deleteDescMany": "Existem {{count}} tarefas usando este status. Elas serão movidas para \"{{fallback}}\".",
+    "archiveAndMigrate": "Arquivar e migrar"
+  },
+  "recurring": {
+    "title": "Tarefas Recorrentes",
+    "subtitle": "Gerencie suas tarefas que se repetem automaticamente.",
+    "empty": "Nenhuma tarefa recorrente criada.",
+    "active": "Ativa",
+    "paused": "Pausada",
+    "next": "Próxima: {{date}}",
+    "errorUpdate": "Erro ao atualizar",
+    "pausedToast": "Recorrência pausada",
+    "activatedToast": "Recorrência ativada",
+    "errorDelete": "Erro ao excluir",
+    "deletedToast": "Recorrência excluída",
+    "deleteTitle": "Excluir recorrência \"{{title}}\"?",
+    "deleteDesc": "A recorrência será removida. Tarefas já criadas não serão afetadas.",
+    "delete": "Excluir",
+    "frequency": {
+      "daily": "Diária",
+      "weekly": "Semanal — {{day}}",
+      "monthly": "Mensal — Dia {{day}}",
+      "yearly": "Anual — {{month}}"
+    },
+    "weekdays": ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"],
+    "months": ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"]
+  },
+  "tour": {
+    "title": "Tour de boas-vindas",
+    "subtitle": "Refaça o tour inicial para revisar a configuração da conta.",
+    "restart": "Refazer tour",
+    "successToast": "Tour reiniciado — recarregue a página",
+    "errorToast": "Erro"
+  }
+}

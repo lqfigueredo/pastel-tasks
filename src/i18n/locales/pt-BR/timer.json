@@ -1,0 +1,33 @@
+{
+  "title": "Temporizador",
+  "tabs": {
+    "timer": "Temporizador",
+    "dashboard": "Dashboard"
+  },
+  "timeLabel": "Tempo: {{minutes}} minuto",
+  "timeLabel_plural": "Tempo: {{minutes}} minutos",
+  "start": "Iniciar",
+  "pause": "Pausar",
+  "resume": "Retomar",
+  "stop": "Interromper",
+  "paused": "Pausado",
+  "finished": "Tempo finalizado!",
+  "duration": "Duração: {{value}}",
+  "descriptionPlaceholder": "Descrição do tempo utilizado (opcional)",
+  "discard": "Descartar",
+  "finish": "Finalizar",
+  "history": "Histórico",
+  "loading": "Carregando...",
+  "noSessions": "Nenhuma sessão registrada.",
+  "savedToast": "Sessão salva com sucesso!",
+  "removedToast": "Sessão removida.",
+  "dashboard": {
+    "totalLabel": "Tempo Total Registrado",
+    "sessions": "{{count}} sessões",
+    "byActivity": "Tempo por Atividade",
+    "noActivity": "Nenhuma sessão registrada.",
+    "byDay": "Tempo por Dia (últimos 14 dias)",
+    "noDescription": "Sem descrição",
+    "chartTime": "Tempo"
+  }
+}

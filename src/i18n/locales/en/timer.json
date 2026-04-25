@@ -1,0 +1,33 @@
+{
+  "title": "Focus Timer",
+  "tabs": {
+    "timer": "Timer",
+    "dashboard": "Dashboard"
+  },
+  "timeLabel": "Time: {{minutes}} minute",
+  "timeLabel_plural": "Time: {{minutes}} minutes",
+  "start": "Start",
+  "pause": "Pause",
+  "resume": "Resume",
+  "stop": "Stop",
+  "paused": "Paused",
+  "finished": "Time's up!",
+  "duration": "Duration: {{value}}",
+  "descriptionPlaceholder": "What did you work on? (optional)",
+  "discard": "Discard",
+  "finish": "Finish",
+  "history": "History",
+  "loading": "Loading...",
+  "noSessions": "No sessions recorded.",
+  "savedToast": "Session saved successfully!",
+  "removedToast": "Session removed.",
+  "dashboard": {
+    "totalLabel": "Total Time Tracked",
+    "sessions": "{{count}} sessions",
+    "byActivity": "Time per Activity",
+    "noActivity": "No sessions recorded.",
+    "byDay": "Time per Day (last 14 days)",
+    "noDescription": "No description",
+    "chartTime": "Time"
+  }
+}
