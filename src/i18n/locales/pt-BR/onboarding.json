@@ -1,0 +1,79 @@
+{
+  "wizard": {
+    "title": "Configuração inicial — passo {{step}} de {{total}}"
+  },
+  "common": {
+    "skipAll": "Pular tudo",
+    "skip": "Pular",
+    "back": "Voltar",
+    "saveAndContinue": "Salvar e continuar"
+  },
+  "step1": {
+    "title": "Bem-vindo!",
+    "subtitle": "Vamos configurar seu perfil em poucos passos. Os dados fiscais permitem emitir suas faturas.",
+    "displayName": "Seu nome",
+    "displayNamePlaceholder": "Como devemos te chamar",
+    "entityType": "Tipo de cadastro",
+    "individual": "Pessoa física",
+    "company": "Pessoa jurídica",
+    "legalNameCompany": "Razão social",
+    "legalNameIndividual": "Nome completo",
+    "taxIdCompany": "CNPJ",
+    "taxIdIndividual": "CPF",
+    "billingEmail": "Email de cobrança",
+    "billingAddress": "Endereço de cobrança",
+    "postalCode": "CEP",
+    "addressLine1": "Logradouro",
+    "addressNumber": "Número",
+    "addressComplement": "Complemento (opcional)",
+    "neighborhood": "Bairro",
+    "city": "Cidade",
+    "state": "UF",
+    "errors": {
+      "cepNotFound": "CEP não encontrado",
+      "cepFailed": "Falha ao buscar CEP",
+      "requiredFields": "Campos obrigatórios",
+      "saveFailed": "Erro ao salvar",
+      "unexpected": "Erro inesperado"
+    }
+  },
+  "step2": {
+    "title": "Crie seu primeiro time",
+    "subtitle": "Times organizam tarefas, ideias e conhecimentos compartilhados. Você pode criar mais depois.",
+    "name": "Nome do time",
+    "namePlaceholder": "Ex: Marketing",
+    "description": "Descrição (opcional)",
+    "create": "Criar time",
+    "errors": {
+      "nameRequired": "Informe um nome para o time",
+      "createFailed": "Erro ao criar time"
+    },
+    "success": "Time criado!"
+  },
+  "step3": {
+    "title": "Convide colegas",
+    "subtitle": "Convide até dois colegas agora. Eles receberão um link por email para criar a conta.",
+    "email1": "Email 1",
+    "email2": "Email 2 (opcional)",
+    "emailPlaceholder1": "colega@empresa.com",
+    "emailPlaceholder2": "outro@empresa.com",
+    "send": "Enviar convites",
+    "sentCount": "{{count}} convite(s) enviado(s)",
+    "someFailed": "Alguns convites falharam"
+  },
+  "step4": {
+    "title": "Crie sua primeira tarefa",
+    "subtitle": "Vamos popular seu Kanban. Você pode editar e adicionar detalhes depois.",
+    "taskTitle": "Título",
+    "taskTitlePlaceholder": "Ex: Configurar conta",
+    "description": "Descrição (opcional)",
+    "create": "Criar e concluir",
+    "skipFinish": "Concluir sem criar",
+    "errors": {
+      "titleRequired": "Informe um título",
+      "noStatus": "Nenhum status disponível",
+      "createFailed": "Erro ao criar tarefa"
+    },
+    "success": "Primeira tarefa criada!"
+  }
+}
