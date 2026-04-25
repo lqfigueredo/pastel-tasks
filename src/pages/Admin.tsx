@@ -406,7 +406,7 @@ export default function Admin() {
                               </Button>
                             </TooltipTrigger>
                             <TooltipContent>
-                              {isUserAdmin ? 'Remover admin' : 'Promover a admin'}
+                              {isUserAdmin ? t('actions.removeAdmin') : t('actions.promoteAdmin')}
                             </TooltipContent>
                           </Tooltip>
                         )}
@@ -425,7 +425,7 @@ export default function Admin() {
                                 <Pencil className="h-4 w-4 text-muted-foreground" />
                               </Button>
                             </TooltipTrigger>
-                            <TooltipContent>Editar usuário</TooltipContent>
+                            <TooltipContent>{t('actions.edit')}</TooltipContent>
                           </Tooltip>
                         )}
 
@@ -450,7 +450,7 @@ export default function Admin() {
                               </Button>
                             </TooltipTrigger>
                             <TooltipContent>
-                              {isBanned ? 'Reativar usuário' : 'Inativar usuário'}
+                              {isBanned ? t('actions.reactivate') : t('actions.deactivate')}
                             </TooltipContent>
                           </Tooltip>
                         )}
