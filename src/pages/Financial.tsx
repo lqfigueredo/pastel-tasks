@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, lazy, Suspense } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useSupportTicketsQuery } from '@/hooks/useSupportTicketsQuery';
 import {
   useFinancialDataQuery,
@@ -10,7 +11,7 @@ import {
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { format, isPast } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { getCurrentLocale } from '@/lib/date';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -32,8 +33,6 @@ const SubscriptionsTab = lazy(() => import('@/components/financial/Subscriptions
 const PlansTab = lazy(() => import('@/components/financial/PlansTab'));
 const VouchersTab = lazy(() => import('@/components/financial/VouchersTab'));
 const LegalDocumentsEditor = lazy(() => import('@/components/financial/LegalDocumentsEditor'));
-
-const TabFallback = () => <InlineLoader label="Carregando..." />;
 import {
   Table,
   TableBody,
@@ -56,6 +55,8 @@ import {
 import { Progress } from '@/components/ui/progress';
 
 const Financial = () => {
+  const { t } = useTranslation('financial');
+  const TabFallback = () => <InlineLoader label={t('page.loading')} />;
   const { user } = useAuth();
   const [isSolutionAdmin, setIsSolutionAdmin] = useState<boolean | null>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
