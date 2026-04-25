@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -18,7 +19,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { formatDistanceToNow, format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { getCurrentLocale } from '@/lib/date';
 
 interface TeamSummary {
   id: string;
@@ -38,6 +39,7 @@ interface PendingInvite {
 }
 
 const TeamList = () => {
+  const { t } = useTranslation('team');
   const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -116,14 +118,14 @@ const TeamList = () => {
       .single();
 
     if (error) {
-      toast({ title: 'Erro ao criar time', description: error.message, variant: 'destructive' });
+      toast({ title: t('list.errorCreate'), description: error.message, variant: 'destructive' });
       setCreating(false);
       return;
     }
 
     await supabase.from('team_members').insert({ team_id: newTeam.id, user_id: user.id });
 
-    toast({ title: 'Time criado com sucesso!' });
+    toast({ title: t('list.successCreate') });
     setTeamName('');
     setCreating(false);
     setDialogOpen(false);
@@ -140,7 +142,7 @@ const TeamList = () => {
       toast({ title: 'Erro', description: data?.error || error?.message, variant: 'destructive' });
       return;
     }
-    toast({ title: 'Convite revogado' });
+    toast({ title: t('list.successRevoke') });
     loadData();
   };
 
@@ -157,11 +159,11 @@ const TeamList = () => {
     });
     setActionLoading(null);
     if (error || data?.error) {
-      toast({ title: 'Erro ao reenviar', description: data?.error || error?.message, variant: 'destructive' });
+      toast({ title: t('list.errorResend'), description: data?.error || error?.message, variant: 'destructive' });
       loadData();
       return;
     }
-    toast({ title: 'Convite reenviado!', description: `Novo email enviado para ${invite.email}` });
+    toast({ title: t('list.successResend'), description: t('list.successResendDesc', { email: invite.email }) });
     loadData();
   };
 
@@ -178,37 +180,37 @@ const TeamList = () => {
       <div className="flex items-center justify-between">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="font-display text-2xl font-bold text-foreground mb-1">Equipes</h1>
+            <h1 className="font-display text-2xl font-bold text-foreground mb-1">{t('list.title')}</h1>
             <HelpButton pageKey="team" />
           </div>
-          <p className="text-sm text-muted-foreground">Gerencie seus times e colabore com outros membros</p>
+          <p className="text-sm text-muted-foreground">{t('list.subtitle')}</p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" onClick={() => setInviteOpen(true)}>
             <Mail className="h-4 w-4 mr-2" />
-            Convidar por email
+            {t('list.inviteByEmail')}
           </Button>
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
               <Button>
                 <Plus className="h-4 w-4 mr-2" />
-                Criar Time
+                {t('list.createTeam')}
               </Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Criar novo time</DialogTitle>
+                <DialogTitle>{t('list.createDialogTitle')}</DialogTitle>
               </DialogHeader>
               <div className="space-y-4 pt-2">
                 <Input
-                  placeholder="Nome do time"
+                  placeholder={t('list.namePlaceholder')}
                   value={teamName}
                   onChange={e => setTeamName(e.target.value)}
                   onKeyDown={e => e.key === 'Enter' && handleCreateTeam()}
                 />
                 <Button onClick={handleCreateTeam} disabled={creating || !teamName.trim()} className="w-full">
                   {creating ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Plus className="h-4 w-4 mr-2" />}
-                  Criar Time
+                  {t('list.createTeam')}
                 </Button>
               </div>
             </DialogContent>
@@ -222,26 +224,26 @@ const TeamList = () => {
         <Card className="max-w-md mx-auto">
           <CardHeader className="text-center">
             <Users className="h-12 w-12 mx-auto text-muted-foreground mb-2" />
-            <CardTitle className="text-lg">Nenhum time ainda</CardTitle>
-            <CardDescription>Crie um time para colaborar com outros membros</CardDescription>
+            <CardTitle className="text-lg">{t('list.emptyTitle')}</CardTitle>
+            <CardDescription>{t('list.emptyDesc')}</CardDescription>
           </CardHeader>
         </Card>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {teams.map(t => (
+          {teams.map(t2 => (
             <Card
-              key={t.id}
+              key={t2.id}
               className="cursor-pointer hover:border-primary/50 transition-colors group"
-              onClick={() => navigate(`/equipe/${t.id}`)}
+              onClick={() => navigate(`/equipe/${t2.id}`)}
             >
               <CardHeader className="pb-3">
                 <div className="flex items-start justify-between">
-                  <CardTitle className="text-base">{t.name}</CardTitle>
+                  <CardTitle className="text-base">{t2.name}</CardTitle>
                   <ChevronRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity mt-1" />
                 </div>
-                {t.description && (
+                {t2.description && (
                   <CardDescription className="line-clamp-2 text-xs">
-                    {t.description}
+                    {t2.description}
                   </CardDescription>
                 )}
               </CardHeader>
@@ -249,12 +251,12 @@ const TeamList = () => {
                 <div className="flex items-center gap-2">
                   <Badge variant="secondary" className="text-xs gap-1">
                     <Users className="h-3 w-3" />
-                    {t.member_count} {t.member_count === 1 ? 'membro' : 'membros'}
+                    {t2.member_count === 1 ? t('list.memberOne', { count: 1 }) : t('list.memberOther', { count: t2.member_count })}
                   </Badge>
-                  {t.created_by === user?.id && (
+                  {t2.created_by === user?.id && (
                     <Badge variant="outline" className="text-xs gap-1">
                       <Crown className="h-3 w-3" />
-                      Criador
+                      {t('list.creator')}
                     </Badge>
                   )}
                 </div>
@@ -269,9 +271,9 @@ const TeamList = () => {
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
               <Mail className="h-4 w-4" />
-              Convites pendentes ({invites.length})
+              {t('list.pendingInvites', { count: invites.length })}
             </CardTitle>
-            <CardDescription>Convites enviados aguardando aceite</CardDescription>
+            <CardDescription>{t('list.pendingDesc')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-2">
             {invites.map(inv => (
@@ -283,9 +285,9 @@ const TeamList = () => {
                   <div className="font-medium text-sm truncate">{inv.email}</div>
                   <div className="text-xs text-muted-foreground flex items-center gap-2 mt-0.5">
                     <Clock className="h-3 w-3" />
-                    Expira {formatDistanceToNow(new Date(inv.expires_at), { addSuffix: true, locale: ptBR })}
+                    {t('list.expires', { when: formatDistanceToNow(new Date(inv.expires_at), { addSuffix: true, locale: getCurrentLocale() }) })}
                     <span className="text-muted-foreground/60">·</span>
-                    Enviado em {format(new Date(inv.created_at), 'dd/MM/yyyy', { locale: ptBR })}
+                    {t('list.sentOn', { date: format(new Date(inv.created_at), 'dd/MM/yyyy', { locale: getCurrentLocale() }) })}
                   </div>
                 </div>
                 <div className="flex items-center gap-1">
@@ -294,7 +296,7 @@ const TeamList = () => {
                     variant="ghost"
                     onClick={() => handleResend(inv)}
                     disabled={actionLoading === inv.id}
-                    title="Reenviar convite"
+                    title={t('list.resendInvite')}
                   >
                     {actionLoading === inv.id ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
@@ -307,7 +309,7 @@ const TeamList = () => {
                     variant="ghost"
                     onClick={() => handleRevoke(inv.id)}
                     disabled={actionLoading === inv.id}
-                    title="Revogar convite"
+                    title={t('list.revokeInvite')}
                   >
                     <X className="h-4 w-4" />
                   </Button>
