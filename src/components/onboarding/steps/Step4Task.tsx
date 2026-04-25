@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useStatusesQuery } from '@/hooks/useStatusesQuery';
@@ -17,6 +18,7 @@ interface Props {
 }
 
 export const Step4Task = ({ teamId, onFinish, onBack, onSkip }: Props) => {
+  const { t } = useTranslation('onboarding');
   const { user } = useAuth();
   const { toast } = useToast();
   const { data: statuses } = useStatusesQuery();
@@ -27,12 +29,12 @@ export const Step4Task = ({ teamId, onFinish, onBack, onSkip }: Props) => {
   const handleCreate = async () => {
     if (!user) return;
     if (!title.trim()) {
-      toast({ title: 'Informe um título', variant: 'destructive' });
+      toast({ title: t('step4.errors.titleRequired'), variant: 'destructive' });
       return;
     }
     const defaultStatus = statuses?.find((s) => s.is_default) || statuses?.[0];
     if (!defaultStatus) {
-      toast({ title: 'Nenhum status disponível', variant: 'destructive' });
+      toast({ title: t('step4.errors.noStatus'), variant: 'destructive' });
       return;
     }
     setLoading(true);
@@ -45,10 +47,10 @@ export const Step4Task = ({ teamId, onFinish, onBack, onSkip }: Props) => {
         created_by: user.id,
       });
       if (error) throw error;
-      toast({ title: 'Primeira tarefa criada!' });
+      toast({ title: t('step4.success') });
       onFinish();
     } catch (err: any) {
-      toast({ title: 'Erro ao criar tarefa', description: err.message, variant: 'destructive' });
+      toast({ title: t('step4.errors.createFailed'), description: err.message, variant: 'destructive' });
     } finally {
       setLoading(false);
     }
@@ -57,29 +59,27 @@ export const Step4Task = ({ teamId, onFinish, onBack, onSkip }: Props) => {
   return (
     <div className="space-y-5">
       <div>
-        <h3 className="text-lg font-semibold mb-1">Crie sua primeira tarefa</h3>
-        <p className="text-sm text-muted-foreground">
-          Vamos popular seu Kanban. Você pode editar e adicionar detalhes depois.
-        </p>
+        <h3 className="text-lg font-semibold mb-1">{t('step4.title')}</h3>
+        <p className="text-sm text-muted-foreground">{t('step4.subtitle')}</p>
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="taskTitle">Título</Label>
-        <Input id="taskTitle" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Ex: Configurar conta" />
+        <Label htmlFor="taskTitle">{t('step4.taskTitle')}</Label>
+        <Input id="taskTitle" value={title} onChange={(e) => setTitle(e.target.value)} placeholder={t('step4.taskTitlePlaceholder')} />
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="taskDesc">Descrição (opcional)</Label>
+        <Label htmlFor="taskDesc">{t('step4.description')}</Label>
         <Textarea id="taskDesc" value={description} onChange={(e) => setDescription(e.target.value)} rows={3} />
       </div>
 
       <div className="flex justify-between pt-4 gap-2">
-        <Button variant="ghost" onClick={onSkip}>Concluir sem criar</Button>
+        <Button variant="ghost" onClick={onSkip}>{t('step4.skipFinish')}</Button>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={onBack}>Voltar</Button>
+          <Button variant="outline" onClick={onBack}>{t('common.back')}</Button>
           <Button onClick={handleCreate} disabled={loading}>
             {loading && <Loader2 className="h-4 w-4 animate-spin" />}
-            Criar e concluir
+            {t('step4.create')}
           </Button>
         </div>
       </div>

@@ -1,0 +1,66 @@
+{
+  "page": {
+    "title": "Assinatura e Cobrança",
+    "subtitle": "Gerencie seu plano, faturas e dados fiscais"
+  },
+  "status": {
+    "trialing": "Em período de teste",
+    "active": "Ativa",
+    "past_due": "Pagamento pendente",
+    "suspended": "Suspensa",
+    "canceled": "Cancelada",
+    "pending": "Aguardando ativação"
+  },
+  "notFound": {
+    "title": "Assinatura não encontrada",
+    "description": "Sua conta ainda não possui uma assinatura ativa. Entre em contato com o suporte."
+  },
+  "alerts": {
+    "pastDueTitle": "Atenção: pagamento pendente",
+    "suspendedDesc": "Sua assinatura foi suspensa por falta de pagamento. Regularize para reativar o acesso.",
+    "pastDueDesc": "Detectamos um problema com o último pagamento. Atualize sua forma de pagamento para evitar suspensão.",
+    "updatePayment": "Atualizar pagamento",
+    "trialEndingSoon": "Período de teste termina em {{days}} dia(s)",
+    "trialActive": "Você está em período de teste ({{days}} dias restantes)",
+    "trialActivateCta": "Ative sua assinatura agora para garantir continuidade do acesso da equipe.",
+    "activateNow": "Ativar agora",
+    "cancelScheduledTitle": "Cancelamento agendado",
+    "cancelScheduledDesc": "Sua assinatura será cancelada em {{date}}."
+  },
+  "summary": {
+    "seatsPurchased": "Assentos contratados",
+    "minSeats": "Mínimo de {{n}} assentos",
+    "inUse": "Em uso",
+    "monthlyEstimate": "Mensalidade estimada",
+    "perSeat": "{{value}} por assento",
+    "priceTbd": "Preço a ser definido"
+  },
+  "adjust": {
+    "title": "Ajustar assentos",
+    "description": "Aumente para adicionar mais usuários. Reduções entram em vigor no próximo ciclo.",
+    "newTotal": "Novo total de assentos",
+    "newMonthly": "Novo valor mensal estimado",
+    "requestUpgrade": "Solicitar upgrade",
+    "scheduleReduction": "Agendar redução",
+    "noChanges": "Sem alterações",
+    "minSeatsHelp": "Mínimo de {{n}} assentos",
+    "activeUsersHelp": " (você tem {{n}} usuários ativos)",
+    "reduceSubject": "Ajuste de assentos: reduzir para {{seats}} assentos ({{delta}})",
+    "reduceLabel": "redução de assentos para {{seats}}"
+  },
+  "cycle": {
+    "title": "Ciclo atual",
+    "periodStart": "Início do período",
+    "nextCharge": "Próxima cobrança",
+    "trialEndsAt": "Período de teste termina em"
+  },
+  "payment": {
+    "title": "Forma de pagamento",
+    "description": "Em breve: gestão automática de cartão e boleto via provedor.",
+    "manage": "Gerenciar pagamento",
+    "updateSubject": "Atualizar forma de pagamento",
+    "updateLabel": "atualização de forma de pagamento",
+    "activateSubject": "Quero ativar minha assinatura agora",
+    "activateLabel": "ativação imediata da assinatura"
+  }
+}

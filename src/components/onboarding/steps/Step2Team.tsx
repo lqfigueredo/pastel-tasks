@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Input } from '@/components/ui/input';
@@ -15,6 +16,7 @@ interface Props {
 }
 
 export const Step2Team = ({ onNext, onBack, onSkip }: Props) => {
+  const { t } = useTranslation('onboarding');
   const { user } = useAuth();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
@@ -24,7 +26,7 @@ export const Step2Team = ({ onNext, onBack, onSkip }: Props) => {
   const handleCreate = async () => {
     if (!user) return;
     if (!name.trim()) {
-      toast({ title: 'Informe um nome para o time', variant: 'destructive' });
+      toast({ title: t('step2.errors.nameRequired'), variant: 'destructive' });
       return;
     }
     setLoading(true);
@@ -39,10 +41,10 @@ export const Step2Team = ({ onNext, onBack, onSkip }: Props) => {
       // Add creator as team member
       await supabase.from('team_members').insert({ team_id: team.id, user_id: user.id });
 
-      toast({ title: 'Time criado!' });
+      toast({ title: t('step2.success') });
       onNext(team.id);
     } catch (err: any) {
-      toast({ title: 'Erro ao criar time', description: err.message, variant: 'destructive' });
+      toast({ title: t('step2.errors.createFailed'), description: err.message, variant: 'destructive' });
     } finally {
       setLoading(false);
     }
@@ -51,30 +53,28 @@ export const Step2Team = ({ onNext, onBack, onSkip }: Props) => {
   return (
     <div className="space-y-5">
       <div>
-        <h3 className="text-lg font-semibold mb-1">Crie seu primeiro time</h3>
-        <p className="text-sm text-muted-foreground">
-          Times organizam tarefas, ideias e conhecimentos compartilhados. Você pode criar mais depois.
-        </p>
+        <h3 className="text-lg font-semibold mb-1">{t('step2.title')}</h3>
+        <p className="text-sm text-muted-foreground">{t('step2.subtitle')}</p>
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="teamName">Nome do time</Label>
-        <Input id="teamName" value={name} onChange={(e) => setName(e.target.value)} placeholder="Ex: Marketing" />
+        <Label htmlFor="teamName">{t('step2.name')}</Label>
+        <Input id="teamName" value={name} onChange={(e) => setName(e.target.value)} placeholder={t('step2.namePlaceholder')} />
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="teamDesc">Descrição (opcional)</Label>
+        <Label htmlFor="teamDesc">{t('step2.description')}</Label>
         <Textarea id="teamDesc" value={description} onChange={(e) => setDescription(e.target.value)} rows={3} />
       </div>
 
       <div className="flex justify-between pt-4 gap-2">
-        <Button variant="ghost" onClick={onSkip}>Pular tudo</Button>
+        <Button variant="ghost" onClick={onSkip}>{t('common.skipAll')}</Button>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={onBack}>Voltar</Button>
-          <Button variant="outline" onClick={() => onNext(null)}>Pular</Button>
+          <Button variant="outline" onClick={onBack}>{t('common.back')}</Button>
+          <Button variant="outline" onClick={() => onNext(null)}>{t('common.skip')}</Button>
           <Button onClick={handleCreate} disabled={loading}>
             {loading && <Loader2 className="h-4 w-4 animate-spin" />}
-            Criar time
+            {t('step2.create')}
           </Button>
         </div>
       </div>

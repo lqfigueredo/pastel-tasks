@@ -18,6 +18,9 @@ import ptIdeas from './locales/pt-BR/ideas.json';
 import ptMeetings from './locales/pt-BR/meetings.json';
 import ptKnowledge from './locales/pt-BR/knowledge.json';
 import ptWorkInstructions from './locales/pt-BR/workInstructions.json';
+import ptOnboarding from './locales/pt-BR/onboarding.json';
+import ptBilling from './locales/pt-BR/billing.json';
+import ptPricing from './locales/pt-BR/pricing.json';
 
 import enCommon from './locales/en/common.json';
 import enNav from './locales/en/nav.json';
@@ -33,6 +36,9 @@ import enIdeas from './locales/en/ideas.json';
 import enMeetings from './locales/en/meetings.json';
 import enKnowledge from './locales/en/knowledge.json';
 import enWorkInstructions from './locales/en/workInstructions.json';
+import enOnboarding from './locales/en/onboarding.json';
+import enBilling from './locales/en/billing.json';
+import enPricing from './locales/en/pricing.json';
 
 export const SUPPORTED_LOCALES = ['pt-BR', 'en'] as const;
 export type SupportedLocale = (typeof SUPPORTED_LOCALES)[number];
@@ -54,6 +60,9 @@ const NAMESPACES = [
   'meetings',
   'knowledge',
   'workInstructions',
+  'onboarding',
+  'billing',
+  'pricing',
 ] as const;
 
 const resources = {
@@ -72,6 +81,9 @@ const resources = {
     meetings: ptMeetings,
     knowledge: ptKnowledge,
     workInstructions: ptWorkInstructions,
+    onboarding: ptOnboarding,
+    billing: ptBilling,
+    pricing: ptPricing,
   },
   en: {
     common: enCommon,
@@ -88,6 +100,9 @@ const resources = {
     meetings: enMeetings,
     knowledge: enKnowledge,
     workInstructions: enWorkInstructions,
+    onboarding: enOnboarding,
+    billing: enBilling,
+    pricing: enPricing,
   },
 } as const;
 

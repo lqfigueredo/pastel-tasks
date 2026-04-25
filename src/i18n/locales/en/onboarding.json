@@ -1,0 +1,79 @@
+{
+  "wizard": {
+    "title": "Initial setup — step {{step}} of {{total}}"
+  },
+  "common": {
+    "skipAll": "Skip all",
+    "skip": "Skip",
+    "back": "Back",
+    "saveAndContinue": "Save and continue"
+  },
+  "step1": {
+    "title": "Welcome!",
+    "subtitle": "Let's set up your profile in a few steps. Tax details allow us to issue your invoices.",
+    "displayName": "Your name",
+    "displayNamePlaceholder": "How should we call you",
+    "entityType": "Account type",
+    "individual": "Individual",
+    "company": "Company",
+    "legalNameCompany": "Legal name",
+    "legalNameIndividual": "Full name",
+    "taxIdCompany": "Tax ID (CNPJ)",
+    "taxIdIndividual": "Tax ID (CPF)",
+    "billingEmail": "Billing email",
+    "billingAddress": "Billing address",
+    "postalCode": "ZIP code",
+    "addressLine1": "Street",
+    "addressNumber": "Number",
+    "addressComplement": "Complement (optional)",
+    "neighborhood": "Neighborhood",
+    "city": "City",
+    "state": "State",
+    "errors": {
+      "cepNotFound": "ZIP code not found",
+      "cepFailed": "Failed to look up ZIP",
+      "requiredFields": "Required fields",
+      "saveFailed": "Failed to save",
+      "unexpected": "Unexpected error"
+    }
+  },
+  "step2": {
+    "title": "Create your first team",
+    "subtitle": "Teams organize shared tasks, ideas and knowledge. You can create more later.",
+    "name": "Team name",
+    "namePlaceholder": "e.g. Marketing",
+    "description": "Description (optional)",
+    "create": "Create team",
+    "errors": {
+      "nameRequired": "Provide a team name",
+      "createFailed": "Failed to create team"
+    },
+    "success": "Team created!"
+  },
+  "step3": {
+    "title": "Invite teammates",
+    "subtitle": "Invite up to two teammates now. They'll get an email link to create their account.",
+    "email1": "Email 1",
+    "email2": "Email 2 (optional)",
+    "emailPlaceholder1": "colleague@company.com",
+    "emailPlaceholder2": "another@company.com",
+    "send": "Send invites",
+    "sentCount": "{{count}} invite(s) sent",
+    "someFailed": "Some invites failed"
+  },
+  "step4": {
+    "title": "Create your first task",
+    "subtitle": "Let's populate your Kanban. You can edit and add details later.",
+    "taskTitle": "Title",
+    "taskTitlePlaceholder": "e.g. Set up account",
+    "description": "Description (optional)",
+    "create": "Create and finish",
+    "skipFinish": "Finish without creating",
+    "errors": {
+      "titleRequired": "Provide a title",
+      "noStatus": "No status available",
+      "createFailed": "Failed to create task"
+    },
+    "success": "First task created!"
+  }
+}

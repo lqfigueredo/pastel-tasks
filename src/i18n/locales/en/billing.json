@@ -1,0 +1,66 @@
+{
+  "page": {
+    "title": "Subscription & Billing",
+    "subtitle": "Manage your plan, invoices and tax details"
+  },
+  "status": {
+    "trialing": "Trial",
+    "active": "Active",
+    "past_due": "Payment pending",
+    "suspended": "Suspended",
+    "canceled": "Canceled",
+    "pending": "Awaiting activation"
+  },
+  "notFound": {
+    "title": "Subscription not found",
+    "description": "Your account does not have an active subscription yet. Please contact support."
+  },
+  "alerts": {
+    "pastDueTitle": "Attention: payment pending",
+    "suspendedDesc": "Your subscription was suspended due to non-payment. Settle to reactivate access.",
+    "pastDueDesc": "We detected an issue with the last payment. Update your payment method to avoid suspension.",
+    "updatePayment": "Update payment",
+    "trialEndingSoon": "Trial ends in {{days}} day(s)",
+    "trialActive": "You are on trial ({{days}} days remaining)",
+    "trialActivateCta": "Activate your subscription now to ensure your team's continued access.",
+    "activateNow": "Activate now",
+    "cancelScheduledTitle": "Cancellation scheduled",
+    "cancelScheduledDesc": "Your subscription will be canceled on {{date}}."
+  },
+  "summary": {
+    "seatsPurchased": "Seats purchased",
+    "minSeats": "Minimum of {{n}} seats",
+    "inUse": "In use",
+    "monthlyEstimate": "Estimated monthly",
+    "perSeat": "{{value}} per seat",
+    "priceTbd": "Price to be defined"
+  },
+  "adjust": {
+    "title": "Adjust seats",
+    "description": "Increase to add more users. Reductions take effect on the next cycle.",
+    "newTotal": "New seat total",
+    "newMonthly": "New estimated monthly amount",
+    "requestUpgrade": "Request upgrade",
+    "scheduleReduction": "Schedule reduction",
+    "noChanges": "No changes",
+    "minSeatsHelp": "Minimum of {{n}} seats",
+    "activeUsersHelp": " (you have {{n}} active users)",
+    "reduceSubject": "Seat adjustment: reduce to {{seats}} seats ({{delta}})",
+    "reduceLabel": "reduce seats to {{seats}}"
+  },
+  "cycle": {
+    "title": "Current cycle",
+    "periodStart": "Period start",
+    "nextCharge": "Next charge",
+    "trialEndsAt": "Trial ends on"
+  },
+  "payment": {
+    "title": "Payment method",
+    "description": "Coming soon: automatic management of card and bank slip via provider.",
+    "manage": "Manage payment",
+    "updateSubject": "Update payment method",
+    "updateLabel": "payment method update",
+    "activateSubject": "I want to activate my subscription now",
+    "activateLabel": "immediate subscription activation"
+  }
+}

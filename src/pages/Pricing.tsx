@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Check, Sparkles, ArrowRight } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -18,23 +19,21 @@ interface Plan {
   features: unknown;
 }
 
-const formatBRL = (cents: number) =>
-  new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(cents / 100);
-
 const Pricing = () => {
+  const { t, i18n } = useTranslation('pricing');
   const [plans, setPlans] = useState<Plan[]>([]);
   const [loading, setLoading] = useState(true);
   const [seats, setSeats] = useState(10);
 
+  const formatMoney = (cents: number, currency: string) =>
+    new Intl.NumberFormat(i18n.language || 'pt-BR', { style: 'currency', currency }).format(cents / 100);
+
   useEffect(() => {
-    document.title = 'Preços do NEVVOH — Gestão de tarefas a partir de R$ por usuário';
+    document.title = t('meta.title');
     const meta =
       document.querySelector('meta[name="description"]') ||
       Object.assign(document.createElement('meta'), { name: 'description' });
-    meta.setAttribute(
-      'content',
-      'Conheça os planos do NEVVOH: cobrança mensal por usuário, mínimo de 10 assentos e 14 dias de teste grátis sem cartão.'
-    );
+    meta.setAttribute('content', t('meta.description'));
     if (!meta.parentNode) document.head.appendChild(meta);
 
     supabase
@@ -47,7 +46,7 @@ const Pricing = () => {
         if (data && data.length > 0) setSeats((data[0] as Plan).minimum_seats);
         setLoading(false);
       });
-  }, []);
+  }, [t]);
 
   const primary = plans[0];
   const monthlyTotal = useMemo(() => {
@@ -63,6 +62,8 @@ const Pricing = () => {
     return [];
   }, [primary]);
 
+  const faqItems = t('faq.items', { returnObjects: true }) as Array<{ q: string; a: string }>;
+
   return (
     <div className="min-h-screen bg-background text-foreground scroll-smooth">
       <header className="border-b border-border/50 bg-background/80 backdrop-blur-sm sticky top-0 z-10">
@@ -73,10 +74,10 @@ const Pricing = () => {
           </Link>
           <nav className="flex items-center gap-2">
             <Link to="/" className="text-sm text-muted-foreground hover:text-foreground px-3">
-              Início
+              {t('header.home')}
             </Link>
             <Link to="/auth">
-              <Button variant="outline" size="sm">Já tenho conta</Button>
+              <Button variant="outline" size="sm">{t('header.haveAccount')}</Button>
             </Link>
           </nav>
         </div>
@@ -87,13 +88,13 @@ const Pricing = () => {
         <div className="relative mx-auto max-w-4xl px-6 py-20 text-center">
           <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 text-sm font-medium text-primary mb-6">
             <Sparkles className="h-4 w-4" />
-            14 dias grátis, sem cartão
+            {t('hero.badge')}
           </div>
           <h1 className="text-4xl font-bold tracking-tight sm:text-5xl font-display">
-            Preço transparente, <span className="text-primary">por usuário</span>
+            {t('hero.title1')} <span className="text-primary">{t('hero.titleHighlight')}</span>
           </h1>
           <p className="mx-auto mt-6 max-w-2xl text-lg text-muted-foreground">
-            Sem letras miúdas. Pague apenas pelos assentos da sua equipe e cancele quando quiser.
+            {t('hero.subtitle')}
           </p>
         </div>
       </section>
@@ -105,7 +106,7 @@ const Pricing = () => {
               <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
             </div>
           ) : !primary ? (
-            <p className="text-center text-muted-foreground">Nenhum plano disponível no momento.</p>
+            <p className="text-center text-muted-foreground">{t('noPlans')}</p>
           ) : (
             <div className="rounded-2xl border-2 border-primary/30 bg-card shadow-xl overflow-hidden">
               <div className="bg-primary/5 border-b border-primary/20 p-8 text-center">
@@ -115,14 +116,14 @@ const Pricing = () => {
                 )}
                 <div className="mt-6 flex items-baseline justify-center gap-2">
                   <span className="text-5xl font-bold text-primary font-display">
-                    {formatBRL(primary.price_per_seat_cents)}
+                    {formatMoney(primary.price_per_seat_cents, primary.currency)}
                   </span>
-                  <span className="text-muted-foreground">/usuário/mês</span>
+                  <span className="text-muted-foreground">{t('plan.perSeatMonth')}</span>
                 </div>
                 <p className="mt-2 text-sm text-muted-foreground">
-                  A partir de {primary.minimum_seats} assentos •{' '}
+                  {t('plan.fromSeats', { n: primary.minimum_seats })} •{' '}
                   <span className="font-semibold text-foreground">
-                    valor mínimo {formatBRL(primary.minimum_seats * primary.price_per_seat_cents)}/mês
+                    {t('plan.minValue', { value: formatMoney(primary.minimum_seats * primary.price_per_seat_cents, primary.currency) })}
                   </span>
                 </p>
               </div>
@@ -130,7 +131,7 @@ const Pricing = () => {
               <div className="p-8 space-y-8">
                 <div className="rounded-xl bg-muted/50 p-6">
                   <div className="flex items-center justify-between mb-4">
-                    <span className="font-medium">Quantos usuários?</span>
+                    <span className="font-medium">{t('plan.howManyUsers')}</span>
                     <span className="text-2xl font-bold text-primary font-display">{seats}</span>
                   </div>
                   <Slider
@@ -142,8 +143,8 @@ const Pricing = () => {
                     className="mb-4"
                   />
                   <div className="flex items-center justify-between pt-4 border-t border-border">
-                    <span className="text-sm text-muted-foreground">Mensalidade estimada</span>
-                    <span className="text-3xl font-bold font-display">{formatBRL(monthlyTotal)}</span>
+                    <span className="text-sm text-muted-foreground">{t('plan.monthlyEstimate')}</span>
+                    <span className="text-3xl font-bold font-display">{formatMoney(monthlyTotal, primary.currency)}</span>
                   </div>
                 </div>
 
@@ -161,7 +162,7 @@ const Pricing = () => {
                 <div className="flex flex-col sm:flex-row gap-3 pt-4">
                   <Link to="/auth" className="flex-1">
                     <Button size="lg" className="w-full gap-2">
-                      Começar teste grátis
+                      {t('plan.startTrial')}
                       <ArrowRight className="h-4 w-4" />
                     </Button>
                   </Link>
@@ -178,31 +179,10 @@ const Pricing = () => {
       <section className="border-t border-border/50 bg-muted/30 py-20">
         <div className="mx-auto max-w-3xl px-6">
           <h2 className="text-center text-2xl font-bold sm:text-3xl font-display mb-10">
-            Perguntas frequentes
+            {t('faq.title')}
           </h2>
           <div className="space-y-4">
-            {[
-              {
-                q: 'Posso cancelar quando quiser?',
-                a: 'Sim. Você pode cancelar a assinatura a qualquer momento pelo painel de cobrança. O acesso continua até o fim do período já pago.',
-              },
-              {
-                q: 'Como funciona o teste grátis?',
-                a: 'São 14 dias completos com acesso a todos os módulos, sem precisar cadastrar cartão. Ao final, você decide se ativa a assinatura.',
-              },
-              {
-                q: 'Por que o mínimo é de 10 assentos?',
-                a: 'O NEVVOH foi desenhado para times. O mínimo de 10 assentos garante que você tenha espaço para crescer e que a colaboração entre membros seja efetiva desde o início.',
-              },
-              {
-                q: 'Posso aumentar ou diminuir assentos depois?',
-                a: 'Sim. Pelo painel de cobrança você ajusta o número de assentos quando precisar e a próxima fatura é recalculada automaticamente.',
-              },
-              {
-                q: 'Quais formas de pagamento são aceitas?',
-                a: 'No momento o pagamento é processado manualmente pelo time comercial. Em breve teremos checkout automático com cartão e Pix.',
-              },
-            ].map((faq, i) => (
+            {faqItems.map((faq, i) => (
               <details key={i} className="group rounded-xl border border-border bg-card p-5">
                 <summary className="cursor-pointer list-none flex items-center justify-between font-semibold">
                   <span>{faq.q}</span>
@@ -224,10 +204,10 @@ const Pricing = () => {
             <span className="text-sm font-semibold">NEVVOH</span>
           </div>
           <p className="text-sm text-muted-foreground">
-            © {new Date().getFullYear()} NEVVOH. Todos os direitos reservados.
+            {t('footer.copyright', { year: new Date().getFullYear() })}
           </p>
           <Link to="/auth" className="text-sm text-primary hover:underline">
-            Acessar plataforma
+            {t('footer.access')}
           </Link>
         </div>
       </footer>
