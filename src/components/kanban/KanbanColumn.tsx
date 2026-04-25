@@ -91,7 +91,7 @@ function KanbanColumnImpl({
   return (
     <div
       className={cn(
-        "min-w-[280px] flex-1 rounded-xl border bg-muted/30 p-3 transition-all",
+        "min-w-[280px] w-[85vw] sm:w-auto sm:flex-1 snap-start rounded-xl border bg-muted/30 p-3 transition-all",
         dragOver && dragColIdx === null ? "border-primary border-2 bg-primary/5" : "border-border/50",
         isColumnDragOver && "border-primary border-2 border-dashed bg-primary/5",
         isColumnDragging && "opacity-50"
