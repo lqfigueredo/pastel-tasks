@@ -288,7 +288,7 @@ const Index = () => {
               </div>
             </PopoverContent>
           </Popover>
-          <Button onClick={() => setCreateOpen(true)} className="gap-2">
+          <Button onClick={() => setCreateOpen(true)} className="gap-2 flex-1 sm:flex-none">
             <Plus className="h-4 w-4" />
             Nova Tarefa
           </Button>
