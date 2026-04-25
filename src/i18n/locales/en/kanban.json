@@ -1,0 +1,239 @@
+{
+  "page": {
+    "title": "My Tasks",
+    "subtitleFiltered": "{{visible}} of {{total}} task",
+    "subtitleFiltered_plural": "{{visible}} of {{total}} tasks",
+    "subtitleAll": "{{count}} task in total",
+    "subtitleAll_plural": "{{count}} tasks in total",
+    "filterPrefix": "Filter: {{name}}",
+    "removeFilter": "Remove filter",
+    "filterByAssignee": "Filter by assignee",
+    "allAssignees": "All assignees",
+    "noName": "No name",
+    "newTask": "New Task"
+  },
+  "export": {
+    "trigger": "Export CSV",
+    "title": "Export tasks",
+    "description": "Filter by creation period. Leave blank to export all.",
+    "startDate": "Start date",
+    "endDate": "End date",
+    "select": "Select",
+    "clear": "Clear",
+    "download": "Download CSV",
+    "empty": "No tasks to export in the selected period",
+    "success": "CSV exported with {{count}} task",
+    "success_plural": "CSV exported with {{count}} tasks",
+    "headers": {
+      "id": "ID",
+      "title": "Title",
+      "description": "Description",
+      "status": "Status",
+      "assignees": "Assignees",
+      "startDate": "Start date",
+      "estimatedDate": "Due date",
+      "endDate": "End date",
+      "critical": "Critical",
+      "createdAt": "Created at"
+    },
+    "yes": "Yes",
+    "no": "No",
+    "noAssigneeName": "No name"
+  },
+  "savedFilters": {
+    "trigger": "Saved filters",
+    "label": "My filters",
+    "empty": "No saved filters yet",
+    "saveCurrent": "Save current filter",
+    "delete": "Delete filter",
+    "saveTitle": "Save current filter",
+    "nameLabel": "Filter name",
+    "namePlaceholder": "e.g. My tasks, Marketing team...",
+    "savedToast": "Filter saved!",
+    "errorSave": "Failed to save filter",
+    "errorDelete": "Failed to delete"
+  },
+  "column": {
+    "dragHandle": "Drag to reorder",
+    "minimize": "Collapse column",
+    "emptyTitle": "No tasks here",
+    "emptyDescription": "Drag cards to this column or create a new task."
+  },
+  "card": {
+    "recurring": "Recurring task",
+    "critical": "Critical task",
+    "fromMeeting": "Linked to a meeting minute",
+    "expand": "Expand",
+    "minimize": "Minimize",
+    "expandCard": "Expand card",
+    "minimizeCard": "Minimize card",
+    "movePrev": "Move to previous status",
+    "moveNext": "Move to next status",
+    "moveLabel": "Move"
+  },
+  "mobile": {
+    "emptyStatus": "No tasks in this status"
+  },
+  "create": {
+    "title": "New Task",
+    "description": "Fill in the new task details",
+    "fields": {
+      "title": "Title",
+      "titlePlaceholder": "Task title",
+      "descLabel": "Description",
+      "descPlaceholder": "Brief description...",
+      "status": "Status",
+      "statusPlaceholder": "Select a status",
+      "assignees": "Assignees",
+      "linkTeam": "Link to team",
+      "critical": "Critical",
+      "fromMeeting": "Meeting",
+      "recurring": "Recurring",
+      "meeting": "Meeting Minute",
+      "selectMeeting": "Select a minute...",
+      "pendency": "Pending item",
+      "selectPendency": "Select a pending item...",
+      "frequency": "Frequency",
+      "weekday": "Day of week",
+      "monthDay": "Day of month",
+      "dayN": "Day {{day}}",
+      "month": "Month",
+      "startDate": "Start Date",
+      "estimatedDate": "Due Date"
+    },
+    "frequencyOptions": {
+      "daily": "Daily",
+      "weekly": "Weekly",
+      "monthly": "Monthly",
+      "yearly": "Yearly"
+    },
+    "weekdays": {
+      "0": "Sunday",
+      "1": "Monday",
+      "2": "Tuesday",
+      "3": "Wednesday",
+      "4": "Thursday",
+      "5": "Friday",
+      "6": "Saturday"
+    },
+    "months": {
+      "0": "January",
+      "1": "February",
+      "2": "March",
+      "3": "April",
+      "4": "May",
+      "5": "June",
+      "6": "July",
+      "7": "August",
+      "8": "September",
+      "9": "October",
+      "10": "November",
+      "11": "December"
+    },
+    "validation": {
+      "titleRequired": "Enter a title.",
+      "yearRange": "Year must be between 1900 and 2100.",
+      "selectStatus": "Select a status",
+      "selectStatusDesc": "Choose a status for the task before saving."
+    },
+    "submit": "Create Task",
+    "submitRecurring": "Create Recurrence",
+    "submitting": "Creating...",
+    "errors": {
+      "create": "create the task",
+      "createRecurring": "create the recurrence"
+    },
+    "success": "Task created!",
+    "successRecurring": "Recurring task created!"
+  },
+  "detail": {
+    "title": "Task Details",
+    "description": "Edit fields and save changes",
+    "copyId": "Copy task ID",
+    "clickToCopy": "Click to copy",
+    "idCopied": "ID copied!",
+    "errorCopy": "Failed to copy ID",
+    "fields": {
+      "title": "Title",
+      "fullDescription": "Full Description",
+      "status": "Status",
+      "assignees": "Assignees",
+      "critical": "Critical Task",
+      "start": "Start",
+      "estimated": "Due",
+      "actualEnd": "Actual End"
+    },
+    "fromMeetingLabel": "Origin: Meeting",
+    "invalidDate": "Invalid date",
+    "yearRange": "Year must be between 1900 and 2100.",
+    "errorSave": "Failed to save",
+    "updated": "Task updated!",
+    "saving": "Saving...",
+    "save": "Save",
+    "cancel": "Cancel",
+    "moveTask": "move the task",
+    "justifyTitle": "Justification Required",
+    "justifyDescription": "The estimated delivery date is being changed. Please explain the reason.",
+    "justifyPlaceholder": "Reason for the date change...",
+    "justifyRequired": "Justification required",
+    "justifyConfirm": "Confirm",
+    "dateChanged": "📅 Estimated date changed: {{reason}}",
+    "comments": "Comments",
+    "noComments": "No comments",
+    "addComment": "Add comment...",
+    "errorComment": "Failed to add comment",
+    "errorCommentDesc": "You may not have permission to comment on this task."
+  },
+  "attachments": {
+    "title": "Attachments",
+    "upload": "Upload file",
+    "uploading": "Uploading...",
+    "empty": "No attachments",
+    "preview": "Preview",
+    "delete": "Delete",
+    "errorUpload": "Failed to upload {{name}}",
+    "uploaded": "Attachment(s) uploaded!"
+  },
+  "timer": {
+    "title": "Time Tracker",
+    "stop": "Stop",
+    "start": "Start Timer",
+    "consolidate": "Consolidate Hours",
+    "totalsByUser": "Total Hours per User",
+    "grandTotal": "Grand Total",
+    "previousSessions": "Previous sessions",
+    "noSessions": "No sessions recorded",
+    "errorStart": "Failed to start timer",
+    "errorStop": "Failed to stop timer",
+    "userFallback": "User"
+  },
+  "history": {
+    "title": "Change History",
+    "show": "expand",
+    "hide": "hide",
+    "empty": "No changes recorded",
+    "userFallback": "User",
+    "empty_value": "empty",
+    "fields": {
+      "title": "Title",
+      "description": "Description",
+      "status": "Status",
+      "start_date": "Start date",
+      "actual_end_date": "Actual end date",
+      "estimated_delivery_date": "Due date",
+      "assignee_added": "Assignee added",
+      "assignee_removed": "Assignee removed"
+    }
+  },
+  "linkedIdeas": {
+    "label": "Linked Ideas",
+    "searchPlaceholder": "Search idea to link...",
+    "empty": "No linked ideas",
+    "implemented": "Implemented",
+    "pending": "Pending"
+  },
+  "assignee": {
+    "add": "Add",
+    "empty": "No profile found"
+  }
+}

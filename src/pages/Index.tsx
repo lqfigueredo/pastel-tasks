@@ -1,13 +1,14 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { Plus, X, Download, Calendar as CalendarIcon } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
-import { ptBR } from 'date-fns/locale';
+import { getCurrentLocale } from '@/lib/date';
 import { KanbanBoard, KanbanBoardRef } from '@/components/kanban/KanbanBoard';
 import { CreateTaskDialog } from '@/components/kanban/CreateTaskDialog';
 import { useUserRoles } from '@/hooks/useUserRoles';
@@ -25,10 +26,9 @@ import { toast } from 'sonner';
 import { format } from 'date-fns';
 
 const Index = () => {
+  const { t } = useTranslation('kanban');
   const [createOpen, setCreateOpen] = useState(false);
   const { user } = useAuth();
-  // Default filter: show only the logged-in user's tasks. Users can switch to
-  // "Todos os responsáveis" via the existing selector to see the full team board.
   const [filterAssigneeId, setFilterAssigneeId] = useState<string | null>(user?.id ?? null);
   const [counts, setCounts] = useState<{ visible: number; total: number }>({ visible: 0, total: 0 });
   const [exportStartDate, setExportStartDate] = useState<Date | undefined>(undefined);
@@ -56,19 +56,12 @@ const Index = () => {
     }
   }, [isSolutionAdmin, isAdmin, isRegularUser, navigate]);
 
-  // When auth resolves after first render, default the filter to the logged-in user
-  // (only if user hasn't manually changed it yet — i.e. it's still null).
   useEffect(() => {
     setFilterAssigneeId((current) => (current === null && user?.id ? user.id : current));
   }, [user?.id]);
 
-  const handleTaskCreated = () => {
-    boardRef.current?.refresh();
-  };
-
-  const handleCountChange = useCallback((visible: number, total: number) => {
-    setCounts({ visible, total });
-  }, []);
+  const handleTaskCreated = () => boardRef.current?.refresh();
+  const handleCountChange = useCallback((visible: number, total: number) => setCounts({ visible, total }), []);
 
   const profiles = useMemo(
     () =>
@@ -83,8 +76,8 @@ const Index = () => {
     : null;
 
   const subtitle = filterAssigneeId
-    ? `${counts.visible} de ${counts.total} tarefa${counts.total === 1 ? '' : 's'}`
-    : `${counts.total} tarefa${counts.total === 1 ? '' : 's'} no total`;
+    ? t('page.subtitleFiltered', { visible: counts.visible, total: counts.total, count: counts.total })
+    : t('page.subtitleAll', { count: counts.total });
 
   const { data: tasksData } = useTasksQuery();
   const { data: statuses } = useStatusesQuery();
@@ -93,85 +86,85 @@ const Index = () => {
     const allTasks = tasksData?.tasks ?? [];
     const statusMap = new Map((statuses ?? []).map((s) => [s.id, s.name]));
 
-    // Match the same filter applied to the visible board
     let tasks = filterAssigneeId
       ? allTasks.filter((t) => t.assignees.some((a) => a.user_id === filterAssigneeId))
       : allTasks;
 
-    // Apply date range filter on created_at (inclusive). End date covers the
-    // entire day by extending to 23:59:59.999.
     if (exportStartDate || exportEndDate) {
       const startMs = exportStartDate ? new Date(exportStartDate).setHours(0, 0, 0, 0) : -Infinity;
       const endMs = exportEndDate ? new Date(exportEndDate).setHours(23, 59, 59, 999) : Infinity;
-      tasks = tasks.filter((t) => {
-        if (!t.created_at) return false;
-        const ms = new Date(t.created_at).getTime();
+      tasks = tasks.filter((tk) => {
+        if (!tk.created_at) return false;
+        const ms = new Date(tk.created_at).getTime();
         return ms >= startMs && ms <= endMs;
       });
     }
 
     if (tasks.length === 0) {
-      toast.info('Nenhuma tarefa para exportar no período selecionado');
+      toast.info(t('export.empty'));
       return;
     }
 
     const headers = [
-      'ID',
-      'Título',
-      'Descrição',
-      'Status',
-      'Responsáveis',
-      'Data início',
-      'Prazo estimado',
-      'Data fim',
-      'Crítica',
-      'Criada em',
+      t('export.headers.id'),
+      t('export.headers.title'),
+      t('export.headers.description'),
+      t('export.headers.status'),
+      t('export.headers.assignees'),
+      t('export.headers.startDate'),
+      t('export.headers.estimatedDate'),
+      t('export.headers.endDate'),
+      t('export.headers.critical'),
+      t('export.headers.createdAt'),
     ];
 
-    const rows = tasks.map((t) => [
-      t.id,
-      t.title,
-      t.description ?? '',
-      statusMap.get(t.status_id) ?? '',
-      t.assignees.map((a) => a.display_name || 'Sem nome').join('; '),
-      t.start_date ?? '',
-      t.estimated_delivery_date ?? '',
-      t.end_date ?? '',
-      t.is_critical ? 'Sim' : 'Não',
-      t.created_at ? format(new Date(t.created_at), 'dd/MM/yyyy HH:mm') : '',
+    const rows = tasks.map((tk) => [
+      tk.id,
+      tk.title,
+      tk.description ?? '',
+      statusMap.get(tk.status_id) ?? '',
+      tk.assignees.map((a) => a.display_name || t('export.noAssigneeName')).join('; '),
+      tk.start_date ?? '',
+      tk.estimated_delivery_date ?? '',
+      tk.end_date ?? '',
+      tk.is_critical ? t('export.yes') : t('export.no'),
+      tk.created_at ? format(new Date(tk.created_at), 'dd/MM/yyyy HH:mm') : '',
     ]);
 
     const csv = buildCsv(headers, rows);
     const filename = `tarefas_${format(new Date(), 'yyyy-MM-dd')}.csv`;
     downloadCsv(filename, csv);
-    toast.success(`CSV exportado com ${tasks.length} tarefa${tasks.length === 1 ? '' : 's'}`);
+    toast.success(t('export.success', { count: tasks.length }));
     setExportPopoverOpen(false);
-  }, [tasksData, statuses, filterAssigneeId, exportStartDate, exportEndDate]);
+  }, [tasksData, statuses, filterAssigneeId, exportStartDate, exportEndDate, t]);
 
   const clearExportDates = useCallback(() => {
     setExportStartDate(undefined);
     setExportEndDate(undefined);
   }, []);
 
+  const dateLocale = getCurrentLocale();
 
   return (
     <div className="animate-fade-in min-w-0">
       <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div className="min-w-0">
           <div className="flex items-center gap-2">
-            <h1 className="font-display text-xl md:text-2xl font-bold text-foreground truncate">Minhas Tarefas</h1>
+            <h1 className="font-display text-xl md:text-2xl font-bold text-foreground truncate">{t('page.title')}</h1>
             <HelpButton pageKey="tasks" />
           </div>
           <div className="mt-1 flex items-center gap-2 flex-wrap">
             <p className="text-sm text-muted-foreground truncate">{subtitle}</p>
             {filteredAssignee && (
               <Badge variant="secondary" className="gap-1 pl-2 pr-1">
-                <span className="text-xs truncate max-w-[160px]">Filtro: {filteredAssignee.display_name || 'Sem nome'}</span>
+                <span className="text-xs truncate max-w-[160px]">
+                  {t('page.filterPrefix', { name: filteredAssignee.display_name || t('page.noName') })}
+                </span>
                 <button
                   type="button"
                   onClick={() => setFilterAssigneeId(null)}
                   className="rounded-full p-0.5 hover:bg-muted-foreground/20 transition-colors shrink-0"
-                  aria-label="Remover filtro"
+                  aria-label={t('page.removeFilter')}
                 >
                   <X className="h-3 w-3" />
                 </button>
@@ -189,13 +182,13 @@ const Index = () => {
             onValueChange={(v) => setFilterAssigneeId(v === 'all' ? null : v)}
           >
             <SelectTrigger className="w-full sm:w-[200px]">
-              <SelectValue placeholder="Filtrar por responsável" />
+              <SelectValue placeholder={t('page.filterByAssignee')} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Todos os responsáveis</SelectItem>
+              <SelectItem value="all">{t('page.allAssignees')}</SelectItem>
               {profiles.map((p) => (
                 <SelectItem key={p.user_id} value={p.user_id}>
-                  {p.display_name || 'Sem nome'}
+                  {p.display_name || t('page.noName')}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -204,19 +197,17 @@ const Index = () => {
             <PopoverTrigger asChild>
               <Button variant="outline" className="gap-2 flex-1 sm:flex-none">
                 <Download className="h-4 w-4" />
-                Exportar CSV
+                {t('export.trigger')}
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-80" align="end">
               <div className="space-y-4">
                 <div>
-                  <h4 className="text-sm font-semibold">Exportar tarefas</h4>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Filtre pelo período de criação. Deixe em branco para exportar todas.
-                  </p>
+                  <h4 className="text-sm font-semibold">{t('export.title')}</h4>
+                  <p className="text-xs text-muted-foreground mt-1">{t('export.description')}</p>
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-xs">Data inicial</Label>
+                  <Label className="text-xs">{t('export.startDate')}</Label>
                   <Popover>
                     <PopoverTrigger asChild>
                       <Button
@@ -227,7 +218,7 @@ const Index = () => {
                         )}
                       >
                         <CalendarIcon className="mr-2 h-4 w-4" />
-                        {exportStartDate ? format(exportStartDate, 'dd/MM/yyyy') : 'Selecionar'}
+                        {exportStartDate ? format(exportStartDate, 'dd/MM/yyyy') : t('export.select')}
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0" align="start">
@@ -235,7 +226,7 @@ const Index = () => {
                         mode="single"
                         selected={exportStartDate}
                         onSelect={setExportStartDate}
-                        locale={ptBR}
+                        locale={dateLocale}
                         disabled={(date) => (exportEndDate ? date > exportEndDate : false)}
                         initialFocus
                         className={cn('p-3 pointer-events-auto')}
@@ -244,7 +235,7 @@ const Index = () => {
                   </Popover>
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-xs">Data final</Label>
+                  <Label className="text-xs">{t('export.endDate')}</Label>
                   <Popover>
                     <PopoverTrigger asChild>
                       <Button
@@ -255,7 +246,7 @@ const Index = () => {
                         )}
                       >
                         <CalendarIcon className="mr-2 h-4 w-4" />
-                        {exportEndDate ? format(exportEndDate, 'dd/MM/yyyy') : 'Selecionar'}
+                        {exportEndDate ? format(exportEndDate, 'dd/MM/yyyy') : t('export.select')}
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0" align="start">
@@ -263,7 +254,7 @@ const Index = () => {
                         mode="single"
                         selected={exportEndDate}
                         onSelect={setExportEndDate}
-                        locale={ptBR}
+                        locale={dateLocale}
                         disabled={(date) => (exportStartDate ? date < exportStartDate : false)}
                         initialFocus
                         className={cn('p-3 pointer-events-auto')}
@@ -278,11 +269,11 @@ const Index = () => {
                     onClick={clearExportDates}
                     disabled={!exportStartDate && !exportEndDate}
                   >
-                    Limpar
+                    {t('export.clear')}
                   </Button>
                   <Button size="sm" onClick={handleExportCsv} className="gap-2">
                     <Download className="h-4 w-4" />
-                    Baixar CSV
+                    {t('export.download')}
                   </Button>
                 </div>
               </div>
@@ -290,7 +281,7 @@ const Index = () => {
           </Popover>
           <Button onClick={() => setCreateOpen(true)} className="gap-2 flex-1 sm:flex-none">
             <Plus className="h-4 w-4" />
-            Nova Tarefa
+            {t('page.newTask')}
           </Button>
         </div>
       </div>

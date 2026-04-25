@@ -1,0 +1,60 @@
+{
+  "title": "Dashboard",
+  "subtitle": "Calendário mensal de atividades",
+  "filter": {
+    "all": "Todas",
+    "created": "Minhas tarefas",
+    "assigned": "Atribuídas a mim"
+  },
+  "legend": {
+    "title": "Legenda:",
+    "created": "Tarefa criada por mim",
+    "assigned": "Atribuída a mim por outro"
+  },
+  "weekdays": ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"],
+  "moreCount": "+{{count}} mais",
+  "noStatus": "Sem status",
+  "tooltip": {
+    "critical": "Crítica",
+    "completed": "Concluída: {{date}}",
+    "estimated": "Previsão: {{date}}"
+  },
+  "timeReport": {
+    "title": "Relatório de Horas",
+    "loading": "Carregando relatório...",
+    "empty": "Nenhuma sessão de trabalho registrada ainda.",
+    "startDate": "Data Início",
+    "endDate": "Data Fim",
+    "clear": "Limpar",
+    "total": "Total:",
+    "export": "Exportar",
+    "byTask": "Por Tarefa",
+    "byUser": "Por Usuário",
+    "users": "{{count}} usuário",
+    "users_plural": "{{count}} usuários",
+    "tasks": "{{count}} tarefa",
+    "tasks_plural": "{{count}} tarefas",
+    "noEntries": "Nenhum registro no período selecionado.",
+    "deletedTask": "Tarefa removida",
+    "userFallback": "Usuário",
+    "csvHeaders": {
+      "user": "Usuário",
+      "task": "Tarefa",
+      "start": "Início",
+      "end": "Fim",
+      "duration": "Duração (hh:mm:ss)"
+    },
+    "pdf": {
+      "title": "Relatório de Horas",
+      "period": "Período: {{period}}",
+      "allTime": "Todo o período",
+      "grandTotal": "Total geral: {{total}}",
+      "generatedAt": "Gerado em: {{at}}",
+      "byTask": "Por Tarefa",
+      "byUser": "Por Usuário",
+      "tasksCol": "Tarefas",
+      "usersCol": "Usuários",
+      "totalCol": "Total"
+    }
+  }
+}

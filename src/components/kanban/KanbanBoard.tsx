@@ -80,7 +80,10 @@ export const KanbanBoard = forwardRef<KanbanBoardRef, KanbanBoardProps>(({ filte
 
       if (error) {
         rollback();
-        errorToast('mover a tarefa', error);
+        // Use translated label via i18n directly to avoid prop drilling
+        // eslint-disable-next-line @typescript-eslint/no-var-requires
+        const i18n = (await import('@/i18n')).default;
+        errorToast(i18n.t('detail.moveTask', { ns: 'kanban' }) as string, error);
       }
     },
     [tasks, optimisticUpdate]

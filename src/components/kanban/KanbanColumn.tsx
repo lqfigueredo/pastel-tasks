@@ -1,5 +1,6 @@
 import { memo, useState } from 'react';
 import { ChevronDown, ChevronRight, GripVertical, Inbox } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import type { Task, TaskStatus } from '@/types/kanban';
 import { KanbanCard } from './KanbanCard';
 import { cn } from '@/lib/utils';
@@ -24,21 +25,15 @@ function KanbanColumnImpl({
   columnIndex, dragColIdx, dragOverColIdx,
   onColumnDragStart, onColumnDragEnter, onColumnDragEnd,
 }: KanbanColumnProps) {
+  const { t } = useTranslation('kanban');
   const [collapsed, setCollapsed] = useState(false);
   const [dragOver, setDragOver] = useState(false);
 
   const isColumnDragging = dragColIdx === columnIndex;
   const isColumnDragOver = dragOverColIdx === columnIndex && dragColIdx !== null && dragColIdx !== columnIndex;
 
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    setDragOver(true);
-  };
-
-  const handleDragLeave = () => {
-    setDragOver(false);
-  };
-
+  const handleDragOver = (e: React.DragEvent) => { e.preventDefault(); setDragOver(true); };
+  const handleDragLeave = () => setDragOver(false);
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setDragOver(false);
@@ -51,16 +46,10 @@ function KanbanColumnImpl({
     e.dataTransfer.effectAllowed = 'move';
     onColumnDragStart(columnIndex);
   };
-
-  const handleColumnHeaderDragEnd = () => {
-    onColumnDragEnd(columnIndex);
-  };
-
+  const handleColumnHeaderDragEnd = () => onColumnDragEnd(columnIndex);
   const handleColumnDragEnter = (e: React.DragEvent) => {
     e.preventDefault();
-    if (dragColIdx !== null) {
-      onColumnDragEnter(columnIndex);
-    }
+    if (dragColIdx !== null) onColumnDragEnter(columnIndex);
   };
 
   if (collapsed) {
@@ -74,10 +63,7 @@ function KanbanColumnImpl({
         onDragEnter={handleColumnDragEnter}
       >
         <ChevronRight className="h-4 w-4 text-muted-foreground mb-2" />
-        <div
-          className="h-3 w-3 rounded-full mb-2"
-          style={{ backgroundColor: status.color }}
-        />
+        <div className="h-3 w-3 rounded-full mb-2" style={{ backgroundColor: status.color }} />
         <span className="text-xs font-semibold text-foreground [writing-mode:vertical-lr] rotate-180">
           {status.name}
         </span>
@@ -107,21 +93,18 @@ function KanbanColumnImpl({
           onDragStart={handleColumnHeaderDragStart}
           onDragEnd={handleColumnHeaderDragEnd}
           className="shrink-0 cursor-grab active:cursor-grabbing rounded p-0.5 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-          title="Arrastar para reordenar"
+          title={t('column.dragHandle')}
         >
           <GripVertical className="h-4 w-4" />
         </div>
         <button
           onClick={() => setCollapsed(true)}
           className="shrink-0 rounded p-0.5 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-          title="Minimizar coluna"
+          title={t('column.minimize')}
         >
           <ChevronDown className="h-4 w-4" />
         </button>
-        <div
-          className="h-3 w-3 rounded-full"
-          style={{ backgroundColor: status.color }}
-        />
+        <div className="h-3 w-3 rounded-full" style={{ backgroundColor: status.color }} />
         <h3 className="text-sm font-semibold text-foreground">{status.name}</h3>
         <span className="ml-auto rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
           {tasks.length}
@@ -134,8 +117,8 @@ function KanbanColumnImpl({
         {tasks.length === 0 && (
           <EmptyState
             icon={Inbox}
-            title="Nenhuma tarefa aqui"
-            description="Arraste cartões para esta coluna ou crie uma nova tarefa."
+            title={t('column.emptyTitle')}
+            description={t('column.emptyDescription')}
             compact
           />
         )}
@@ -145,4 +128,3 @@ function KanbanColumnImpl({
 }
 
 export const KanbanColumn = memo(KanbanColumnImpl);
-
