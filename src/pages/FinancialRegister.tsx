@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -9,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { TrendingUp, Eye, EyeOff } from "lucide-react";
 
 const FinancialRegister = () => {
+  const { t } = useTranslation('financialRegister');
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -20,17 +22,17 @@ const FinancialRegister = () => {
     e.preventDefault();
 
     if (!email.trim() || !password.trim() || !token.trim()) {
-      toast.error("Preencha todos os campos");
+      toast.error(t('errors.required'));
       return;
     }
 
     if (token !== "445") {
-      toast.error("Token de acesso inválido");
+      toast.error(t('errors.invalidToken'));
       return;
     }
 
     if (password.length < 6) {
-      toast.error("A senha deve ter pelo menos 6 caracteres");
+      toast.error(t('errors.passwordShort'));
       return;
     }
 
@@ -41,7 +43,7 @@ const FinancialRegister = () => {
       });
 
       if (error) {
-        toast.error(error.message || "Erro ao criar conta");
+        toast.error(error.message || t('errors.createFailed'));
         return;
       }
 
@@ -50,10 +52,10 @@ const FinancialRegister = () => {
         return;
       }
 
-      toast.success("Conta criada com sucesso! Faça login para continuar.");
+      toast.success(t('success'));
       navigate("/auth");
     } catch {
-      toast.error("Erro ao criar conta");
+      toast.error(t('errors.createFailed'));
     } finally {
       setLoading(false);
     }
@@ -66,31 +68,29 @@ const FinancialRegister = () => {
           <div className="flex justify-center mb-2">
             <TrendingUp className="h-10 w-10 text-primary" />
           </div>
-          <CardTitle className="text-2xl">Cadastro Financeiro</CardTitle>
-          <CardDescription>
-            Crie sua conta de administrador financeiro
-          </CardDescription>
+          <CardTitle className="text-2xl">{t('page.title')}</CardTitle>
+          <CardDescription>{t('page.description')}</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">E-mail</Label>
+              <Label htmlFor="email">{t('form.email')}</Label>
               <Input
                 id="email"
                 type="email"
-                placeholder="seu@email.com"
+                placeholder={t('form.emailPlaceholder')}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Senha</Label>
+              <Label htmlFor="password">{t('form.password')}</Label>
               <div className="relative">
                 <Input
                   id="password"
                   type={showPassword ? "text" : "password"}
-                  placeholder="Mínimo 6 caracteres"
+                  placeholder={t('form.passwordPlaceholder')}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
@@ -105,27 +105,27 @@ const FinancialRegister = () => {
               </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="token">Token de Acesso</Label>
+              <Label htmlFor="token">{t('form.token')}</Label>
               <Input
                 id="token"
                 type="text"
-                placeholder="Informe o token"
+                placeholder={t('form.tokenPlaceholder')}
                 value={token}
                 onChange={(e) => setToken(e.target.value)}
                 required
               />
             </div>
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Criando conta..." : "Criar Conta"}
+              {loading ? t('form.submitting') : t('form.submit')}
             </Button>
           </form>
           <div className="mt-4 text-center text-sm text-muted-foreground">
-            Já tem conta?{" "}
+            {t('form.haveAccount')}{" "}
             <button
               onClick={() => navigate("/auth")}
               className="text-primary hover:underline"
             >
-              Entrar
+              {t('form.signIn')}
             </button>
           </div>
         </CardContent>
