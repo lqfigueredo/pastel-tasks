@@ -51,5 +51,54 @@
       "closed": "Closed",
       "open": "Open"
     }
+  },
+  "create": {
+    "title": "New Meeting Minute",
+    "description": "Fill in the meeting details",
+    "dateLabel": "Meeting Date *",
+    "selectDate": "Select a date",
+    "descLabel": "Description *",
+    "descPlaceholder": "Describe the topics discussed in the meeting...",
+    "participants": "Participants",
+    "noUsers": "No users available",
+    "noName": "No name",
+    "externalParticipants": "External Participants",
+    "externalPlaceholder": "External participant name",
+    "attachments": "Attachments",
+    "selectFiles": "Select files",
+    "cancel": "Cancel",
+    "save": "Create Minute",
+    "saving": "Saving...",
+    "requiredFields": "Fill in all required fields",
+    "duplicateName": "Name already added",
+    "errorCreate": "Failed to create minute",
+    "success": "Minute created successfully"
+  },
+  "editMeeting": {
+    "title": "Edit Meeting Minute",
+    "description": "Change the meeting details",
+    "save": "Save Changes",
+    "saving": "Saving...",
+    "cancel": "Cancel",
+    "errorUpdate": "Failed to update minute",
+    "success": "Minute updated successfully"
+  },
+  "pendency": {
+    "title": "New Pending Item",
+    "description": "Add a pending item to the minute",
+    "descLabel": "Description *",
+    "descPlaceholder": "Describe the pending item...",
+    "responsibleLabel": "Responsible *",
+    "selectResponsible": "Select the responsible person",
+    "externalGroup": "External",
+    "externalSuffix": "(External)",
+    "dueDateLabel": "Due Date",
+    "selectDate": "Select a date",
+    "cancel": "Cancel",
+    "save": "Add",
+    "saving": "Saving...",
+    "requiredFields": "Fill in description and responsible",
+    "errorCreate": "Failed to create pending item",
+    "success": "Pending item added"
   }
 }
