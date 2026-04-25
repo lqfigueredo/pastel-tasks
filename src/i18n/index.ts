@@ -36,6 +36,9 @@ import enIdeas from './locales/en/ideas.json';
 import enMeetings from './locales/en/meetings.json';
 import enKnowledge from './locales/en/knowledge.json';
 import enWorkInstructions from './locales/en/workInstructions.json';
+import enOnboarding from './locales/en/onboarding.json';
+import enBilling from './locales/en/billing.json';
+import enPricing from './locales/en/pricing.json';
 
 export const SUPPORTED_LOCALES = ['pt-BR', 'en'] as const;
 export type SupportedLocale = (typeof SUPPORTED_LOCALES)[number];
