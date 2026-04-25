@@ -101,17 +101,17 @@ const Financial = () => {
       if (error) throw error;
 
       const messages: Record<string, string> = {
-        approve: 'Usuário aprovado!',
-        reject: 'Usuário rejeitado.',
-        deactivate: 'Licença inativada com sucesso.',
-        'update-license': 'Validade da licença atualizada.',
-        reactivate: 'Licença reativada com sucesso!',
-        'confirm-email': 'E-mail confirmado com sucesso!',
+        approve: t('approvals.messages.approve'),
+        reject: t('approvals.messages.reject'),
+        deactivate: t('approvals.messages.deactivate'),
+        'update-license': t('approvals.messages.updateLicense'),
+        reactivate: t('approvals.messages.reactivate'),
+        'confirm-email': t('approvals.messages.confirmEmail'),
       };
-      toast.success(messages[action] || 'Ação realizada.');
+      toast.success(messages[action] || t('approvals.messages.default'));
       invalidateFinancialData();
     } catch (err: any) {
-      toast.error(err.message || 'Erro ao processar ação');
+      toast.error(err.message || t('approvals.messages.error'));
     } finally {
       setActionLoading(null);
     }
@@ -124,7 +124,7 @@ const Financial = () => {
 
   const handleSaveLimit = async (adminUserId: string, maxUsers: number) => {
     if (!maxUsers || maxUsers < 1) {
-      toast.error('Limite deve ser pelo menos 1');
+      toast.error(t('limits.minError'));
       return;
     }
     setActionLoading(adminUserId);
@@ -133,11 +133,11 @@ const Financial = () => {
         .from('admin_settings')
         .upsert({ admin_user_id: adminUserId, max_users: maxUsers }, { onConflict: 'admin_user_id' });
       if (error) throw error;
-      toast.success('Limite atualizado com sucesso!');
+      toast.success(t('limits.saved'));
       setEditingLimit(null);
       invalidateFinancialData();
     } catch (err: any) {
-      toast.error(err.message || 'Erro ao salvar limite');
+      toast.error(err.message || t('limits.saveError'));
     } finally {
       setActionLoading(null);
     }
@@ -150,18 +150,18 @@ const Financial = () => {
   if (!isSolutionAdmin) {
     return (
       <div className="flex items-center justify-center py-20">
-        <p className="text-muted-foreground">Acesso restrito.</p>
+        <p className="text-muted-foreground">{t('page.denied')}</p>
       </div>
     );
   }
 
   const statusBadge = (status: string) => {
     switch (status) {
-      case 'pending': return <Badge variant="outline" className="text-yellow-600 border-yellow-400">Pendente</Badge>;
-      case 'approved': return <Badge className="bg-green-600">Aprovado</Badge>;
-      case 'rejected': return <Badge variant="destructive">Rejeitado</Badge>;
-      case 'expired': return <Badge variant="outline" className="text-orange-600 border-orange-400">Expirado</Badge>;
-      case 'deactivated': return <Badge variant="destructive">Inativado</Badge>;
+      case 'pending': return <Badge variant="outline" className="text-yellow-600 border-yellow-400">{t('status.pending')}</Badge>;
+      case 'approved': return <Badge className="bg-green-600">{t('status.approved')}</Badge>;
+      case 'rejected': return <Badge variant="destructive">{t('status.rejected')}</Badge>;
+      case 'expired': return <Badge variant="outline" className="text-orange-600 border-orange-400">{t('status.expired')}</Badge>;
+      case 'deactivated': return <Badge variant="destructive">{t('status.deactivated')}</Badge>;
       default: return <Badge variant="outline">{status}</Badge>;
     }
   };
@@ -170,8 +170,8 @@ const Financial = () => {
     if (!expiresAt || !['approved'].includes(status)) return null;
     const expired = isPast(new Date(expiresAt));
     return expired
-      ? <Badge variant="outline" className="text-red-600 border-red-400">Expirada</Badge>
-      : <Badge variant="outline" className="text-green-600 border-green-400">Vigente</Badge>;
+      ? <Badge variant="outline" className="text-red-600 border-red-400">{t('license.expired')}</Badge>
+      : <Badge variant="outline" className="text-green-600 border-green-400">{t('license.active')}</Badge>;
   };
 
   return (
@@ -235,17 +235,17 @@ const Financial = () => {
 
         <TabsContent value="approvals">
           {approvals.length === 0 ? (
-            <p className="text-muted-foreground py-10 text-center">Nenhuma solicitação de aprovação.</p>
+            <p className="text-muted-foreground py-10 text-center">{t('approvals.empty')}</p>
           ) : (
             <div className="rounded-lg border border-border overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Nome</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Validade da Licença</TableHead>
-                    <TableHead>Data da Solicitação</TableHead>
-                    <TableHead className="text-right">Ações</TableHead>
+                    <TableHead>{t('approvals.name')}</TableHead>
+                    <TableHead>{t('approvals.status')}</TableHead>
+                    <TableHead>{t('approvals.licenseExpiry')}</TableHead>
+                    <TableHead>{t('approvals.requestedAt')}</TableHead>
+                    <TableHead className="text-right">{t('approvals.actions')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -301,7 +301,7 @@ const Financial = () => {
                                 onClick={() => handleAction(approval.user_id, 'approve')}
                               >
                                 <Check className="h-4 w-4 mr-1" />
-                                Aprovar
+                                {t('approvals.approve')}
                               </Button>
                               <Button
                                 size="sm"
@@ -311,7 +311,7 @@ const Financial = () => {
                                 onClick={() => handleAction(approval.user_id, 'reject')}
                               >
                                 <X className="h-4 w-4 mr-1" />
-                                Rejeitar
+                                {t('approvals.reject')}
                               </Button>
                             </>
                           )}
@@ -325,23 +325,25 @@ const Financial = () => {
                                   disabled={actionLoading === approval.user_id}
                                 >
                                   <Ban className="h-4 w-4 mr-1" />
-                                  Inativar
+                                  {t('approvals.deactivate')}
                                 </Button>
                               </AlertDialogTrigger>
                               <AlertDialogContent>
                                 <AlertDialogHeader>
-                                  <AlertDialogTitle>Inativar licença</AlertDialogTitle>
-                                  <AlertDialogDescription>
-                                    Isso irá inativar o admin <strong>{approval.display_name}</strong> e todos os usuários dos times criados por ele. Deseja continuar?
-                                  </AlertDialogDescription>
+                                  <AlertDialogTitle>{t('approvals.deactivateDialog.title')}</AlertDialogTitle>
+                                  <AlertDialogDescription
+                                    dangerouslySetInnerHTML={{
+                                      __html: t('approvals.deactivateDialog.description', { name: approval.display_name }),
+                                    }}
+                                  />
                                 </AlertDialogHeader>
                                 <AlertDialogFooter>
-                                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                  <AlertDialogCancel>{t('approvals.deactivateDialog.cancel')}</AlertDialogCancel>
                                   <AlertDialogAction
                                     className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                                     onClick={() => handleAction(approval.user_id, 'deactivate')}
                                   >
-                                    Inativar
+                                    {t('approvals.deactivateDialog.confirm')}
                                   </AlertDialogAction>
                                 </AlertDialogFooter>
                               </AlertDialogContent>
@@ -356,7 +358,7 @@ const Financial = () => {
                               onClick={() => handleAction(approval.user_id, 'reactivate')}
                             >
                               <RotateCcw className="h-4 w-4 mr-1" />
-                              Reativar
+                              {t('approvals.reactivate')}
                             </Button>
                           )}
                           <Button
@@ -365,19 +367,19 @@ const Financial = () => {
                             className="text-blue-600 hover:bg-blue-50"
                             disabled={actionLoading === approval.user_id}
                             onClick={() => handleAction(approval.user_id, 'confirm-email')}
-                            title="Confirmar e-mail manualmente"
+                            title={t('approvals.confirmEmailTitle')}
                           >
                             <MailCheck className="h-4 w-4 mr-1" />
-                            Confirmar E-mail
+                            {t('approvals.confirmEmail')}
                           </Button>
                           <Button
                             size="sm"
                             variant="ghost"
                             onClick={() => setEditingUser(approval)}
-                            title="Editar perfil do usuário"
+                            title={t('approvals.editTitle')}
                           >
                             <Pencil className="h-4 w-4 mr-1" />
-                            Editar
+                            {t('approvals.edit')}
                           </Button>
                         </div>
                       </TableCell>
@@ -391,17 +393,17 @@ const Financial = () => {
 
         <TabsContent value="leads">
           {leads.length === 0 ? (
-            <p className="text-muted-foreground py-10 text-center">Nenhum lead registrado ainda.</p>
+            <p className="text-muted-foreground py-10 text-center">{t('leads.empty')}</p>
           ) : (
             <div className="rounded-lg border border-border overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Nome</TableHead>
-                    <TableHead>E-mail</TableHead>
-                    <TableHead>Data de Contato</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Ações</TableHead>
+                    <TableHead>{t('leads.name')}</TableHead>
+                    <TableHead>{t('leads.email')}</TableHead>
+                    <TableHead>{t('leads.createdAt')}</TableHead>
+                    <TableHead>{t('leads.status')}</TableHead>
+                    <TableHead className="text-right">{t('leads.actions')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -414,9 +416,9 @@ const Financial = () => {
                       </TableCell>
                       <TableCell>
                         {lead.replied_at ? (
-                          <Badge className="bg-green-600">Respondido</Badge>
+                          <Badge className="bg-green-600">{t('leads.replied')}</Badge>
                         ) : (
-                          <Badge variant="outline" className="text-yellow-600 border-yellow-400">Aguardando</Badge>
+                          <Badge variant="outline" className="text-yellow-600 border-yellow-400">{t('leads.waiting')}</Badge>
                         )}
                       </TableCell>
                       <TableCell className="text-right">
@@ -426,7 +428,7 @@ const Financial = () => {
                           onClick={() => setReplyingLead(lead)}
                         >
                           <Send className="h-4 w-4 mr-1" />
-                          {lead.replied_at ? 'Reenviar' : 'Responder'}
+                          {lead.replied_at ? t('leads.resend') : t('leads.reply')}
                         </Button>
                       </TableCell>
                     </TableRow>
@@ -439,16 +441,16 @@ const Financial = () => {
 
         <TabsContent value="limits">
           {adminLimits.length === 0 ? (
-            <p className="text-muted-foreground py-10 text-center">Nenhum administrador encontrado.</p>
+            <p className="text-muted-foreground py-10 text-center">{t('limits.empty')}</p>
           ) : (
             <div className="rounded-lg border border-border overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Administrador</TableHead>
-                    <TableHead>Usuários</TableHead>
-                    <TableHead>Limite</TableHead>
-                    <TableHead className="text-right">Ações</TableHead>
+                    <TableHead>{t('limits.admin')}</TableHead>
+                    <TableHead>{t('limits.users')}</TableHead>
+                    <TableHead>{t('limits.limit')}</TableHead>
+                    <TableHead className="text-right">{t('limits.actions')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -507,7 +509,7 @@ const Financial = () => {
                               onClick={() => setEditingLimit({ adminId: admin.admin_user_id, value: String(admin.max_users) })}
                             >
                               <Pencil className="h-4 w-4 mr-1" />
-                              Editar
+                              {t('limits.edit')}
                             </Button>
                           )}
                         </TableCell>
