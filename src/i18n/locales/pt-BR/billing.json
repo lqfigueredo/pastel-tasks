@@ -62,5 +62,119 @@
     "updateLabel": "atualização de forma de pagamento",
     "activateSubject": "Quero ativar minha assinatura agora",
     "activateLabel": "ativação imediata da assinatura"
+  },
+  "profile": {
+    "title": "Dados fiscais",
+    "description": "Necessários para emissão de nota fiscal e cobrança.",
+    "complete": "Dados completos para emissão de NF",
+    "incomplete": "Faltam dados para emissão de NF ({{filled}}/{{total}})",
+    "individual": "Pessoa física (CPF)",
+    "company": "Pessoa jurídica (CNPJ)",
+    "fields": {
+      "legalNameCompany": "Razão social *",
+      "legalNameIndividual": "Nome completo *",
+      "cnpj": "CNPJ *",
+      "cpf": "CPF *",
+      "tradeName": "Nome fantasia",
+      "municipalRegistration": "Inscrição municipal",
+      "stateRegistration": "Inscrição estadual",
+      "stateRegistrationPlaceholder": "ISENTO se não tiver",
+      "billingEmail": "Email de cobrança *",
+      "phone": "Telefone",
+      "phonePlaceholder": "(00) 00000-0000",
+      "postalCode": "CEP *",
+      "postalCodePlaceholder": "00000-000",
+      "addressLine1": "Logradouro *",
+      "addressLine1Placeholder": "Rua, Avenida...",
+      "addressNumber": "Número *",
+      "addressComplement": "Complemento",
+      "addressComplementPlaceholder": "Sala, andar...",
+      "neighborhood": "Bairro *",
+      "city": "Cidade *",
+      "state": "UF *",
+      "country": "País"
+    },
+    "errors": {
+      "required": "Obrigatório",
+      "invalidCnpj": "CNPJ inválido",
+      "invalidCpf": "CPF inválido",
+      "invalidEmail": "Email inválido",
+      "invalidPostalCode": "CEP inválido",
+      "invalidState": "UF inválida",
+      "addressNumberRequired": "Informe o número",
+      "neighborhoodRequired": "Informe o bairro",
+      "cepNotFound": "CEP não encontrado",
+      "checkFields": "Verifique os campos destacados"
+    },
+    "save": "Salvar dados fiscais",
+    "saved": "Dados fiscais salvos"
+  },
+  "invoices": {
+    "title": "Histórico de faturas",
+    "description": "Pagamentos e faturas em aberto.",
+    "empty": "Nenhuma fatura registrada ainda.",
+    "columns": {
+      "date": "Data",
+      "period": "Período",
+      "amount": "Valor",
+      "method": "Método",
+      "status": "Status"
+    },
+    "status": {
+      "paid": "Paga",
+      "open": "Em aberto",
+      "failed": "Falhou",
+      "void": "Cancelada",
+      "refunded": "Estornada"
+    }
+  },
+  "banner": {
+    "suspended": "Sua assinatura está suspensa. Regularize o pagamento para reativar o acesso.",
+    "pastDue": "Pagamento pendente. Atualize sua forma de pagamento para evitar suspensão.",
+    "trialExpired": "Seu período de teste expirou. Ative sua assinatura para continuar usando.",
+    "trialEndingDays": "Seu período de teste termina em {{days}} dia(s). Ative sua assinatura.",
+    "trialEndingHours": "Seu período de teste termina em menos de 1 dia. Ative sua assinatura.",
+    "trialDaysLeft": "Faltam {{days}} dias do seu período de teste gratuito. Ative sua assinatura quando quiser.",
+    "canceled": "Sua assinatura foi cancelada. O acesso terminará no fim do período atual.",
+    "resolve": "Resolver"
+  },
+  "activate": {
+    "title": "Falar com o time comercial",
+    "description": "Como ainda não temos checkout automático, abrimos um chamado para o nosso time comercial entrar em contato e ativar sua assinatura.",
+    "messageLabel": "Sua mensagem",
+    "messagePlaceholder": "Ex.: Quero ativar minha conta com 15 assentos a partir do próximo mês.",
+    "cancel": "Cancelar",
+    "submit": "Enviar pedido",
+    "errorEmpty": "Conte um pouco sobre seu pedido para o time comercial.",
+    "errorSubmit": "Não foi possível enviar: {{message}}",
+    "success": "Pedido enviado! Nosso time entrará em contato em breve."
+  },
+  "requestSeats": {
+    "title": "Solicitar mais assentos",
+    "description": "Seu plano atual permite {{seats}} usuários. Informe quantos assentos adicionais você precisa e o motivo. O Financeiro analisará e entrará em contato.",
+    "subject": "Solicitação de aumento de assentos",
+    "header": "[Solicitação de assentos adicionais]",
+    "fields": {
+      "totalLabel": "Quantidade total desejada",
+      "diffHelp": "Você está pedindo <bold>+{{diff}}</bold> assentos além dos {{current}} atuais.",
+      "reasonLabel": "Motivo da solicitação",
+      "reasonPlaceholder": "Ex.: Estamos contratando 3 novos colaboradores para o time de vendas no próximo mês."
+    },
+    "errors": {
+      "tooLow": "A quantidade solicitada deve ser maior que {{current}}.",
+      "reasonShort": "Descreva o motivo (mínimo 10 caracteres).",
+      "submit": "Não foi possível enviar: {{message}}"
+    },
+    "labels": {
+      "admin": "Administrador",
+      "current": "Assentos atuais",
+      "requested": "Assentos solicitados",
+      "diff": "Diferença",
+      "reason": "Motivo",
+      "defaultAdmin": "Administrador"
+    },
+    "cancel": "Cancelar",
+    "submit": "Enviar solicitação",
+    "success": "Pedido enviado ao Financeiro. Entraremos em contato em breve."
   }
 }

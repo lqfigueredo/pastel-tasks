@@ -6,6 +6,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { AlertTriangle, Clock, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { differenceInDays } from 'date-fns';
+import { useTranslation } from 'react-i18next';
 
 interface Sub {
   status: string;
@@ -14,6 +15,7 @@ interface Sub {
 }
 
 export default function SubscriptionStatusBanner() {
+  const { t } = useTranslation('billing');
   const { user } = useAuth();
   const { isAdmin, loading: rolesLoading } = useUserRoles();
   const [sub, setSub] = useState<Sub | null>(null);
@@ -38,24 +40,24 @@ export default function SubscriptionStatusBanner() {
   let tone: 'warning' | 'destructive' = 'warning';
 
   if (sub.status === 'suspended') {
-    message = 'Sua assinatura está suspensa. Regularize o pagamento para reativar o acesso.';
+    message = t('banner.suspended');
     tone = 'destructive';
   } else if (sub.status === 'past_due') {
-    message = 'Pagamento pendente. Atualize sua forma de pagamento para evitar suspensão.';
+    message = t('banner.pastDue');
     tone = 'destructive';
   } else if (sub.status === 'trialing' && sub.trial_ends_at) {
     const days = differenceInDays(new Date(sub.trial_ends_at), new Date());
     if (days < 0) {
-      message = 'Seu período de teste expirou. Ative sua assinatura para continuar usando.';
+      message = t('banner.trialExpired');
       tone = 'destructive';
     } else if (days <= 3) {
-      message = `Seu período de teste termina em ${days === 0 ? 'menos de 1 dia' : `${days} dia(s)`}. Ative sua assinatura.`;
+      message = days === 0 ? t('banner.trialEndingHours') : t('banner.trialEndingDays', { days });
       tone = 'destructive';
     } else if (days <= 7) {
-      message = `Faltam ${days} dias do seu período de teste gratuito. Ative sua assinatura quando quiser.`;
+      message = t('banner.trialDaysLeft', { days });
     }
   } else if (sub.status === 'canceled') {
-    message = 'Sua assinatura foi cancelada. O acesso terminará no fim do período atual.';
+    message = t('banner.canceled');
   }
 
   if (!message) return null;
@@ -72,7 +74,7 @@ export default function SubscriptionStatusBanner() {
         variant={tone === 'destructive' ? 'secondary' : 'default'}
         onClick={() => navigate('/cobranca')}
       >
-        Resolver
+        {t('banner.resolve')}
       </Button>
       <button onClick={() => setDismissed(true)} className="opacity-70 hover:opacity-100">
         <X className="h-4 w-4" />

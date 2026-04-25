@@ -62,5 +62,69 @@
     "deactivate": "Inativar usuário",
     "reactivate": "Reativar usuário",
     "actionError": "Erro ao executar ação"
+  },
+  "editDialog": {
+    "title": "Editar usuário",
+    "description": "Atualize o nome, e-mail ou time deste usuário.",
+    "displayName": "Nome de exibição",
+    "email": "E-mail",
+    "emailHint": "Alterar o e-mail muda também o login do usuário.",
+    "team": "Time",
+    "noTeam": "Sem time",
+    "cancel": "Cancelar",
+    "save": "Salvar",
+    "errors": {
+      "loadEmail": "Erro ao carregar e-mail",
+      "loadUser": "Erro ao carregar dados do usuário",
+      "nameRequired": "Nome de exibição é obrigatório",
+      "invalidEmail": "Formato de e-mail inválido",
+      "updateProfile": "Erro ao atualizar perfil",
+      "updateTeam": "Erro ao atualizar time",
+      "saveFailed": "Erro ao salvar alterações"
+    },
+    "success": "Usuário atualizado com sucesso"
+  },
+  "emails": {
+    "stats": {
+      "total": "Total",
+      "sent": "Enviados",
+      "failed": "Falhos",
+      "suppressed": "Suprimidos"
+    },
+    "filters": {
+      "period": "Período",
+      "template": "Template",
+      "allTemplates": "Todos os templates",
+      "status": "Status",
+      "allStatus": "Todos",
+      "sent": "Enviados",
+      "failed": "Falhos",
+      "suppressed": "Suprimidos",
+      "periods": {
+        "24h": "Últimas 24h",
+        "7d": "Últimos 7 dias",
+        "30d": "Últimos 30 dias"
+      }
+    },
+    "table": {
+      "template": "Template",
+      "recipient": "Destinatário",
+      "status": "Status",
+      "datetime": "Data/Hora",
+      "error": "Erro",
+      "empty": "Nenhum email encontrado para os filtros selecionados."
+    },
+    "pagination": {
+      "page": "Página {{current}} de {{total}} ({{records}} emails)"
+    },
+    "statusLabels": {
+      "sent": "Enviado",
+      "pending": "Pendente",
+      "dlq": "Falhou",
+      "failed": "Falhou",
+      "suppressed": "Suprimido",
+      "bounced": "Rejeitado",
+      "complained": "Reclamação"
+    }
   }
 }

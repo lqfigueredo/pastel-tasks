@@ -62,5 +62,119 @@
     "updateLabel": "payment method update",
     "activateSubject": "I want to activate my subscription now",
     "activateLabel": "immediate subscription activation"
+  },
+  "profile": {
+    "title": "Tax details",
+    "description": "Required for invoice issuance and billing.",
+    "complete": "All required tax data is complete",
+    "incomplete": "Tax data incomplete ({{filled}}/{{total}})",
+    "individual": "Individual (CPF)",
+    "company": "Company (CNPJ)",
+    "fields": {
+      "legalNameCompany": "Legal name *",
+      "legalNameIndividual": "Full name *",
+      "cnpj": "CNPJ *",
+      "cpf": "CPF *",
+      "tradeName": "Trade name",
+      "municipalRegistration": "Municipal registration",
+      "stateRegistration": "State registration",
+      "stateRegistrationPlaceholder": "EXEMPT if none",
+      "billingEmail": "Billing email *",
+      "phone": "Phone",
+      "phonePlaceholder": "(00) 00000-0000",
+      "postalCode": "Postal code *",
+      "postalCodePlaceholder": "00000-000",
+      "addressLine1": "Street *",
+      "addressLine1Placeholder": "Street, Avenue...",
+      "addressNumber": "Number *",
+      "addressComplement": "Complement",
+      "addressComplementPlaceholder": "Suite, floor...",
+      "neighborhood": "Neighborhood *",
+      "city": "City *",
+      "state": "State *",
+      "country": "Country"
+    },
+    "errors": {
+      "required": "Required",
+      "invalidCnpj": "Invalid CNPJ",
+      "invalidCpf": "Invalid CPF",
+      "invalidEmail": "Invalid email",
+      "invalidPostalCode": "Invalid postal code",
+      "invalidState": "Invalid state",
+      "addressNumberRequired": "Enter the number",
+      "neighborhoodRequired": "Enter the neighborhood",
+      "cepNotFound": "Postal code not found",
+      "checkFields": "Please review the highlighted fields"
+    },
+    "save": "Save tax details",
+    "saved": "Tax details saved"
+  },
+  "invoices": {
+    "title": "Invoice history",
+    "description": "Payments and open invoices.",
+    "empty": "No invoices recorded yet.",
+    "columns": {
+      "date": "Date",
+      "period": "Period",
+      "amount": "Amount",
+      "method": "Method",
+      "status": "Status"
+    },
+    "status": {
+      "paid": "Paid",
+      "open": "Open",
+      "failed": "Failed",
+      "void": "Void",
+      "refunded": "Refunded"
+    }
+  },
+  "banner": {
+    "suspended": "Your subscription is suspended. Settle the payment to restore access.",
+    "pastDue": "Payment pending. Update your payment method to avoid suspension.",
+    "trialExpired": "Your trial has expired. Activate your subscription to continue.",
+    "trialEndingDays": "Your trial ends in {{days}} day(s). Activate your subscription.",
+    "trialEndingHours": "Your trial ends in less than 1 day. Activate your subscription.",
+    "trialDaysLeft": "{{days}} days remaining of your free trial. Activate your subscription whenever you're ready.",
+    "canceled": "Your subscription has been canceled. Access ends at the end of the current period.",
+    "resolve": "Resolve"
+  },
+  "activate": {
+    "title": "Talk to the sales team",
+    "description": "Since we don't have automatic checkout yet, we'll open a ticket so our sales team can contact you and activate your subscription.",
+    "messageLabel": "Your message",
+    "messagePlaceholder": "E.g.: I want to activate my account with 15 seats starting next month.",
+    "cancel": "Cancel",
+    "submit": "Send request",
+    "errorEmpty": "Please tell us about your request for the sales team.",
+    "errorSubmit": "Could not send: {{message}}",
+    "success": "Request sent! Our team will contact you soon."
+  },
+  "requestSeats": {
+    "title": "Request more seats",
+    "description": "Your current plan allows {{seats}} users. Tell us how many additional seats you need and why. Finance will review and reach out.",
+    "subject": "Seat increase request",
+    "header": "[Additional seats request]",
+    "fields": {
+      "totalLabel": "Desired total amount",
+      "diffHelp": "You're requesting <bold>+{{diff}}</bold> seats beyond the current {{current}}.",
+      "reasonLabel": "Reason for the request",
+      "reasonPlaceholder": "E.g.: We're hiring 3 new collaborators for the sales team next month."
+    },
+    "errors": {
+      "tooLow": "The requested amount must be greater than {{current}}.",
+      "reasonShort": "Please describe the reason (at least 10 characters).",
+      "submit": "Could not send: {{message}}"
+    },
+    "labels": {
+      "admin": "Administrator",
+      "current": "Current seats",
+      "requested": "Requested seats",
+      "diff": "Difference",
+      "reason": "Reason",
+      "defaultAdmin": "Administrator"
+    },
+    "cancel": "Cancel",
+    "submit": "Send request",
+    "success": "Request sent to Finance. We'll reach out soon."
   }
 }

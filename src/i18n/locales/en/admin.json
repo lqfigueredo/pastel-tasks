@@ -62,5 +62,69 @@
     "deactivate": "Deactivate user",
     "reactivate": "Reactivate user",
     "actionError": "Failed to execute action"
+  },
+  "editDialog": {
+    "title": "Edit user",
+    "description": "Update the name, email or team for this user.",
+    "displayName": "Display name",
+    "email": "Email",
+    "emailHint": "Changing the email also changes the user's login.",
+    "team": "Team",
+    "noTeam": "No team",
+    "cancel": "Cancel",
+    "save": "Save",
+    "errors": {
+      "loadEmail": "Failed to load email",
+      "loadUser": "Failed to load user data",
+      "nameRequired": "Display name is required",
+      "invalidEmail": "Invalid email format",
+      "updateProfile": "Failed to update profile",
+      "updateTeam": "Failed to update team",
+      "saveFailed": "Failed to save changes"
+    },
+    "success": "User updated successfully"
+  },
+  "emails": {
+    "stats": {
+      "total": "Total",
+      "sent": "Sent",
+      "failed": "Failed",
+      "suppressed": "Suppressed"
+    },
+    "filters": {
+      "period": "Period",
+      "template": "Template",
+      "allTemplates": "All templates",
+      "status": "Status",
+      "allStatus": "All",
+      "sent": "Sent",
+      "failed": "Failed",
+      "suppressed": "Suppressed",
+      "periods": {
+        "24h": "Last 24h",
+        "7d": "Last 7 days",
+        "30d": "Last 30 days"
+      }
+    },
+    "table": {
+      "template": "Template",
+      "recipient": "Recipient",
+      "status": "Status",
+      "datetime": "Date/Time",
+      "error": "Error",
+      "empty": "No emails found for the selected filters."
+    },
+    "pagination": {
+      "page": "Page {{current}} of {{total}} ({{records}} emails)"
+    },
+    "statusLabels": {
+      "sent": "Sent",
+      "pending": "Pending",
+      "dlq": "Failed",
+      "failed": "Failed",
+      "suppressed": "Suppressed",
+      "bounced": "Bounced",
+      "complained": "Complaint"
+    }
   }
 }

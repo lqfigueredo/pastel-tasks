@@ -85,5 +85,304 @@
   },
   "tickets": {
     "tagOpen": "{{n}} hot"
+  },
+  "plans": {
+    "intro": "Plan catalog. Changing the price here only affects new subscriptions.",
+    "new": "New plan",
+    "edit": "Edit plan",
+    "default": "Default",
+    "inactive": "Inactive",
+    "perSeat": "/seat/{{cycle}}",
+    "month": "month",
+    "year": "year",
+    "minSeats": "Minimum {{n}} seats",
+    "actions": {
+      "edit": "Edit",
+      "makeDefault": "Make default",
+      "deactivate": "Deactivate",
+      "activate": "Activate"
+    },
+    "errors": {
+      "loadFailed": "Failed to load plans",
+      "requiredFields": "Code and name are required",
+      "clearDefault": "Failed to clear default"
+    },
+    "messages": {
+      "updated": "Plan updated",
+      "created": "Plan created",
+      "newDefault": "{{name}} is the new default plan"
+    },
+    "form": {
+      "code": "Code",
+      "codePlaceholder": "starter",
+      "name": "Name",
+      "namePlaceholder": "Starter",
+      "description": "Description",
+      "pricePerSeat": "Price per seat (BRL)",
+      "minSeats": "Min seats",
+      "cycle": "Cycle",
+      "monthly": "Monthly",
+      "yearly": "Yearly",
+      "features": "Features (one per line)",
+      "featuresPlaceholder": "Unlimited tasks\n24/7 support\nAdvanced reports",
+      "active": "Active",
+      "cancel": "Cancel",
+      "save": "Save"
+    }
+  },
+  "vouchers": {
+    "intro": "Discount coupons applicable to subscriptions.",
+    "new": "New voucher",
+    "edit": "Edit voucher",
+    "empty": "No vouchers created.",
+    "active": "Active",
+    "inactive": "Inactive",
+    "duration": {
+      "once": "Single invoice",
+      "forever": "Lifetime",
+      "months": "{{n}} months"
+    },
+    "validityUntil": "until {{date}}",
+    "noLimit": "no limit",
+    "columns": {
+      "code": "Code",
+      "discount": "Discount",
+      "duration": "Duration",
+      "redemptions": "Redemptions",
+      "validity": "Validity",
+      "status": "Status",
+      "actions": "Actions"
+    },
+    "errors": {
+      "codeRequired": "Code is required",
+      "valuePositive": "Discount value must be positive",
+      "percentMax": "Percent cannot exceed 100"
+    },
+    "messages": {
+      "updated": "Voucher updated",
+      "created": "Voucher created"
+    },
+    "form": {
+      "code": "Code",
+      "codePlaceholder": "LAUNCH20",
+      "description": "Description (internal)",
+      "type": "Type",
+      "typePercent": "Percent (%)",
+      "typeFixed": "Fixed amount (BRL)",
+      "valuePercent": "Percent (1-100)",
+      "valueFixed": "Amount (BRL)",
+      "duration": "Duration",
+      "durationOnce": "Single invoice only",
+      "durationRepeating": "For X months",
+      "durationForever": "Lifetime",
+      "months": "Months",
+      "redemptionLimit": "Redemption limit",
+      "redemptionLimitPlaceholder": "Unlimited",
+      "appliesTo": "Applies to",
+      "anyPlan": "Any plan",
+      "validFrom": "Valid from",
+      "validUntil": "Valid until",
+      "active": "Active",
+      "cancel": "Cancel",
+      "save": "Save"
+    }
+  },
+  "subscriptions": {
+    "status": {
+      "trialing": "Trial",
+      "active": "Active",
+      "past_due": "Past due",
+      "suspended": "Suspended",
+      "canceled": "Canceled",
+      "pending": "Pending"
+    },
+    "kpis": {
+      "mrrTitle": "Active MRR",
+      "mrrTrialSuffix": "+ {{value}} in trial",
+      "byStatus": "By status",
+      "active": "{{n}} active",
+      "trial": "{{n}} trial",
+      "pastDue": "{{n}} past due",
+      "suspendedCanceled": "{{suspended}} suspended · {{canceled}} canceled",
+      "occupancy": "Seat occupancy",
+      "occupancyDetail": "{{used}} used / {{total}} purchased",
+      "alerts": "Alerts",
+      "alertsDetail": "{{trial}} trial ending in 3d · {{pastDue}} past due"
+    },
+    "filters": {
+      "searchAdmin": "Search admin...",
+      "allStatus": "All statuses",
+      "active": "Active",
+      "trialing": "Trial",
+      "pastDue": "Past due",
+      "suspended": "Suspended",
+      "canceled": "Canceled",
+      "pending": "Pending"
+    },
+    "table": {
+      "admin": "Admin",
+      "status": "Status",
+      "seats": "Seats",
+      "monthly": "Monthly",
+      "nextCycle": "Next cycle",
+      "provider": "Provider",
+      "actions": "Actions",
+      "details": "Details",
+      "empty": "No subscriptions found.",
+      "trialEnds": "Trial ends {{relative}}",
+      "pastDueSince": "Past due since {{date}}",
+      "noName": "Unnamed"
+    }
+  },
+  "drawer": {
+    "summary": {
+      "seats": "Seats",
+      "monthly": "Monthly",
+      "nextCycle": "Next cycle",
+      "trialEnds": "Trial ends"
+    },
+    "courtesyBadge": "🎁 Comp",
+    "courtesyTitle": "Active courtesy",
+    "fiscalIncomplete": {
+      "title": "Tax data incomplete",
+      "description": "You can't register a payment or generate an invoice until the customer completes their tax data. See pending fields in the <strong>Fiscal</strong> tab."
+    },
+    "actions": {
+      "registerPayment": "Register payment",
+      "manage": "Manage subscription"
+    },
+    "tabs": {
+      "invoices": "Invoices",
+      "discounts": "Discounts",
+      "fiscal": "Fiscal",
+      "history": "History",
+      "notes": "Notes"
+    },
+    "invoices": {
+      "empty": "No invoices recorded."
+    },
+    "fiscal": {
+      "edit": "Edit tax data",
+      "create": "Add tax data",
+      "notFilled": "Customer has not filled tax data yet.",
+      "complete": "All tax data complete for invoice issuance",
+      "missing": "{{n}} field(s) missing for invoice issuance",
+      "type": "Type",
+      "company": "Company",
+      "individual": "Individual",
+      "cnpj": "CNPJ",
+      "cpf": "CPF",
+      "legalNameCompany": "Legal name",
+      "legalNameIndividual": "Name",
+      "tradeName": "Trade name",
+      "municipalRegistration": "Municipal registration",
+      "stateRegistration": "State registration",
+      "email": "Email",
+      "phone": "Phone",
+      "address": "Address",
+      "postalCodeLabel": "Postal code {{code}}"
+    },
+    "history": {
+      "empty": "No changes recorded.",
+      "from": "from:",
+      "to": "to:"
+    },
+    "notes": {
+      "empty": "No notes.",
+      "add": "Add note...",
+      "save": "Save note",
+      "errorSave": "Failed to save note"
+    },
+    "changeLabels": {
+      "seats_changed": "Seats changed",
+      "status_changed": "Status changed",
+      "trial_extended": "Trial extended",
+      "manual_payment": "Manual payment",
+      "cycle_advanced": "Cycle advanced",
+      "created": "Subscription created",
+      "cancellation_scheduled": "Cancellation scheduled",
+      "reactivated": "Reactivated",
+      "note": "Note",
+      "comp_activation": "Comp activation",
+      "voucher_applied": "Voucher applied",
+      "voucher_removed": "Voucher removed",
+      "direct_discount": "Direct discount applied"
+    }
+  },
+  "manualPayment": {
+    "title": "Register manual payment",
+    "description": "Creates a paid invoice and (optionally) advances the subscription cycle.",
+    "fiscalIncomplete": {
+      "title": "Tax data incomplete",
+      "intro": "Cannot generate invoice without the tax data required for invoice issuance.",
+      "noProfile": "This customer hasn't filled any tax data yet.",
+      "missingHeader": "Pending fields:",
+      "askClient": "Ask the customer to complete it in <strong>Billing → Tax data</strong>."
+    },
+    "fields": {
+      "amount": "Amount (BRL)",
+      "method": "Method",
+      "reference": "Reference (optional)",
+      "referencePlaceholder": "Transaction ID, receipt...",
+      "notes": "Notes",
+      "advance": "Advance cycle (+1 month) and reactivate if past due"
+    },
+    "methods": {
+      "pix": "PIX",
+      "boleto": "Bank slip",
+      "card": "Card",
+      "manual": "Other / Manual"
+    },
+    "errors": {
+      "fiscal": "Tax data incomplete. Cannot generate invoice.",
+      "fiscalServer": "Tax data incomplete on server. Update the customer's record.",
+      "invalidAmount": "Invalid amount"
+    },
+    "success": "Payment recorded",
+    "close": "Close",
+    "cancel": "Cancel",
+    "submit": "Register"
+  },
+  "helpTexts": {
+    "intro": "Edit help texts shown when clicking the <strong>?</strong> button on each page of the system.",
+    "dialogTitle": "Dialog Title",
+    "sections": "Help Sections",
+    "sectionTitlePlaceholder": "Section title",
+    "sectionTextPlaceholder": "Explanation text...",
+    "addSection": "Add Section",
+    "save": "Save",
+    "saveError": "Failed to save: {{message}}",
+    "saveSuccess": "Help for \"{{page}}\" saved!",
+    "pageLabels": {
+      "tasks": "My Tasks",
+      "dashboard": "Dashboard",
+      "meetings": "Meeting Minutes",
+      "work-instructions": "Work Instructions",
+      "calendar": "Personal Calendar",
+      "settings": "Settings",
+      "admin": "Administration",
+      "financial": "Finance",
+      "team": "Teams"
+    }
+  },
+  "legal": {
+    "tabs": {
+      "terms": "Terms of Use",
+      "privacy": "Privacy Policy"
+    },
+    "alert": "Use markdown. Published versions are immutable and visible at <code>/terms</code> or <code>/privacy</code>. Legal review is recommended before public go-live.",
+    "editor": "Editor (markdown)",
+    "preview": "Preview",
+    "empty": "_Empty_",
+    "currentVersion": "Current published version: <bold>v{{n}}</bold>",
+    "publish": "Publish new version",
+    "publishing": "Publishing...",
+    "history": "Version history",
+    "errors": {
+      "empty": "Content cannot be empty.",
+      "noChanges": "No changes to publish.",
+      "publish": "Failed to publish: {{message}}"
+    },
+    "success": "Version {{n}} published."
   }
 }
