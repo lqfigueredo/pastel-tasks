@@ -1,0 +1,66 @@
+{
+  "page": {
+    "title": "Administração",
+    "subtitle": "Cadastre novos usuários e gerencie o sistema."
+  },
+  "tabs": {
+    "users": "Usuários",
+    "support": "Suporte",
+    "emails": "Emails"
+  },
+  "loading": "Carregando...",
+  "denied": {
+    "title": "Acesso Negado",
+    "description": "Você não tem permissão para acessar esta página."
+  },
+  "limit": {
+    "title": "Limite de {{n}} usuários atingido",
+    "description": "Você atingiu o limite do seu plano. Solicite ao Financeiro a liberação de assentos adicionais.",
+    "request": "Solicitar mais assentos",
+    "reachedHint": "Limite atingido — solicite mais assentos acima."
+  },
+  "register": {
+    "title": "Cadastrar Usuário",
+    "description": "O usuário poderá fazer login imediatamente após o cadastro.",
+    "usage": "({{current}}/{{max}} usuários utilizados)",
+    "name": "Nome",
+    "namePlaceholder": "Nome completo",
+    "email": "Email",
+    "emailPlaceholder": "email@exemplo.com",
+    "password": "Senha",
+    "passwordPlaceholder": "Mínimo 6 caracteres",
+    "team": "Time (opcional)",
+    "teamPlaceholder": "Selecione um time",
+    "noTeam": "Nenhum",
+    "submit": "Cadastrar Usuário",
+    "errors": {
+      "required": "Preencha todos os campos obrigatórios",
+      "passwordShort": "A senha deve ter pelo menos 6 caracteres",
+      "createFailed": "Erro ao cadastrar usuário"
+    },
+    "success": "Usuário cadastrado com sucesso!"
+  },
+  "list": {
+    "title": "Usuários Cadastrados",
+    "count": "{{n}} usuário(s) no sistema",
+    "name": "Nome",
+    "team": "Time",
+    "role": "Papel",
+    "status": "Status",
+    "createdAt": "Cadastrado em",
+    "actions": "Ações",
+    "you": "(você)",
+    "admin": "Admin",
+    "user": "Usuário",
+    "active": "Ativo",
+    "inactive": "Inativo"
+  },
+  "actions": {
+    "promoteAdmin": "Promover a admin",
+    "removeAdmin": "Remover admin",
+    "edit": "Editar usuário",
+    "deactivate": "Inativar usuário",
+    "reactivate": "Reativar usuário",
+    "actionError": "Erro ao executar ação"
+  }
+}

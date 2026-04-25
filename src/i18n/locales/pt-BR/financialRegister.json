@@ -1,0 +1,25 @@
+{
+  "page": {
+    "title": "Cadastro Financeiro",
+    "description": "Crie sua conta de administrador financeiro"
+  },
+  "form": {
+    "email": "E-mail",
+    "emailPlaceholder": "seu@email.com",
+    "password": "Senha",
+    "passwordPlaceholder": "Mínimo 6 caracteres",
+    "token": "Token de Acesso",
+    "tokenPlaceholder": "Informe o token",
+    "submit": "Criar Conta",
+    "submitting": "Criando conta...",
+    "haveAccount": "Já tem conta?",
+    "signIn": "Entrar"
+  },
+  "errors": {
+    "required": "Preencha todos os campos",
+    "invalidToken": "Token de acesso inválido",
+    "passwordShort": "A senha deve ter pelo menos 6 caracteres",
+    "createFailed": "Erro ao criar conta"
+  },
+  "success": "Conta criada com sucesso! Faça login para continuar."
+}

@@ -1,0 +1,25 @@
+{
+  "page": {
+    "title": "Finance Registration",
+    "description": "Create your financial administrator account"
+  },
+  "form": {
+    "email": "Email",
+    "emailPlaceholder": "your@email.com",
+    "password": "Password",
+    "passwordPlaceholder": "Minimum 6 characters",
+    "token": "Access Token",
+    "tokenPlaceholder": "Enter the token",
+    "submit": "Create Account",
+    "submitting": "Creating account...",
+    "haveAccount": "Already have an account?",
+    "signIn": "Sign in"
+  },
+  "errors": {
+    "required": "Fill in all fields",
+    "invalidToken": "Invalid access token",
+    "passwordShort": "Password must be at least 6 characters",
+    "createFailed": "Failed to create account"
+  },
+  "success": "Account created successfully! Sign in to continue."
+}
