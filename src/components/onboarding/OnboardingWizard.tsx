@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Progress } from '@/components/ui/progress';
 import { supabase } from '@/integrations/supabase/client';
@@ -12,6 +13,7 @@ import { Step4Task } from './steps/Step4Task';
 const TOTAL_STEPS = 4;
 
 export const OnboardingWizard = () => {
+  const { t } = useTranslation('onboarding');
   const { user } = useAuth();
   const invalidate = useInvalidateOnboarding();
   const [step, setStep] = useState(1);
@@ -40,7 +42,7 @@ export const OnboardingWizard = () => {
         onEscapeKeyDown={(e) => e.preventDefault()}
       >
         <DialogHeader>
-          <DialogTitle>Configuração inicial — passo {step} de {TOTAL_STEPS}</DialogTitle>
+          <DialogTitle>{t('wizard.title', { step, total: TOTAL_STEPS })}</DialogTitle>
         </DialogHeader>
 
         <Progress value={(step / TOTAL_STEPS) * 100} className="h-2" />
