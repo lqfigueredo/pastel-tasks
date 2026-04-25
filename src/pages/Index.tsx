@@ -1,8 +1,13 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
-import { Plus, X, Download } from 'lucide-react';
+import { Plus, X, Download, Calendar as CalendarIcon } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Label } from '@/components/ui/label';
+import { cn } from '@/lib/utils';
+import { ptBR } from 'date-fns/locale';
 import { KanbanBoard, KanbanBoardRef } from '@/components/kanban/KanbanBoard';
 import { CreateTaskDialog } from '@/components/kanban/CreateTaskDialog';
 import { useUserRoles } from '@/hooks/useUserRoles';
