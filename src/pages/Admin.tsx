@@ -1,4 +1,5 @@
 import { useState, lazy, Suspense } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -14,12 +15,11 @@ import { ShieldX, UserPlus, Loader2, ShieldCheck, ShieldOff, UserX, UserCheck, P
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { HelpButton } from '@/components/HelpButton';
 import { PageLoader, InlineLoader } from '@/components/ui/loaders';
+import { getCurrentLocale } from '@/lib/date';
 
 const SupportTicketList = lazy(() => import('@/components/support/SupportTicketList'));
 const EmailDashboard = lazy(() => import('@/components/admin/EmailDashboard'));
 const EditUserDialog = lazy(() => import('@/components/admin/EditUserDialog'));
-
-const TabFallback = () => <InlineLoader label="Carregando..." />;
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertTriangle } from 'lucide-react';
 import { RequestSeatsDialog } from '@/components/admin/RequestSeatsDialog';
