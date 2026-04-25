@@ -29,6 +29,10 @@ import enCalendar from './locales/en/calendar.json';
 import enTimer from './locales/en/timer.json';
 import enTeam from './locales/en/team.json';
 import enSettings from './locales/en/settings.json';
+import enIdeas from './locales/en/ideas.json';
+import enMeetings from './locales/en/meetings.json';
+import enKnowledge from './locales/en/knowledge.json';
+import enWorkInstructions from './locales/en/workInstructions.json';
 
 export const SUPPORTED_LOCALES = ['pt-BR', 'en'] as const;
 export type SupportedLocale = (typeof SUPPORTED_LOCALES)[number];
