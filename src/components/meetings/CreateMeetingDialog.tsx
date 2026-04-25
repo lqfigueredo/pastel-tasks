@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import {
@@ -12,7 +13,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { CalendarIcon, Plus, X } from 'lucide-react';
 import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { getCurrentLocale } from '@/lib/date';
 import { cn } from '@/lib/utils';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
@@ -32,6 +33,7 @@ interface Profile {
 
 export function CreateMeetingDialog({ open, onOpenChange, onCreated }: Props) {
   const { user } = useAuth();
+  const { t } = useTranslation('meetings');
   const [date, setDate] = useState<Date>();
   const [description, setDescription] = useState('');
   const [profiles, setProfiles] = useState<Profile[]>([]);
@@ -78,7 +80,7 @@ export function CreateMeetingDialog({ open, onOpenChange, onCreated }: Props) {
     const name = externalName.trim();
     if (!name) return;
     if (externalParticipants.includes(name)) {
-      toast.error('Nome já adicionado');
+      toast.error(t('create.duplicateName'));
       return;
     }
     setExternalParticipants((prev) => [...prev, name]);
@@ -91,7 +93,7 @@ export function CreateMeetingDialog({ open, onOpenChange, onCreated }: Props) {
 
   const handleSave = async () => {
     if (!user || !date || !description.trim()) {
-      toast.error('Preencha todos os campos obrigatórios');
+      toast.error(t('create.requiredFields'));
       return;
     }
     setSaving(true);
@@ -108,7 +110,7 @@ export function CreateMeetingDialog({ open, onOpenChange, onCreated }: Props) {
       .single();
 
     if (error || !meeting) {
-      toast.error('Erro ao criar ata');
+      toast.error(t('create.errorCreate'));
       setSaving(false);
       return;
     }
@@ -135,7 +137,7 @@ export function CreateMeetingDialog({ open, onOpenChange, onCreated }: Props) {
       }
     }
 
-    toast.success('Ata criada com sucesso');
+    toast.success(t('create.success'));
     reset();
     onOpenChange(false);
     onCreated();
@@ -150,13 +152,13 @@ export function CreateMeetingDialog({ open, onOpenChange, onCreated }: Props) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>Nova Ata de Reunião</DialogTitle>
-          <DialogDescription>Preencha os dados da reunião</DialogDescription>
+          <DialogTitle>{t('create.title')}</DialogTitle>
+          <DialogDescription>{t('create.description')}</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label>Data da Reunião *</Label>
+            <Label>{t('create.dateLabel')}</Label>
             <Popover>
               <PopoverTrigger asChild>
                 <Button
@@ -164,7 +166,7 @@ export function CreateMeetingDialog({ open, onOpenChange, onCreated }: Props) {
                   className={cn('w-full justify-start text-left font-normal', !date && 'text-muted-foreground')}
                 >
                   <CalendarIcon className="mr-2 h-4 w-4" />
-                  {date ? format(date, "dd 'de' MMMM 'de' yyyy", { locale: ptBR }) : 'Selecione uma data'}
+                  {date ? format(date, 'PPP', { locale: getCurrentLocale() }) : t('create.selectDate')}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0" align="start">
@@ -172,7 +174,7 @@ export function CreateMeetingDialog({ open, onOpenChange, onCreated }: Props) {
                   mode="single"
                   selected={date}
                   onSelect={setDate}
-                  locale={ptBR}
+                  locale={getCurrentLocale()}
                   className="p-3 pointer-events-auto"
                 />
               </PopoverContent>
@@ -180,9 +182,9 @@ export function CreateMeetingDialog({ open, onOpenChange, onCreated }: Props) {
           </div>
 
           <div className="space-y-2">
-            <Label>Descrição *</Label>
+            <Label>{t('create.descLabel')}</Label>
             <Textarea
-              placeholder="Descreva os assuntos tratados na reunião..."
+              placeholder={t('create.descPlaceholder')}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={4}
@@ -190,10 +192,10 @@ export function CreateMeetingDialog({ open, onOpenChange, onCreated }: Props) {
           </div>
 
           <div className="space-y-2">
-            <Label>Participantes</Label>
+            <Label>{t('create.participants')}</Label>
             <div className="max-h-40 space-y-1 overflow-y-auto rounded-md border p-2">
               {profiles.length === 0 ? (
-                <p className="text-xs text-muted-foreground">Nenhum usuário disponível</p>
+                <p className="text-xs text-muted-foreground">{t('create.noUsers')}</p>
               ) : (
                 profiles.map((p) => (
                   <label key={p.user_id} className="flex items-center gap-2 rounded p-1 text-sm hover:bg-accent cursor-pointer">
@@ -201,7 +203,7 @@ export function CreateMeetingDialog({ open, onOpenChange, onCreated }: Props) {
                       checked={selectedUsers.includes(p.user_id)}
                       onCheckedChange={() => toggleUser(p.user_id)}
                     />
-                    {p.display_name || 'Sem nome'}
+                    {p.display_name || t('create.noName')}
                   </label>
                 ))
               )}
@@ -209,10 +211,10 @@ export function CreateMeetingDialog({ open, onOpenChange, onCreated }: Props) {
           </div>
 
           <div className="space-y-2">
-            <Label>Participantes Externos</Label>
+            <Label>{t('create.externalParticipants')}</Label>
             <div className="flex gap-2">
               <Input
-                placeholder="Nome do participante externo"
+                placeholder={t('create.externalPlaceholder')}
                 value={externalName}
                 onChange={(e) => setExternalName(e.target.value)}
                 onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addExternal(); } }}
@@ -236,7 +238,7 @@ export function CreateMeetingDialog({ open, onOpenChange, onCreated }: Props) {
           </div>
 
           <div className="space-y-2">
-            <Label>Anexos</Label>
+            <Label>{t('create.attachments')}</Label>
             <input
               ref={fileRef}
               type="file"
@@ -249,7 +251,7 @@ export function CreateMeetingDialog({ open, onOpenChange, onCreated }: Props) {
               }}
             />
             <Button type="button" variant="outline" size="sm" className="gap-1 text-xs w-full" onClick={() => fileRef.current?.click()}>
-              <Upload className="h-3 w-3" /> Selecionar arquivos
+              <Upload className="h-3 w-3" /> {t('create.selectFiles')}
             </Button>
             {selectedFiles.length > 0 && (
               <div className="space-y-1">
@@ -269,10 +271,10 @@ export function CreateMeetingDialog({ open, onOpenChange, onCreated }: Props) {
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancelar
+            {t('create.cancel')}
           </Button>
           <Button onClick={handleSave} disabled={saving}>
-            {saving ? 'Salvando...' : 'Criar Ata'}
+            {saving ? t('create.saving') : t('create.save')}
           </Button>
         </DialogFooter>
       </DialogContent>

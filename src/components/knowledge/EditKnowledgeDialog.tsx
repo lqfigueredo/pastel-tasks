@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from '@/hooks/use-toast';
@@ -35,6 +36,7 @@ interface Props {
 }
 
 export function EditKnowledgeDialog({ open, onOpenChange, source, teams, isOwner }: Props) {
+  const { t } = useTranslation('knowledge');
   const queryClient = useQueryClient();
   const [loading, setLoading] = useState(false);
   const [title, setTitle] = useState('');
@@ -66,9 +68,9 @@ export function EditKnowledgeDialog({ open, onOpenChange, source, teams, isOwner
     }).eq('id', source.id);
 
     if (error) {
-      toast({ title: 'Erro ao atualizar', description: error.message, variant: 'destructive' });
+      toast({ title: t('edit.errorUpdate'), description: error.message, variant: 'destructive' });
     } else {
-      toast({ title: 'Fonte atualizada!' });
+      toast({ title: t('edit.updated') });
       queryClient.invalidateQueries({ queryKey: ['knowledge-sources'] });
       onOpenChange(false);
     }
@@ -85,9 +87,9 @@ export function EditKnowledgeDialog({ open, onOpenChange, source, teams, isOwner
 
     const { error } = await supabase.from('knowledge_sources').delete().eq('id', source.id);
     if (error) {
-      toast({ title: 'Erro ao excluir', description: error.message, variant: 'destructive' });
+      toast({ title: t('edit.errorDelete'), description: error.message, variant: 'destructive' });
     } else {
-      toast({ title: 'Fonte excluída!' });
+      toast({ title: t('edit.deleted') });
       queryClient.invalidateQueries({ queryKey: ['knowledge-sources'] });
       onOpenChange(false);
     }
@@ -106,25 +108,25 @@ export function EditKnowledgeDialog({ open, onOpenChange, source, teams, isOwner
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>{isOwner ? 'Editar Fonte' : 'Detalhes da Fonte'}</DialogTitle>
+          <DialogTitle>{isOwner ? t('edit.titleEdit') : t('edit.titleView')}</DialogTitle>
           <DialogDescription>
-            {isOwner ? 'Atualize as informações da fonte de conhecimento.' : 'Visualize os detalhes desta fonte.'}
+            {isOwner ? t('edit.descEdit') : t('edit.descView')}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
           <div className="space-y-1">
-            <Label>Título</Label>
+            <Label>{t('edit.titleLabel')}</Label>
             <Input value={title} onChange={(e) => setTitle(e.target.value)} disabled={!isOwner} />
           </div>
 
           <div className="space-y-1">
-            <Label>Descrição</Label>
+            <Label>{t('edit.descLabel')}</Label>
             <Textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3} disabled={!isOwner} />
           </div>
 
           <div className="space-y-1">
-            <Label>Link de referência</Label>
+            <Label>{t('edit.linkLabel')}</Label>
             <div className="flex gap-2">
               <Input type="url" value={referenceUrl} onChange={(e) => setReferenceUrl(e.target.value)} disabled={!isOwner} className="flex-1" />
               {source.reference_url && (
@@ -139,7 +141,7 @@ export function EditKnowledgeDialog({ open, onOpenChange, source, teams, isOwner
 
           {source.file_name && (
             <div className="space-y-1">
-              <Label>Arquivo</Label>
+              <Label>{t('edit.fileLabel')}</Label>
               <Button variant="outline" size="sm" onClick={handleDownload} className="w-full justify-start">
                 <FileDown className="mr-2 h-4 w-4" />
                 {source.file_name}
@@ -150,24 +152,24 @@ export function EditKnowledgeDialog({ open, onOpenChange, source, teams, isOwner
           {isOwner && (
             <>
               <div className="space-y-1">
-                <Label>Escopo</Label>
+                <Label>{t('edit.scopeLabel')}</Label>
                 <Select value={scope} onValueChange={setScope}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="individual">Individual</SelectItem>
-                    <SelectItem value="team">Equipe</SelectItem>
+                    <SelectItem value="individual">{t('edit.scopeIndividual')}</SelectItem>
+                    <SelectItem value="team">{t('edit.scopeTeam')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               {scope === 'team' && (
                 <div className="space-y-1">
-                  <Label>Equipe</Label>
+                  <Label>{t('edit.teamLabel')}</Label>
                   <Select value={teamId} onValueChange={setTeamId}>
-                    <SelectTrigger><SelectValue placeholder="Selecione a equipe" /></SelectTrigger>
+                    <SelectTrigger><SelectValue placeholder={t('edit.selectTeam')} /></SelectTrigger>
                     <SelectContent>
-                      {teams.map((t) => (
-                        <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
+                      {teams.map((tm) => (
+                        <SelectItem key={tm.id} value={tm.id}>{tm.name}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -180,15 +182,15 @@ export function EditKnowledgeDialog({ open, onOpenChange, source, teams, isOwner
         <DialogFooter className="flex justify-between sm:justify-between">
           {isOwner && (
             <Button variant="destructive" size="sm" onClick={handleDelete} disabled={loading}>
-              <Trash2 className="mr-2 h-4 w-4" />Excluir
+              <Trash2 className="mr-2 h-4 w-4" />{t('edit.delete')}
             </Button>
           )}
           <div className="flex gap-2">
-            <Button variant="outline" onClick={() => onOpenChange(false)}>Fechar</Button>
+            <Button variant="outline" onClick={() => onOpenChange(false)}>{t('edit.close')}</Button>
             {isOwner && (
               <Button onClick={handleUpdate} disabled={loading || !title.trim()}>
                 {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Salvar
+                {t('edit.save')}
               </Button>
             )}
           </div>

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
@@ -11,7 +12,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { getCurrentLocale } from '@/lib/date';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
@@ -25,6 +26,7 @@ interface Props {
 }
 
 export function AddPendencyDialog({ open, onOpenChange, meetingId, participants, externalParticipants, onCreated }: Props) {
+  const { t } = useTranslation('meetings');
   const [description, setDescription] = useState('');
   const [responsibleValue, setResponsibleValue] = useState('');
   const [dueDate, setDueDate] = useState<Date>();
@@ -38,7 +40,7 @@ export function AddPendencyDialog({ open, onOpenChange, meetingId, participants,
 
   const handleSave = async () => {
     if (!description.trim() || !responsibleValue) {
-      toast.error('Preencha descrição e responsável');
+      toast.error(t('pendency.requiredFields'));
       return;
     }
     setSaving(true);
@@ -56,12 +58,12 @@ export function AddPendencyDialog({ open, onOpenChange, meetingId, participants,
     });
 
     if (error) {
-      toast.error('Erro ao criar pendência');
+      toast.error(t('pendency.errorCreate'));
       setSaving(false);
       return;
     }
 
-    toast.success('Pendência adicionada');
+    toast.success(t('pendency.success'));
     reset();
     onOpenChange(false);
     onCreated();
@@ -72,15 +74,15 @@ export function AddPendencyDialog({ open, onOpenChange, meetingId, participants,
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Nova Pendência</DialogTitle>
-          <DialogDescription>Adicione uma pendência à ata</DialogDescription>
+          <DialogTitle>{t('pendency.title')}</DialogTitle>
+          <DialogDescription>{t('pendency.description')}</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label>Descrição *</Label>
+            <Label>{t('pendency.descLabel')}</Label>
             <Textarea
-              placeholder="Descreva a pendência..."
+              placeholder={t('pendency.descPlaceholder')}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={3}
@@ -88,10 +90,10 @@ export function AddPendencyDialog({ open, onOpenChange, meetingId, participants,
           </div>
 
           <div className="space-y-2">
-            <Label>Responsável *</Label>
+            <Label>{t('pendency.responsibleLabel')}</Label>
             <Select value={responsibleValue} onValueChange={setResponsibleValue}>
               <SelectTrigger>
-                <SelectValue placeholder="Selecione o responsável" />
+                <SelectValue placeholder={t('pendency.selectResponsible')} />
               </SelectTrigger>
               <SelectContent>
                 {participants.map((p) => (
@@ -101,10 +103,10 @@ export function AddPendencyDialog({ open, onOpenChange, meetingId, participants,
                 ))}
                 {externalParticipants.length > 0 && (
                   <>
-                    <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground">Externos</div>
+                    <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground">{t('pendency.externalGroup')}</div>
                     {externalParticipants.map((name) => (
                       <SelectItem key={`ext-${name}`} value={`ext:${name}`}>
-                        {name} (Externo)
+                        {name} {t('pendency.externalSuffix')}
                       </SelectItem>
                     ))}
                   </>
@@ -114,7 +116,7 @@ export function AddPendencyDialog({ open, onOpenChange, meetingId, participants,
           </div>
 
           <div className="space-y-2">
-            <Label>Data de Conclusão</Label>
+            <Label>{t('pendency.dueDateLabel')}</Label>
             <Popover>
               <PopoverTrigger asChild>
                 <Button
@@ -122,7 +124,7 @@ export function AddPendencyDialog({ open, onOpenChange, meetingId, participants,
                   className={cn('w-full justify-start text-left font-normal', !dueDate && 'text-muted-foreground')}
                 >
                   <CalendarIcon className="mr-2 h-4 w-4" />
-                  {dueDate ? format(dueDate, 'dd/MM/yyyy') : 'Selecione uma data'}
+                  {dueDate ? format(dueDate, 'P', { locale: getCurrentLocale() }) : t('pendency.selectDate')}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0" align="start">
@@ -130,7 +132,7 @@ export function AddPendencyDialog({ open, onOpenChange, meetingId, participants,
                   mode="single"
                   selected={dueDate}
                   onSelect={setDueDate}
-                  locale={ptBR}
+                  locale={getCurrentLocale()}
                   className="p-3 pointer-events-auto"
                 />
               </PopoverContent>
@@ -140,10 +142,10 @@ export function AddPendencyDialog({ open, onOpenChange, meetingId, participants,
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancelar
+            {t('pendency.cancel')}
           </Button>
           <Button onClick={handleSave} disabled={saving}>
-            {saving ? 'Salvando...' : 'Adicionar'}
+            {saving ? t('pendency.saving') : t('pendency.save')}
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useQueryClient } from '@tanstack/react-query';
@@ -23,6 +24,7 @@ interface Props {
 
 export function CreateKnowledgeDialog({ open, onOpenChange, teams }: Props) {
   const { user } = useAuth();
+  const { t } = useTranslation('knowledge');
   const queryClient = useQueryClient();
   const [loading, setLoading] = useState(false);
   const [title, setTitle] = useState('');
@@ -51,7 +53,7 @@ export function CreateKnowledgeDialog({ open, onOpenChange, teams }: Props) {
         .from('knowledge-attachments')
         .upload(path, file);
       if (uploadError) {
-        toast({ title: 'Erro ao enviar arquivo', description: uploadError.message, variant: 'destructive' });
+        toast({ title: t('create.errorUpload'), description: uploadError.message, variant: 'destructive' });
         setLoading(false);
         return;
       }
@@ -71,9 +73,9 @@ export function CreateKnowledgeDialog({ open, onOpenChange, teams }: Props) {
     });
 
     if (error) {
-      toast({ title: 'Erro ao criar fonte', description: error.message, variant: 'destructive' });
+      toast({ title: t('create.errorCreate'), description: error.message, variant: 'destructive' });
     } else {
-      toast({ title: 'Fonte de conhecimento criada!' });
+      toast({ title: t('create.success') });
       queryClient.invalidateQueries({ queryKey: ['knowledge-sources'] });
       reset();
       onOpenChange(false);
@@ -85,50 +87,50 @@ export function CreateKnowledgeDialog({ open, onOpenChange, teams }: Props) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>Nova Fonte de Conhecimento</DialogTitle>
-          <DialogDescription>Adicione um link de referência ou arquivo importante.</DialogDescription>
+          <DialogTitle>{t('create.title')}</DialogTitle>
+          <DialogDescription>{t('create.description')}</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
           <div className="space-y-1">
-            <Label>Título *</Label>
-            <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Ex: Documentação da API" />
+            <Label>{t('create.titleLabel')}</Label>
+            <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder={t('create.titlePlaceholder')} />
           </div>
 
           <div className="space-y-1">
-            <Label>Descrição</Label>
-            <Textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Breve descrição..." rows={3} />
+            <Label>{t('create.descLabel')}</Label>
+            <Textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder={t('create.descPlaceholder')} rows={3} />
           </div>
 
           <div className="space-y-1">
-            <Label>Link de referência</Label>
-            <Input type="url" value={referenceUrl} onChange={(e) => setReferenceUrl(e.target.value)} placeholder="https://..." />
+            <Label>{t('create.linkLabel')}</Label>
+            <Input type="url" value={referenceUrl} onChange={(e) => setReferenceUrl(e.target.value)} placeholder={t('create.linkPlaceholder')} />
           </div>
 
           <div className="space-y-1">
-            <Label>Arquivo</Label>
+            <Label>{t('create.fileLabel')}</Label>
             <Input type="file" onChange={(e) => setFile(e.target.files?.[0] || null)} />
           </div>
 
           <div className="space-y-1">
-            <Label>Escopo</Label>
+            <Label>{t('create.scopeLabel')}</Label>
             <Select value={scope} onValueChange={setScope}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="individual">Individual</SelectItem>
-                <SelectItem value="team">Equipe</SelectItem>
+                <SelectItem value="individual">{t('create.scopeIndividual')}</SelectItem>
+                <SelectItem value="team">{t('create.scopeTeam')}</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           {scope === 'team' && (
             <div className="space-y-1">
-              <Label>Equipe</Label>
+              <Label>{t('create.teamLabel')}</Label>
               <Select value={teamId} onValueChange={setTeamId}>
-                <SelectTrigger><SelectValue placeholder="Selecione a equipe" /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder={t('create.selectTeam')} /></SelectTrigger>
                 <SelectContent>
-                  {teams.map((t) => (
-                    <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
+                  {teams.map((tm) => (
+                    <SelectItem key={tm.id} value={tm.id}>{tm.name}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -137,10 +139,10 @@ export function CreateKnowledgeDialog({ open, onOpenChange, teams }: Props) {
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>{t('create.cancel')}</Button>
           <Button onClick={handleSubmit} disabled={loading || !title.trim()}>
             {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Criar
+            {t('create.save')}
           </Button>
         </DialogFooter>
       </DialogContent>
