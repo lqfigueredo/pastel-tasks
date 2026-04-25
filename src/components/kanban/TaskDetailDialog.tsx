@@ -218,11 +218,45 @@ export function TaskDetailDialog({ task, allStatuses, open, onOpenChange, onRefr
     fetchComments();
   };
 
+  const handleCopyId = async () => {
+    try {
+      await navigator.clipboard.writeText(task.id);
+      toast({ title: 'ID copiado!', description: task.id });
+    } catch {
+      toast({ title: 'Erro ao copiar ID', variant: 'destructive' });
+    }
+  };
+
+  const shortId = task.id.slice(0, 8);
+
   return (
     <>
       <ResponsiveDialog open={open} onOpenChange={onOpenChange} contentClassName="max-w-xl">
         <ResponsiveDialogHeader>
-          <ResponsiveDialogTitle>Detalhes da Tarefa</ResponsiveDialogTitle>
+          <ResponsiveDialogTitle className="flex items-center gap-2 flex-wrap">
+            <span>Detalhes da Tarefa</span>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    type="button"
+                    onClick={handleCopyId}
+                    className="inline-flex items-center"
+                    aria-label="Copiar ID da tarefa"
+                  >
+                    <Badge variant="secondary" className="font-mono text-xs gap-1 cursor-pointer hover:bg-secondary/80">
+                      #{shortId}
+                      <Copy className="h-3 w-3" />
+                    </Badge>
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p className="font-mono text-xs">{task.id}</p>
+                  <p className="text-xs text-muted-foreground mt-1">Clique para copiar</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </ResponsiveDialogTitle>
           <ResponsiveDialogDescription>Edite os campos e salve as alterações</ResponsiveDialogDescription>
         </ResponsiveDialogHeader>
 
