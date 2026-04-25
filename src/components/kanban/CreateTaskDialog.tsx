@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -13,6 +14,8 @@ import { AssigneeSelector } from './AssigneeSelector';
 import { Users, Repeat, FileText, AlertTriangle } from 'lucide-react';
 import { errorToast } from '@/lib/toast-helpers';
 import { cn } from '@/lib/utils';
+import { getCurrentLocale } from '@/lib/date';
+import { format as formatDate } from 'date-fns';
 import {
   ResponsiveDialog,
   ResponsiveDialogHeader,
