@@ -1,0 +1,47 @@
+{
+  "groups": {
+    "work": "Work",
+    "documentation": "Documentation",
+    "administration": "Administration",
+    "operation": "Operations"
+  },
+  "items": {
+    "dashboard": "Dashboard",
+    "myTasks": "My Tasks",
+    "team": "Team",
+    "agenda": "Calendar",
+    "timer": "Focus Timer",
+    "meetings": "Meeting Minutes",
+    "instructions": "Work Instructions",
+    "ideas": "Ideas Log",
+    "knowledge": "Knowledge Base",
+    "settings": "Settings",
+    "admin": "Administration",
+    "billing": "Billing",
+    "financial": "Financials"
+  },
+  "pageTitles": {
+    "dashboard": "Dashboard",
+    "tasks": "My Tasks",
+    "teamDetail": "Team Details",
+    "team": "Team",
+    "agenda": "Calendar",
+    "timer": "Focus Timer",
+    "meetingDetail": "Meeting Details",
+    "meetings": "Meeting Minutes",
+    "instructions": "Work Instructions",
+    "ideas": "Ideas Log",
+    "knowledge": "Knowledge Base",
+    "settings": "Settings",
+    "admin": "Administration",
+    "billing": "Subscription & Billing",
+    "financial": "Financials"
+  },
+  "logout": {
+    "trigger": "Sign out",
+    "confirmTitle": "Sign out?",
+    "confirmDescription": "You will need to sign in again to access your account.",
+    "cancel": "Cancel",
+    "confirm": "Sign out"
+  }
+}

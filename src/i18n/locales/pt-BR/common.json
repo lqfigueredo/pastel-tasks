@@ -1,0 +1,85 @@
+{
+  "actions": {
+    "save": "Salvar",
+    "cancel": "Cancelar",
+    "delete": "Excluir",
+    "edit": "Editar",
+    "create": "Criar",
+    "add": "Adicionar",
+    "remove": "Remover",
+    "confirm": "Confirmar",
+    "close": "Fechar",
+    "back": "Voltar",
+    "next": "Próximo",
+    "previous": "Anterior",
+    "search": "Buscar",
+    "filter": "Filtrar",
+    "export": "Exportar",
+    "import": "Importar",
+    "loading": "Carregando…",
+    "tryAgain": "Tentar novamente",
+    "viewAll": "Ver todos",
+    "viewMore": "Ver mais",
+    "select": "Selecionar",
+    "apply": "Aplicar",
+    "clear": "Limpar",
+    "copy": "Copiar",
+    "copied": "Copiado!",
+    "duplicate": "Duplicar",
+    "share": "Compartilhar",
+    "submit": "Enviar",
+    "send": "Enviar",
+    "yes": "Sim",
+    "no": "Não",
+    "open": "Abrir",
+    "refresh": "Atualizar"
+  },
+  "states": {
+    "empty": "Nenhum resultado encontrado",
+    "loading": "Carregando…",
+    "error": "Ocorreu um erro",
+    "saving": "Salvando…",
+    "saved": "Salvo",
+    "noData": "Sem dados disponíveis"
+  },
+  "labels": {
+    "name": "Nome",
+    "email": "E-mail",
+    "password": "Senha",
+    "description": "Descrição",
+    "title": "Título",
+    "date": "Data",
+    "status": "Status",
+    "type": "Tipo",
+    "actions": "Ações",
+    "createdAt": "Criado em",
+    "updatedAt": "Atualizado em",
+    "optional": "(opcional)",
+    "required": "obrigatório"
+  },
+  "search": {
+    "placeholder": "Buscar",
+    "openShortcut": "⌘K",
+    "openLabel": "Abrir busca global"
+  },
+  "language": {
+    "label": "Idioma",
+    "ptBR": "Português (Brasil)",
+    "en": "English",
+    "current": "Idioma atual",
+    "ariaLabel": "Selecionar idioma",
+    "saved": "Idioma alterado para Português",
+    "savedEn": "Language changed to English"
+  },
+  "theme": {
+    "lightMode": "Modo claro",
+    "darkMode": "Modo escuro",
+    "toggle": "Alternar tema"
+  },
+  "errors": {
+    "generic": "Algo deu errado. Tente novamente.",
+    "network": "Verifique sua conexão e tente novamente.",
+    "couldNot": "Não foi possível {{action}}",
+    "details": "Detalhes: {{message}}"
+  }
+}

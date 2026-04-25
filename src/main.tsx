@@ -1,5 +1,6 @@
 import { initSentry } from "./lib/sentry";
 import { captureSentryError } from "./lib/sentry";
+import "./i18n"; // initialize i18next before anything reads translations
 import "./index.css";
 
 function renderFallback(error: unknown) {
