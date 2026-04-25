@@ -78,6 +78,56 @@ const Index = () => {
     ? `${counts.visible} de ${counts.total} tarefa${counts.total === 1 ? '' : 's'}`
     : `${counts.total} tarefa${counts.total === 1 ? '' : 's'} no total`;
 
+  const { data: tasksData } = useTasksQuery();
+  const { data: statuses } = useStatusesQuery();
+
+  const handleExportCsv = useCallback(() => {
+    const allTasks = tasksData?.tasks ?? [];
+    const statusMap = new Map((statuses ?? []).map((s) => [s.id, s.name]));
+
+    // Match the same filter applied to the visible board
+    const tasks = filterAssigneeId
+      ? allTasks.filter((t) => t.assignees.some((a) => a.user_id === filterAssigneeId))
+      : allTasks;
+
+    if (tasks.length === 0) {
+      toast.info('Nenhuma tarefa para exportar');
+      return;
+    }
+
+    const headers = [
+      'ID',
+      'Título',
+      'Descrição',
+      'Status',
+      'Responsáveis',
+      'Data início',
+      'Prazo estimado',
+      'Data fim',
+      'Crítica',
+      'Criada em',
+    ];
+
+    const rows = tasks.map((t) => [
+      t.id,
+      t.title,
+      t.description ?? '',
+      statusMap.get(t.status_id) ?? '',
+      t.assignees.map((a) => a.display_name || 'Sem nome').join('; '),
+      t.start_date ?? '',
+      t.estimated_delivery_date ?? '',
+      t.end_date ?? '',
+      t.is_critical ? 'Sim' : 'Não',
+      t.created_at ? format(new Date(t.created_at), 'dd/MM/yyyy HH:mm') : '',
+    ]);
+
+    const csv = buildCsv(headers, rows);
+    const filename = `tarefas_${format(new Date(), 'yyyy-MM-dd')}.csv`;
+    downloadCsv(filename, csv);
+    toast.success(`CSV exportado com ${tasks.length} tarefa${tasks.length === 1 ? '' : 's'}`);
+  }, [tasksData, statuses, filterAssigneeId]);
+
+
   return (
     <div className="animate-fade-in">
       <div className="mb-6 flex items-center justify-between gap-3 flex-wrap">
