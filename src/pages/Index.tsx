@@ -202,7 +202,7 @@ const Index = () => {
           </Select>
           <Popover open={exportPopoverOpen} onOpenChange={setExportPopoverOpen}>
             <PopoverTrigger asChild>
-              <Button variant="outline" className="gap-2">
+              <Button variant="outline" className="gap-2 flex-1 sm:flex-none">
                 <Download className="h-4 w-4" />
                 Exportar CSV
               </Button>
