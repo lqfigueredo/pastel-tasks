@@ -13,7 +13,7 @@ import { Users, Plus, Trash2, Loader2, Mail, Crown, Calendar, FileText, Save, Ar
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { TeamAttachments } from '@/components/team/TeamAttachments';
-import { useTeamDetailQuery, useInvalidateTeamDetail } from '@/hooks/useTeamDetailQuery';
+import { useTeamDetailQuery } from '@/hooks/useTeamDetailQuery';
 
 interface TeamData {
   id: string;
@@ -45,8 +45,7 @@ const Team = () => {
   const { user } = useAuth();
   const { toast } = useToast();
 
-  const { data: teamDetail, isLoading: loading } = useTeamDetailQuery(teamId);
-  const invalidateTeamDetail = useInvalidateTeamDetail();
+  const { data: teamDetail, isLoading: loading, refetch } = useTeamDetailQuery(teamId);
   const team = teamDetail?.team ?? null;
   const members = teamDetail?.members ?? [];
   const tasks = teamDetail?.tasks ?? [];
@@ -67,7 +66,7 @@ const Team = () => {
   }, [team?.id]);
 
   const reload = () => {
-    if (teamId) invalidateTeamDetail(teamId);
+    refetch();
   };
 
   const handleDeleteTeam = async () => {
