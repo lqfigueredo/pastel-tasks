@@ -1061,6 +1061,7 @@ export type Database = {
           created_at: string
           display_name: string
           id: string
+          locale: string
           onboarding_completed_at: string | null
           theme: string
           updated_at: string
@@ -1071,6 +1072,7 @@ export type Database = {
           created_at?: string
           display_name?: string
           id?: string
+          locale?: string
           onboarding_completed_at?: string | null
           theme?: string
           updated_at?: string
@@ -1081,6 +1083,7 @@ export type Database = {
           created_at?: string
           display_name?: string
           id?: string
+          locale?: string
           onboarding_completed_at?: string | null
           theme?: string
           updated_at?: string
