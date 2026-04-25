@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -22,6 +23,7 @@ interface Props {
 }
 
 export function MeetingAttachments({ meetingId, canUpload, createdBy }: Props) {
+  const { t } = useTranslation('meetings');
   const { user } = useAuth();
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [uploading, setUploading] = useState(false);
@@ -55,7 +57,7 @@ export function MeetingAttachments({ meetingId, canUpload, createdBy }: Props) {
         .upload(path, file);
 
       if (uploadError) {
-        toast.error(`Erro ao enviar ${file.name}`);
+        toast.error(t('attachments.errorUpload', { name: file.name }));
         continue;
       }
 
@@ -70,7 +72,7 @@ export function MeetingAttachments({ meetingId, canUpload, createdBy }: Props) {
     setUploading(false);
     fetchAttachments();
     if (fileRef.current) fileRef.current.value = '';
-    toast.success('Anexo(s) enviado(s)!');
+    toast.success(t('attachments.uploaded'));
   };
 
   const handleDelete = async (att: Attachment) => {
@@ -104,12 +106,12 @@ export function MeetingAttachments({ meetingId, canUpload, createdBy }: Props) {
           disabled={uploading}
         >
           <Upload className="h-3 w-3" />
-          {uploading ? 'Enviando...' : 'Enviar arquivo'}
+          {uploading ? t('attachments.uploading') : t('attachments.upload')}
         </Button>
       )}
 
       {attachments.length === 0 && (
-        <p className="text-xs text-muted-foreground text-center py-2">Nenhum anexo</p>
+        <p className="text-xs text-muted-foreground text-center py-2">{t('attachments.empty')}</p>
       )}
 
       <div className="space-y-2">
@@ -127,15 +129,15 @@ export function MeetingAttachments({ meetingId, canUpload, createdBy }: Props) {
               type="button"
               onClick={() => setPreviewAtt(att)}
               className="truncate flex-1 text-left hover:underline focus:outline-none focus:underline"
-              title="Pré-visualizar"
+              title={t('attachments.preview')}
             >
               {att.file_name}
             </button>
-            <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => setPreviewAtt(att)} title="Pré-visualizar">
+            <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => setPreviewAtt(att)} title={t('attachments.preview')}>
               <Eye className="h-3 w-3" />
             </Button>
             {canDelete(att) && (
-              <Button size="icon" variant="ghost" className="h-6 w-6 text-destructive" onClick={() => handleDelete(att)} title="Excluir">
+              <Button size="icon" variant="ghost" className="h-6 w-6 text-destructive" onClick={() => handleDelete(att)} title={t('attachments.delete')}>
                 <Trash2 className="h-3 w-3" />
               </Button>
             )}

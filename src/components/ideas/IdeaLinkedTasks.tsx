@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -22,6 +23,7 @@ interface Props {
 }
 
 export function IdeaLinkedTasks({ ideaId, isOwner }: Props) {
+  const { t } = useTranslation('ideas');
   const { user } = useAuth();
   const { toast } = useToast();
   const [linkedTasks, setLinkedTasks] = useState<LinkedTask[]>([]);
@@ -59,12 +61,12 @@ export function IdeaLinkedTasks({ ideaId, isOwner }: Props) {
 
     setLinkedTasks(
       links.map((link) => {
-        const task = tasks.find((t) => t.id === link.task_id);
+        const task = tasks.find((tt) => tt.id === link.task_id);
         const status = task ? statusMap.get(task.status_id) : null;
         return {
           id: link.id,
           task_id: link.task_id,
-          task_title: task?.title || 'Tarefa não encontrada',
+          task_title: task?.title || t('linkedTasks.notFound'),
           status_name: status?.name || '',
           status_color: status?.color || '#94A3B8',
         };
@@ -90,7 +92,7 @@ export function IdeaLinkedTasks({ ideaId, isOwner }: Props) {
       .limit(10);
 
     const linkedIds = new Set(linkedTasks.map((l) => l.task_id));
-    setSearchResults((data || []).filter((t) => !linkedIds.has(t.id)));
+    setSearchResults((data || []).filter((tt) => !linkedIds.has(tt.id)));
     setSearching(false);
   };
 
@@ -102,29 +104,29 @@ export function IdeaLinkedTasks({ ideaId, isOwner }: Props) {
       linked_by: user.id,
     });
     if (error) {
-      toast({ title: 'Erro ao vincular tarefa', variant: 'destructive' });
+      toast({ title: t('linkedTasks.errorLink'), variant: 'destructive' });
       return;
     }
     setSearchTerm('');
     setSearchResults([]);
     fetchLinkedTasks();
-    toast({ title: 'Tarefa vinculada!' });
+    toast({ title: t('linkedTasks.linked') });
   };
 
   const unlinkTask = async (linkId: string) => {
     await supabase.from('idea_tasks').delete().eq('id', linkId);
     fetchLinkedTasks();
-    toast({ title: 'Vínculo removido' });
+    toast({ title: t('linkedTasks.unlinked') });
   };
 
   return (
     <div>
       <Label className="flex items-center gap-2 mb-2">
-        <Link2 className="h-4 w-4" /> Tarefas Vinculadas
+        <Link2 className="h-4 w-4" /> {t('linkedTasks.label')}
       </Label>
 
       {linkedTasks.length === 0 && (
-        <p className="text-xs text-muted-foreground mb-2">Nenhuma tarefa vinculada</p>
+        <p className="text-xs text-muted-foreground mb-2">{t('linkedTasks.empty')}</p>
       )}
 
       <div className="space-y-1.5 mb-2">
@@ -149,14 +151,14 @@ export function IdeaLinkedTasks({ ideaId, isOwner }: Props) {
         <>
           {!showSearch ? (
             <Button variant="outline" size="sm" className="gap-1" onClick={() => setShowSearch(true)}>
-              <Plus className="h-3 w-3" /> Vincular tarefa
+              <Plus className="h-3 w-3" /> {t('linkedTasks.linkButton')}
             </Button>
           ) : (
             <div className="space-y-2">
               <div className="relative">
                 <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
                 <Input
-                  placeholder="Buscar tarefa pelo título..."
+                  placeholder={t('linkedTasks.searchPlaceholder')}
                   value={searchTerm}
                   onChange={(e) => handleSearch(e.target.value)}
                   className="pl-8 h-8 text-sm"
@@ -165,22 +167,22 @@ export function IdeaLinkedTasks({ ideaId, isOwner }: Props) {
               </div>
               {searchResults.length > 0 && (
                 <div className="border border-border rounded-md max-h-32 overflow-y-auto">
-                  {searchResults.map((t) => (
+                  {searchResults.map((tt) => (
                     <button
-                      key={t.id}
+                      key={tt.id}
                       className="w-full text-left px-3 py-1.5 text-sm hover:bg-muted/50 transition-colors"
-                      onClick={() => linkTask(t.id)}
+                      onClick={() => linkTask(tt.id)}
                     >
-                      {t.title}
+                      {tt.title}
                     </button>
                   ))}
                 </div>
               )}
               {searchTerm.length >= 2 && searchResults.length === 0 && !searching && (
-                <p className="text-xs text-muted-foreground">Nenhuma tarefa encontrada</p>
+                <p className="text-xs text-muted-foreground">{t('linkedTasks.noResults')}</p>
               )}
               <Button variant="ghost" size="sm" onClick={() => { setShowSearch(false); setSearchTerm(''); setSearchResults([]); }}>
-                Cancelar
+                {t('linkedTasks.cancel')}
               </Button>
             </div>
           )}

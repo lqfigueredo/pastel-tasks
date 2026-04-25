@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -16,6 +17,7 @@ interface AssigneeSelectorProps {
 }
 
 export function AssigneeSelector({ selectedIds, onChange }: AssigneeSelectorProps) {
+  const { t } = useTranslation('kanban');
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -98,14 +100,14 @@ export function AssigneeSelector({ selectedIds, onChange }: AssigneeSelectorProp
           </span>
         ))}
         <Button type="button" variant="outline" size="sm" className="h-7 gap-1 text-xs" onClick={() => setOpen(!open)}>
-          <UserPlus className="h-3 w-3" /> Adicionar
+          <UserPlus className="h-3 w-3" /> {t('assignee.add')}
         </Button>
       </div>
 
       {open && (
         <div className="absolute left-0 top-full z-50 mt-1 w-56 rounded-lg border border-border bg-popover p-1 shadow-lg">
           {profiles.length === 0 && (
-            <p className="p-2 text-xs text-muted-foreground">Nenhum perfil encontrado</p>
+            <p className="p-2 text-xs text-muted-foreground">{t('assignee.empty')}</p>
           )}
           {profiles.map((p) => (
             <label

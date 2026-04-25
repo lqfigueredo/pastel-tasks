@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import {
@@ -12,7 +13,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { CalendarIcon, Plus, X } from 'lucide-react';
 import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { getCurrentLocale } from '@/lib/date';
 import { cn } from '@/lib/utils';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
@@ -32,6 +33,7 @@ interface Profile {
 }
 
 export function CreateEventDialog({ open, onOpenChange, onCreated, initialDate }: Props) {
+  const { t } = useTranslation('calendar');
   const { user } = useAuth();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -90,7 +92,7 @@ export function CreateEventDialog({ open, onOpenChange, onCreated, initialDate }
     const name = externalName.trim();
     if (!name) return;
     if (externalParticipants.includes(name)) {
-      toast.error('Nome já adicionado');
+      toast.error(t('create.alreadyAdded'));
       return;
     }
     setExternalParticipants(prev => [...prev, name]);
@@ -99,14 +101,13 @@ export function CreateEventDialog({ open, onOpenChange, onCreated, initialDate }
 
   const handleSave = async () => {
     if (!user || !date || !title.trim()) {
-      toast.error('Preencha título e data');
+      toast.error(t('create.fillRequired'));
       return;
     }
     setSaving(true);
 
     let meetingId: string | null = null;
 
-    // Create meeting minute if toggled
     if (createMeeting) {
       const { data: meeting, error: meetingError } = await supabase
         .from('meeting_minutes')
@@ -120,14 +121,13 @@ export function CreateEventDialog({ open, onOpenChange, onCreated, initialDate }
         .single();
 
       if (meetingError || !meeting) {
-        toast.error('Erro ao criar ata de reunião');
+        toast.error(t('create.errorMeeting'));
         setSaving(false);
         return;
       }
 
       meetingId = meeting.id;
 
-      // Add participants to meeting
       const meetingParticipants = [
         { meeting_id: meeting.id, user_id: user.id },
         ...selectedUsers.map(uid => ({ meeting_id: meeting.id, user_id: uid })),
@@ -135,7 +135,6 @@ export function CreateEventDialog({ open, onOpenChange, onCreated, initialDate }
       await supabase.from('meeting_participants').insert(meetingParticipants);
     }
 
-    // Create calendar event
     const { data: event, error } = await supabase
       .from('calendar_events')
       .insert({
@@ -152,12 +151,11 @@ export function CreateEventDialog({ open, onOpenChange, onCreated, initialDate }
       .single();
 
     if (error || !event) {
-      toast.error('Erro ao criar evento');
+      toast.error(t('create.errorEvent'));
       setSaving(false);
       return;
     }
 
-    // Add participants
     const participantRows = [
       ...selectedUsers.map(uid => ({ event_id: event.id, user_id: uid })),
       ...externalParticipants.map(name => ({ event_id: event.id, external_name: name })),
@@ -166,7 +164,7 @@ export function CreateEventDialog({ open, onOpenChange, onCreated, initialDate }
       await supabase.from('calendar_event_participants').insert(participantRows);
     }
 
-    toast.success(createMeeting ? 'Evento e ata criados com sucesso' : 'Evento criado com sucesso');
+    toast.success(createMeeting ? t('create.successWithMeeting') : t('create.successEvent'));
     reset();
     onOpenChange(false);
     onCreated();
@@ -181,62 +179,62 @@ export function CreateEventDialog({ open, onOpenChange, onCreated, initialDate }
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Novo Evento</DialogTitle>
-          <DialogDescription>Adicione um compromisso à sua agenda</DialogDescription>
+          <DialogTitle>{t('create.title')}</DialogTitle>
+          <DialogDescription>{t('create.description')}</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label>Título *</Label>
-            <Input placeholder="Título do evento" value={title} onChange={e => setTitle(e.target.value)} />
+            <Label>{t('create.fields.title')} *</Label>
+            <Input placeholder={t('create.fields.titlePlaceholder')} value={title} onChange={e => setTitle(e.target.value)} />
           </div>
 
           <div className="space-y-2">
-            <Label>Data *</Label>
+            <Label>{t('create.fields.date')} *</Label>
             <Popover>
               <PopoverTrigger asChild>
                 <Button variant="outline" className={cn('w-full justify-start text-left font-normal', !date && 'text-muted-foreground')}>
                   <CalendarIcon className="mr-2 h-4 w-4" />
-                  {date ? format(date, "dd 'de' MMMM 'de' yyyy", { locale: ptBR }) : 'Selecione uma data'}
+                  {date ? format(date, 'PPP', { locale: getCurrentLocale() }) : t('create.fields.datePlaceholder')}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0" align="start">
-                <Calendar mode="single" selected={date} onSelect={setDate} locale={ptBR} className="p-3 pointer-events-auto" />
+                <Calendar mode="single" selected={date} onSelect={setDate} locale={getCurrentLocale()} className="p-3 pointer-events-auto" />
               </PopoverContent>
             </Popover>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Hora Início</Label>
+              <Label>{t('create.fields.startTime')}</Label>
               <Input type="time" value={startTime} onChange={e => setStartTime(e.target.value)} />
             </div>
             <div className="space-y-2">
-              <Label>Hora Fim</Label>
+              <Label>{t('create.fields.endTime')}</Label>
               <Input type="time" value={endTime} onChange={e => setEndTime(e.target.value)} />
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label>Local</Label>
-            <Input placeholder="Local do evento" value={location} onChange={e => setLocation(e.target.value)} />
+            <Label>{t('create.fields.location')}</Label>
+            <Input placeholder={t('create.fields.locationPlaceholder')} value={location} onChange={e => setLocation(e.target.value)} />
           </div>
 
           <div className="space-y-2">
-            <Label>Descrição</Label>
-            <Textarea placeholder="Detalhes do evento..." value={description} onChange={e => setDescription(e.target.value)} rows={3} />
+            <Label>{t('create.fields.descLabel')}</Label>
+            <Textarea placeholder={t('create.fields.descPlaceholder')} value={description} onChange={e => setDescription(e.target.value)} rows={3} />
           </div>
 
           <div className="space-y-2">
-            <Label>Participantes</Label>
+            <Label>{t('create.fields.participants')}</Label>
             <div className="max-h-40 space-y-1 overflow-y-auto rounded-md border p-2">
               {profiles.length === 0 ? (
-                <p className="text-xs text-muted-foreground">Nenhum usuário disponível</p>
+                <p className="text-xs text-muted-foreground">{t('create.fields.noUsers')}</p>
               ) : (
                 profiles.map(p => (
                   <label key={p.user_id} className="flex items-center gap-2 rounded p-1 text-sm hover:bg-accent cursor-pointer">
                     <Checkbox checked={selectedUsers.includes(p.user_id)} onCheckedChange={() => toggleUser(p.user_id)} />
-                    {p.display_name || 'Sem nome'}
+                    {p.display_name || t('detail.noName')}
                   </label>
                 ))
               )}
@@ -244,10 +242,10 @@ export function CreateEventDialog({ open, onOpenChange, onCreated, initialDate }
           </div>
 
           <div className="space-y-2">
-            <Label>Participantes Externos</Label>
+            <Label>{t('create.fields.externalParticipants')}</Label>
             <div className="flex gap-2">
               <Input
-                placeholder="Nome do participante externo"
+                placeholder={t('create.fields.externalPlaceholder')}
                 value={externalName}
                 onChange={e => setExternalName(e.target.value)}
                 onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addExternal(); } }}
@@ -273,15 +271,15 @@ export function CreateEventDialog({ open, onOpenChange, onCreated, initialDate }
           <div className="flex items-center gap-3 rounded-lg border p-3">
             <Switch checked={createMeeting} onCheckedChange={setCreateMeeting} />
             <div>
-              <p className="text-sm font-medium">Criar ata de reunião</p>
-              <p className="text-xs text-muted-foreground">Cria automaticamente uma ata vinculada a este evento</p>
+              <p className="text-sm font-medium">{t('create.createMeeting')}</p>
+              <p className="text-xs text-muted-foreground">{t('create.createMeetingDesc')}</p>
             </div>
           </div>
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-          <Button onClick={handleSave} disabled={saving}>{saving ? 'Salvando...' : 'Criar Evento'}</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>{t('create.cancel')}</Button>
+          <Button onClick={handleSave} disabled={saving}>{saving ? t('create.saving') : t('create.save')}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

@@ -65,6 +65,36 @@
     "errorUpdate": "Failed to update",
     "success": "Document updated successfully"
   },
+  "versions": {
+    "title": "Version History — {{title}}",
+    "loading": "Loading...",
+    "empty": "No previous versions found",
+    "version": "Version",
+    "file": "File",
+    "reason": "Reason",
+    "changedBy": "Changed by",
+    "date": "Date",
+    "errorDownload": "Failed to download",
+    "errorLastVersion": "Cannot remove the last version from history",
+    "confirmDelete": "Remove this version from history? The file will be permanently deleted.",
+    "removed": "Version removed"
+  },
+  "logs": {
+    "title": "Change Log — {{title}}",
+    "loading": "Loading...",
+    "empty": "No records found",
+    "action": "Action",
+    "details": "Details",
+    "user": "User",
+    "date": "Date",
+    "actions": {
+      "created": "Created",
+      "updated_metadata": "Metadata updated",
+      "updated_file": "Document updated",
+      "deleted_version": "Version removed",
+      "deleted": "Deleted"
+    }
+  },
   "create": {
     "title": "New Work Instruction",
     "titleField": "Title *",

@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfilesQuery } from '@/hooks/useProfilesQuery';
@@ -6,7 +7,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Play, Square, Clock, BarChart3 } from 'lucide-react';
 import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { getCurrentLocale } from '@/lib/date';
 
 interface TimeEntry {
   id: string;
@@ -34,6 +35,7 @@ function formatDuration(seconds: number): string {
 }
 
 export function TaskTimer({ taskId }: Props) {
+  const { t, i18n } = useTranslation('kanban');
   const { user } = useAuth();
   const { toast } = useToast();
   const { data: profilesMap } = useProfilesQuery();
@@ -87,7 +89,7 @@ export function TaskTimer({ taskId }: Props) {
       .select()
       .single();
     if (error) {
-      toast({ title: 'Erro ao iniciar timer', variant: 'destructive' });
+      toast({ title: t('timer.errorStart'), variant: 'destructive' });
     } else if (data) {
       setActiveEntry(data);
       fetchEntries();
@@ -101,7 +103,7 @@ export function TaskTimer({ taskId }: Props) {
       .update({ ended_at: new Date().toISOString() })
       .eq('id', activeEntry.id);
     if (error) {
-      toast({ title: 'Erro ao parar timer', variant: 'destructive' });
+      toast({ title: t('timer.errorStop'), variant: 'destructive' });
     } else {
       setActiveEntry(null);
       fetchEntries();
@@ -118,7 +120,7 @@ export function TaskTimer({ taskId }: Props) {
 
     const summary: UserSummary[] = Array.from(userTotals.entries()).map(([uid, secs]) => ({
       user_id: uid,
-      display_name: profilesMap?.get(uid)?.display_name || 'Usuário',
+      display_name: profilesMap?.get(uid)?.display_name || t('timer.userFallback'),
       total_seconds: secs,
     }));
 
@@ -127,11 +129,13 @@ export function TaskTimer({ taskId }: Props) {
   };
 
   const completedEntries = entries.filter((e) => e.ended_at);
+  const isEn = (i18n.language || 'pt-BR').startsWith('en');
+  const timeLabel = isEn ? "MM/dd 'at' HH:mm" : "dd/MM 'às' HH:mm";
 
   return (
     <div>
       <h4 className="flex items-center gap-2 text-sm font-semibold mb-3">
-        <Clock className="h-4 w-4" /> Timer de Horas
+        <Clock className="h-4 w-4" /> {t('timer.title')}
       </h4>
 
       <div className="flex items-center gap-3 mb-4">
@@ -142,25 +146,25 @@ export function TaskTimer({ taskId }: Props) {
               <span className="font-mono text-lg font-semibold text-primary">{formatDuration(elapsed)}</span>
             </div>
             <Button size="sm" variant="destructive" onClick={handleStop}>
-              <Square className="h-3 w-3 mr-1" /> Parar
+              <Square className="h-3 w-3 mr-1" /> {t('timer.stop')}
             </Button>
           </>
         ) : (
           <Button size="sm" onClick={handleStart}>
-            <Play className="h-3 w-3 mr-1" /> Iniciar Timer
+            <Play className="h-3 w-3 mr-1" /> {t('timer.start')}
           </Button>
         )}
 
         {completedEntries.length > 0 && (
           <Button size="sm" variant="outline" onClick={handleConsolidate}>
-            <BarChart3 className="h-3 w-3 mr-1" /> Consolidar Horas
+            <BarChart3 className="h-3 w-3 mr-1" /> {t('timer.consolidate')}
           </Button>
         )}
       </div>
 
       {showSummary && summaryData.length > 0 && (
         <div className="mb-4 rounded-lg border border-border bg-muted/30 p-3">
-          <h5 className="text-xs font-semibold mb-2">Total de Horas por Usuário</h5>
+          <h5 className="text-xs font-semibold mb-2">{t('timer.totalsByUser')}</h5>
           <div className="space-y-1">
             {summaryData.map((s) => (
               <div key={s.user_id} className="flex justify-between text-sm">
@@ -172,7 +176,7 @@ export function TaskTimer({ taskId }: Props) {
               <>
                 <div className="border-t border-border my-1" />
                 <div className="flex justify-between text-sm font-semibold">
-                  <span>Total Geral</span>
+                  <span>{t('timer.grandTotal')}</span>
                   <span className="font-mono">
                     {formatDuration(summaryData.reduce((a, b) => a + b.total_seconds, 0))}
                   </span>
@@ -185,14 +189,14 @@ export function TaskTimer({ taskId }: Props) {
 
       {completedEntries.length > 0 && (
         <div className="space-y-2 max-h-40 overflow-y-auto">
-          <p className="text-xs text-muted-foreground font-medium">Sessões anteriores</p>
+          <p className="text-xs text-muted-foreground font-medium">{t('timer.previousSessions')}</p>
           {completedEntries.map((e) => {
             const dur = (new Date(e.ended_at!).getTime() - new Date(e.started_at).getTime()) / 1000;
             return (
               <div key={e.id} className="flex items-center justify-between rounded-md bg-muted/50 px-3 py-2 text-xs">
                 <span>
-                  {format(new Date(e.started_at), "dd/MM 'às' HH:mm", { locale: ptBR })} →{' '}
-                  {format(new Date(e.ended_at!), 'HH:mm', { locale: ptBR })}
+                  {format(new Date(e.started_at), timeLabel, { locale: getCurrentLocale() })} →{' '}
+                  {format(new Date(e.ended_at!), 'HH:mm', { locale: getCurrentLocale() })}
                 </span>
                 <span className="font-mono font-medium">{formatDuration(dur)}</span>
               </div>
@@ -202,7 +206,7 @@ export function TaskTimer({ taskId }: Props) {
       )}
 
       {entries.length === 0 && (
-        <p className="text-xs text-muted-foreground text-center py-2">Nenhuma sessão registrada</p>
+        <p className="text-xs text-muted-foreground text-center py-2">{t('timer.noSessions')}</p>
       )}
     </div>
   );

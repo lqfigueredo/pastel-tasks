@@ -65,6 +65,36 @@
     "errorUpdate": "Erro ao atualizar",
     "success": "Documento atualizado com sucesso"
   },
+  "versions": {
+    "title": "Histórico de Versões — {{title}}",
+    "loading": "Carregando...",
+    "empty": "Nenhuma versão anterior encontrada",
+    "version": "Versão",
+    "file": "Arquivo",
+    "reason": "Motivo",
+    "changedBy": "Alterado por",
+    "date": "Data",
+    "errorDownload": "Erro ao baixar",
+    "errorLastVersion": "Não é possível remover a última versão do histórico",
+    "confirmDelete": "Remover esta versão do histórico? O arquivo será excluído permanentemente.",
+    "removed": "Versão removida"
+  },
+  "logs": {
+    "title": "Log de Alterações — {{title}}",
+    "loading": "Carregando...",
+    "empty": "Nenhum registro encontrado",
+    "action": "Ação",
+    "details": "Detalhes",
+    "user": "Usuário",
+    "date": "Data",
+    "actions": {
+      "created": "Criado",
+      "updated_metadata": "Metadados atualizados",
+      "updated_file": "Documento atualizado",
+      "deleted_version": "Versão removida",
+      "deleted": "Excluído"
+    }
+  },
   "create": {
     "title": "Nova Instrução de Trabalho",
     "titleField": "Título *",

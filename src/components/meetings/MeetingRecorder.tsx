@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -19,6 +20,7 @@ interface Props {
 }
 
 export function MeetingRecorder({ meetingId, onRecorded }: Props) {
+  const { t } = useTranslation('meetings');
   const { user } = useAuth();
   const [recording, setRecording] = useState(false);
   const [elapsed, setElapsed] = useState(0);
@@ -36,17 +38,16 @@ export function MeetingRecorder({ meetingId, onRecorded }: Props) {
     };
   }, []);
 
-  // Auto-stop when duration limit reached
   useEffect(() => {
     if (recording && elapsed >= MAX_DURATION_SECONDS) {
       stoppedByLimitRef.current = true;
-      toast.warning('Gravação parada automaticamente: limite de 45 minutos atingido.');
+      toast.warning(t('recorder.limitDuration'));
       stopRecording();
     }
   }, [recording, elapsed]);
 
   const stopAllStreams = () => {
-    streamsRef.current.forEach(s => s.getTracks().forEach(t => t.stop()));
+    streamsRef.current.forEach(s => s.getTracks().forEach(tr => tr.stop()));
     streamsRef.current = [];
   };
 
@@ -65,7 +66,7 @@ export function MeetingRecorder({ meetingId, onRecorded }: Props) {
         combinedTracks.push(...screenStream.getTracks());
 
         screenStream.getVideoTracks()[0]?.addEventListener('ended', () => {
-          toast.info('Compartilhamento de tela encerrado. A gravação foi finalizada.');
+          toast.info(t('recorder.screenEnded'));
           stopRecording();
         });
       }
@@ -74,17 +75,17 @@ export function MeetingRecorder({ meetingId, onRecorded }: Props) {
         try {
           const audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
           streamsRef.current.push(audioStream);
-          const existingAudioIds = new Set(combinedTracks.filter(t => t.kind === 'audio').map(t => t.id));
-          audioStream.getAudioTracks().forEach(t => {
-            if (!existingAudioIds.has(t.id)) combinedTracks.push(t);
+          const existingAudioIds = new Set(combinedTracks.filter(tr => tr.kind === 'audio').map(tr => tr.id));
+          audioStream.getAudioTracks().forEach(tr => {
+            if (!existingAudioIds.has(tr.id)) combinedTracks.push(tr);
           });
         } catch {
           if (mode === 'audio-only') {
-            toast.error('Não foi possível acessar o microfone.');
+            toast.error(t('recorder.errorMic'));
             stopAllStreams();
             return;
           }
-          toast.warning('Microfone não disponível. Gravando apenas tela.');
+          toast.warning(t('recorder.warnMic'));
         }
       }
 
@@ -100,7 +101,7 @@ export function MeetingRecorder({ meetingId, onRecorded }: Props) {
 
           if (totalSizeRef.current >= MAX_SIZE_BYTES) {
             stoppedByLimitRef.current = true;
-            toast.warning('Gravação parada automaticamente: limite de 200 MB atingido.');
+            toast.warning(t('recorder.limitSize'));
             stopRecording();
           }
         }
@@ -125,12 +126,12 @@ export function MeetingRecorder({ meetingId, onRecorded }: Props) {
     } catch (err: any) {
       stopAllStreams();
       if (err.name === 'NotAllowedError') {
-        toast.error('Permissão negada para gravação.');
+        toast.error(t('recorder.errorPermission'));
       } else {
-        toast.error('Erro ao iniciar gravação.');
+        toast.error(t('recorder.errorStart'));
       }
     }
-  }, [meetingId]);
+  }, [meetingId, t]);
 
   const stopRecording = useCallback(() => {
     if (recorderRef.current && recorderRef.current.state !== 'inactive') {
@@ -141,17 +142,17 @@ export function MeetingRecorder({ meetingId, onRecorded }: Props) {
   const uploadRecording = async (blob: Blob, mimeType: string) => {
     if (!user) return;
     const ext = 'webm';
-    const fileName = `gravacao_${new Date().toISOString().slice(0, 19).replace(/[:.]/g, '-')}.${ext}`;
+    const fileName = `recording_${new Date().toISOString().slice(0, 19).replace(/[:.]/g, '-')}.${ext}`;
     const path = `${user.id}/${meetingId}/${crypto.randomUUID()}.${ext}`;
 
-    toast.info('Salvando gravação...');
+    toast.info(t('recorder.saving'));
 
     const { error: uploadError } = await supabase.storage
       .from('meeting-attachments')
       .upload(path, blob, { contentType: mimeType });
 
     if (uploadError) {
-      toast.error('Erro ao salvar gravação.');
+      toast.error(t('recorder.errorSave'));
       console.error(uploadError);
       return;
     }
@@ -164,7 +165,7 @@ export function MeetingRecorder({ meetingId, onRecorded }: Props) {
       uploaded_by: user.id,
     });
 
-    toast.success('Gravação salva como anexo!');
+    toast.success(t('recorder.saved'));
     onRecorded();
   };
 
@@ -187,10 +188,10 @@ export function MeetingRecorder({ meetingId, onRecorded }: Props) {
           {formatTime(elapsed)} / {formatTime(MAX_DURATION_SECONDS)}
         </span>
         {isWarning && (
-          <span className="text-xs text-yellow-500">Encerrando em breve</span>
+          <span className="text-xs text-yellow-500">{t('recorder.endingSoon')}</span>
         )}
         <Button size="sm" variant="destructive" onClick={stopRecording} className="gap-1">
-          <Square className="h-3 w-3" /> Parar
+          <Square className="h-3 w-3" /> {t('recorder.stop')}
         </Button>
       </div>
     );
@@ -202,23 +203,23 @@ export function MeetingRecorder({ meetingId, onRecorded }: Props) {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button size="sm" variant="outline" className="gap-1">
-              <Video className="h-4 w-4" /> Gravar
+              <Video className="h-4 w-4" /> {t('recorder.trigger')}
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuItem onClick={() => startRecording('screen-audio')}>
-              <Monitor className="mr-2 h-4 w-4" /> Tela + Áudio
+              <Monitor className="mr-2 h-4 w-4" /> {t('recorder.screenAudio')}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => startRecording('audio-only')}>
-              <Mic className="mr-2 h-4 w-4" /> Apenas Áudio
+              <Mic className="mr-2 h-4 w-4" /> {t('recorder.audioOnly')}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => startRecording('screen-only')}>
-              <Monitor className="mr-2 h-4 w-4" /> Apenas Tela
+              <Monitor className="mr-2 h-4 w-4" /> {t('recorder.screenOnly')}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </TooltipTrigger>
-      <TooltipContent>Máximo: 45 min ou 200 MB</TooltipContent>
+      <TooltipContent>{t('recorder.limit')}</TooltipContent>
     </Tooltip>
   );
 }

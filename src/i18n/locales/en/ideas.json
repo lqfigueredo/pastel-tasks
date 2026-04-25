@@ -45,6 +45,28 @@
     "errorCreate": "Failed to create idea",
     "success": "Idea registered!"
   },
+  "attachments": {
+    "title": "Attachments",
+    "upload": "Upload file",
+    "uploading": "Uploading...",
+    "empty": "No attachments",
+    "preview": "Preview",
+    "delete": "Delete",
+    "errorUpload": "Failed to upload {{name}}",
+    "uploaded": "Attachment(s) uploaded!"
+  },
+  "linkedTasks": {
+    "label": "Linked Tasks",
+    "empty": "No linked tasks",
+    "linkButton": "Link task",
+    "searchPlaceholder": "Search task by title...",
+    "noResults": "No tasks found",
+    "cancel": "Cancel",
+    "notFound": "Task not found",
+    "errorLink": "Failed to link task",
+    "linked": "Task linked!",
+    "unlinked": "Link removed"
+  },
   "edit": {
     "titleEdit": "Edit Idea",
     "titleView": "Idea Details",

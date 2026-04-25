@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -14,7 +15,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Badge } from '@/components/ui/badge';
 import { CalendarIcon, MapPin, Clock, FileText, Trash2, UserRound } from 'lucide-react';
 import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { getCurrentLocale } from '@/lib/date';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -46,6 +47,7 @@ interface Props {
 }
 
 export function EventDetailDialog({ open, onOpenChange, event, onUpdated }: Props) {
+  const { t } = useTranslation('calendar');
   const { user } = useAuth();
   const navigate = useNavigate();
   const [editing, setEditing] = useState(false);
@@ -83,11 +85,11 @@ export function EventDetailDialog({ open, onOpenChange, event, onUpdated }: Prop
         let profileMap: Record<string, string> = {};
         if (userIds.length > 0) {
           const { data: profiles } = await supabase.from('profiles').select('user_id, display_name').in('user_id', userIds);
-          profileMap = Object.fromEntries((profiles || []).map(p => [p.user_id, p.display_name || 'Sem nome']));
+          profileMap = Object.fromEntries((profiles || []).map(p => [p.user_id, p.display_name || t('detail.noName')]));
         }
         setParticipants(data.map(p => ({
           ...p,
-          display_name: p.user_id ? (profileMap[p.user_id] || 'Sem nome') : undefined,
+          display_name: p.user_id ? (profileMap[p.user_id] || t('detail.noName')) : undefined,
         })));
       } else {
         setParticipants([]);
@@ -113,9 +115,9 @@ export function EventDetailDialog({ open, onOpenChange, event, onUpdated }: Prop
       .eq('id', event.id);
 
     if (error) {
-      toast.error('Erro ao salvar evento');
+      toast.error(t('detail.errorSave'));
     } else {
-      toast.success('Evento atualizado');
+      toast.success(t('detail.successUpdate'));
       setEditing(false);
       onUpdated();
     }
@@ -126,9 +128,9 @@ export function EventDetailDialog({ open, onOpenChange, event, onUpdated }: Prop
     if (!event) return;
     const { error } = await supabase.from('calendar_events').delete().eq('id', event.id);
     if (error) {
-      toast.error('Erro ao excluir evento');
+      toast.error(t('detail.errorDelete'));
     } else {
-      toast.success('Evento excluído');
+      toast.success(t('detail.successDelete'));
       onOpenChange(false);
       onUpdated();
     }
@@ -150,12 +152,11 @@ export function EventDetailDialog({ open, onOpenChange, event, onUpdated }: Prop
       .single();
 
     if (error || !meeting) {
-      toast.error('Erro ao criar ata');
+      toast.error(t('detail.errorMeeting'));
       setCreatingMeeting(false);
       return;
     }
 
-    // Add user participants to meeting
     const userParticipants = participants.filter(p => p.user_id);
     const meetingParts = [
       { meeting_id: meeting.id, user_id: user.id },
@@ -163,10 +164,9 @@ export function EventDetailDialog({ open, onOpenChange, event, onUpdated }: Prop
     ];
     await supabase.from('meeting_participants').insert(meetingParts);
 
-    // Link event to meeting
     await supabase.from('calendar_events').update({ meeting_id: meeting.id }).eq('id', event.id);
 
-    toast.success('Ata de reunião criada e vinculada');
+    toast.success(t('detail.successMeeting'));
     setCreatingMeeting(false);
     onUpdated();
   };
@@ -179,48 +179,48 @@ export function EventDetailDialog({ open, onOpenChange, event, onUpdated }: Prop
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{editing ? 'Editar Evento' : 'Detalhes do Evento'}</DialogTitle>
+          <DialogTitle>{editing ? t('detail.edit') : t('detail.title')}</DialogTitle>
           <DialogDescription>
-            {editing ? 'Altere os dados do evento' : format(new Date(event.event_date + 'T00:00:00'), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
+            {editing ? t('detail.editDesc') : format(new Date(event.event_date + 'T00:00:00'), 'PPP', { locale: getCurrentLocale() })}
           </DialogDescription>
         </DialogHeader>
 
         {editing ? (
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label>Título *</Label>
+              <Label>{t('detail.fields.title')} *</Label>
               <Input value={title} onChange={e => setTitle(e.target.value)} />
             </div>
             <div className="space-y-2">
-              <Label>Data *</Label>
+              <Label>{t('detail.fields.date')} *</Label>
               <Popover>
                 <PopoverTrigger asChild>
                   <Button variant="outline" className={cn('w-full justify-start text-left font-normal', !date && 'text-muted-foreground')}>
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    {date ? format(date, "dd/MM/yyyy") : 'Selecione'}
+                    {date ? format(date, 'P', { locale: getCurrentLocale() }) : t('detail.fields.datePlaceholder')}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar mode="single" selected={date} onSelect={setDate} locale={ptBR} className="p-3 pointer-events-auto" />
+                  <Calendar mode="single" selected={date} onSelect={setDate} locale={getCurrentLocale()} className="p-3 pointer-events-auto" />
                 </PopoverContent>
               </Popover>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Hora Início</Label>
+                <Label>{t('detail.fields.startTime')}</Label>
                 <Input type="time" value={startTime} onChange={e => setStartTime(e.target.value)} />
               </div>
               <div className="space-y-2">
-                <Label>Hora Fim</Label>
+                <Label>{t('detail.fields.endTime')}</Label>
                 <Input type="time" value={endTime} onChange={e => setEndTime(e.target.value)} />
               </div>
             </div>
             <div className="space-y-2">
-              <Label>Local</Label>
+              <Label>{t('detail.fields.location')}</Label>
               <Input value={location} onChange={e => setLocation(e.target.value)} />
             </div>
             <div className="space-y-2">
-              <Label>Descrição</Label>
+              <Label>{t('detail.fields.description')}</Label>
               <Textarea value={description} onChange={e => setDescription(e.target.value)} rows={3} />
             </div>
           </div>
@@ -248,7 +248,7 @@ export function EventDetailDialog({ open, onOpenChange, event, onUpdated }: Prop
 
             {participants.length > 0 && (
               <div>
-                <h4 className="mb-2 text-sm font-medium text-muted-foreground">Participantes</h4>
+                <h4 className="mb-2 text-sm font-medium text-muted-foreground">{t('detail.participants')}</h4>
                 <div className="flex flex-wrap gap-2">
                   {participants.map(p => (
                     <div key={p.id} className="flex items-center gap-1.5">
@@ -258,7 +258,7 @@ export function EventDetailDialog({ open, onOpenChange, event, onUpdated }: Prop
                         </AvatarFallback>
                       </Avatar>
                       <span className="text-xs text-foreground">{p.display_name || p.external_name}</span>
-                      {p.external_name && <Badge variant="outline" className="text-[10px] px-1 py-0">Externo</Badge>}
+                      {p.external_name && <Badge variant="outline" className="text-[10px] px-1 py-0">{t('detail.external')}</Badge>}
                     </div>
                   ))}
                 </div>
@@ -267,14 +267,14 @@ export function EventDetailDialog({ open, onOpenChange, event, onUpdated }: Prop
 
             {event.meeting_id && (
               <Button variant="outline" size="sm" onClick={() => { onOpenChange(false); navigate(`/atas/${event.meeting_id}`); }}>
-                <FileText className="mr-2 h-4 w-4" /> Ver Ata de Reunião
+                <FileText className="mr-2 h-4 w-4" /> {t('detail.viewMeeting')}
               </Button>
             )}
 
             {!event.meeting_id && isOwner && (
               <Button variant="outline" size="sm" onClick={handleCreateMeeting} disabled={creatingMeeting}>
                 <FileText className="mr-2 h-4 w-4" />
-                {creatingMeeting ? 'Criando...' : 'Criar Ata de Reunião'}
+                {creatingMeeting ? t('detail.creatingMeeting') : t('detail.createMeeting')}
               </Button>
             )}
           </div>
@@ -284,19 +284,19 @@ export function EventDetailDialog({ open, onOpenChange, event, onUpdated }: Prop
           {isOwner && !editing && (
             <>
               <Button variant="destructive" size="sm" onClick={handleDelete}>
-                <Trash2 className="mr-2 h-4 w-4" /> Excluir
+                <Trash2 className="mr-2 h-4 w-4" /> {t('detail.delete')}
               </Button>
-              <Button variant="outline" onClick={() => setEditing(true)}>Editar</Button>
+              <Button variant="outline" onClick={() => setEditing(true)}>{t('detail.edit_action')}</Button>
             </>
           )}
           {editing && (
             <>
-              <Button variant="outline" onClick={() => setEditing(false)}>Cancelar</Button>
-              <Button onClick={handleSave} disabled={saving}>{saving ? 'Salvando...' : 'Salvar'}</Button>
+              <Button variant="outline" onClick={() => setEditing(false)}>{t('detail.cancel')}</Button>
+              <Button onClick={handleSave} disabled={saving}>{saving ? t('detail.saving') : t('detail.save')}</Button>
             </>
           )}
           {!editing && (
-            <Button variant="outline" onClick={() => onOpenChange(false)}>Fechar</Button>
+            <Button variant="outline" onClick={() => onOpenChange(false)}>{t('detail.close')}</Button>
           )}
         </DialogFooter>
       </DialogContent>

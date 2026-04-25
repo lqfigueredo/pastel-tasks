@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
 import { Lightbulb, Search, X, Link } from 'lucide-react';
 
 interface LinkedIdea {
@@ -24,6 +24,7 @@ interface Props {
 }
 
 export function TaskLinkedIdeas({ taskId, isOwner = false }: Props) {
+  const { t } = useTranslation('kanban');
   const { user } = useAuth();
   const [ideas, setIdeas] = useState<LinkedIdea[]>([]);
   const [search, setSearch] = useState('');
@@ -99,14 +100,14 @@ export function TaskLinkedIdeas({ taskId, isOwner = false }: Props) {
   return (
     <div>
       <Label className="flex items-center gap-2 mb-2">
-        <Lightbulb className="h-4 w-4" /> Ideias Vinculadas
+        <Lightbulb className="h-4 w-4" /> {t('linkedIdeas.label')}
       </Label>
 
       {isOwner && (
         <div className="relative mb-3">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Buscar ideia para vincular..."
+            placeholder={t('linkedIdeas.searchPlaceholder')}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="pl-9"
@@ -129,7 +130,7 @@ export function TaskLinkedIdeas({ taskId, isOwner = false }: Props) {
       )}
 
       {ideas.length === 0 && (
-        <p className="text-xs text-muted-foreground">Nenhuma ideia vinculada</p>
+        <p className="text-xs text-muted-foreground">{t('linkedIdeas.empty')}</p>
       )}
 
       <div className="space-y-1.5">
@@ -137,7 +138,7 @@ export function TaskLinkedIdeas({ taskId, isOwner = false }: Props) {
           <div key={idea.id} className="flex items-center gap-2 text-sm rounded-md border border-border px-3 py-1.5">
             <span className="flex-1 truncate">{idea.title}</span>
             <Badge variant={idea.is_implemented ? 'default' : 'secondary'} className="text-xs">
-              {idea.is_implemented ? 'Implementada' : 'Pendente'}
+              {idea.is_implemented ? t('linkedIdeas.implemented') : t('linkedIdeas.pending')}
             </Badge>
             {isOwner && (
               <button onClick={() => unlinkIdea(idea.id)} className="text-muted-foreground hover:text-destructive">

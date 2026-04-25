@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -20,6 +21,7 @@ interface Props {
 }
 
 export function IdeaAttachments({ ideaId }: Props) {
+  const { t } = useTranslation('ideas');
   const { user } = useAuth();
   const { toast } = useToast();
   const [attachments, setAttachments] = useState<Attachment[]>([]);
@@ -54,7 +56,7 @@ export function IdeaAttachments({ ideaId }: Props) {
         .upload(path, file);
 
       if (uploadError) {
-        toast({ title: `Erro ao enviar ${file.name}`, variant: 'destructive' });
+        toast({ title: t('attachments.errorUpload', { name: file.name }), variant: 'destructive' });
         continue;
       }
 
@@ -69,7 +71,7 @@ export function IdeaAttachments({ ideaId }: Props) {
     setUploading(false);
     fetchAttachments();
     if (fileRef.current) fileRef.current.value = '';
-    toast({ title: 'Anexo(s) enviado(s)!' });
+    toast({ title: t('attachments.uploaded') });
   };
 
   const handleDelete = async (att: Attachment) => {
@@ -83,7 +85,7 @@ export function IdeaAttachments({ ideaId }: Props) {
   return (
     <div>
       <h4 className="flex items-center gap-2 text-sm font-semibold mb-3">
-        <Paperclip className="h-4 w-4" /> Anexos
+        <Paperclip className="h-4 w-4" /> {t('attachments.title')}
       </h4>
 
       <input
@@ -103,11 +105,11 @@ export function IdeaAttachments({ ideaId }: Props) {
         disabled={uploading}
       >
         <Upload className="h-3 w-3" />
-        {uploading ? 'Enviando...' : 'Enviar arquivo'}
+        {uploading ? t('attachments.uploading') : t('attachments.upload')}
       </Button>
 
       {attachments.length === 0 && (
-        <p className="text-xs text-muted-foreground text-center py-2">Nenhum anexo</p>
+        <p className="text-xs text-muted-foreground text-center py-2">{t('attachments.empty')}</p>
       )}
 
       <div className="space-y-2">
@@ -122,15 +124,15 @@ export function IdeaAttachments({ ideaId }: Props) {
               type="button"
               onClick={() => setPreviewAtt(att)}
               className="truncate flex-1 text-left hover:underline focus:outline-none focus:underline"
-              title="Pré-visualizar"
+              title={t('attachments.preview')}
             >
               {att.file_name}
             </button>
-            <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => setPreviewAtt(att)} title="Pré-visualizar">
+            <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => setPreviewAtt(att)} title={t('attachments.preview')}>
               <Eye className="h-3 w-3" />
             </Button>
             {user?.id === att.uploaded_by && (
-              <Button size="icon" variant="ghost" className="h-6 w-6 text-destructive" onClick={() => handleDelete(att)} title="Excluir">
+              <Button size="icon" variant="ghost" className="h-6 w-6 text-destructive" onClick={() => handleDelete(att)} title={t('attachments.delete')}>
                 <Trash2 className="h-3 w-3" />
               </Button>
             )}

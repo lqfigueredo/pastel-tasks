@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { getCurrentLocale } from '@/lib/date';
 import { Download, Trash2 } from 'lucide-react';
 
 interface Version {
@@ -25,6 +26,7 @@ interface Props {
 }
 
 export function VersionHistory({ instruction, onClose, profiles }: Props) {
+  const { t } = useTranslation('workInstructions');
   const { toast } = useToast();
   const [versions, setVersions] = useState<Version[]>([]);
   const [loading, setLoading] = useState(true);
@@ -45,7 +47,7 @@ export function VersionHistory({ instruction, onClose, profiles }: Props) {
   const handleDownload = async (filePath: string, fileName: string) => {
     const { data, error } = await supabase.storage.from('work-instructions').download(filePath);
     if (error) {
-      toast({ title: 'Erro ao baixar', description: error.message, variant: 'destructive' });
+      toast({ title: t('versions.errorDownload'), description: error.message, variant: 'destructive' });
       return;
     }
     const url = URL.createObjectURL(data);
@@ -58,15 +60,15 @@ export function VersionHistory({ instruction, onClose, profiles }: Props) {
 
   const handleDeleteVersion = async (version: Version) => {
     if (versions.length <= 1) {
-      toast({ title: 'Não é possível remover a última versão do histórico', variant: 'destructive' });
+      toast({ title: t('versions.errorLastVersion'), variant: 'destructive' });
       return;
     }
-    if (!confirm('Remover esta versão do histórico? O arquivo será excluído permanentemente.')) return;
+    if (!confirm(t('versions.confirmDelete'))) return;
 
     await supabase.storage.from('work-instructions').remove([version.file_path]);
     await supabase.from('work_instruction_versions').delete().eq('id', version.id);
 
-    toast({ title: 'Versão removida' });
+    toast({ title: t('versions.removed') });
     fetchVersions();
   };
 
@@ -74,22 +76,22 @@ export function VersionHistory({ instruction, onClose, profiles }: Props) {
     <Dialog open onOpenChange={() => onClose()}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Histórico de Versões — {instruction.title}</DialogTitle>
+          <DialogTitle>{t('versions.title', { title: instruction.title })}</DialogTitle>
         </DialogHeader>
         {loading ? (
-          <p className="text-muted-foreground">Carregando...</p>
+          <p className="text-muted-foreground">{t('versions.loading')}</p>
         ) : versions.length === 0 ? (
-          <p className="text-muted-foreground py-4 text-center">Nenhuma versão anterior encontrada</p>
+          <p className="text-muted-foreground py-4 text-center">{t('versions.empty')}</p>
         ) : (
           <div className="max-h-[400px] overflow-auto">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Versão</TableHead>
-                  <TableHead>Arquivo</TableHead>
-                  <TableHead>Motivo</TableHead>
-                  <TableHead>Alterado por</TableHead>
-                  <TableHead>Data</TableHead>
+                  <TableHead>{t('versions.version')}</TableHead>
+                  <TableHead>{t('versions.file')}</TableHead>
+                  <TableHead>{t('versions.reason')}</TableHead>
+                  <TableHead>{t('versions.changedBy')}</TableHead>
+                  <TableHead>{t('versions.date')}</TableHead>
                   <TableHead />
                 </TableRow>
               </TableHeader>
@@ -101,7 +103,7 @@ export function VersionHistory({ instruction, onClose, profiles }: Props) {
                     <TableCell className="text-xs max-w-[200px] truncate">{v.change_reason}</TableCell>
                     <TableCell className="text-xs">{profiles[v.changed_by] || '—'}</TableCell>
                     <TableCell className="text-xs whitespace-nowrap">
-                      {format(new Date(v.created_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}
+                      {format(new Date(v.created_at), 'P HH:mm', { locale: getCurrentLocale() })}
                     </TableCell>
                     <TableCell>
                       <div className="flex gap-1">

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -39,6 +40,7 @@ interface Props {
 }
 
 export function KanbanSavedFilters({ current, onApply }: Props) {
+  const { t } = useTranslation('kanban');
   const { user } = useAuth();
   const { toast } = useToast();
   const qc = useQueryClient();
@@ -76,10 +78,10 @@ export function KanbanSavedFilters({ current, onApply }: Props) {
       filters: current as any,
     });
     if (error) {
-      toast({ title: 'Erro ao salvar filtro', description: error.message, variant: 'destructive' });
+      toast({ title: t('savedFilters.errorSave'), description: error.message, variant: 'destructive' });
       return;
     }
-    toast({ title: 'Filtro salvo!' });
+    toast({ title: t('savedFilters.savedToast') });
     setSaveOpen(false);
     refresh();
   };
@@ -87,7 +89,7 @@ export function KanbanSavedFilters({ current, onApply }: Props) {
   const handleDelete = async (id: string) => {
     const { error } = await supabase.from('kanban_saved_filters').delete().eq('id', id);
     if (error) {
-      toast({ title: 'Erro ao excluir', description: error.message, variant: 'destructive' });
+      toast({ title: t('savedFilters.errorDelete'), description: error.message, variant: 'destructive' });
       return;
     }
     refresh();
@@ -101,15 +103,15 @@ export function KanbanSavedFilters({ current, onApply }: Props) {
         <DropdownMenuTrigger asChild>
           <Button variant="outline" size="sm" className="gap-1.5">
             <Bookmark className="h-3.5 w-3.5" />
-            Filtros salvos
+            {t('savedFilters.trigger')}
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-64">
-          <DropdownMenuLabel>Meus filtros</DropdownMenuLabel>
+          <DropdownMenuLabel>{t('savedFilters.label')}</DropdownMenuLabel>
           <DropdownMenuSeparator />
           {filters.length === 0 && (
             <div className="px-2 py-3 text-xs text-muted-foreground text-center">
-              Nenhum filtro salvo ainda
+              {t('savedFilters.empty')}
             </div>
           )}
           {filters.map((f) => (
@@ -134,7 +136,7 @@ export function KanbanSavedFilters({ current, onApply }: Props) {
                 type="button"
                 onClick={() => handleDelete(f.id)}
                 className="rounded p-1 text-destructive hover:bg-destructive/10"
-                aria-label="Excluir filtro"
+                aria-label={t('savedFilters.delete')}
               >
                 <Trash2 className="h-3 w-3" />
               </button>
@@ -143,7 +145,7 @@ export function KanbanSavedFilters({ current, onApply }: Props) {
           <DropdownMenuSeparator />
           <DropdownMenuItem onSelect={() => setSaveOpen(true)} className="gap-2">
             <Plus className="h-3.5 w-3.5" />
-            Salvar filtro atual
+            {t('savedFilters.saveCurrent')}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -151,15 +153,15 @@ export function KanbanSavedFilters({ current, onApply }: Props) {
       <Dialog open={saveOpen} onOpenChange={setSaveOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Salvar filtro atual</DialogTitle>
+            <DialogTitle>{t('savedFilters.saveTitle')}</DialogTitle>
           </DialogHeader>
           <div className="space-y-2">
-            <Label htmlFor="filter-name">Nome do filtro</Label>
+            <Label htmlFor="filter-name">{t('savedFilters.nameLabel')}</Label>
             <Input
               id="filter-name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Ex: Minhas tarefas, Time Marketing..."
+              placeholder={t('savedFilters.namePlaceholder')}
               autoFocus
               onKeyDown={(e) => {
                 if (e.key === 'Enter') {
@@ -171,10 +173,10 @@ export function KanbanSavedFilters({ current, onApply }: Props) {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setSaveOpen(false)}>
-              Cancelar
+              {t('create.cancel', { defaultValue: 'Cancelar' })}
             </Button>
             <Button onClick={handleSave} disabled={!name.trim()}>
-              Salvar
+              {t('detail.save')}
             </Button>
           </DialogFooter>
         </DialogContent>
