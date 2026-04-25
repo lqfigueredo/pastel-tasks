@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -11,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Separator } from '@/components/ui/separator';
 import { AssigneeSelector } from './AssigneeSelector';
 import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { getCurrentLocale } from '@/lib/date';
 import { MessageSquare, Send, AlertTriangle, FileText, Copy } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -46,6 +47,7 @@ interface Props {
 export function TaskDetailDialog({ task, allStatuses, open, onOpenChange, onRefresh }: Props) {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { t } = useTranslation('kanban');
   const [title, setTitle] = useState(task.title);
   const [description, setDescription] = useState(task.description || '');
   const [statusId, setStatusId] = useState(task.status_id);
@@ -107,7 +109,7 @@ export function TaskDetailDialog({ task, allStatuses, open, onOpenChange, onRefr
 
   const handleJustifyConfirm = async () => {
     if (!justification.trim()) {
-      toast({ title: 'Justificativa obrigatória', variant: 'destructive' });
+      toast({ title: t('detail.justifyRequired'), variant: 'destructive' });
       return;
     }
     await supabase.from('delivery_date_logs').insert({
@@ -119,7 +121,7 @@ export function TaskDetailDialog({ task, allStatuses, open, onOpenChange, onRefr
     await supabase.from('task_comments').insert({
       task_id: task.id,
       user_id: user!.id,
-      content: `📅 Data de previsão alterada: ${justification}`,
+      content: t('detail.dateChanged', { reason: justification }),
       comment_type: 'justification',
     });
     setEstimatedDate(pendingDate);
@@ -158,7 +160,7 @@ export function TaskDetailDialog({ task, allStatuses, open, onOpenChange, onRefr
 
   const handleSave = async () => {
     if (!isValidDate(startDate) || !isValidDate(estimatedDate) || !isValidDate(actualEndDate)) {
-      toast({ title: 'Data inválida', description: 'O ano deve estar entre 1900 e 2100.', variant: 'destructive' });
+      toast({ title: t('detail.invalidDate'), description: t('detail.yearRange'), variant: 'destructive' });
       return;
     }
     setSaving(true);
@@ -178,7 +180,7 @@ export function TaskDetailDialog({ task, allStatuses, open, onOpenChange, onRefr
     }).eq('id', task.id);
 
     if (error) {
-      toast({ title: 'Erro ao salvar', variant: 'destructive' });
+      toast({ title: t('detail.errorSave'), variant: 'destructive' });
     } else {
       await saveAssignees();
 
@@ -195,7 +197,7 @@ export function TaskDetailDialog({ task, allStatuses, open, onOpenChange, onRefr
         }).eq('id', task.meeting_pendency_id);
       }
 
-      toast({ title: 'Tarefa atualizada!' });
+      toast({ title: t('detail.updated') });
       onRefresh();
       onOpenChange(false);
     }
@@ -211,7 +213,7 @@ export function TaskDetailDialog({ task, allStatuses, open, onOpenChange, onRefr
       comment_type: 'normal',
     });
     if (error) {
-      toast({ title: 'Erro ao adicionar comentário', description: 'Você pode não ter permissão para comentar nesta tarefa.', variant: 'destructive' });
+      toast({ title: t('detail.errorComment'), description: t('detail.errorCommentDesc'), variant: 'destructive' });
       return;
     }
     setNewComment('');
@@ -221,9 +223,9 @@ export function TaskDetailDialog({ task, allStatuses, open, onOpenChange, onRefr
   const handleCopyId = async () => {
     try {
       await navigator.clipboard.writeText(task.id);
-      toast({ title: 'ID copiado!', description: task.id });
+      toast({ title: t('detail.idCopied'), description: task.id });
     } catch {
-      toast({ title: 'Erro ao copiar ID', variant: 'destructive' });
+      toast({ title: t('detail.errorCopy'), variant: 'destructive' });
     }
   };
 
@@ -234,7 +236,7 @@ export function TaskDetailDialog({ task, allStatuses, open, onOpenChange, onRefr
       <ResponsiveDialog open={open} onOpenChange={onOpenChange} contentClassName="max-w-xl">
         <ResponsiveDialogHeader>
           <ResponsiveDialogTitle className="flex items-center gap-2 flex-wrap">
-            <span>Detalhes da Tarefa</span>
+            <span>{t('detail.title')}</span>
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -242,7 +244,7 @@ export function TaskDetailDialog({ task, allStatuses, open, onOpenChange, onRefr
                     type="button"
                     onClick={handleCopyId}
                     className="inline-flex items-center"
-                    aria-label="Copiar ID da tarefa"
+                    aria-label={t('detail.copyId')}
                   >
                     <Badge variant="secondary" className="font-mono text-xs gap-1 cursor-pointer hover:bg-secondary/80">
                       #{shortId}
@@ -252,28 +254,28 @@ export function TaskDetailDialog({ task, allStatuses, open, onOpenChange, onRefr
                 </TooltipTrigger>
                 <TooltipContent>
                   <p className="font-mono text-xs">{task.id}</p>
-                  <p className="text-xs text-muted-foreground mt-1">Clique para copiar</p>
+                  <p className="text-xs text-muted-foreground mt-1">{t('detail.clickToCopy')}</p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
           </ResponsiveDialogTitle>
-          <ResponsiveDialogDescription>Edite os campos e salve as alterações</ResponsiveDialogDescription>
+          <ResponsiveDialogDescription>{t('detail.description')}</ResponsiveDialogDescription>
         </ResponsiveDialogHeader>
 
           <div className="space-y-4">
 
             <div className="space-y-2">
-              <Label>Título</Label>
+              <Label>{t('detail.fields.title')}</Label>
               <Input value={title} onChange={(e) => setTitle(e.target.value)} />
             </div>
 
             <div className="space-y-2">
-              <Label>Descrição Completa</Label>
+              <Label>{t('detail.fields.fullDescription')}</Label>
               <Textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={4} />
             </div>
 
             <div className="space-y-2">
-              <Label>Status</Label>
+              <Label>{t('detail.fields.status')}</Label>
               <Select value={statusId} onValueChange={setStatusId}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -285,7 +287,7 @@ export function TaskDetailDialog({ task, allStatuses, open, onOpenChange, onRefr
             </div>
 
             <div className="space-y-2">
-              <Label>Responsáveis</Label>
+              <Label>{t('detail.fields.assignees')}</Label>
               <AssigneeSelector selectedIds={assigneeIds} onChange={setAssigneeIds} />
             </div>
 
@@ -293,7 +295,7 @@ export function TaskDetailDialog({ task, allStatuses, open, onOpenChange, onRefr
               <div className="flex items-start gap-2 rounded-lg border border-primary/20 bg-primary/5 p-3">
                 <FileText className="h-4 w-4 text-primary mt-0.5 shrink-0" />
                 <div>
-                  <p className="text-xs font-medium text-primary mb-1">Origem: Reunião</p>
+                  <p className="text-xs font-medium text-primary mb-1">{t('detail.fromMeetingLabel')}</p>
                   <p className="text-sm text-foreground">{pendencyText}</p>
                 </div>
               </div>
@@ -303,22 +305,22 @@ export function TaskDetailDialog({ task, allStatuses, open, onOpenChange, onRefr
             <div className="flex items-center justify-between rounded-lg border border-destructive/30 p-3">
               <div className="flex items-center gap-2">
                 <AlertTriangle className="h-4 w-4 text-destructive" />
-                <Label htmlFor="critical-detail-toggle" className="cursor-pointer text-sm font-medium">Tarefa Crítica</Label>
+                <Label htmlFor="critical-detail-toggle" className="cursor-pointer text-sm font-medium">{t('detail.fields.critical')}</Label>
               </div>
               <Switch id="critical-detail-toggle" checked={isCritical} onCheckedChange={setIsCritical} />
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div className="space-y-2">
-                <Label>Início</Label>
+                <Label>{t('detail.fields.start')}</Label>
                 <Input type="date" min="1900-01-01" max="2100-12-31" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
               </div>
               <div className="space-y-2">
-                <Label>Previsão</Label>
+                <Label>{t('detail.fields.estimated')}</Label>
                 <Input type="date" min="1900-01-01" max="2100-12-31" value={estimatedDate} onChange={(e) => handleEstimatedDateChange(e.target.value)} />
               </div>
               <div className="space-y-2">
-                <Label>Fim Real</Label>
+                <Label>{t('detail.fields.actualEnd')}</Label>
                 <Input type="date" min="1900-01-01" max="2100-12-31" value={actualEndDate} onChange={(e) => setActualEndDate(e.target.value)} />
               </div>
             </div>
@@ -328,8 +330,8 @@ export function TaskDetailDialog({ task, allStatuses, open, onOpenChange, onRefr
             <TaskChangeHistory taskId={task.id} />
 
             <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-              <Button onClick={handleSave} disabled={saving}>{saving ? 'Salvando...' : 'Salvar'}</Button>
+              <Button variant="outline" onClick={() => onOpenChange(false)}>{t('detail.cancel')}</Button>
+              <Button onClick={handleSave} disabled={saving}>{saving ? t('detail.saving') : t('detail.save')}</Button>
             </div>
 
             <Separator />
@@ -348,11 +350,11 @@ export function TaskDetailDialog({ task, allStatuses, open, onOpenChange, onRefr
 
             <div>
               <h4 className="flex items-center gap-2 text-sm font-semibold mb-3">
-                <MessageSquare className="h-4 w-4" /> Comentários
+                <MessageSquare className="h-4 w-4" /> {t('detail.comments')}
               </h4>
               <div className="space-y-3 max-h-48 overflow-y-auto mb-3">
                 {comments.length === 0 && (
-                  <p className="text-xs text-muted-foreground text-center py-4">Nenhum comentário</p>
+                  <p className="text-xs text-muted-foreground text-center py-4">{t('detail.noComments')}</p>
                 )}
                 {comments.map((c) => (
                   <div
@@ -365,14 +367,14 @@ export function TaskDetailDialog({ task, allStatuses, open, onOpenChange, onRefr
                   >
                     <p className="text-foreground">{c.content}</p>
                     <p className="mt-1 text-xs text-muted-foreground">
-                      {format(new Date(c.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+                      {format(new Date(c.created_at), 'Pp', { locale: getCurrentLocale() })}
                     </p>
                   </div>
                 ))}
               </div>
               <div className="flex gap-2">
                 <Input
-                  placeholder="Adicionar comentário..."
+                  placeholder={t('detail.addComment')}
                   value={newComment}
                   onChange={(e) => setNewComment(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && addComment()}
@@ -389,23 +391,23 @@ export function TaskDetailDialog({ task, allStatuses, open, onOpenChange, onRefr
         <ResponsiveDialogHeader>
           <ResponsiveDialogTitle className="flex items-center gap-2">
             <AlertTriangle className="h-5 w-5 text-destructive" />
-            Justificativa Obrigatória
+            {t('detail.justifyTitle')}
           </ResponsiveDialogTitle>
           <ResponsiveDialogDescription>
-            A data de previsão de entrega está sendo alterada. Informe o motivo da mudança.
+            {t('detail.justifyDescription')}
           </ResponsiveDialogDescription>
         </ResponsiveDialogHeader>
         <Textarea
           value={justification}
           onChange={(e) => setJustification(e.target.value)}
-          placeholder="Motivo da alteração da data..."
+          placeholder={t('detail.justifyPlaceholder')}
           rows={3}
         />
         <div className="flex justify-end gap-2 mt-4">
           <Button variant="outline" onClick={() => { setJustifyOpen(false); setPendingDate(''); }}>
-            Cancelar
+            {t('detail.cancel')}
           </Button>
-          <Button onClick={handleJustifyConfirm}>Confirmar</Button>
+          <Button onClick={handleJustifyConfirm}>{t('detail.justifyConfirm')}</Button>
         </div>
       </ResponsiveDialog>
     </>
