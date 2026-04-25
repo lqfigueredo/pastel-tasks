@@ -14,6 +14,10 @@ import ptCalendar from './locales/pt-BR/calendar.json';
 import ptTimer from './locales/pt-BR/timer.json';
 import ptTeam from './locales/pt-BR/team.json';
 import ptSettings from './locales/pt-BR/settings.json';
+import ptIdeas from './locales/pt-BR/ideas.json';
+import ptMeetings from './locales/pt-BR/meetings.json';
+import ptKnowledge from './locales/pt-BR/knowledge.json';
+import ptWorkInstructions from './locales/pt-BR/workInstructions.json';
 
 import enCommon from './locales/en/common.json';
 import enNav from './locales/en/nav.json';
@@ -42,6 +46,10 @@ const NAMESPACES = [
   'timer',
   'team',
   'settings',
+  'ideas',
+  'meetings',
+  'knowledge',
+  'workInstructions',
 ] as const;
 
 const resources = {
@@ -56,6 +64,10 @@ const resources = {
     timer: ptTimer,
     team: ptTeam,
     settings: ptSettings,
+    ideas: ptIdeas,
+    meetings: ptMeetings,
+    knowledge: ptKnowledge,
+    workInstructions: ptWorkInstructions,
   },
   en: {
     common: enCommon,
@@ -68,6 +80,10 @@ const resources = {
     timer: enTimer,
     team: enTeam,
     settings: enSettings,
+    ideas: enIdeas,
+    meetings: enMeetings,
+    knowledge: enKnowledge,
+    workInstructions: enWorkInstructions,
   },
 } as const;
 
