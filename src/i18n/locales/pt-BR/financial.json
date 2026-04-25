@@ -85,5 +85,304 @@
   },
   "tickets": {
     "tagOpen": "{{n}} quente"
+  },
+  "plans": {
+    "intro": "Catálogo de planos. Mudar o preço aqui só afeta novas assinaturas.",
+    "new": "Novo plano",
+    "edit": "Editar plano",
+    "default": "Padrão",
+    "inactive": "Inativo",
+    "perSeat": "/assento/{{cycle}}",
+    "month": "mês",
+    "year": "ano",
+    "minSeats": "Mínimo {{n}} assentos",
+    "actions": {
+      "edit": "Editar",
+      "makeDefault": "Tornar padrão",
+      "deactivate": "Desativar",
+      "activate": "Ativar"
+    },
+    "errors": {
+      "loadFailed": "Erro ao carregar planos",
+      "requiredFields": "Código e nome são obrigatórios",
+      "clearDefault": "Erro ao limpar default"
+    },
+    "messages": {
+      "updated": "Plano atualizado",
+      "created": "Plano criado",
+      "newDefault": "{{name}} é o novo plano padrão"
+    },
+    "form": {
+      "code": "Código",
+      "codePlaceholder": "starter",
+      "name": "Nome",
+      "namePlaceholder": "Starter",
+      "description": "Descrição",
+      "pricePerSeat": "Preço por assento (R$)",
+      "minSeats": "Mínimo assentos",
+      "cycle": "Ciclo",
+      "monthly": "Mensal",
+      "yearly": "Anual",
+      "features": "Features (uma por linha)",
+      "featuresPlaceholder": "Tarefas ilimitadas\nSuporte 24/7\nRelatórios avançados",
+      "active": "Ativo",
+      "cancel": "Cancelar",
+      "save": "Salvar"
+    }
+  },
+  "vouchers": {
+    "intro": "Cupons de desconto aplicáveis a assinaturas.",
+    "new": "Novo voucher",
+    "edit": "Editar voucher",
+    "empty": "Nenhum voucher criado.",
+    "active": "Ativo",
+    "inactive": "Inativo",
+    "duration": {
+      "once": "Uma fatura",
+      "forever": "Vitalício",
+      "months": "{{n}} meses"
+    },
+    "validityUntil": "até {{date}}",
+    "noLimit": "sem limite",
+    "columns": {
+      "code": "Código",
+      "discount": "Desconto",
+      "duration": "Duração",
+      "redemptions": "Resgates",
+      "validity": "Validade",
+      "status": "Status",
+      "actions": "Ações"
+    },
+    "errors": {
+      "codeRequired": "Código é obrigatório",
+      "valuePositive": "Valor do desconto deve ser positivo",
+      "percentMax": "Percentual não pode passar de 100"
+    },
+    "messages": {
+      "updated": "Voucher atualizado",
+      "created": "Voucher criado"
+    },
+    "form": {
+      "code": "Código",
+      "codePlaceholder": "LANCAMENTO20",
+      "description": "Descrição (interna)",
+      "type": "Tipo",
+      "typePercent": "Percentual (%)",
+      "typeFixed": "Valor fixo (R$)",
+      "valuePercent": "Percentual (1-100)",
+      "valueFixed": "Valor (R$)",
+      "duration": "Duração",
+      "durationOnce": "Apenas uma fatura",
+      "durationRepeating": "Por X meses",
+      "durationForever": "Vitalício",
+      "months": "Meses",
+      "redemptionLimit": "Limite de resgates",
+      "redemptionLimitPlaceholder": "Ilimitado",
+      "appliesTo": "Aplicável a",
+      "anyPlan": "Qualquer plano",
+      "validFrom": "Válido a partir de",
+      "validUntil": "Válido até",
+      "active": "Ativo",
+      "cancel": "Cancelar",
+      "save": "Salvar"
+    }
+  },
+  "subscriptions": {
+    "status": {
+      "trialing": "Trial",
+      "active": "Ativa",
+      "past_due": "Inadimplente",
+      "suspended": "Suspensa",
+      "canceled": "Cancelada",
+      "pending": "Pendente"
+    },
+    "kpis": {
+      "mrrTitle": "MRR ativo",
+      "mrrTrialSuffix": "+ {{value}} em trial",
+      "byStatus": "Por status",
+      "active": "{{n}} ativas",
+      "trial": "{{n}} trial",
+      "pastDue": "{{n}} inadimp.",
+      "suspendedCanceled": "{{suspended}} suspensas · {{canceled}} canceladas",
+      "occupancy": "Ocupação de assentos",
+      "occupancyDetail": "{{used}} usados / {{total}} contratados",
+      "alerts": "Alertas",
+      "alertsDetail": "{{trial}} trial vencendo em 3d · {{pastDue}} inadimplentes"
+    },
+    "filters": {
+      "searchAdmin": "Buscar admin...",
+      "allStatus": "Todos os status",
+      "active": "Ativas",
+      "trialing": "Trial",
+      "pastDue": "Inadimplentes",
+      "suspended": "Suspensas",
+      "canceled": "Canceladas",
+      "pending": "Pendentes"
+    },
+    "table": {
+      "admin": "Admin",
+      "status": "Status",
+      "seats": "Assentos",
+      "monthly": "Mensalidade",
+      "nextCycle": "Próximo ciclo",
+      "provider": "Provider",
+      "actions": "Ações",
+      "details": "Detalhes",
+      "empty": "Nenhuma assinatura encontrada.",
+      "trialEnds": "Trial termina {{relative}}",
+      "pastDueSince": "Inadimplente desde {{date}}",
+      "noName": "Sem nome"
+    }
+  },
+  "drawer": {
+    "summary": {
+      "seats": "Assentos",
+      "monthly": "Mensalidade",
+      "nextCycle": "Próximo ciclo",
+      "trialEnds": "Trial termina"
+    },
+    "courtesyBadge": "🎁 Cortesia",
+    "courtesyTitle": "Cortesia ativa",
+    "fiscalIncomplete": {
+      "title": "Dados fiscais incompletos",
+      "description": "Não é possível registrar pagamento ou gerar fatura até o cliente completar o cadastro fiscal. Veja os campos pendentes na aba <strong>Fiscal</strong>."
+    },
+    "actions": {
+      "registerPayment": "Registrar pagamento",
+      "manage": "Gerenciar assinatura"
+    },
+    "tabs": {
+      "invoices": "Faturas",
+      "discounts": "Descontos",
+      "fiscal": "Fiscal",
+      "history": "Histórico",
+      "notes": "Notas"
+    },
+    "invoices": {
+      "empty": "Sem faturas registradas."
+    },
+    "fiscal": {
+      "edit": "Editar dados fiscais",
+      "create": "Cadastrar dados fiscais",
+      "notFilled": "Cliente ainda não preencheu os dados fiscais.",
+      "complete": "Dados completos para emissão de NF",
+      "missing": "Faltam {{n}} campo(s) para emissão de NF",
+      "type": "Tipo",
+      "company": "Pessoa jurídica",
+      "individual": "Pessoa física",
+      "cnpj": "CNPJ",
+      "cpf": "CPF",
+      "legalNameCompany": "Razão social",
+      "legalNameIndividual": "Nome",
+      "tradeName": "Nome fantasia",
+      "municipalRegistration": "Inscrição municipal",
+      "stateRegistration": "Inscrição estadual",
+      "email": "Email",
+      "phone": "Telefone",
+      "address": "Endereço",
+      "postalCodeLabel": "CEP {{code}}"
+    },
+    "history": {
+      "empty": "Sem mudanças registradas.",
+      "from": "de:",
+      "to": "para:"
+    },
+    "notes": {
+      "empty": "Sem notas.",
+      "add": "Adicionar nota...",
+      "save": "Salvar nota",
+      "errorSave": "Erro ao salvar nota"
+    },
+    "changeLabels": {
+      "seats_changed": "Assentos alterados",
+      "status_changed": "Status alterado",
+      "trial_extended": "Trial estendido",
+      "manual_payment": "Pagamento manual",
+      "cycle_advanced": "Ciclo avançado",
+      "created": "Assinatura criada",
+      "cancellation_scheduled": "Cancelamento agendado",
+      "reactivated": "Reativada",
+      "note": "Anotação",
+      "comp_activation": "Ativação como cortesia",
+      "voucher_applied": "Voucher aplicado",
+      "voucher_removed": "Voucher removido",
+      "direct_discount": "Desconto direto aplicado"
+    }
+  },
+  "manualPayment": {
+    "title": "Registrar pagamento manual",
+    "description": "Cria uma fatura paga e (opcionalmente) avança o ciclo da assinatura.",
+    "fiscalIncomplete": {
+      "title": "Dados fiscais incompletos",
+      "intro": "Não é possível gerar fatura sem os dados fiscais necessários para emissão de NF.",
+      "noProfile": "Este cliente ainda não preencheu nenhum dado fiscal.",
+      "missingHeader": "Campos pendentes:",
+      "askClient": "Peça ao cliente para completar em <strong>Cobrança → Dados fiscais</strong>."
+    },
+    "fields": {
+      "amount": "Valor (R$)",
+      "method": "Método",
+      "reference": "Referência (opcional)",
+      "referencePlaceholder": "ID transação, comprovante...",
+      "notes": "Observações",
+      "advance": "Avançar ciclo (+1 mês) e reativar se estava inadimplente"
+    },
+    "methods": {
+      "pix": "PIX",
+      "boleto": "Boleto",
+      "card": "Cartão",
+      "manual": "Outro / Manual"
+    },
+    "errors": {
+      "fiscal": "Dados fiscais incompletos. Não é possível gerar fatura.",
+      "fiscalServer": "Dados fiscais incompletos no servidor. Atualize o cadastro do cliente.",
+      "invalidAmount": "Valor inválido"
+    },
+    "success": "Pagamento registrado",
+    "close": "Fechar",
+    "cancel": "Cancelar",
+    "submit": "Registrar"
+  },
+  "helpTexts": {
+    "intro": "Edite os textos de ajuda exibidos ao clicar no botão <strong>?</strong> em cada página do sistema.",
+    "dialogTitle": "Título do Dialog",
+    "sections": "Seções de Ajuda",
+    "sectionTitlePlaceholder": "Título da seção",
+    "sectionTextPlaceholder": "Texto explicativo...",
+    "addSection": "Adicionar Seção",
+    "save": "Salvar",
+    "saveError": "Erro ao salvar: {{message}}",
+    "saveSuccess": "Ajuda de \"{{page}}\" salva!",
+    "pageLabels": {
+      "tasks": "Minhas Tarefas",
+      "dashboard": "Dashboard",
+      "meetings": "Atas de Reunião",
+      "work-instructions": "Instruções de Trabalho",
+      "calendar": "Agenda Pessoal",
+      "settings": "Configurações",
+      "admin": "Administração",
+      "financial": "Financeiro",
+      "team": "Equipes"
+    }
+  },
+  "legal": {
+    "tabs": {
+      "terms": "Termos de Uso",
+      "privacy": "Política de Privacidade"
+    },
+    "alert": "Use markdown. As versões publicadas são imutáveis e ficam visíveis em <code>/termos</code> ou <code>/privacidade</code>. Recomenda-se revisão jurídica antes do go-live público.",
+    "editor": "Editor (markdown)",
+    "preview": "Pré-visualização",
+    "empty": "_Vazio_",
+    "currentVersion": "Versão atual publicada: <bold>v{{n}}</bold>",
+    "publish": "Publicar nova versão",
+    "publishing": "Publicando...",
+    "history": "Histórico de versões",
+    "errors": {
+      "empty": "Conteúdo não pode estar vazio.",
+      "noChanges": "Nenhuma alteração para publicar.",
+      "publish": "Erro ao publicar: {{message}}"
+    },
+    "success": "Versão {{n}} publicada."
   }
 }
