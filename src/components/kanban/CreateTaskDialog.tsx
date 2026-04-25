@@ -90,9 +90,9 @@ export function CreateTaskDialog({ open, onOpenChange, onTaskCreated }: Props) {
     e.preventDefault();
     if (!user) return;
 
-    const tErr = !title.trim() ? 'Informe um título.' : undefined;
-    const sErr = !isValidDate(startDate) ? 'Ano deve estar entre 1900 e 2100.' : undefined;
-    const eErr = !isValidDate(estimatedDate) ? 'Ano deve estar entre 1900 e 2100.' : undefined;
+    const tErr = !title.trim() ? t('create.validation.titleRequired') : undefined;
+    const sErr = !isValidDate(startDate) ? t('create.validation.yearRange') : undefined;
+    const eErr = !isValidDate(estimatedDate) ? t('create.validation.yearRange') : undefined;
     setTitleError(tErr);
     setStartDateError(sErr);
     setEstimatedDateError(eErr);
@@ -100,8 +100,8 @@ export function CreateTaskDialog({ open, onOpenChange, onTaskCreated }: Props) {
 
     if (!statusId) {
       toast({
-        title: 'Selecione um status',
-        description: 'Escolha um status para a tarefa antes de salvar.',
+        title: t('create.validation.selectStatus'),
+        description: t('create.validation.selectStatusDesc'),
         variant: 'destructive',
       });
       return;
@@ -142,9 +142,9 @@ export function CreateTaskDialog({ open, onOpenChange, onTaskCreated }: Props) {
       });
 
       if (error) {
-        errorToast('criar a recorrência', error);
+        errorToast(t('create.errors.createRecurring'), error);
       } else {
-        toast({ title: 'Tarefa recorrente criada!' });
+        toast({ title: t('create.successRecurring') });
         resetForm();
         onOpenChange(false);
         onTaskCreated?.();
@@ -163,14 +163,14 @@ export function CreateTaskDialog({ open, onOpenChange, onTaskCreated }: Props) {
       }).select('id').single();
 
       if (error) {
-        errorToast('criar a tarefa', error);
+        errorToast(t('create.errors.create'), error);
       } else {
         if (data && assigneeIds.length > 0) {
           await supabase.from('task_assignees').insert(
             assigneeIds.map((user_id) => ({ task_id: data.id, user_id }))
           );
         }
-        toast({ title: 'Tarefa criada!' });
+        toast({ title: t('create.success') });
         resetForm();
         onOpenChange(false);
         onTaskCreated?.();
@@ -203,22 +203,22 @@ export function CreateTaskDialog({ open, onOpenChange, onTaskCreated }: Props) {
   return (
     <ResponsiveDialog open={open} onOpenChange={onOpenChange}>
       <ResponsiveDialogHeader>
-        <ResponsiveDialogTitle>Nova Tarefa</ResponsiveDialogTitle>
+        <ResponsiveDialogTitle>{t('create.title')}</ResponsiveDialogTitle>
         <ResponsiveDialogDescription>
-          Preencha os detalhes da nova tarefa
+          {t('create.description')}
         </ResponsiveDialogDescription>
       </ResponsiveDialogHeader>
       <form onSubmit={handleSubmit} className="space-y-4">
 
           <div className="space-y-1.5">
-            <Label>Título *</Label>
+            <Label>{t('create.fields.title')} *</Label>
             <Input
               value={title}
               onChange={(e) => {
                 setTitle(e.target.value);
                 if (titleError) setTitleError(undefined);
               }}
-              onBlur={() => setTitleError(!title.trim() ? 'Informe um título.' : undefined)}
+              onBlur={() => setTitleError(!title.trim() ? t('create.validation.titleRequired') : undefined)}
               placeholder="Título da tarefa"
               aria-invalid={!!titleError}
               className={cn(titleError && 'border-destructive focus-visible:ring-destructive')}
