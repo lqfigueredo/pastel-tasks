@@ -1,0 +1,66 @@
+{
+  "page": {
+    "title": "Administration",
+    "subtitle": "Register new users and manage the system."
+  },
+  "tabs": {
+    "users": "Users",
+    "support": "Support",
+    "emails": "Emails"
+  },
+  "loading": "Loading...",
+  "denied": {
+    "title": "Access Denied",
+    "description": "You don't have permission to access this page."
+  },
+  "limit": {
+    "title": "Limit of {{n}} users reached",
+    "description": "You've reached your plan's limit. Request additional seats from Finance.",
+    "request": "Request more seats",
+    "reachedHint": "Limit reached — request more seats above."
+  },
+  "register": {
+    "title": "Register User",
+    "description": "The user will be able to log in immediately after registration.",
+    "usage": "({{current}}/{{max}} users in use)",
+    "name": "Name",
+    "namePlaceholder": "Full name",
+    "email": "Email",
+    "emailPlaceholder": "email@example.com",
+    "password": "Password",
+    "passwordPlaceholder": "Minimum 6 characters",
+    "team": "Team (optional)",
+    "teamPlaceholder": "Select a team",
+    "noTeam": "None",
+    "submit": "Register User",
+    "errors": {
+      "required": "Fill in all required fields",
+      "passwordShort": "Password must be at least 6 characters",
+      "createFailed": "Failed to register user"
+    },
+    "success": "User registered successfully!"
+  },
+  "list": {
+    "title": "Registered Users",
+    "count": "{{n}} user(s) in the system",
+    "name": "Name",
+    "team": "Team",
+    "role": "Role",
+    "status": "Status",
+    "createdAt": "Created at",
+    "actions": "Actions",
+    "you": "(you)",
+    "admin": "Admin",
+    "user": "User",
+    "active": "Active",
+    "inactive": "Inactive"
+  },
+  "actions": {
+    "promoteAdmin": "Promote to admin",
+    "removeAdmin": "Remove admin",
+    "edit": "Edit user",
+    "deactivate": "Deactivate user",
+    "reactivate": "Reactivate user",
+    "actionError": "Failed to execute action"
+  }
+}

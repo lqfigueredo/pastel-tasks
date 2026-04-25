@@ -1,0 +1,89 @@
+{
+  "page": {
+    "title": "Financeiro",
+    "subtitle": "Gerencie leads e aprovações de usuários.",
+    "denied": "Acesso restrito.",
+    "loading": "Carregando..."
+  },
+  "tabs": {
+    "subscriptions": "Assinaturas",
+    "plans": "Planos",
+    "vouchers": "Vouchers",
+    "approvals": "Aprovações",
+    "leads": "Leads",
+    "limits": "Limites",
+    "emails": "Emails",
+    "support": "Chamados",
+    "helpTexts": "Textos de Ajuda",
+    "legal": "Documentos Legais"
+  },
+  "status": {
+    "pending": "Pendente",
+    "approved": "Aprovado",
+    "rejected": "Rejeitado",
+    "expired": "Expirado",
+    "deactivated": "Inativado"
+  },
+  "license": {
+    "expired": "Expirada",
+    "active": "Vigente"
+  },
+  "approvals": {
+    "empty": "Nenhuma solicitação de aprovação.",
+    "name": "Nome",
+    "status": "Status",
+    "licenseExpiry": "Validade da Licença",
+    "requestedAt": "Data da Solicitação",
+    "actions": "Ações",
+    "approve": "Aprovar",
+    "reject": "Rejeitar",
+    "deactivate": "Inativar",
+    "reactivate": "Reativar",
+    "confirmEmail": "Confirmar E-mail",
+    "confirmEmailTitle": "Confirmar e-mail manualmente",
+    "edit": "Editar",
+    "editTitle": "Editar perfil do usuário",
+    "deactivateDialog": {
+      "title": "Inativar licença",
+      "description": "Isso irá inativar o admin <strong>{{name}}</strong> e todos os usuários dos times criados por ele. Deseja continuar?",
+      "cancel": "Cancelar",
+      "confirm": "Inativar"
+    },
+    "messages": {
+      "approve": "Usuário aprovado!",
+      "reject": "Usuário rejeitado.",
+      "deactivate": "Licença inativada com sucesso.",
+      "updateLicense": "Validade da licença atualizada.",
+      "reactivate": "Licença reativada com sucesso!",
+      "confirmEmail": "E-mail confirmado com sucesso!",
+      "default": "Ação realizada.",
+      "error": "Erro ao processar ação"
+    }
+  },
+  "leads": {
+    "empty": "Nenhum lead registrado ainda.",
+    "name": "Nome",
+    "email": "E-mail",
+    "createdAt": "Data de Contato",
+    "status": "Status",
+    "replied": "Respondido",
+    "waiting": "Aguardando",
+    "actions": "Ações",
+    "reply": "Responder",
+    "resend": "Reenviar"
+  },
+  "limits": {
+    "empty": "Nenhum administrador encontrado.",
+    "admin": "Administrador",
+    "users": "Usuários",
+    "limit": "Limite",
+    "actions": "Ações",
+    "edit": "Editar",
+    "minError": "Limite deve ser pelo menos 1",
+    "saved": "Limite atualizado com sucesso!",
+    "saveError": "Erro ao salvar limite"
+  },
+  "tickets": {
+    "tagOpen": "{{n}} quente"
+  }
+}

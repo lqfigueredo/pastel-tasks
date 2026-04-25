@@ -1,0 +1,89 @@
+{
+  "page": {
+    "title": "Finance",
+    "subtitle": "Manage leads and user approvals.",
+    "denied": "Restricted access.",
+    "loading": "Loading..."
+  },
+  "tabs": {
+    "subscriptions": "Subscriptions",
+    "plans": "Plans",
+    "vouchers": "Vouchers",
+    "approvals": "Approvals",
+    "leads": "Leads",
+    "limits": "Limits",
+    "emails": "Emails",
+    "support": "Tickets",
+    "helpTexts": "Help Texts",
+    "legal": "Legal Documents"
+  },
+  "status": {
+    "pending": "Pending",
+    "approved": "Approved",
+    "rejected": "Rejected",
+    "expired": "Expired",
+    "deactivated": "Deactivated"
+  },
+  "license": {
+    "expired": "Expired",
+    "active": "Active"
+  },
+  "approvals": {
+    "empty": "No approval requests.",
+    "name": "Name",
+    "status": "Status",
+    "licenseExpiry": "License Expiry",
+    "requestedAt": "Request Date",
+    "actions": "Actions",
+    "approve": "Approve",
+    "reject": "Reject",
+    "deactivate": "Deactivate",
+    "reactivate": "Reactivate",
+    "confirmEmail": "Confirm Email",
+    "confirmEmailTitle": "Manually confirm email",
+    "edit": "Edit",
+    "editTitle": "Edit user profile",
+    "deactivateDialog": {
+      "title": "Deactivate license",
+      "description": "This will deactivate admin <strong>{{name}}</strong> and all users from teams they created. Continue?",
+      "cancel": "Cancel",
+      "confirm": "Deactivate"
+    },
+    "messages": {
+      "approve": "User approved!",
+      "reject": "User rejected.",
+      "deactivate": "License deactivated successfully.",
+      "updateLicense": "License expiry updated.",
+      "reactivate": "License reactivated successfully!",
+      "confirmEmail": "Email confirmed successfully!",
+      "default": "Action completed.",
+      "error": "Failed to process action"
+    }
+  },
+  "leads": {
+    "empty": "No leads registered yet.",
+    "name": "Name",
+    "email": "Email",
+    "createdAt": "Contact Date",
+    "status": "Status",
+    "replied": "Replied",
+    "waiting": "Waiting",
+    "actions": "Actions",
+    "reply": "Reply",
+    "resend": "Resend"
+  },
+  "limits": {
+    "empty": "No administrators found.",
+    "admin": "Administrator",
+    "users": "Users",
+    "limit": "Limit",
+    "actions": "Actions",
+    "edit": "Edit",
+    "minError": "Limit must be at least 1",
+    "saved": "Limit updated successfully!",
+    "saveError": "Failed to save limit"
+  },
+  "tickets": {
+    "tagOpen": "{{n}} hot"
+  }
+}

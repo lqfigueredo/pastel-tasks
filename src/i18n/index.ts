@@ -21,6 +21,9 @@ import ptWorkInstructions from './locales/pt-BR/workInstructions.json';
 import ptOnboarding from './locales/pt-BR/onboarding.json';
 import ptBilling from './locales/pt-BR/billing.json';
 import ptPricing from './locales/pt-BR/pricing.json';
+import ptAdmin from './locales/pt-BR/admin.json';
+import ptFinancial from './locales/pt-BR/financial.json';
+import ptFinancialRegister from './locales/pt-BR/financialRegister.json';
 
 import enCommon from './locales/en/common.json';
 import enNav from './locales/en/nav.json';
@@ -39,6 +42,9 @@ import enWorkInstructions from './locales/en/workInstructions.json';
 import enOnboarding from './locales/en/onboarding.json';
 import enBilling from './locales/en/billing.json';
 import enPricing from './locales/en/pricing.json';
+import enAdmin from './locales/en/admin.json';
+import enFinancial from './locales/en/financial.json';
+import enFinancialRegister from './locales/en/financialRegister.json';
 
 export const SUPPORTED_LOCALES = ['pt-BR', 'en'] as const;
 export type SupportedLocale = (typeof SUPPORTED_LOCALES)[number];
@@ -63,6 +69,9 @@ const NAMESPACES = [
   'onboarding',
   'billing',
   'pricing',
+  'admin',
+  'financial',
+  'financialRegister',
 ] as const;
 
 const resources = {
@@ -84,6 +93,9 @@ const resources = {
     onboarding: ptOnboarding,
     billing: ptBilling,
     pricing: ptPricing,
+    admin: ptAdmin,
+    financial: ptFinancial,
+    financialRegister: ptFinancialRegister,
   },
   en: {
     common: enCommon,
@@ -103,6 +115,9 @@ const resources = {
     onboarding: enOnboarding,
     billing: enBilling,
     pricing: enPricing,
+    admin: enAdmin,
+    financial: enFinancial,
+    financialRegister: enFinancialRegister,
   },
 } as const;
 
