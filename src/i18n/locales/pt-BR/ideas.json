@@ -26,5 +26,39 @@
     "noIdeasTitle": "Nenhuma ideia ainda",
     "noIdeasDesc": "Capture insights e melhorias do dia a dia. Você pode transformá-las em tarefas depois.",
     "registerFirst": "Registrar primeira ideia"
+  },
+  "create": {
+    "title": "Nova Ideia",
+    "titleLabel": "Título *",
+    "titlePlaceholder": "Título da ideia",
+    "descLabel": "Descrição",
+    "descPlaceholder": "Descreva a ideia...",
+    "team": "Equipe (opcional)",
+    "noTeam": "Sem equipe",
+    "attachments": "Anexos",
+    "selectFiles": "Selecionar arquivos",
+    "filesSelected_one": "{{count}} arquivo selecionado",
+    "filesSelected_other": "{{count}} arquivos selecionados",
+    "cancel": "Cancelar",
+    "save": "Criar",
+    "saving": "Salvando...",
+    "errorCreate": "Erro ao criar ideia",
+    "success": "Ideia registrada!"
+  },
+  "edit": {
+    "titleEdit": "Editar Ideia",
+    "titleView": "Detalhes da Ideia",
+    "titleLabel": "Título",
+    "descLabel": "Descrição",
+    "implemented": "Ideia implementada",
+    "team": "Equipe",
+    "noTeam": "Sem equipe",
+    "delete": "Excluir",
+    "cancel": "Cancelar",
+    "save": "Salvar",
+    "saving": "Salvando...",
+    "errorSave": "Erro ao salvar",
+    "updated": "Ideia atualizada!",
+    "deleted": "Ideia excluída"
   }
 }

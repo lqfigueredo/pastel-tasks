@@ -64,5 +64,24 @@
     "errorUpload": "Erro ao enviar arquivo",
     "errorUpdate": "Erro ao atualizar",
     "success": "Documento atualizado com sucesso"
+  },
+  "create": {
+    "title": "Nova Instrução de Trabalho",
+    "titleField": "Título *",
+    "titlePlaceholder": "Título do documento",
+    "descField": "Descrição resumida",
+    "descPlaceholder": "Breve descrição",
+    "teamField": "Equipe *",
+    "selectTeam": "Selecione a equipe",
+    "active": "Ativo",
+    "fileField": "Arquivo PDF *",
+    "save": "Criar Instrução",
+    "saving": "Salvando...",
+    "requiredFields": "Preencha todos os campos obrigatórios",
+    "errorPdfOnly": "Apenas arquivos PDF são permitidos",
+    "errorUpload": "Erro ao enviar arquivo",
+    "errorCreate": "Erro ao criar instrução",
+    "createdLog": "Instrução \"{{title}}\" criada",
+    "success": "Instrução criada com sucesso"
   }
 }
