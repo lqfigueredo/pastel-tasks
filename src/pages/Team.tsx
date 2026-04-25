@@ -45,8 +45,7 @@ const Team = () => {
   const { user } = useAuth();
   const { toast } = useToast();
 
-  const { data: teamDetail, isLoading: loading } = useTeamDetailQuery(teamId);
-  const invalidateTeamDetail = useInvalidateTeamDetail();
+  const { data: teamDetail, isLoading: loading, refetch } = useTeamDetailQuery(teamId);
   const team = teamDetail?.team ?? null;
   const members = teamDetail?.members ?? [];
   const tasks = teamDetail?.tasks ?? [];
@@ -67,7 +66,7 @@ const Team = () => {
   }, [team?.id]);
 
   const reload = () => {
-    if (teamId) invalidateTeamDetail(teamId);
+    refetch();
   };
 
   const handleDeleteTeam = async () => {
