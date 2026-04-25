@@ -1,5 +1,6 @@
 import { useState, useEffect, lazy, Suspense } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -7,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, CalendarDays, Plus, CheckCircle2, Circle, UserRound, Pencil, Paperclip } from 'lucide-react';
 import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { getCurrentLocale } from '@/lib/date';
 import { AddPendencyDialog } from '@/components/meetings/AddPendencyDialog';
 import { EditMeetingDialog } from '@/components/meetings/EditMeetingDialog';
 import { MeetingAttachments } from '@/components/meetings/MeetingAttachments';
@@ -37,6 +38,7 @@ export default function MeetingMinuteDetail() {
   const { meetingId } = useParams<{ meetingId: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { t } = useTranslation('meetings');
   const [meeting, setMeeting] = useState<any>(null);
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [externalParticipants, setExternalParticipants] = useState<string[]>([]);
@@ -66,7 +68,7 @@ export default function MeetingMinuteDetail() {
       }
       const { data: profiles } = await supabase.from('profiles').select('user_id, display_name').in('user_id', userIds);
       setParticipants(
-        (profiles || []).map((p) => ({ user_id: p.user_id, display_name: p.display_name || 'Sem nome' }))
+        (profiles || []).map((p) => ({ user_id: p.user_id, display_name: p.display_name || t('detail.noNameFallback') }))
       );
     }
 
@@ -76,13 +78,13 @@ export default function MeetingMinuteDetail() {
       let profileMap: Record<string, string> = {};
       if (responsibleIds.length > 0) {
         const { data: profiles } = await supabase.from('profiles').select('user_id, display_name').in('user_id', responsibleIds);
-        profileMap = Object.fromEntries((profiles || []).map((p) => [p.user_id, p.display_name || 'Sem nome']));
+        profileMap = Object.fromEntries((profiles || []).map((p) => [p.user_id, p.display_name || t('detail.noNameFallback')]));
       }
       setPendencies(pendData.map((p) => ({
         ...p,
         responsible_name: p.responsible_user_id
-          ? (profileMap[p.responsible_user_id] || 'Desconhecido')
-          : (p.responsible_external_name ? `${p.responsible_external_name} (Externo)` : 'Não definido'),
+          ? (profileMap[p.responsible_user_id] || t('detail.unknown'))
+          : (p.responsible_external_name ? `${p.responsible_external_name} (${t('detail.external')})` : t('detail.notDefined')),
       })));
     } else {
       setPendencies([]);
@@ -109,7 +111,7 @@ export default function MeetingMinuteDetail() {
       .eq('id', pendency.id);
 
     if (error) {
-      toast.error('Erro ao atualizar pendência');
+      toast.error(t('detail.errorUpdate'));
       return;
     }
 
@@ -131,11 +133,11 @@ export default function MeetingMinuteDetail() {
         p.id === pendency.id ? { ...p, is_completed: newCompleted, completed_at: newCompleted ? new Date().toISOString() : null } : p
       )
     );
-    toast.success(newCompleted ? 'Pendência encerrada' : 'Pendência reaberta');
+    toast.success(newCompleted ? t('detail.pendencyClosed') : t('detail.pendencyReopened'));
   };
 
-  if (loading) return <p className="text-muted-foreground">Carregando...</p>;
-  if (!meeting) return <p className="text-destructive">Ata não encontrada.</p>;
+  if (loading) return <p className="text-muted-foreground">{t('detail.loading')}</p>;
+  if (!meeting) return <p className="text-destructive">{t('detail.notFound')}</p>;
 
   const getInitials = (name: string) =>
     name
@@ -148,7 +150,7 @@ export default function MeetingMinuteDetail() {
   return (
     <div className="space-y-6">
       <Button variant="ghost" onClick={() => navigate('/atas')} className="mb-2">
-        <ArrowLeft className="mr-2 h-4 w-4" /> Voltar
+        <ArrowLeft className="mr-2 h-4 w-4" /> {t('detail.back')}
       </Button>
 
       <Card>
@@ -156,9 +158,9 @@ export default function MeetingMinuteDetail() {
           <div>
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <CalendarDays className="h-4 w-4" />
-              {format(new Date(meeting.meeting_date + 'T00:00:00'), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
+              {format(new Date(meeting.meeting_date + 'T00:00:00'), "PPP", { locale: getCurrentLocale() })}
             </div>
-            <CardTitle className="text-lg mt-1">Descrição da Reunião</CardTitle>
+            <CardTitle className="text-lg mt-1">{t('detail.description')}</CardTitle>
           </div>
           <div className="flex items-center gap-2">
             <Suspense fallback={null}>
@@ -166,7 +168,7 @@ export default function MeetingMinuteDetail() {
             </Suspense>
             {meeting.created_by === user?.id && (
               <Button size="sm" variant="outline" onClick={() => setEditDialogOpen(true)}>
-                <Pencil className="mr-2 h-4 w-4" /> Editar
+                <Pencil className="mr-2 h-4 w-4" /> {t('detail.edit')}
               </Button>
             )}
           </div>
@@ -175,7 +177,7 @@ export default function MeetingMinuteDetail() {
           <p className="whitespace-pre-wrap text-sm text-foreground">{meeting.description}</p>
 
           <div>
-            <h3 className="mb-2 text-sm font-medium text-muted-foreground">Participantes</h3>
+            <h3 className="mb-2 text-sm font-medium text-muted-foreground">{t('detail.participants')}</h3>
             <div className="flex flex-wrap gap-2">
               {participants.map((p) => (
                 <div key={p.user_id} className="flex items-center gap-1.5">
@@ -193,7 +195,7 @@ export default function MeetingMinuteDetail() {
                     </AvatarFallback>
                   </Avatar>
                   <span className="text-xs text-foreground">{name}</span>
-                  <Badge variant="outline" className="text-[10px] px-1 py-0">Externo</Badge>
+                  <Badge variant="outline" className="text-[10px] px-1 py-0">{t('detail.external')}</Badge>
                 </div>
               ))}
             </div>
@@ -203,23 +205,23 @@ export default function MeetingMinuteDetail() {
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-lg">Pendências</CardTitle>
+          <CardTitle className="text-lg">{t('detail.pendencies')}</CardTitle>
           <Button size="sm" onClick={() => setPendencyDialogOpen(true)}>
-            <Plus className="mr-2 h-4 w-4" /> Adicionar
+            <Plus className="mr-2 h-4 w-4" /> {t('detail.addPendency')}
           </Button>
         </CardHeader>
         <CardContent>
           {pendencies.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Nenhuma pendência registrada.</p>
+            <p className="text-sm text-muted-foreground">{t('detail.noPendencies')}</p>
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-10"></TableHead>
-                  <TableHead>Descrição</TableHead>
-                  <TableHead>Responsável</TableHead>
-                  <TableHead>Data Conclusão</TableHead>
-                  <TableHead>Status</TableHead>
+                  <TableHead>{t('detail.table.description')}</TableHead>
+                  <TableHead>{t('detail.table.responsible')}</TableHead>
+                  <TableHead>{t('detail.table.dueDate')}</TableHead>
+                  <TableHead>{t('detail.table.status')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -247,7 +249,7 @@ export default function MeetingMinuteDetail() {
                     </TableCell>
                     <TableCell>
                       <Badge variant={p.is_completed ? 'secondary' : 'outline'}>
-                        {p.is_completed ? 'Encerrada' : 'Aberta'}
+                        {p.is_completed ? t('detail.status.closed') : t('detail.status.open')}
                       </Badge>
                     </TableCell>
                   </TableRow>
@@ -261,7 +263,7 @@ export default function MeetingMinuteDetail() {
       <Card>
         <CardHeader>
           <CardTitle className="text-lg flex items-center gap-2">
-            <Paperclip className="h-4 w-4" /> Anexos
+            <Paperclip className="h-4 w-4" /> {t('detail.attachments')}
           </CardTitle>
         </CardHeader>
         <CardContent>

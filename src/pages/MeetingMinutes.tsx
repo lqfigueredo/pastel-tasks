@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -8,10 +9,10 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Plus, FileText, CalendarDays, Users, AlertCircle, Search, X, CalendarIcon, Filter } from 'lucide-react';
+import { Plus, FileText, CalendarDays, Users, AlertCircle, Search, X, CalendarIcon } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { getCurrentLocale } from '@/lib/date';
 import { cn } from '@/lib/utils';
 import { CreateMeetingDialog } from '@/components/meetings/CreateMeetingDialog';
 import { HelpButton } from '@/components/HelpButton';
@@ -30,6 +31,7 @@ interface MeetingRow {
 
 export default function MeetingMinutes() {
   const { user } = useAuth();
+  const { t } = useTranslation('meetings');
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -82,13 +84,13 @@ export default function MeetingMinutes() {
       <div className="flex items-center justify-between">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold text-foreground">Atas de Reunião</h1>
+            <h1 className="text-2xl font-bold text-foreground">{t('list.title')}</h1>
             <HelpButton pageKey="meetings" />
           </div>
-          <p className="text-sm text-muted-foreground">Gerencie suas atas e pendências</p>
+          <p className="text-sm text-muted-foreground">{t('list.subtitle')}</p>
         </div>
         <Button onClick={() => setDialogOpen(true)}>
-          <Plus className="mr-2 h-4 w-4" /> Nova Ata
+          <Plus className="mr-2 h-4 w-4" /> {t('list.newMeeting')}
         </Button>
       </div>
 
@@ -97,7 +99,7 @@ export default function MeetingMinutes() {
         <div className="relative flex-1 min-w-[200px] max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Buscar por descrição..."
+            placeholder={t('list.searchPlaceholder')}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="pl-9"
@@ -107,22 +109,22 @@ export default function MeetingMinutes() {
           <PopoverTrigger asChild>
             <Button variant="outline" className={cn("justify-start text-left font-normal", !dateFrom && "text-muted-foreground")}>
               <CalendarIcon className="mr-2 h-4 w-4" />
-              {dateFrom ? format(dateFrom, "dd/MM/yyyy") : "Data início"}
+              {dateFrom ? format(dateFrom, "dd/MM/yyyy") : t('list.dateFrom')}
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-auto p-0" align="start">
-            <Calendar mode="single" selected={dateFrom} onSelect={setDateFrom} initialFocus className="p-3 pointer-events-auto" locale={ptBR} />
+            <Calendar mode="single" selected={dateFrom} onSelect={setDateFrom} initialFocus className="p-3 pointer-events-auto" locale={getCurrentLocale()} />
           </PopoverContent>
         </Popover>
         <Popover>
           <PopoverTrigger asChild>
             <Button variant="outline" className={cn("justify-start text-left font-normal", !dateTo && "text-muted-foreground")}>
               <CalendarIcon className="mr-2 h-4 w-4" />
-              {dateTo ? format(dateTo, "dd/MM/yyyy") : "Data fim"}
+              {dateTo ? format(dateTo, "dd/MM/yyyy") : t('list.dateTo')}
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-auto p-0" align="start">
-            <Calendar mode="single" selected={dateTo} onSelect={setDateTo} initialFocus className="p-3 pointer-events-auto" locale={ptBR} />
+            <Calendar mode="single" selected={dateTo} onSelect={setDateTo} initialFocus className="p-3 pointer-events-auto" locale={getCurrentLocale()} />
           </PopoverContent>
         </Popover>
         <Button
@@ -132,11 +134,11 @@ export default function MeetingMinutes() {
           className="gap-1"
         >
           <AlertCircle className="h-4 w-4" />
-          Com pendências
+          {t('list.withPendencies')}
         </Button>
         {hasFilters && (
           <Button variant="ghost" size="sm" onClick={clearFilters}>
-            <X className="mr-1 h-4 w-4" /> Limpar
+            <X className="mr-1 h-4 w-4" /> {t('list.clear')}
           </Button>
         )}
       </div>
@@ -148,16 +150,16 @@ export default function MeetingMinutes() {
           <CardContent className="p-0">
             <EmptyState
               icon={FileText}
-              title={hasFilters ? 'Nenhuma ata encontrada' : 'Nenhuma ata ainda'}
+              title={hasFilters ? t('empty.noResultsTitle') : t('empty.noMeetingsTitle')}
               description={
                 hasFilters
-                  ? 'Tente ajustar os filtros para ver mais resultados.'
-                  : 'Registre suas reuniões e acompanhe pendências em um só lugar.'
+                  ? t('empty.noResultsDesc')
+                  : t('empty.noMeetingsDesc')
               }
               action={
                 hasFilters
-                  ? { label: 'Limpar filtros', onClick: clearFilters }
-                  : { label: 'Criar primeira ata', onClick: () => setDialogOpen(true) }
+                  ? { label: t('empty.clearFilters'), onClick: clearFilters }
+                  : { label: t('empty.createFirst'), onClick: () => setDialogOpen(true) }
               }
             />
           </CardContent>
@@ -177,22 +179,22 @@ export default function MeetingMinutes() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <CalendarDays className="h-4 w-4" />
-                    {format(new Date(m.meeting_date + 'T00:00:00'), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
+                    {format(new Date(m.meeting_date + 'T00:00:00'), "PPP", { locale: getCurrentLocale() })}
                   </div>
                   {m.pendency_count !== undefined && m.pendency_count > 0 && (
                     <Badge variant="destructive" className="bg-orange-500 hover:bg-orange-600">
-                      {m.pendency_count} pendência(s)
+                      {t('list.pendencies', { count: m.pendency_count })}
                     </Badge>
                   )}
                 </div>
                 <p className="line-clamp-2 text-sm text-foreground">{m.description}</p>
                 <div className="flex items-center gap-4 text-xs text-muted-foreground">
                   <span className="flex items-center gap-1">
-                    <Users className="h-3.5 w-3.5" /> {m.participant_count} participante(s)
+                    <Users className="h-3.5 w-3.5" /> {t('list.participants', { count: m.participant_count || 0 })}
                   </span>
                   {(!m.pendency_count || m.pendency_count === 0) && (
                     <span className="flex items-center gap-1">
-                      <AlertCircle className="h-3.5 w-3.5" /> Sem pendências
+                      <AlertCircle className="h-3.5 w-3.5" /> {t('list.noPendencies')}
                     </span>
                   )}
                 </div>

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -23,17 +24,18 @@ interface Props {
 export function UpdateDocumentDialog({ instruction, onClose, onUpdated }: Props) {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { t } = useTranslation('workInstructions');
   const [file, setFile] = useState<File | null>(null);
   const [reason, setReason] = useState('');
   const [saving, setSaving] = useState(false);
 
   const handleUpdate = async () => {
     if (!file || !reason.trim()) {
-      toast({ title: 'Selecione o novo PDF e informe o motivo da alteração', variant: 'destructive' });
+      toast({ title: t('update.errorRequired'), variant: 'destructive' });
       return;
     }
     if (file.type !== 'application/pdf') {
-      toast({ title: 'Apenas arquivos PDF são permitidos', variant: 'destructive' });
+      toast({ title: t('update.errorPdfOnly'), variant: 'destructive' });
       return;
     }
 
@@ -66,7 +68,7 @@ export function UpdateDocumentDialog({ instruction, onClose, onUpdated }: Props)
       .upload(newPath, file, { contentType: 'application/pdf' });
 
     if (uploadError) {
-      toast({ title: 'Erro ao enviar arquivo', description: uploadError.message, variant: 'destructive' });
+      toast({ title: t('update.errorUpload'), description: uploadError.message, variant: 'destructive' });
       setSaving(false);
       return;
     }
@@ -77,7 +79,7 @@ export function UpdateDocumentDialog({ instruction, onClose, onUpdated }: Props)
       .eq('id', instruction.id);
 
     if (error) {
-      toast({ title: 'Erro ao atualizar', description: error.message, variant: 'destructive' });
+      toast({ title: t('update.errorUpdate'), description: error.message, variant: 'destructive' });
       setSaving(false);
       return;
     }
@@ -90,7 +92,7 @@ export function UpdateDocumentDialog({ instruction, onClose, onUpdated }: Props)
       user_id: user!.id,
     });
 
-    toast({ title: 'Documento atualizado com sucesso' });
+    toast({ title: t('update.success') });
     onClose();
     onUpdated();
   };
@@ -99,22 +101,22 @@ export function UpdateDocumentDialog({ instruction, onClose, onUpdated }: Props)
     <Dialog open onOpenChange={() => onClose()}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Atualizar Documento — {instruction.title}</DialogTitle>
+          <DialogTitle>{t('update.title', { title: instruction.title })}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
           <p className="text-sm text-muted-foreground">
-            O documento atual ({instruction.current_file_name}) será salvo no histórico de versões.
+            {t('update.currentInfo', { name: instruction.current_file_name })}
           </p>
           <div>
-            <Label>Novo arquivo PDF *</Label>
+            <Label>{t('update.newFile')}</Label>
             <Input type="file" accept="application/pdf" onChange={e => setFile(e.target.files?.[0] || null)} />
           </div>
           <div>
-            <Label>Motivo da alteração *</Label>
-            <Textarea value={reason} onChange={e => setReason(e.target.value)} placeholder="Descreva o motivo da atualização" rows={3} />
+            <Label>{t('update.reason')}</Label>
+            <Textarea value={reason} onChange={e => setReason(e.target.value)} placeholder={t('update.reasonPlaceholder')} rows={3} />
           </div>
           <Button onClick={handleUpdate} disabled={saving} className="w-full">
-            {saving ? 'Atualizando...' : 'Atualizar Documento'}
+            {saving ? t('update.submitting') : t('update.submit')}
           </Button>
         </div>
       </DialogContent>

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -18,6 +19,7 @@ interface Props {
 export function EditInstructionDialog({ instruction, onClose, onUpdated }: Props) {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { t } = useTranslation('workInstructions');
   const [title, setTitle] = useState(instruction.title);
   const [description, setDescription] = useState(instruction.description || '');
   const [isActive, setIsActive] = useState(instruction.is_active);
@@ -25,7 +27,7 @@ export function EditInstructionDialog({ instruction, onClose, onUpdated }: Props
 
   const handleSave = async () => {
     if (!title.trim()) {
-      toast({ title: 'Título é obrigatório', variant: 'destructive' });
+      toast({ title: t('edit.errorTitle'), variant: 'destructive' });
       return;
     }
     setSaving(true);
@@ -35,7 +37,7 @@ export function EditInstructionDialog({ instruction, onClose, onUpdated }: Props
       .eq('id', instruction.id);
 
     if (error) {
-      toast({ title: 'Erro ao atualizar', description: error.message, variant: 'destructive' });
+      toast({ title: t('edit.errorUpdate'), description: error.message, variant: 'destructive' });
       setSaving(false);
       return;
     }
@@ -43,11 +45,11 @@ export function EditInstructionDialog({ instruction, onClose, onUpdated }: Props
     await supabase.from('work_instruction_logs').insert({
       instruction_id: instruction.id,
       action: 'updated_metadata',
-      details: `Metadados atualizados (título, descrição, status)`,
+      details: t('edit.updatedLog'),
       user_id: user!.id,
     });
 
-    toast({ title: 'Instrução atualizada' });
+    toast({ title: t('edit.updated') });
     onClose();
     onUpdated();
   };
@@ -56,23 +58,23 @@ export function EditInstructionDialog({ instruction, onClose, onUpdated }: Props
     <Dialog open onOpenChange={() => onClose()}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Editar Instrução</DialogTitle>
+          <DialogTitle>{t('edit.title')}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
           <div>
-            <Label>Título *</Label>
+            <Label>{t('edit.titleField')}</Label>
             <Input value={title} onChange={e => setTitle(e.target.value)} />
           </div>
           <div>
-            <Label>Descrição resumida</Label>
+            <Label>{t('edit.descField')}</Label>
             <Textarea value={description} onChange={e => setDescription(e.target.value)} rows={3} />
           </div>
           <div className="flex items-center gap-2">
             <Switch checked={isActive} onCheckedChange={setIsActive} />
-            <Label>Ativo</Label>
+            <Label>{t('edit.active')}</Label>
           </div>
           <Button onClick={handleSave} disabled={saving} className="w-full">
-            {saving ? 'Salvando...' : 'Salvar'}
+            {saving ? t('edit.saving') : t('edit.save')}
           </Button>
         </div>
       </DialogContent>

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -35,6 +36,7 @@ interface Team {
 
 export default function WorkInstructions() {
   const { user } = useAuth();
+  const { t } = useTranslation('workInstructions');
   const { toast } = useToast();
   const [instructions, setInstructions] = useState<WorkInstruction[]>([]);
   const [teams, setTeams] = useState<Team[]>([]);
@@ -90,7 +92,7 @@ export default function WorkInstructions() {
   const handleDownload = async (filePath: string, fileName: string) => {
     const { data, error } = await supabase.storage.from('work-instructions').download(filePath);
     if (error) {
-      toast({ title: 'Erro ao baixar arquivo', description: error.message, variant: 'destructive' });
+      toast({ title: t('messages.errorDownload'), description: error.message, variant: 'destructive' });
       return;
     }
     const url = URL.createObjectURL(data);
@@ -102,7 +104,7 @@ export default function WorkInstructions() {
   };
 
   const handleDelete = async (instruction: WorkInstruction) => {
-    if (!confirm('Tem certeza que deseja excluir esta instrução de trabalho?')) return;
+    if (!confirm(t('messages.confirmDelete'))) return;
 
     // Delete file from storage
     await supabase.storage.from('work-instructions').remove([instruction.current_file_path]);
@@ -120,15 +122,15 @@ export default function WorkInstructions() {
     await supabase.from('work_instruction_logs').insert({
       instruction_id: instruction.id,
       action: 'deleted',
-      details: `Instrução "${instruction.title}" excluída`,
+      details: t('messages.deletedLog', { title: instruction.title }),
       user_id: user!.id,
     });
 
     const { error } = await supabase.from('work_instructions').delete().eq('id', instruction.id);
     if (error) {
-      toast({ title: 'Erro ao excluir', description: error.message, variant: 'destructive' });
+      toast({ title: t('messages.errorDelete'), description: error.message, variant: 'destructive' });
     } else {
-      toast({ title: 'Instrução excluída' });
+      toast({ title: t('messages.deleted') });
       fetchData();
     }
   };
@@ -138,13 +140,13 @@ export default function WorkInstructions() {
       <div className="flex items-center justify-between">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold text-foreground">Instruções de Trabalho</h1>
+            <h1 className="text-2xl font-bold text-foreground">{t('page.title')}</h1>
             <HelpButton pageKey="work-instructions" />
           </div>
-          <p className="text-muted-foreground">Gerencie documentos e procedimentos da equipe</p>
+          <p className="text-muted-foreground">{t('page.subtitle')}</p>
         </div>
         <Button onClick={() => setCreateOpen(true)}>
-          <Plus className="mr-2 h-4 w-4" /> Nova Instrução
+          <Plus className="mr-2 h-4 w-4" /> {t('page.newInstruction')}
         </Button>
       </div>
 
@@ -152,7 +154,7 @@ export default function WorkInstructions() {
         <div className="relative w-[260px]">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Buscar por título ou equipe..."
+            placeholder={t('page.searchPlaceholder')}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-9"
@@ -161,10 +163,10 @@ export default function WorkInstructions() {
         <Select value={filterTeam} onValueChange={setFilterTeam}>
           <SelectTrigger className="w-[200px]">
             <Filter className="mr-2 h-4 w-4" />
-            <SelectValue placeholder="Equipe" />
+            <SelectValue placeholder={t('page.filterTeam')} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Todas as equipes</SelectItem>
+            <SelectItem value="all">{t('page.allTeams')}</SelectItem>
             {teams.map(t => (
               <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
             ))}
@@ -172,34 +174,34 @@ export default function WorkInstructions() {
         </Select>
         <Select value={filterStatus} onValueChange={setFilterStatus}>
           <SelectTrigger className="w-[160px]">
-            <SelectValue placeholder="Status" />
+            <SelectValue placeholder={t('page.filterStatus')} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Todos</SelectItem>
-            <SelectItem value="active">Ativos</SelectItem>
-            <SelectItem value="inactive">Inativos</SelectItem>
+            <SelectItem value="all">{t('page.all')}</SelectItem>
+            <SelectItem value="active">{t('page.active')}</SelectItem>
+            <SelectItem value="inactive">{t('page.inactive')}</SelectItem>
           </SelectContent>
         </Select>
       </div>
 
       {loading ? (
-        <p className="text-muted-foreground">Carregando...</p>
+        <p className="text-muted-foreground">{t('page.loading')}</p>
       ) : filtered.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-12 text-center">
           <FileText className="mb-4 h-12 w-12 text-muted-foreground/50" />
-          <p className="text-muted-foreground">Nenhuma instrução de trabalho encontrada</p>
+          <p className="text-muted-foreground">{t('page.empty')}</p>
         </div>
       ) : (
         <div className="rounded-lg border">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Título</TableHead>
-                <TableHead>Equipe</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Criado por</TableHead>
-                <TableHead>Arquivo</TableHead>
-                <TableHead className="text-right">Ações</TableHead>
+                <TableHead>{t('table.title')}</TableHead>
+                <TableHead>{t('table.team')}</TableHead>
+                <TableHead>{t('table.status')}</TableHead>
+                <TableHead>{t('table.createdBy')}</TableHead>
+                <TableHead>{t('table.file')}</TableHead>
+                <TableHead className="text-right">{t('table.actions')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -216,7 +218,7 @@ export default function WorkInstructions() {
                   <TableCell>{teamName(instr.team_id)}</TableCell>
                   <TableCell>
                     <Badge variant={instr.is_active ? 'default' : 'secondary'}>
-                      {instr.is_active ? 'Ativo' : 'Inativo'}
+                      {instr.is_active ? t('status.active') : t('status.inactive')}
                     </Badge>
                   </TableCell>
                   <TableCell className="text-sm">{profiles[instr.created_by] || '—'}</TableCell>
@@ -232,11 +234,11 @@ export default function WorkInstructions() {
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-1">
-                      <Button variant="ghost" size="sm" onClick={() => setEditInstruction(instr)}>Editar</Button>
-                      <Button variant="ghost" size="sm" onClick={() => setUpdateDocInstruction(instr)}>Atualizar PDF</Button>
-                      <Button variant="ghost" size="sm" onClick={() => setVersionInstruction(instr)}>Versões</Button>
-                      <Button variant="ghost" size="sm" onClick={() => setLogInstruction(instr)}>Log</Button>
-                      <Button variant="ghost" size="sm" className="text-destructive" onClick={() => handleDelete(instr)}>Excluir</Button>
+                      <Button variant="ghost" size="sm" onClick={() => setEditInstruction(instr)}>{t('actions.edit')}</Button>
+                      <Button variant="ghost" size="sm" onClick={() => setUpdateDocInstruction(instr)}>{t('actions.updatePdf')}</Button>
+                      <Button variant="ghost" size="sm" onClick={() => setVersionInstruction(instr)}>{t('actions.versions')}</Button>
+                      <Button variant="ghost" size="sm" onClick={() => setLogInstruction(instr)}>{t('actions.log')}</Button>
+                      <Button variant="ghost" size="sm" className="text-destructive" onClick={() => handleDelete(instr)}>{t('actions.delete')}</Button>
                     </div>
                   </TableCell>
                 </TableRow>

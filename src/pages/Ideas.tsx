@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -27,6 +28,7 @@ interface Idea {
 
 export default function Ideas() {
   const { user } = useAuth();
+  const { t } = useTranslation('ideas');
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState('all');
@@ -57,7 +59,7 @@ export default function Ideas() {
 
       return data.map((i) => ({
         ...i,
-        profiles: { display_name: profileMap.get(i.created_by) || 'Usuário' },
+        profiles: { display_name: profileMap.get(i.created_by) || t('table.userFallback') },
         teams: i.team_id ? { name: teamMap.get(i.team_id) || '' } : null,
       })) as Idea[];
     },
@@ -84,26 +86,26 @@ export default function Ideas() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Lightbulb className="h-6 w-6 text-primary" />
-          <h1 className="text-2xl font-bold">Registro de Ideias</h1>
+          <h1 className="text-2xl font-bold">{t('page.title')}</h1>
         </div>
         <Button onClick={() => setCreateOpen(true)} className="gap-1">
-          <Plus className="h-4 w-4" /> Nova Ideia
+          <Plus className="h-4 w-4" /> {t('page.newIdea')}
         </Button>
       </div>
 
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input placeholder="Buscar ideias..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
+          <Input placeholder={t('page.searchPlaceholder')} value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
         </div>
         <Select value={filter} onValueChange={setFilter}>
           <SelectTrigger className="w-[200px]">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Todas</SelectItem>
-            <SelectItem value="implemented">Implementadas</SelectItem>
-            <SelectItem value="pending">Não implementadas</SelectItem>
+            <SelectItem value="all">{t('page.filterAll')}</SelectItem>
+            <SelectItem value="implemented">{t('page.filterImplemented')}</SelectItem>
+            <SelectItem value="pending">{t('page.filterPending')}</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -111,16 +113,16 @@ export default function Ideas() {
       {filtered.length === 0 ? (
         <EmptyState
           icon={Lightbulb}
-          title={search || filter !== 'all' ? 'Nenhuma ideia encontrada' : 'Nenhuma ideia ainda'}
+          title={search || filter !== 'all' ? t('empty.noResultsTitle') : t('empty.noIdeasTitle')}
           description={
             search || filter !== 'all'
-              ? 'Tente ajustar a busca ou o filtro.'
-              : 'Capture insights e melhorias do dia a dia. Você pode transformá-las em tarefas depois.'
+              ? t('empty.noResultsDesc')
+              : t('empty.noIdeasDesc')
           }
           action={
             search || filter !== 'all'
               ? undefined
-              : { label: 'Registrar primeira ideia', onClick: () => setCreateOpen(true) }
+              : { label: t('empty.registerFirst'), onClick: () => setCreateOpen(true) }
           }
         />
       ) : (
@@ -128,12 +130,12 @@ export default function Ideas() {
           <Table>
              <TableHeader>
               <TableRow>
-                <TableHead>Título</TableHead>
-                <TableHead className="hidden md:table-cell">Descrição</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="hidden sm:table-cell">Equipe</TableHead>
-                <TableHead className="hidden sm:table-cell">Autor</TableHead>
-                <TableHead className="hidden sm:table-cell">Data</TableHead>
+                <TableHead>{t('table.title')}</TableHead>
+                <TableHead className="hidden md:table-cell">{t('table.description')}</TableHead>
+                <TableHead>{t('table.status')}</TableHead>
+                <TableHead className="hidden sm:table-cell">{t('table.team')}</TableHead>
+                <TableHead className="hidden sm:table-cell">{t('table.author')}</TableHead>
+                <TableHead className="hidden sm:table-cell">{t('table.date')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -149,14 +151,14 @@ export default function Ideas() {
                   </TableCell>
                   <TableCell>
                     <Badge variant={idea.is_implemented ? 'default' : 'secondary'}>
-                      {idea.is_implemented ? 'Implementada' : 'Pendente'}
+                      {idea.is_implemented ? t('status.implemented') : t('status.pending')}
                     </Badge>
                   </TableCell>
                   <TableCell className="hidden sm:table-cell text-muted-foreground">
                     {idea.teams?.name || '—'}
                   </TableCell>
                   <TableCell className="hidden sm:table-cell text-muted-foreground">
-                    {idea.profiles?.display_name || 'Usuário'}
+                    {idea.profiles?.display_name || t('table.userFallback')}
                   </TableCell>
                   <TableCell className="hidden sm:table-cell text-muted-foreground">
                     {format(new Date(idea.created_at), 'dd/MM/yyyy')}

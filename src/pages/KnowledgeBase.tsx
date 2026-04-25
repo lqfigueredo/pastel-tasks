@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Input } from '@/components/ui/input';
@@ -13,7 +14,7 @@ import { EmptyState } from '@/components/ui/empty-state';
 import { ListSkeleton } from '@/components/ui/loaders';
 import { BookMarked } from 'lucide-react';
 import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { getCurrentLocale } from '@/lib/date';
 
 interface KnowledgeSource {
   id: string;
@@ -30,6 +31,7 @@ interface KnowledgeSource {
 
 export default function KnowledgeBase() {
   const { user } = useAuth();
+  const { t } = useTranslation('knowledge');
   const [search, setSearch] = useState('');
   const [createOpen, setCreateOpen] = useState(false);
   const [editSource, setEditSource] = useState<KnowledgeSource | null>(null);
@@ -73,16 +75,16 @@ export default function KnowledgeBase() {
   return (
     <div className="space-y-6 p-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <h1 className="text-2xl font-bold text-foreground">Fonte de Conhecimento</h1>
+        <h1 className="text-2xl font-bold text-foreground">{t('page.title')}</h1>
         <Button onClick={() => setCreateOpen(true)}>
-          <Plus className="mr-2 h-4 w-4" />Nova Fonte
+          <Plus className="mr-2 h-4 w-4" />{t('page.newSource')}
         </Button>
       </div>
 
       <div className="relative max-w-sm">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input
-          placeholder="Filtrar por título..."
+          placeholder={t('page.searchPlaceholder')}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="pl-9"
@@ -94,16 +96,16 @@ export default function KnowledgeBase() {
       ) : filtered.length === 0 ? (
         <EmptyState
           icon={BookMarked}
-          title={search ? 'Nenhuma fonte encontrada' : 'Nenhuma fonte cadastrada'}
+          title={search ? t('empty.noResultsTitle') : t('empty.noSourcesTitle')}
           description={
             search
-              ? 'Tente buscar por outro termo.'
-              : 'Centralize links e arquivos de referência da sua equipe em um só lugar.'
+              ? t('empty.noResultsDesc')
+              : t('empty.noSourcesDesc')
           }
           action={
             search
               ? undefined
-              : { label: 'Adicionar primeira fonte', onClick: () => setCreateOpen(true) }
+              : { label: t('empty.addFirst'), onClick: () => setCreateOpen(true) }
           }
         />
       ) : (
@@ -119,9 +121,9 @@ export default function KnowledgeBase() {
                   <CardTitle className="line-clamp-2 text-base">{source.title}</CardTitle>
                   <Badge variant={source.scope === 'team' ? 'default' : 'secondary'} className="shrink-0">
                     {source.scope === 'team' ? (
-                      <><Users className="mr-1 h-3 w-3" />Equipe</>
+                      <><Users className="mr-1 h-3 w-3" />{t('scope.team')}</>
                     ) : (
-                      <><User className="mr-1 h-3 w-3" />Individual</>
+                      <><User className="mr-1 h-3 w-3" />{t('scope.individual')}</>
                     )}
                   </Badge>
                 </div>
@@ -133,7 +135,7 @@ export default function KnowledgeBase() {
                 <div className="flex flex-wrap gap-2">
                   {source.reference_url && (
                     <Badge variant="outline" className="gap-1">
-                      <ExternalLink className="h-3 w-3" />Link
+                      <ExternalLink className="h-3 w-3" />{t('badges.link')}
                     </Badge>
                   )}
                   {source.file_name && (
@@ -143,7 +145,7 @@ export default function KnowledgeBase() {
                   )}
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  {format(new Date(source.created_at), "dd/MM/yyyy", { locale: ptBR })}
+                  {format(new Date(source.created_at), "dd/MM/yyyy", { locale: getCurrentLocale() })}
                 </p>
               </CardContent>
             </Card>
