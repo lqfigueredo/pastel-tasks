@@ -1,0 +1,47 @@
+{
+  "groups": {
+    "work": "Trabalho",
+    "documentation": "Documentação",
+    "administration": "Administração",
+    "operation": "Operação"
+  },
+  "items": {
+    "dashboard": "Dashboard",
+    "myTasks": "Minhas Tarefas",
+    "team": "Equipe",
+    "agenda": "Agenda",
+    "timer": "Temporizador",
+    "meetings": "Atas de Reunião",
+    "instructions": "Instruções de Trabalho",
+    "ideas": "Registro de Ideias",
+    "knowledge": "Fonte de Conhecimento",
+    "settings": "Configurações",
+    "admin": "Administração",
+    "billing": "Cobrança",
+    "financial": "Financeiro"
+  },
+  "pageTitles": {
+    "dashboard": "Dashboard",
+    "tasks": "Minhas Tarefas",
+    "teamDetail": "Detalhes da Equipe",
+    "team": "Equipe",
+    "agenda": "Agenda",
+    "timer": "Temporizador",
+    "meetingDetail": "Detalhes da Ata",
+    "meetings": "Atas de Reunião",
+    "instructions": "Instruções de Trabalho",
+    "ideas": "Registro de Ideias",
+    "knowledge": "Fonte de Conhecimento",
+    "settings": "Configurações",
+    "admin": "Administração",
+    "billing": "Assinatura e Cobrança",
+    "financial": "Financeiro"
+  },
+  "logout": {
+    "trigger": "Sair",
+    "confirmTitle": "Sair da conta?",
+    "confirmDescription": "Você precisará entrar novamente para acessar sua conta.",
+    "cancel": "Cancelar",
+    "confirm": "Sair"
+  }
+}

@@ -1,0 +1,85 @@
+{
+  "actions": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "create": "Create",
+    "add": "Add",
+    "remove": "Remove",
+    "confirm": "Confirm",
+    "close": "Close",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "search": "Search",
+    "filter": "Filter",
+    "export": "Export",
+    "import": "Import",
+    "loading": "Loading…",
+    "tryAgain": "Try again",
+    "viewAll": "View all",
+    "viewMore": "View more",
+    "select": "Select",
+    "apply": "Apply",
+    "clear": "Clear",
+    "copy": "Copy",
+    "copied": "Copied!",
+    "duplicate": "Duplicate",
+    "share": "Share",
+    "submit": "Submit",
+    "send": "Send",
+    "yes": "Yes",
+    "no": "No",
+    "open": "Open",
+    "refresh": "Refresh"
+  },
+  "states": {
+    "empty": "No results found",
+    "loading": "Loading…",
+    "error": "An error occurred",
+    "saving": "Saving…",
+    "saved": "Saved",
+    "noData": "No data available"
+  },
+  "labels": {
+    "name": "Name",
+    "email": "Email",
+    "password": "Password",
+    "description": "Description",
+    "title": "Title",
+    "date": "Date",
+    "status": "Status",
+    "type": "Type",
+    "actions": "Actions",
+    "createdAt": "Created at",
+    "updatedAt": "Updated at",
+    "optional": "(optional)",
+    "required": "required"
+  },
+  "search": {
+    "placeholder": "Search",
+    "openShortcut": "⌘K",
+    "openLabel": "Open global search"
+  },
+  "language": {
+    "label": "Language",
+    "ptBR": "Português (Brasil)",
+    "en": "English",
+    "current": "Current language",
+    "ariaLabel": "Select language",
+    "saved": "Idioma alterado para Português",
+    "savedEn": "Language changed to English"
+  },
+  "theme": {
+    "lightMode": "Light mode",
+    "darkMode": "Dark mode",
+    "toggle": "Toggle theme"
+  },
+  "errors": {
+    "generic": "Something went wrong. Please try again.",
+    "network": "Check your connection and try again.",
+    "couldNot": "Could not {{action}}",
+    "details": "Details: {{message}}"
+  }
+}
