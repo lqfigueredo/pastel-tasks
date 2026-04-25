@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Input } from '@/components/ui/input';
@@ -16,6 +17,7 @@ interface Props {
 const onlyDigits = (s: string) => s.replace(/\D/g, '');
 
 export const Step1Profile = ({ onNext, onSkip }: Props) => {
+  const { t } = useTranslation('onboarding');
   const { user } = useAuth();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
@@ -65,7 +67,7 @@ export const Step1Profile = ({ onNext, onSkip }: Props) => {
       const res = await fetch(`https://viacep.com.br/ws/${digits}/json/`);
       const data = await res.json();
       if (data.erro) {
-        toast({ title: 'CEP não encontrado', variant: 'destructive' });
+        toast({ title: t('step1.errors.cepNotFound'), variant: 'destructive' });
         return;
       }
       setAddressLine1(data.logradouro || '');
@@ -73,7 +75,7 @@ export const Step1Profile = ({ onNext, onSkip }: Props) => {
       setCity(data.localidade || '');
       setState(data.uf || '');
     } catch {
-      toast({ title: 'Falha ao buscar CEP', variant: 'destructive' });
+      toast({ title: t('step1.errors.cepFailed'), variant: 'destructive' });
     } finally {
       setCepLoading(false);
     }
@@ -86,23 +88,26 @@ export const Step1Profile = ({ onNext, onSkip }: Props) => {
     postalCode.trim() ||
     addressLine1.trim();
 
+  const legalNameLabel = entityType === 'company' ? t('step1.legalNameCompany') : t('step1.legalNameIndividual');
+  const taxIdLabel = entityType === 'company' ? t('step1.taxIdCompany') : t('step1.taxIdIndividual');
+
   const handleSave = async () => {
     if (!user) return;
     const required: Array<[string, string]> = [
-      ['Seu nome', displayName],
-      [entityType === 'company' ? 'Razão social' : 'Nome completo', legalName],
-      [entityType === 'company' ? 'CNPJ' : 'CPF', taxId],
-      ['Email de cobrança', billingEmail],
-      ['CEP', postalCode],
-      ['Logradouro', addressLine1],
-      ['Número', addressNumber],
-      ['Bairro', neighborhood],
-      ['Cidade', city],
-      ['UF', state],
+      [t('step1.displayName'), displayName],
+      [legalNameLabel, legalName],
+      [taxIdLabel, taxId],
+      [t('step1.billingEmail'), billingEmail],
+      [t('step1.postalCode'), postalCode],
+      [t('step1.addressLine1'), addressLine1],
+      [t('step1.addressNumber'), addressNumber],
+      [t('step1.neighborhood'), neighborhood],
+      [t('step1.city'), city],
+      [t('step1.state'), state],
     ];
     const missing = required.filter(([, v]) => !v.trim()).map(([k]) => k);
     if (missing.length > 0) {
-      toast({ title: 'Campos obrigatórios', description: missing.join(', '), variant: 'destructive' });
+      toast({ title: t('step1.errors.requiredFields'), description: missing.join(', '), variant: 'destructive' });
       return;
     }
     setLoading(true);
@@ -141,8 +146,8 @@ export const Step1Profile = ({ onNext, onSkip }: Props) => {
 
       onNext();
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Erro inesperado';
-      toast({ title: 'Erro ao salvar', description: message, variant: 'destructive' });
+      const message = err instanceof Error ? err.message : t('step1.errors.unexpected');
+      toast({ title: t('step1.errors.saveFailed'), description: message, variant: 'destructive' });
     } finally {
       setLoading(false);
     }
@@ -151,50 +156,48 @@ export const Step1Profile = ({ onNext, onSkip }: Props) => {
   return (
     <div className="space-y-5 max-h-[70vh] overflow-y-auto pr-1">
       <div>
-        <h3 className="text-lg font-semibold mb-1">Bem-vindo!</h3>
-        <p className="text-sm text-muted-foreground">
-          Vamos configurar seu perfil em poucos passos. Os dados fiscais permitem emitir suas faturas.
-        </p>
+        <h3 className="text-lg font-semibold mb-1">{t('step1.title')}</h3>
+        <p className="text-sm text-muted-foreground">{t('step1.subtitle')}</p>
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="displayName">Seu nome</Label>
-        <Input id="displayName" value={displayName} onChange={(e) => setDisplayName(e.target.value)} placeholder="Como devemos te chamar" />
+        <Label htmlFor="displayName">{t('step1.displayName')}</Label>
+        <Input id="displayName" value={displayName} onChange={(e) => setDisplayName(e.target.value)} placeholder={t('step1.displayNamePlaceholder')} />
       </div>
 
       <div className="space-y-2">
-        <Label>Tipo de cadastro</Label>
+        <Label>{t('step1.entityType')}</Label>
         <RadioGroup value={entityType} onValueChange={(v) => setEntityType(v as 'individual' | 'company')} className="flex gap-4">
           <label className="flex items-center gap-2 cursor-pointer">
-            <RadioGroupItem value="individual" /> Pessoa física
+            <RadioGroupItem value="individual" /> {t('step1.individual')}
           </label>
           <label className="flex items-center gap-2 cursor-pointer">
-            <RadioGroupItem value="company" /> Pessoa jurídica
+            <RadioGroupItem value="company" /> {t('step1.company')}
           </label>
         </RadioGroup>
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="legalName">{entityType === 'company' ? 'Razão social' : 'Nome completo'}</Label>
+        <Label htmlFor="legalName">{legalNameLabel}</Label>
         <Input id="legalName" value={legalName} onChange={(e) => setLegalName(e.target.value)} />
       </div>
 
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-2">
-          <Label htmlFor="taxId">{entityType === 'company' ? 'CNPJ' : 'CPF'}</Label>
+          <Label htmlFor="taxId">{taxIdLabel}</Label>
           <Input id="taxId" value={taxId} onChange={(e) => setTaxId(e.target.value)} />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="billingEmail">Email de cobrança</Label>
+          <Label htmlFor="billingEmail">{t('step1.billingEmail')}</Label>
           <Input id="billingEmail" type="email" value={billingEmail} onChange={(e) => setBillingEmail(e.target.value)} />
         </div>
       </div>
 
       <div className="border-t pt-4 space-y-3">
-        <h4 className="font-semibold text-sm">Endereço de cobrança</h4>
+        <h4 className="font-semibold text-sm">{t('step1.billingAddress')}</h4>
         <div className="grid grid-cols-3 gap-3">
           <div className="space-y-2">
-            <Label htmlFor="postalCode">CEP</Label>
+            <Label htmlFor="postalCode">{t('step1.postalCode')}</Label>
             <div className="relative">
               <Input
                 id="postalCode"
@@ -208,48 +211,48 @@ export const Step1Profile = ({ onNext, onSkip }: Props) => {
             </div>
           </div>
           <div className="col-span-2 space-y-2">
-            <Label htmlFor="addressLine1">Logradouro</Label>
+            <Label htmlFor="addressLine1">{t('step1.addressLine1')}</Label>
             <Input id="addressLine1" value={addressLine1} onChange={(e) => setAddressLine1(e.target.value)} />
           </div>
         </div>
 
         <div className="grid grid-cols-3 gap-3">
           <div className="space-y-2">
-            <Label htmlFor="addressNumber">Número</Label>
+            <Label htmlFor="addressNumber">{t('step1.addressNumber')}</Label>
             <Input id="addressNumber" value={addressNumber} onChange={(e) => setAddressNumber(e.target.value)} />
           </div>
           <div className="col-span-2 space-y-2">
-            <Label htmlFor="addressComplement">Complemento (opcional)</Label>
+            <Label htmlFor="addressComplement">{t('step1.addressComplement')}</Label>
             <Input id="addressComplement" value={addressComplement} onChange={(e) => setAddressComplement(e.target.value)} />
           </div>
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="neighborhood">Bairro</Label>
+          <Label htmlFor="neighborhood">{t('step1.neighborhood')}</Label>
           <Input id="neighborhood" value={neighborhood} onChange={(e) => setNeighborhood(e.target.value)} />
         </div>
 
         <div className="grid grid-cols-3 gap-3">
           <div className="col-span-2 space-y-2">
-            <Label htmlFor="city">Cidade</Label>
+            <Label htmlFor="city">{t('step1.city')}</Label>
             <Input id="city" value={city} onChange={(e) => setCity(e.target.value)} />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="state">UF</Label>
+            <Label htmlFor="state">{t('step1.state')}</Label>
             <Input id="state" value={state} onChange={(e) => setState(e.target.value.toUpperCase())} maxLength={2} />
           </div>
         </div>
       </div>
 
       <div className="flex justify-between pt-4 gap-2 sticky bottom-0 bg-background pb-1">
-        <Button variant="ghost" onClick={onSkip}>Pular tudo</Button>
+        <Button variant="ghost" onClick={onSkip}>{t('common.skipAll')}</Button>
         <div className="flex gap-2">
           {!hasAnyInput && (
-            <Button variant="outline" onClick={onNext}>Pular</Button>
+            <Button variant="outline" onClick={onNext}>{t('common.skip')}</Button>
           )}
           <Button onClick={handleSave} disabled={loading}>
             {loading && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-            Salvar e continuar
+            {t('common.saveAndContinue')}
           </Button>
         </div>
       </div>
