@@ -83,6 +83,34 @@
     "errorUpdate": "Erro ao atualizar ata",
     "success": "Ata atualizada com sucesso"
   },
+  "attachments": {
+    "upload": "Enviar arquivo",
+    "uploading": "Enviando...",
+    "empty": "Nenhum anexo",
+    "preview": "Pré-visualizar",
+    "delete": "Excluir",
+    "errorUpload": "Erro ao enviar {{name}}",
+    "uploaded": "Anexo(s) enviado(s)!"
+  },
+  "recorder": {
+    "trigger": "Gravar",
+    "stop": "Parar",
+    "endingSoon": "Encerrando em breve",
+    "screenAudio": "Tela + Áudio",
+    "audioOnly": "Apenas Áudio",
+    "screenOnly": "Apenas Tela",
+    "limit": "Máximo: 45 min ou 200 MB",
+    "limitDuration": "Gravação parada automaticamente: limite de 45 minutos atingido.",
+    "limitSize": "Gravação parada automaticamente: limite de 200 MB atingido.",
+    "screenEnded": "Compartilhamento de tela encerrado. A gravação foi finalizada.",
+    "errorMic": "Não foi possível acessar o microfone.",
+    "warnMic": "Microfone não disponível. Gravando apenas tela.",
+    "errorPermission": "Permissão negada para gravação.",
+    "errorStart": "Erro ao iniciar gravação.",
+    "saving": "Salvando gravação...",
+    "errorSave": "Erro ao salvar gravação.",
+    "saved": "Gravação salva como anexo!"
+  },
   "pendency": {
     "title": "Nova Pendência",
     "description": "Adicione uma pendência à ata",

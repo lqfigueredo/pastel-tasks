@@ -45,6 +45,28 @@
     "errorCreate": "Erro ao criar ideia",
     "success": "Ideia registrada!"
   },
+  "attachments": {
+    "title": "Anexos",
+    "upload": "Enviar arquivo",
+    "uploading": "Enviando...",
+    "empty": "Nenhum anexo",
+    "preview": "Pré-visualizar",
+    "delete": "Excluir",
+    "errorUpload": "Erro ao enviar {{name}}",
+    "uploaded": "Anexo(s) enviado(s)!"
+  },
+  "linkedTasks": {
+    "label": "Tarefas Vinculadas",
+    "empty": "Nenhuma tarefa vinculada",
+    "linkButton": "Vincular tarefa",
+    "searchPlaceholder": "Buscar tarefa pelo título...",
+    "noResults": "Nenhuma tarefa encontrada",
+    "cancel": "Cancelar",
+    "notFound": "Tarefa não encontrada",
+    "errorLink": "Erro ao vincular tarefa",
+    "linked": "Tarefa vinculada!",
+    "unlinked": "Vínculo removido"
+  },
   "edit": {
     "titleEdit": "Editar Ideia",
     "titleView": "Detalhes da Ideia",

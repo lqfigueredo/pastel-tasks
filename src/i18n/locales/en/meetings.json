@@ -83,6 +83,34 @@
     "errorUpdate": "Failed to update minute",
     "success": "Minute updated successfully"
   },
+  "attachments": {
+    "upload": "Upload file",
+    "uploading": "Uploading...",
+    "empty": "No attachments",
+    "preview": "Preview",
+    "delete": "Delete",
+    "errorUpload": "Failed to upload {{name}}",
+    "uploaded": "Attachment(s) uploaded!"
+  },
+  "recorder": {
+    "trigger": "Record",
+    "stop": "Stop",
+    "endingSoon": "Ending soon",
+    "screenAudio": "Screen + Audio",
+    "audioOnly": "Audio Only",
+    "screenOnly": "Screen Only",
+    "limit": "Max: 45 min or 200 MB",
+    "limitDuration": "Recording stopped automatically: 45-minute limit reached.",
+    "limitSize": "Recording stopped automatically: 200 MB limit reached.",
+    "screenEnded": "Screen sharing ended. Recording finished.",
+    "errorMic": "Could not access the microphone.",
+    "warnMic": "Microphone unavailable. Recording screen only.",
+    "errorPermission": "Recording permission denied.",
+    "errorStart": "Failed to start recording.",
+    "saving": "Saving recording...",
+    "errorSave": "Failed to save recording.",
+    "saved": "Recording saved as attachment!"
+  },
   "pendency": {
     "title": "New Pending Item",
     "description": "Add a pending item to the minute",
