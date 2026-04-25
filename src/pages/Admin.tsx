@@ -15,7 +15,7 @@ import { ShieldX, UserPlus, Loader2, ShieldCheck, ShieldOff, UserX, UserCheck, P
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { HelpButton } from '@/components/HelpButton';
 import { PageLoader, InlineLoader } from '@/components/ui/loaders';
-import { getCurrentLocale } from '@/lib/date';
+
 
 const SupportTicketList = lazy(() => import('@/components/support/SupportTicketList'));
 const EmailDashboard = lazy(() => import('@/components/admin/EmailDashboard'));
@@ -57,7 +57,7 @@ interface BannedUser {
 }
 
 export default function Admin() {
-  const { t } = useTranslation('admin');
+  const { t, i18n } = useTranslation('admin');
   const TabFallback = () => <InlineLoader label={t('loading')} />;
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -381,7 +381,7 @@ export default function Admin() {
                       )}
                     </TableCell>
                     <TableCell className="text-muted-foreground">
-                      {new Date(p.created_at).toLocaleDateString(getCurrentLocale() === enUS ? 'en-US' : 'pt-BR')}
+                      {new Date(p.created_at).toLocaleDateString(i18n.language || 'pt-BR')}
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-1">
