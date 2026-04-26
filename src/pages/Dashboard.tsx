@@ -71,7 +71,7 @@ export default function Dashboard() {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [filter, setFilter] = useState<TaskFilter>('all');
-  const WEEKDAYS = t('weekdays', { returnObjects: true }) as string[];
+  const WEEKDAYS = safeTArray<string>(t('weekdays', { returnObjects: true }));
 
   const { data: tasksData } = useTasksQuery();
   const { data: statuses = [] } = useStatusesQuery();

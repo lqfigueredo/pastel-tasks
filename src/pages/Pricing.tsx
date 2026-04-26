@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import LeadFormTrigger from '@/components/landing/LeadFormTrigger';
 import logo from '@/assets/logo.webp';
+import { safeTArray } from '@/i18n/safeT';
 
 interface Plan {
   id: string;
@@ -62,7 +63,7 @@ const Pricing = () => {
     return [];
   }, [primary]);
 
-  const faqItems = t('faq.items', { returnObjects: true }) as Array<{ q: string; a: string }>;
+  const faqItems = safeTArray<{ q: string; a: string }>(t('faq.items', { returnObjects: true }));
 
   return (
     <div className="min-h-screen bg-background text-foreground scroll-smooth">

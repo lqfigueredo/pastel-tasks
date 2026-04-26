@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { CheckCircle2, Clock, User, Calendar, Timer, Lightbulb } from 'lucide-react';
+import { safeTArray } from '@/i18n/safeT';
 
 const decorations = [
   { icon: CheckCircle2, top: '8%', left: '4%', rotate: '-rotate-6', delay: '0s', duration: '22s' },
@@ -12,7 +13,7 @@ const decorations = [
 
 const FloatingTasksBackground = () => {
   const { t } = useTranslation('landing');
-  const labels = t('floating.items', { returnObjects: true }) as Array<{ title: string; meta: string }>;
+  const labels = safeTArray<{ title: string; meta: string }>(t('floating.items', { returnObjects: true }));
   const cards = decorations.map((d, i) => ({
     ...d,
     title: labels[i]?.title ?? '',
