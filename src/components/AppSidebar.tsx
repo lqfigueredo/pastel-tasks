@@ -143,7 +143,7 @@ export function AppSidebar() {
           </SidebarGroup>
         )}
 
-        {(isAdmin || isSolutionAdmin) && (
+        {!isAdmin && isSolutionAdmin && (
           <SidebarGroup>
             {!collapsed && <SidebarGroupLabel>{t('groups.administration')}</SidebarGroupLabel>}
             <SidebarGroupContent>
