@@ -129,7 +129,7 @@ export function AppSidebar() {
           <SidebarGroup>
             {!collapsed && <SidebarGroupLabel>{t('groups.administration')}</SidebarGroupLabel>}
             <SidebarGroupContent>
-              <SidebarMenu>{adminItems.map(renderItem)}</SidebarMenu>
+              <SidebarMenu>{[settingsItem, ...adminItems].map(renderItem)}</SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
         )}
