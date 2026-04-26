@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,7 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Loader2, Plus, Pencil, Power, PowerOff, Tag } from 'lucide-react';
 import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { getCurrentLocale } from '@/lib/date';
 import { toast } from 'sonner';
 
 interface Voucher {
@@ -50,18 +51,8 @@ const emptyForm = {
   is_active: true,
 };
 
-const formatDiscount = (v: Voucher) =>
-  v.discount_type === 'percent'
-    ? `${v.discount_value}%`
-    : (v.discount_value / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-
-const durationLabel = (v: Voucher) => {
-  if (v.duration === 'once') return 'Uma fatura';
-  if (v.duration === 'forever') return 'Vitalício';
-  return `${v.duration_in_months} meses`;
-};
-
 export default function VouchersTab() {
+  const { t, i18n } = useTranslation('financial');
   const [vouchers, setVouchers] = useState<Voucher[]>([]);
   const [plans, setPlans] = useState<Plan[]>([]);
   const [loading, setLoading] = useState(true);
@@ -69,6 +60,17 @@ export default function VouchersTab() {
   const [editing, setEditing] = useState<Voucher | null>(null);
   const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
+
+  const formatDiscount = (v: Voucher) =>
+    v.discount_type === 'percent'
+      ? `${v.discount_value}%`
+      : (v.discount_value / 100).toLocaleString(i18n.language || 'pt-BR', { style: 'currency', currency: 'BRL' });
+
+  const durationLabel = (v: Voucher) => {
+    if (v.duration === 'once') return t('vouchers.duration.once');
+    if (v.duration === 'forever') return t('vouchers.duration.forever');
+    return t('vouchers.duration.months', { n: v.duration_in_months });
+  };
 
   const load = async () => {
     setLoading(true);
@@ -87,6 +89,7 @@ export default function VouchersTab() {
 
   useEffect(() => {
     load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const openNew = () => {
@@ -115,15 +118,15 @@ export default function VouchersTab() {
 
   const handleSave = async () => {
     if (!form.code.trim()) {
-      toast.error('Código é obrigatório');
+      toast.error(t('vouchers.errors.codeRequired'));
       return;
     }
     if (form.discount_value <= 0) {
-      toast.error('Valor do desconto deve ser positivo');
+      toast.error(t('vouchers.errors.valuePositive'));
       return;
     }
     if (form.discount_type === 'percent' && form.discount_value > 100) {
-      toast.error('Percentual não pode passar de 100');
+      toast.error(t('vouchers.errors.percentMax'));
       return;
     }
     setSaving(true);
@@ -148,7 +151,7 @@ export default function VouchersTab() {
       toast.error(res.error.message);
       return;
     }
-    toast.success(editing ? 'Voucher atualizado' : 'Voucher criado');
+    toast.success(editing ? t('vouchers.messages.updated') : t('vouchers.messages.created'));
     setOpen(false);
     load();
   };
@@ -170,9 +173,9 @@ export default function VouchersTab() {
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <p className="text-sm text-muted-foreground">Cupons de desconto aplicáveis a assinaturas.</p>
+        <p className="text-sm text-muted-foreground">{t('vouchers.intro')}</p>
         <Button onClick={openNew}>
-          <Plus className="h-4 w-4 mr-1" /> Novo voucher
+          <Plus className="h-4 w-4 mr-1" /> {t('vouchers.new')}
         </Button>
       </div>
 
@@ -180,20 +183,20 @@ export default function VouchersTab() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Código</TableHead>
-              <TableHead>Desconto</TableHead>
-              <TableHead>Duração</TableHead>
-              <TableHead>Resgates</TableHead>
-              <TableHead>Validade</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead className="text-right">Ações</TableHead>
+              <TableHead>{t('vouchers.columns.code')}</TableHead>
+              <TableHead>{t('vouchers.columns.discount')}</TableHead>
+              <TableHead>{t('vouchers.columns.duration')}</TableHead>
+              <TableHead>{t('vouchers.columns.redemptions')}</TableHead>
+              <TableHead>{t('vouchers.columns.validity')}</TableHead>
+              <TableHead>{t('vouchers.columns.status')}</TableHead>
+              <TableHead className="text-right">{t('vouchers.columns.actions')}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {vouchers.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
-                  Nenhum voucher criado.
+                  {t('vouchers.empty')}
                 </TableCell>
               </TableRow>
             ) : (
@@ -214,11 +217,11 @@ export default function VouchersTab() {
                   </TableCell>
                   <TableCell className="text-xs">
                     {v.valid_until
-                      ? `até ${format(new Date(v.valid_until), 'dd/MM/yy', { locale: ptBR })}`
-                      : 'sem limite'}
+                      ? t('vouchers.validityUntil', { date: format(new Date(v.valid_until), 'dd/MM/yy', { locale: getCurrentLocale() }) })
+                      : t('vouchers.noLimit')}
                   </TableCell>
                   <TableCell>
-                    {v.is_active ? <Badge>Ativo</Badge> : <Badge variant="outline">Inativo</Badge>}
+                    {v.is_active ? <Badge>{t('vouchers.active')}</Badge> : <Badge variant="outline">{t('vouchers.inactive')}</Badge>}
                   </TableCell>
                   <TableCell className="text-right">
                     <Button size="sm" variant="ghost" onClick={() => openEdit(v)}>
@@ -238,21 +241,21 @@ export default function VouchersTab() {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{editing ? 'Editar voucher' : 'Novo voucher'}</DialogTitle>
+            <DialogTitle>{editing ? t('vouchers.edit') : t('vouchers.new')}</DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
             <div>
-              <Label>Código</Label>
+              <Label>{t('vouchers.form.code')}</Label>
               <Input
                 value={form.code}
                 onChange={(e) => setForm({ ...form, code: e.target.value.toUpperCase() })}
-                placeholder="LANCAMENTO20"
+                placeholder={t('vouchers.form.codePlaceholder')}
                 disabled={!!editing}
                 className="font-mono"
               />
             </div>
             <div>
-              <Label>Descrição (interna)</Label>
+              <Label>{t('vouchers.form.description')}</Label>
               <Textarea
                 rows={2}
                 value={form.description}
@@ -261,7 +264,7 @@ export default function VouchersTab() {
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <Label>Tipo</Label>
+                <Label>{t('vouchers.form.type')}</Label>
                 <Select
                   value={form.discount_type}
                   onValueChange={(v: 'percent' | 'fixed_amount') => setForm({ ...form, discount_type: v })}
@@ -270,13 +273,13 @@ export default function VouchersTab() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="percent">Percentual (%)</SelectItem>
-                    <SelectItem value="fixed_amount">Valor fixo (R$)</SelectItem>
+                    <SelectItem value="percent">{t('vouchers.form.typePercent')}</SelectItem>
+                    <SelectItem value="fixed_amount">{t('vouchers.form.typeFixed')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div>
-                <Label>{form.discount_type === 'percent' ? 'Percentual (1-100)' : 'Valor (R$)'}</Label>
+                <Label>{form.discount_type === 'percent' ? t('vouchers.form.valuePercent') : t('vouchers.form.valueFixed')}</Label>
                 <Input
                   type="number"
                   step={form.discount_type === 'percent' ? '1' : '0.01'}
@@ -295,7 +298,7 @@ export default function VouchersTab() {
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <Label>Duração</Label>
+                <Label>{t('vouchers.form.duration')}</Label>
                 <Select
                   value={form.duration}
                   onValueChange={(v: 'once' | 'repeating' | 'forever') => setForm({ ...form, duration: v })}
@@ -304,15 +307,15 @@ export default function VouchersTab() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="once">Apenas uma fatura</SelectItem>
-                    <SelectItem value="repeating">Por X meses</SelectItem>
-                    <SelectItem value="forever">Vitalício</SelectItem>
+                    <SelectItem value="once">{t('vouchers.form.durationOnce')}</SelectItem>
+                    <SelectItem value="repeating">{t('vouchers.form.durationRepeating')}</SelectItem>
+                    <SelectItem value="forever">{t('vouchers.form.durationForever')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               {form.duration === 'repeating' && (
                 <div>
-                  <Label>Meses</Label>
+                  <Label>{t('vouchers.form.months')}</Label>
                   <Input
                     type="number"
                     min="1"
@@ -324,17 +327,17 @@ export default function VouchersTab() {
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <Label>Limite de resgates</Label>
+                <Label>{t('vouchers.form.redemptionLimit')}</Label>
                 <Input
                   type="number"
                   min="1"
-                  placeholder="Ilimitado"
+                  placeholder={t('vouchers.form.redemptionLimitPlaceholder')}
                   value={form.max_redemptions}
                   onChange={(e) => setForm({ ...form, max_redemptions: e.target.value })}
                 />
               </div>
               <div>
-                <Label>Aplicável a</Label>
+                <Label>{t('vouchers.form.appliesTo')}</Label>
                 <Select
                   value={form.applies_to_plan_id}
                   onValueChange={(v) => setForm({ ...form, applies_to_plan_id: v })}
@@ -343,7 +346,7 @@ export default function VouchersTab() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="any">Qualquer plano</SelectItem>
+                    <SelectItem value="any">{t('vouchers.form.anyPlan')}</SelectItem>
                     {plans.map((p) => (
                       <SelectItem key={p.id} value={p.id}>
                         {p.name}
@@ -355,7 +358,7 @@ export default function VouchersTab() {
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <Label>Válido a partir de</Label>
+                <Label>{t('vouchers.form.validFrom')}</Label>
                 <Input
                   type="date"
                   value={form.valid_from}
@@ -363,7 +366,7 @@ export default function VouchersTab() {
                 />
               </div>
               <div>
-                <Label>Válido até</Label>
+                <Label>{t('vouchers.form.validUntil')}</Label>
                 <Input
                   type="date"
                   value={form.valid_until}
@@ -372,7 +375,7 @@ export default function VouchersTab() {
               </div>
             </div>
             <div className="flex items-center justify-between">
-              <Label htmlFor="active">Ativo</Label>
+              <Label htmlFor="active">{t('vouchers.form.active')}</Label>
               <Switch
                 id="active"
                 checked={form.is_active}
@@ -382,10 +385,10 @@ export default function VouchersTab() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpen(false)}>
-              Cancelar
+              {t('vouchers.form.cancel')}
             </Button>
             <Button onClick={handleSave} disabled={saving}>
-              {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Salvar'}
+              {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : t('vouchers.form.save')}
             </Button>
           </DialogFooter>
         </DialogContent>
