@@ -1,17 +1,19 @@
 import { useState, lazy, Suspense } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Mail } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const LeadFormDialog = lazy(() => import('./LeadFormDialog'));
 
 const LeadFormTrigger = () => {
+  const { t } = useTranslation('landing');
   const [open, setOpen] = useState(false);
 
   return (
     <>
       <Button variant="outline" size="lg" className="text-base px-8" onClick={() => setOpen(true)}>
         <Mail className="mr-2 h-5 w-5" />
-        Entrar em contato
+        {t('lead.trigger')}
       </Button>
       {open && (
         <Suspense fallback={null}>

@@ -1,0 +1,245 @@
+{
+  "header": {
+    "pricing": "Preços",
+    "haveAccount": "Já tenho conta"
+  },
+  "hero": {
+    "badge": "Produtividade sem complexidade",
+    "title1": "Gestão de tarefas",
+    "titleHighlight": " simples e eficiente",
+    "subtitle": "Organize projetos, gerencie equipes e acompanhe reuniões em um único lugar. O NEVVOH foi criado para times que querem produtividade sem complexidade.",
+    "cta": {
+      "trial": "Realizar trial grátis",
+      "contact": "Entrar em contato"
+    },
+    "trialNote": "14 dias grátis · sem cartão de crédito",
+    "mockup": {
+      "boardLabel": "Quadro · Equipe Produto",
+      "realtime": "Tempo real"
+    }
+  },
+  "features": {
+    "title": "Tudo que você precisa",
+    "subtitle": "8 módulos integrados para cobrir todo o ciclo de gestão da sua equipe.",
+    "clickHint": "Clique para ver exemplo →",
+    "items": {
+      "kanban": {
+        "title": "Kanban Intuitivo",
+        "description": "Organize tarefas em colunas personalizáveis com arrastar e soltar."
+      },
+      "team": {
+        "title": "Gestão de Equipes",
+        "description": "Crie equipes, atribua tarefas e acompanhe o progresso de cada membro."
+      },
+      "meetings": {
+        "title": "Atas de Reunião",
+        "description": "Registre reuniões, pendências e vincule tarefas automaticamente."
+      },
+      "dashboard": {
+        "title": "Dashboard de Prazos",
+        "description": "Visualize entregas por período e nunca perca um prazo importante."
+      },
+      "timer": {
+        "title": "Temporizador Pomodoro",
+        "description": "Controle seu tempo com timer, countdown, pausa e retomada."
+      },
+      "calendar": {
+        "title": "Agenda Pessoal",
+        "description": "Gerencie eventos e compromissos em um calendário integrado."
+      },
+      "workInstructions": {
+        "title": "Instruções de Trabalho",
+        "description": "Documentos versionados com histórico completo de alterações."
+      },
+      "ideas": {
+        "title": "Registro de Ideias",
+        "description": "Capture insights e vincule ideias diretamente a tarefas."
+      }
+    }
+  },
+  "steps": {
+    "title": "Como funciona",
+    "subtitle": "Comece em minutos. Sem curva de aprendizado.",
+    "stepLabel": "Passo {{number}}",
+    "items": {
+      "signup": {
+        "title": "Crie sua conta",
+        "description": "Cadastro rápido e sem complicações."
+      },
+      "organize": {
+        "title": "Organize suas tarefas",
+        "description": "Monte seu quadro Kanban e distribua para a equipe."
+      },
+      "track": {
+        "title": "Acompanhe os resultados",
+        "description": "Dashboards em tempo real para decisões mais inteligentes."
+      }
+    }
+  },
+  "highlights": {
+    "allInOne": { "label": "Tudo em um só lugar", "value": "8+ módulos" },
+    "simpleManagement": { "label": "Gestão simplificada", "value": "100% visual" },
+    "connectedTeams": { "label": "Equipes conectadas", "value": "Tempo real" }
+  },
+  "faq": {
+    "title": "Perguntas Frequentes",
+    "subtitle": "Tire suas dúvidas sobre o NEVVOH e gestão de tarefas.",
+    "items": [
+      {
+        "q": "O que é um gerenciador de tarefas online?",
+        "a": "Um gerenciador de tarefas online é um software que permite criar, organizar e acompanhar atividades de forma digital. O NEVVOH vai além: integra Kanban, gestão de equipes, atas de reunião, temporizador Pomodoro e agenda pessoal em uma única plataforma."
+      },
+      {
+        "q": "Como organizar as tarefas da minha equipe?",
+        "a": "Com o NEVVOH, você cria equipes, distribui tarefas no quadro Kanban com arrastar e soltar, define prazos e acompanha o progresso em tempo real pelo dashboard. Cada membro visualiza suas responsabilidades de forma clara."
+      },
+      {
+        "q": "O NEVVOH substitui ferramentas como Trello ou Asana?",
+        "a": "Sim. O NEVVOH oferece funcionalidades equivalentes — Kanban, gestão de equipes, prazos — e ainda inclui módulos exclusivos como atas de reunião com pendências, instruções de trabalho versionadas e registro de ideias."
+      },
+      {
+        "q": "Posso usar o NEVVOH para gerenciar reuniões?",
+        "a": "Sim! O módulo de Atas de Reunião permite registrar participantes, criar pendências com responsáveis e prazos, e vincular automaticamente tarefas geradas a partir da reunião."
+      },
+      {
+        "q": "O NEVVOH é gratuito?",
+        "a": "O NEVVOH oferece um período de teste gratuito para que você conheça todas as funcionalidades. Entre em contato para saber mais sobre os planos disponíveis."
+      },
+      {
+        "q": "Como funciona o temporizador Pomodoro do NEVVOH?",
+        "a": "O temporizador integrado permite controlar seu tempo de trabalho com sessões focadas, pausas e contagem regressiva. Você pode associar o timer a tarefas específicas para medir o tempo gasto em cada atividade."
+      }
+    ]
+  },
+  "footer": {
+    "terms": "Termos de Uso",
+    "privacy": "Política de Privacidade",
+    "access": "Acessar plataforma",
+    "copyright": "© {{year}} NEVVOH. Todos os direitos reservados."
+  },
+  "lead": {
+    "trigger": "Entrar em contato",
+    "dialog": {
+      "title": "Demonstre seu interesse",
+      "description": "Preencha seus dados e entraremos em contato para apresentar o NEVVOH."
+    },
+    "form": {
+      "name": "Nome",
+      "namePlaceholder": "Seu nome completo",
+      "email": "E-mail",
+      "emailPlaceholder": "seu@email.com",
+      "submit": "Enviar",
+      "submitting": "Enviando...",
+      "turnstileWait": "Aguarde a verificação anti-bot."
+    },
+    "toast": {
+      "success": "Obrigado pelo interesse! Entraremos em contato.",
+      "errorGeneric": "Erro ao enviar. Tente novamente."
+    }
+  },
+  "marquee": {
+    "items": [
+      "Sprint review concluída",
+      "Deploy v2.0 em andamento",
+      "Reunião 15:00 — Sprint Planning",
+      "Pomodoro 25min iniciado",
+      "Entrega Q2 em 3 dias",
+      "Nova ideia adicionada ao backlog"
+    ]
+  },
+  "floating": {
+    "items": [
+      { "title": "Sprint review", "meta": "Concluída" },
+      { "title": "Deploy v2.0", "meta": "Hoje 16:00" },
+      { "title": "Ana Silva", "meta": "Designer" },
+      { "title": "Reunião 15:00", "meta": "Sprint Planning" },
+      { "title": "Pomodoro", "meta": "25:00" },
+      { "title": "Nova ideia", "meta": "Backlog" }
+    ]
+  },
+  "previews": {
+    "kanban": {
+      "columns": {
+        "todo": "A Fazer",
+        "doing": "Em Progresso",
+        "done": "Concluído"
+      },
+      "cards": {
+        "todo": ["Redesign da homepage", "Documentar API", "Revisar contratos"],
+        "doing": ["Integração de pagamentos", "Testes unitários"],
+        "done": ["Setup do projeto", "Design system", "Deploy CI/CD", "Onboarding"]
+      }
+    },
+    "team": {
+      "title": "Equipe Produto",
+      "membersCount": "{{count}} membros",
+      "roles": {
+        "leader": "Líder",
+        "developer": "Desenvolvedor",
+        "designer": "Designer",
+        "qa": "QA",
+        "po": "Product Owner"
+      }
+    },
+    "meeting": {
+      "title": "Reunião de Sprint Planning",
+      "date": "15/04/2026",
+      "description": "Definição das tarefas do próximo sprint e priorização de backlog.",
+      "participants": "Ana Silva, Carlos Souza, Maria Oliveira",
+      "pendingLabel": "Pendências",
+      "items": [
+        { "text": "Definir escopo do módulo financeiro", "resp": "Carlos" },
+        { "text": "Enviar proposta ao cliente", "resp": "Ana" },
+        { "text": "Atualizar documentação técnica", "resp": "Maria" }
+      ]
+    },
+    "dashboard": {
+      "stats": {
+        "onTrack": "No prazo",
+        "warning": "Atenção",
+        "late": "Atrasadas"
+      },
+      "tasks": [
+        { "task": "Entrega do relatório Q2", "date": "18/04" },
+        { "task": "Lançamento v2.0", "date": "25/04" },
+        { "task": "Review de segurança", "date": "12/04" },
+        { "task": "Migração de dados", "date": "10/04" }
+      ]
+    },
+    "timer": {
+      "focus": "Foco",
+      "buttons": { "start": "Iniciar", "pause": "Pausar", "reset": "Resetar" }
+    },
+    "calendar": {
+      "month": "Abril 2026",
+      "days": ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"],
+      "events": {
+        "3": "Sprint Review",
+        "7": "Dentista",
+        "12": "Deploy v2",
+        "15": "Planning",
+        "22": "Férias"
+      }
+    },
+    "workInstructions": {
+      "title": "IT-001 — Procedimento de Deploy",
+      "version": "v3.2",
+      "author": "Carlos Souza",
+      "updatedAt": "Atualizado em 10/04/2026",
+      "attachments": "2 anexos",
+      "steps": [
+        { "title": "1. Preparação do ambiente", "body": "Verificar que todos os testes passaram no CI antes de iniciar o processo de deploy." },
+        { "title": "2. Execução do deploy", "body": "Executar o script de deploy no ambiente de staging antes de produção." },
+        { "title": "3. Validação pós-deploy", "body": "Monitorar logs e métricas por 30 minutos após a conclusão." }
+      ]
+    },
+    "ideas": {
+      "items": [
+        { "title": "Dashboard de analytics", "desc": "Painel visual com métricas de uso em tempo real.", "tags": ["Produto", "Alta"] },
+        { "title": "Modo escuro automático", "desc": "Alternar tema com base no horário do dispositivo.", "tags": ["UX", "Média"] },
+        { "title": "Integração com Slack", "desc": "Notificações de tarefas direto no canal da equipe.", "tags": ["Integração", "Alta"] },
+        { "title": "Gamificação de tarefas", "desc": "Pontos e badges para tarefas concluídas no prazo.", "tags": ["Engajamento", "Baixa"] }
+      ]
+    }
+  }
+}

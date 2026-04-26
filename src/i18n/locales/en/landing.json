@@ -1,0 +1,245 @@
+{
+  "header": {
+    "pricing": "Pricing",
+    "haveAccount": "I have an account"
+  },
+  "hero": {
+    "badge": "Productivity without complexity",
+    "title1": "Task management",
+    "titleHighlight": " simple and efficient",
+    "subtitle": "Organize projects, manage teams, and track meetings in one place. NEVVOH was built for teams that want productivity without complexity.",
+    "cta": {
+      "trial": "Start free trial",
+      "contact": "Get in touch"
+    },
+    "trialNote": "14 days free · no credit card required",
+    "mockup": {
+      "boardLabel": "Board · Product Team",
+      "realtime": "Real time"
+    }
+  },
+  "features": {
+    "title": "Everything you need",
+    "subtitle": "8 integrated modules to cover the full management cycle of your team.",
+    "clickHint": "Click to see example →",
+    "items": {
+      "kanban": {
+        "title": "Intuitive Kanban",
+        "description": "Organize tasks in customizable columns with drag and drop."
+      },
+      "team": {
+        "title": "Team Management",
+        "description": "Create teams, assign tasks, and track each member's progress."
+      },
+      "meetings": {
+        "title": "Meeting Minutes",
+        "description": "Record meetings, action items, and link tasks automatically."
+      },
+      "dashboard": {
+        "title": "Deadline Dashboard",
+        "description": "Visualize deliveries by period and never miss an important deadline."
+      },
+      "timer": {
+        "title": "Pomodoro Timer",
+        "description": "Control your time with timer, countdown, pause and resume."
+      },
+      "calendar": {
+        "title": "Personal Calendar",
+        "description": "Manage events and appointments in an integrated calendar."
+      },
+      "workInstructions": {
+        "title": "Work Instructions",
+        "description": "Versioned documents with full change history."
+      },
+      "ideas": {
+        "title": "Idea Registry",
+        "description": "Capture insights and link ideas directly to tasks."
+      }
+    }
+  },
+  "steps": {
+    "title": "How it works",
+    "subtitle": "Get started in minutes. No learning curve.",
+    "stepLabel": "Step {{number}}",
+    "items": {
+      "signup": {
+        "title": "Create your account",
+        "description": "Quick, hassle-free signup."
+      },
+      "organize": {
+        "title": "Organize your tasks",
+        "description": "Set up your Kanban board and distribute work to your team."
+      },
+      "track": {
+        "title": "Track your results",
+        "description": "Real-time dashboards for smarter decisions."
+      }
+    }
+  },
+  "highlights": {
+    "allInOne": { "label": "Everything in one place", "value": "8+ modules" },
+    "simpleManagement": { "label": "Simplified management", "value": "100% visual" },
+    "connectedTeams": { "label": "Connected teams", "value": "Real time" }
+  },
+  "faq": {
+    "title": "Frequently Asked Questions",
+    "subtitle": "Clear up your doubts about NEVVOH and task management.",
+    "items": [
+      {
+        "q": "What is an online task manager?",
+        "a": "An online task manager is software that lets you create, organize, and track activities digitally. NEVVOH goes further: it integrates Kanban, team management, meeting minutes, Pomodoro timer, and personal calendar in a single platform."
+      },
+      {
+        "q": "How do I organize my team's tasks?",
+        "a": "With NEVVOH, you create teams, distribute tasks on the Kanban board with drag and drop, set deadlines, and track progress in real time on the dashboard. Each member sees their responsibilities clearly."
+      },
+      {
+        "q": "Does NEVVOH replace tools like Trello or Asana?",
+        "a": "Yes. NEVVOH offers equivalent features — Kanban, team management, deadlines — and also includes exclusive modules such as meeting minutes with action items, versioned work instructions, and idea registry."
+      },
+      {
+        "q": "Can I use NEVVOH to manage meetings?",
+        "a": "Yes! The Meeting Minutes module lets you record participants, create action items with owners and deadlines, and automatically link tasks generated from the meeting."
+      },
+      {
+        "q": "Is NEVVOH free?",
+        "a": "NEVVOH offers a free trial period so you can explore all the features. Get in touch to learn more about available plans."
+      },
+      {
+        "q": "How does NEVVOH's Pomodoro timer work?",
+        "a": "The built-in timer lets you manage your work time with focused sessions, breaks, and countdown. You can associate the timer with specific tasks to measure time spent on each activity."
+      }
+    ]
+  },
+  "footer": {
+    "terms": "Terms of Use",
+    "privacy": "Privacy Policy",
+    "access": "Open platform",
+    "copyright": "© {{year}} NEVVOH. All rights reserved."
+  },
+  "lead": {
+    "trigger": "Get in touch",
+    "dialog": {
+      "title": "Show your interest",
+      "description": "Fill in your details and we'll get in touch to introduce NEVVOH."
+    },
+    "form": {
+      "name": "Name",
+      "namePlaceholder": "Your full name",
+      "email": "Email",
+      "emailPlaceholder": "you@email.com",
+      "submit": "Send",
+      "submitting": "Sending...",
+      "turnstileWait": "Please wait for the anti-bot check."
+    },
+    "toast": {
+      "success": "Thanks for your interest! We'll be in touch.",
+      "errorGeneric": "Failed to send. Please try again."
+    }
+  },
+  "marquee": {
+    "items": [
+      "Sprint review completed",
+      "Deploy v2.0 in progress",
+      "Meeting 3:00 PM — Sprint Planning",
+      "25min Pomodoro started",
+      "Q2 delivery in 3 days",
+      "New idea added to the backlog"
+    ]
+  },
+  "floating": {
+    "items": [
+      { "title": "Sprint review", "meta": "Completed" },
+      { "title": "Deploy v2.0", "meta": "Today 4:00 PM" },
+      { "title": "Ana Silva", "meta": "Designer" },
+      { "title": "Meeting 3:00 PM", "meta": "Sprint Planning" },
+      { "title": "Pomodoro", "meta": "25:00" },
+      { "title": "New idea", "meta": "Backlog" }
+    ]
+  },
+  "previews": {
+    "kanban": {
+      "columns": {
+        "todo": "To Do",
+        "doing": "In Progress",
+        "done": "Done"
+      },
+      "cards": {
+        "todo": ["Homepage redesign", "Document the API", "Review contracts"],
+        "doing": ["Payment integration", "Unit tests"],
+        "done": ["Project setup", "Design system", "CI/CD deploy", "Onboarding"]
+      }
+    },
+    "team": {
+      "title": "Product Team",
+      "membersCount": "{{count}} members",
+      "roles": {
+        "leader": "Lead",
+        "developer": "Developer",
+        "designer": "Designer",
+        "qa": "QA",
+        "po": "Product Owner"
+      }
+    },
+    "meeting": {
+      "title": "Sprint Planning Meeting",
+      "date": "04/15/2026",
+      "description": "Defining tasks for the next sprint and prioritizing the backlog.",
+      "participants": "Ana Silva, Carlos Souza, Maria Oliveira",
+      "pendingLabel": "Action items",
+      "items": [
+        { "text": "Define scope of the financial module", "resp": "Carlos" },
+        { "text": "Send proposal to client", "resp": "Ana" },
+        { "text": "Update technical documentation", "resp": "Maria" }
+      ]
+    },
+    "dashboard": {
+      "stats": {
+        "onTrack": "On track",
+        "warning": "At risk",
+        "late": "Overdue"
+      },
+      "tasks": [
+        { "task": "Q2 report delivery", "date": "04/18" },
+        { "task": "v2.0 launch", "date": "04/25" },
+        { "task": "Security review", "date": "04/12" },
+        { "task": "Data migration", "date": "04/10" }
+      ]
+    },
+    "timer": {
+      "focus": "Focus",
+      "buttons": { "start": "Start", "pause": "Pause", "reset": "Reset" }
+    },
+    "calendar": {
+      "month": "April 2026",
+      "days": ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
+      "events": {
+        "3": "Sprint Review",
+        "7": "Dentist",
+        "12": "Deploy v2",
+        "15": "Planning",
+        "22": "Vacation"
+      }
+    },
+    "workInstructions": {
+      "title": "WI-001 — Deploy Procedure",
+      "version": "v3.2",
+      "author": "Carlos Souza",
+      "updatedAt": "Updated on 04/10/2026",
+      "attachments": "2 attachments",
+      "steps": [
+        { "title": "1. Environment preparation", "body": "Verify that all tests passed on CI before starting the deploy process." },
+        { "title": "2. Deploy execution", "body": "Run the deploy script on staging before production." },
+        { "title": "3. Post-deploy validation", "body": "Monitor logs and metrics for 30 minutes after completion." }
+      ]
+    },
+    "ideas": {
+      "items": [
+        { "title": "Analytics dashboard", "desc": "Visual panel with real-time usage metrics.", "tags": ["Product", "High"] },
+        { "title": "Automatic dark mode", "desc": "Switch theme based on the device's time of day.", "tags": ["UX", "Medium"] },
+        { "title": "Slack integration", "desc": "Task notifications directly in the team channel.", "tags": ["Integration", "High"] },
+        { "title": "Task gamification", "desc": "Points and badges for tasks completed on time.", "tags": ["Engagement", "Low"] }
+      ]
+    }
+  }
+}

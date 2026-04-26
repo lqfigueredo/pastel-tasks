@@ -1,16 +1,26 @@
+import { useTranslation } from 'react-i18next';
 import { CheckCircle2, ArrowRight, Pin, Timer, Calendar, Lightbulb } from 'lucide-react';
 
-const items = [
-  { icon: CheckCircle2, text: 'Sprint review concluída', color: 'text-green-500' },
-  { icon: ArrowRight, text: 'Deploy v2.0 em andamento', color: 'text-blue-500' },
-  { icon: Pin, text: 'Reunião 15:00 — Sprint Planning', color: 'text-purple-500' },
-  { icon: Timer, text: 'Pomodoro 25min iniciado', color: 'text-orange-500' },
-  { icon: Calendar, text: 'Entrega Q2 em 3 dias', color: 'text-yellow-500' },
-  { icon: Lightbulb, text: 'Nova ideia adicionada ao backlog', color: 'text-primary' },
+const icons = [CheckCircle2, ArrowRight, Pin, Timer, Calendar, Lightbulb];
+const colors = [
+  'text-green-500',
+  'text-blue-500',
+  'text-purple-500',
+  'text-orange-500',
+  'text-yellow-500',
+  'text-primary',
 ];
 
 const TaskMarquee = () => {
+  const { t } = useTranslation('landing');
+  const labels = t('marquee.items', { returnObjects: true }) as string[];
+  const items = labels.map((text, i) => ({
+    icon: icons[i] ?? CheckCircle2,
+    color: colors[i] ?? 'text-primary',
+    text,
+  }));
   const loop = [...items, ...items];
+
   return (
     <div
       aria-hidden="true"
