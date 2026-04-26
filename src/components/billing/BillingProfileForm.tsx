@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -27,7 +28,7 @@ interface Profile {
   email: string;
   phone: string;
   postal_code: string;
-  address_line1: string; // logradouro/rua
+  address_line1: string;
   address_number: string;
   address_complement: string;
   neighborhood: string;
@@ -56,6 +57,7 @@ const empty: Profile = {
 };
 
 export default function BillingProfileForm() {
+  const { t } = useTranslation('billing');
   const { user } = useAuth();
   const [profile, setProfile] = useState<Profile>(empty);
   const [loading, setLoading] = useState(true);
@@ -117,7 +119,7 @@ export default function BillingProfileForm() {
     const result = await lookupCEP(profile.postal_code);
     setCepLoading(false);
     if (!result) {
-      toast.error('CEP não encontrado');
+      toast.error(t('profile.errors.cepNotFound'));
       return;
     }
     setProfile((p) => ({
@@ -131,14 +133,14 @@ export default function BillingProfileForm() {
 
   const validate = (): boolean => {
     const e: Record<string, string> = {};
-    if (!profile.legal_name.trim()) e.legal_name = 'Obrigatório';
-    if (profile.entity_type === 'company' && !isValidCNPJ(profile.tax_id)) e.tax_id = 'CNPJ inválido';
-    if (profile.entity_type === 'individual' && !isValidCPF(profile.tax_id)) e.tax_id = 'CPF inválido';
-    if (!profile.email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(profile.email)) e.email = 'Email inválido';
-    if (profile.postal_code && !isValidCEP(profile.postal_code)) e.postal_code = 'CEP inválido';
-    if (profile.state && !UF_LIST.includes(profile.state.toUpperCase() as any)) e.state = 'UF inválida';
-    if (profile.address_line1 && !profile.address_number.trim()) e.address_number = 'Informe o número';
-    if (profile.address_line1 && !profile.neighborhood.trim()) e.neighborhood = 'Informe o bairro';
+    if (!profile.legal_name.trim()) e.legal_name = t('profile.errors.required');
+    if (profile.entity_type === 'company' && !isValidCNPJ(profile.tax_id)) e.tax_id = t('profile.errors.invalidCnpj');
+    if (profile.entity_type === 'individual' && !isValidCPF(profile.tax_id)) e.tax_id = t('profile.errors.invalidCpf');
+    if (!profile.email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(profile.email)) e.email = t('profile.errors.invalidEmail');
+    if (profile.postal_code && !isValidCEP(profile.postal_code)) e.postal_code = t('profile.errors.invalidPostalCode');
+    if (profile.state && !UF_LIST.includes(profile.state.toUpperCase() as any)) e.state = t('profile.errors.invalidState');
+    if (profile.address_line1 && !profile.address_number.trim()) e.address_number = t('profile.errors.addressNumberRequired');
+    if (profile.address_line1 && !profile.neighborhood.trim()) e.neighborhood = t('profile.errors.neighborhoodRequired');
     setErrors(e);
     return Object.keys(e).length === 0;
   };
@@ -146,7 +148,7 @@ export default function BillingProfileForm() {
   const handleSave = async () => {
     if (!user) return;
     if (!validate()) {
-      toast.error('Verifique os campos destacados');
+      toast.error(t('profile.errors.checkFields'));
       return;
     }
     setSaving(true);
@@ -164,7 +166,7 @@ export default function BillingProfileForm() {
       address_line1: profile.address_line1.trim() || null,
       address_number: profile.address_number.trim() || null,
       address_complement: profile.address_complement.trim() || null,
-      address_line2: profile.address_complement.trim() || null, // mantém legado em sincronia
+      address_line2: profile.address_complement.trim() || null,
       neighborhood: profile.neighborhood.trim() || null,
       city: profile.city.trim() || null,
       state: profile.state ? profile.state.toUpperCase() : null,
@@ -178,7 +180,7 @@ export default function BillingProfileForm() {
       toast.error(error.message);
       return;
     }
-    toast.success('Dados fiscais salvos');
+    toast.success(t('profile.saved'));
   };
 
   if (loading) {
@@ -192,7 +194,6 @@ export default function BillingProfileForm() {
   const isCompany = profile.entity_type === 'company';
   const taxIdValid = isCompany ? isValidCNPJ(profile.tax_id) : isValidCPF(profile.tax_id);
 
-  // Cálculo de completude para emissão de NF
   const requiredFields: (keyof Profile)[] = isCompany
     ? ['legal_name', 'tax_id', 'email', 'postal_code', 'address_line1', 'address_number', 'neighborhood', 'city', 'state']
     : ['legal_name', 'tax_id', 'email', 'postal_code', 'address_line1', 'address_number', 'neighborhood', 'city', 'state'];
@@ -203,16 +204,14 @@ export default function BillingProfileForm() {
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <FileText className="h-5 w-5" /> Dados fiscais
+          <FileText className="h-5 w-5" /> {t('profile.title')}
         </CardTitle>
-        <CardDescription>
-          Necessários para emissão de nota fiscal e cobrança.
-        </CardDescription>
+        <CardDescription>{t('profile.description')}</CardDescription>
         <div className={`flex items-center gap-2 text-sm mt-2 ${isComplete ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400'}`}>
           {isComplete ? <CheckCircle2 className="h-4 w-4" /> : <AlertCircle className="h-4 w-4" />}
           {isComplete
-            ? 'Dados completos para emissão de NF'
-            : `Faltam dados para emissão de NF (${filledCount}/${requiredFields.length})`}
+            ? t('profile.complete')
+            : t('profile.incomplete', { filled: filledCount, total: requiredFields.length })}
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -223,17 +222,17 @@ export default function BillingProfileForm() {
         >
           <div className="flex items-center gap-2">
             <RadioGroupItem value="individual" id="ind" />
-            <Label htmlFor="ind" className="font-normal cursor-pointer">Pessoa física (CPF)</Label>
+            <Label htmlFor="ind" className="font-normal cursor-pointer">{t('profile.individual')}</Label>
           </div>
           <div className="flex items-center gap-2">
             <RadioGroupItem value="company" id="comp" />
-            <Label htmlFor="comp" className="font-normal cursor-pointer">Pessoa jurídica (CNPJ)</Label>
+            <Label htmlFor="comp" className="font-normal cursor-pointer">{t('profile.company')}</Label>
           </div>
         </RadioGroup>
 
         <div className="grid gap-4 md:grid-cols-2">
           <div>
-            <Label>{isCompany ? 'Razão social *' : 'Nome completo *'}</Label>
+            <Label>{isCompany ? t('profile.fields.legalNameCompany') : t('profile.fields.legalNameIndividual')}</Label>
             <Input
               value={profile.legal_name}
               onChange={(e) => update('legal_name', e.target.value)}
@@ -243,7 +242,7 @@ export default function BillingProfileForm() {
           </div>
 
           <div>
-            <Label>{isCompany ? 'CNPJ *' : 'CPF *'}</Label>
+            <Label>{isCompany ? t('profile.fields.cnpj') : t('profile.fields.cpf')}</Label>
             <Input
               value={profile.tax_id}
               onChange={(e) => update('tax_id', isCompany ? formatCNPJ(e.target.value) : formatCPF(e.target.value))}
@@ -256,7 +255,7 @@ export default function BillingProfileForm() {
           {isCompany && (
             <>
               <div>
-                <Label>Nome fantasia</Label>
+                <Label>{t('profile.fields.tradeName')}</Label>
                 <Input
                   value={profile.trade_name}
                   onChange={(e) => update('trade_name', e.target.value)}
@@ -264,18 +263,18 @@ export default function BillingProfileForm() {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <Label>Inscrição municipal</Label>
+                  <Label>{t('profile.fields.municipalRegistration')}</Label>
                   <Input
                     value={profile.municipal_registration}
                     onChange={(e) => update('municipal_registration', e.target.value)}
                   />
                 </div>
                 <div>
-                  <Label>Inscrição estadual</Label>
+                  <Label>{t('profile.fields.stateRegistration')}</Label>
                   <Input
                     value={profile.state_registration}
                     onChange={(e) => update('state_registration', e.target.value)}
-                    placeholder="ISENTO se não tiver"
+                    placeholder={t('profile.fields.stateRegistrationPlaceholder')}
                   />
                 </div>
               </div>
@@ -283,7 +282,7 @@ export default function BillingProfileForm() {
           )}
 
           <div>
-            <Label>Email de cobrança *</Label>
+            <Label>{t('profile.fields.billingEmail')}</Label>
             <Input
               type="email"
               value={profile.email}
@@ -294,22 +293,22 @@ export default function BillingProfileForm() {
           </div>
 
           <div>
-            <Label>Telefone</Label>
+            <Label>{t('profile.fields.phone')}</Label>
             <Input
               value={profile.phone}
               onChange={(e) => update('phone', formatPhone(e.target.value))}
-              placeholder="(00) 00000-0000"
+              placeholder={t('profile.fields.phonePlaceholder')}
             />
           </div>
 
           <div>
-            <Label>CEP *</Label>
+            <Label>{t('profile.fields.postalCode')}</Label>
             <div className="relative">
               <Input
                 value={profile.postal_code}
                 onChange={(e) => update('postal_code', formatCEP(e.target.value))}
                 onBlur={handleCepBlur}
-                placeholder="00000-000"
+                placeholder={t('profile.fields.postalCodePlaceholder')}
                 aria-invalid={!!errors.postal_code}
               />
               {cepLoading && <Loader2 className="h-4 w-4 animate-spin absolute right-3 top-1/2 -translate-y-1/2" />}
@@ -319,15 +318,15 @@ export default function BillingProfileForm() {
 
           <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-[1fr_140px] gap-3">
             <div>
-              <Label>Logradouro *</Label>
+              <Label>{t('profile.fields.addressLine1')}</Label>
               <Input
                 value={profile.address_line1}
                 onChange={(e) => update('address_line1', e.target.value)}
-                placeholder="Rua, Avenida..."
+                placeholder={t('profile.fields.addressLine1Placeholder')}
               />
             </div>
             <div>
-              <Label>Número *</Label>
+              <Label>{t('profile.fields.addressNumber')}</Label>
               <Input
                 value={profile.address_number}
                 onChange={(e) => update('address_number', e.target.value)}
@@ -338,16 +337,16 @@ export default function BillingProfileForm() {
           </div>
 
           <div>
-            <Label>Complemento</Label>
+            <Label>{t('profile.fields.addressComplement')}</Label>
             <Input
               value={profile.address_complement}
               onChange={(e) => update('address_complement', e.target.value)}
-              placeholder="Sala, andar..."
+              placeholder={t('profile.fields.addressComplementPlaceholder')}
             />
           </div>
 
           <div>
-            <Label>Bairro *</Label>
+            <Label>{t('profile.fields.neighborhood')}</Label>
             <Input
               value={profile.neighborhood}
               onChange={(e) => update('neighborhood', e.target.value)}
@@ -357,7 +356,7 @@ export default function BillingProfileForm() {
           </div>
 
           <div>
-            <Label>Cidade *</Label>
+            <Label>{t('profile.fields.city')}</Label>
             <Input
               value={profile.city}
               onChange={(e) => update('city', e.target.value)}
@@ -366,13 +365,13 @@ export default function BillingProfileForm() {
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <Label>UF *</Label>
+              <Label>{t('profile.fields.state')}</Label>
               <Select
                 value={profile.state}
                 onValueChange={(v) => update('state', v)}
               >
                 <SelectTrigger aria-invalid={!!errors.state}>
-                  <SelectValue placeholder="UF" />
+                  <SelectValue placeholder={t('profile.fields.state').replace(' *', '')} />
                 </SelectTrigger>
                 <SelectContent className="max-h-72">
                   {UF_LIST.map((uf) => (
@@ -383,7 +382,7 @@ export default function BillingProfileForm() {
               {errors.state && <p className="text-xs text-destructive mt-1">{errors.state}</p>}
             </div>
             <div>
-              <Label>País</Label>
+              <Label>{t('profile.fields.country')}</Label>
               <Input
                 value={profile.country}
                 onChange={(e) => update('country', e.target.value.toUpperCase().slice(0, 2))}
@@ -395,7 +394,7 @@ export default function BillingProfileForm() {
 
         <Button onClick={handleSave} disabled={saving}>
           {saving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-          Salvar dados fiscais
+          {t('profile.save')}
         </Button>
       </CardContent>
     </Card>

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -33,20 +34,14 @@ interface EmailResponse {
   pageSize: number;
 }
 
-const PERIODS = [
-  { value: '24h', label: 'Últimas 24h' },
-  { value: '7d', label: 'Últimos 7 dias' },
-  { value: '30d', label: 'Últimos 30 dias' },
-];
-
-const statusConfig: Record<string, { label: string; variant: 'default' | 'destructive' | 'secondary' | 'outline'; className?: string }> = {
-  sent: { label: 'Enviado', variant: 'default', className: 'bg-emerald-500/15 text-emerald-700 border-emerald-500/30' },
-  pending: { label: 'Pendente', variant: 'secondary' },
-  dlq: { label: 'Falhou', variant: 'destructive' },
-  failed: { label: 'Falhou', variant: 'destructive' },
-  suppressed: { label: 'Suprimido', variant: 'outline', className: 'bg-amber-500/15 text-amber-700 border-amber-500/30' },
-  bounced: { label: 'Rejeitado', variant: 'destructive' },
-  complained: { label: 'Reclamação', variant: 'destructive' },
+const statusVariantMap: Record<string, { variant: 'default' | 'destructive' | 'secondary' | 'outline'; className?: string }> = {
+  sent: { variant: 'default', className: 'bg-emerald-500/15 text-emerald-700 border-emerald-500/30' },
+  pending: { variant: 'secondary' },
+  dlq: { variant: 'destructive' },
+  failed: { variant: 'destructive' },
+  suppressed: { variant: 'outline', className: 'bg-amber-500/15 text-amber-700 border-amber-500/30' },
+  bounced: { variant: 'destructive' },
+  complained: { variant: 'destructive' },
 };
 
 interface EmailDashboardProps {
@@ -54,12 +49,19 @@ interface EmailDashboardProps {
 }
 
 export default function EmailDashboard({ scope }: EmailDashboardProps) {
+  const { t, i18n } = useTranslation('admin');
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<EmailResponse | null>(null);
   const [period, setPeriod] = useState('7d');
   const [template, setTemplate] = useState('');
   const [status, setStatus] = useState('');
   const [page, setPage] = useState(0);
+
+  const PERIODS = [
+    { value: '24h', label: t('emails.filters.periods.24h') },
+    { value: '7d', label: t('emails.filters.periods.7d') },
+    { value: '30d', label: t('emails.filters.periods.30d') },
+  ];
 
   const fetchData = async () => {
     setLoading(true);
@@ -98,10 +100,11 @@ export default function EmailDashboard({ scope }: EmailDashboardProps) {
   }, [period, template, status, page]);
 
   const getStatusBadge = (s: string) => {
-    const config = statusConfig[s] || { label: s, variant: 'outline' as const };
+    const config = statusVariantMap[s] || { variant: 'outline' as const };
+    const label = t(`emails.statusLabels.${s}`, { defaultValue: s });
     return (
       <Badge variant={config.variant} className={config.className}>
-        {config.label}
+        {label}
       </Badge>
     );
   };
@@ -115,7 +118,7 @@ export default function EmailDashboard({ scope }: EmailDashboardProps) {
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('emails.stats.total')}</CardTitle>
               <Mail className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -124,7 +127,7 @@ export default function EmailDashboard({ scope }: EmailDashboardProps) {
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Enviados</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('emails.stats.sent')}</CardTitle>
               <CheckCircle2 className="h-4 w-4 text-emerald-600" />
             </CardHeader>
             <CardContent>
@@ -133,7 +136,7 @@ export default function EmailDashboard({ scope }: EmailDashboardProps) {
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Falhos</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('emails.stats.failed')}</CardTitle>
               <XCircle className="h-4 w-4 text-destructive" />
             </CardHeader>
             <CardContent>
@@ -142,7 +145,7 @@ export default function EmailDashboard({ scope }: EmailDashboardProps) {
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Suprimidos</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('emails.stats.suppressed')}</CardTitle>
               <AlertTriangle className="h-4 w-4 text-amber-600" />
             </CardHeader>
             <CardContent>
@@ -156,7 +159,7 @@ export default function EmailDashboard({ scope }: EmailDashboardProps) {
       <div className="flex flex-wrap gap-3">
         <Select value={period} onValueChange={setPeriod}>
           <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Período" />
+            <SelectValue placeholder={t('emails.filters.period')} />
           </SelectTrigger>
           <SelectContent>
             {PERIODS.map((p) => (
@@ -167,25 +170,25 @@ export default function EmailDashboard({ scope }: EmailDashboardProps) {
 
         <Select value={template || 'all'} onValueChange={(v) => setTemplate(v === 'all' ? '' : v)}>
           <SelectTrigger className="w-[220px]">
-            <SelectValue placeholder="Template" />
+            <SelectValue placeholder={t('emails.filters.template')} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Todos os templates</SelectItem>
-            {(data?.templates || []).map((t) => (
-              <SelectItem key={t} value={t}>{t}</SelectItem>
+            <SelectItem value="all">{t('emails.filters.allTemplates')}</SelectItem>
+            {(data?.templates || []).map((tpl) => (
+              <SelectItem key={tpl} value={tpl}>{tpl}</SelectItem>
             ))}
           </SelectContent>
         </Select>
 
         <Select value={status || 'all'} onValueChange={(v) => setStatus(v === 'all' ? '' : v)}>
           <SelectTrigger className="w-[160px]">
-            <SelectValue placeholder="Status" />
+            <SelectValue placeholder={t('emails.filters.status')} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Todos</SelectItem>
-            <SelectItem value="sent">Enviados</SelectItem>
-            <SelectItem value="failed">Falhos</SelectItem>
-            <SelectItem value="suppressed">Suprimidos</SelectItem>
+            <SelectItem value="all">{t('emails.filters.allStatus')}</SelectItem>
+            <SelectItem value="sent">{t('emails.filters.sent')}</SelectItem>
+            <SelectItem value="failed">{t('emails.filters.failed')}</SelectItem>
+            <SelectItem value="suppressed">{t('emails.filters.suppressed')}</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -202,18 +205,18 @@ export default function EmailDashboard({ scope }: EmailDashboardProps) {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Template</TableHead>
-                    <TableHead>Destinatário</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Data/Hora</TableHead>
-                    <TableHead>Erro</TableHead>
+                    <TableHead>{t('emails.table.template')}</TableHead>
+                    <TableHead>{t('emails.table.recipient')}</TableHead>
+                    <TableHead>{t('emails.table.status')}</TableHead>
+                    <TableHead>{t('emails.table.datetime')}</TableHead>
+                    <TableHead>{t('emails.table.error')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {(data?.logs || []).length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
-                        Nenhum email encontrado para os filtros selecionados.
+                        {t('emails.table.empty')}
                       </TableCell>
                     </TableRow>
                   ) : (
@@ -223,7 +226,7 @@ export default function EmailDashboard({ scope }: EmailDashboardProps) {
                         <TableCell className="text-muted-foreground">{log.recipient_email}</TableCell>
                         <TableCell>{getStatusBadge(log.status)}</TableCell>
                         <TableCell className="text-muted-foreground">
-                          {new Date(log.created_at).toLocaleString('pt-BR')}
+                          {new Date(log.created_at).toLocaleString(i18n.language || 'pt-BR')}
                         </TableCell>
                         <TableCell className="max-w-[200px] truncate text-xs text-destructive">
                           {log.error_message || '—'}
@@ -240,7 +243,7 @@ export default function EmailDashboard({ scope }: EmailDashboardProps) {
           {totalPages > 1 && (
             <div className="flex items-center justify-between">
               <span className="text-sm text-muted-foreground">
-                Página {page + 1} de {totalPages} ({data?.total} emails)
+                {t('emails.pagination.page', { current: page + 1, total: totalPages, records: data?.total })}
               </span>
               <div className="flex gap-2">
                 <Button
