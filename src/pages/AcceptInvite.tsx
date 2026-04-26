@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useTranslation, Trans } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
@@ -17,6 +18,7 @@ interface InvitePreview {
 }
 
 const AcceptInvite = () => {
+  const { t } = useTranslation('auth');
   const { token } = useParams<{ token: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -24,7 +26,7 @@ const AcceptInvite = () => {
   const [loading, setLoading] = useState(true);
   const [invite, setInvite] = useState<InvitePreview | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [errorCode, setErrorCode] = useState<string | null>(null);
+  const [, setErrorCode] = useState<string | null>(null);
 
   const [displayName, setDisplayName] = useState('');
   const [password, setPassword] = useState('');
@@ -34,7 +36,7 @@ const AcceptInvite = () => {
   useEffect(() => {
     const loadInvite = async () => {
       if (!token) {
-        setError('Token de convite não fornecido');
+        setError(t('acceptInvite.loadingError'));
         setLoading(false);
         return;
       }
@@ -44,7 +46,7 @@ const AcceptInvite = () => {
       });
 
       if (invokeError || data?.error) {
-        setError(data?.error || invokeError?.message || 'Convite inválido');
+        setError(data?.error || invokeError?.message || t('acceptInvite.invalidInvite'));
         setErrorCode(data?.code || null);
       } else {
         setInvite(data);
@@ -53,20 +55,20 @@ const AcceptInvite = () => {
       setLoading(false);
     };
     loadInvite();
-  }, [token]);
+  }, [token, t]);
 
   const handleAccept = async (e: React.FormEvent) => {
     e.preventDefault();
     if (password !== confirmPassword) {
-      toast({ title: 'Senhas não conferem', variant: 'destructive' });
+      toast({ title: t('acceptInvite.toast.passwordsMismatch'), variant: 'destructive' });
       return;
     }
     if (password.length < 6) {
-      toast({ title: 'A senha deve ter pelo menos 6 caracteres', variant: 'destructive' });
+      toast({ title: t('acceptInvite.toast.passwordTooShort'), variant: 'destructive' });
       return;
     }
     if (!displayName.trim()) {
-      toast({ title: 'Nome é obrigatório', variant: 'destructive' });
+      toast({ title: t('acceptInvite.toast.nameRequired'), variant: 'destructive' });
       return;
     }
 
@@ -83,16 +85,16 @@ const AcceptInvite = () => {
 
     if (invokeError || data?.error) {
       toast({
-        title: 'Erro ao aceitar convite',
-        description: data?.error || invokeError?.message || 'Tente novamente',
+        title: t('acceptInvite.toast.errorTitle'),
+        description: data?.error || invokeError?.message || t('acceptInvite.toast.errorFallback'),
         variant: 'destructive',
       });
       return;
     }
 
     toast({
-      title: 'Conta criada com sucesso!',
-      description: 'Faça login para começar a usar a plataforma.',
+      title: t('acceptInvite.toast.successTitle'),
+      description: t('acceptInvite.toast.successDescription'),
     });
     navigate('/auth?invited=1');
   };
@@ -111,12 +113,12 @@ const AcceptInvite = () => {
         <Card className="max-w-md w-full">
           <CardHeader className="text-center">
             <AlertCircle className="h-12 w-12 mx-auto text-destructive mb-2" />
-            <CardTitle>Convite inválido</CardTitle>
+            <CardTitle>{t('acceptInvite.invalidTitle')}</CardTitle>
             <CardDescription>{error}</CardDescription>
           </CardHeader>
           <CardContent>
             <Button className="w-full" onClick={() => navigate('/')}>
-              Ir para o início
+              {t('acceptInvite.goHome')}
             </Button>
           </CardContent>
         </Card>
@@ -131,20 +133,33 @@ const AcceptInvite = () => {
       <Card className="max-w-md w-full">
         <CardHeader className="text-center">
           <Mail className="h-12 w-12 mx-auto text-primary mb-2" />
-          <CardTitle>Você foi convidado!</CardTitle>
+          <CardTitle>{t('acceptInvite.invitedTitle')}</CardTitle>
           <CardDescription>
-            <strong>{invite.inviter_name}</strong> convidou você
-            {invite.team_name ? ` para o time "${invite.team_name}"` : ''} no NEVVOH.
+            {invite.team_name ? (
+              <Trans
+                i18nKey="acceptInvite.invitedByWithTeam"
+                ns="auth"
+                values={{ inviter: invite.inviter_name, team: invite.team_name }}
+                components={{ strong: <strong /> }}
+              />
+            ) : (
+              <Trans
+                i18nKey="acceptInvite.invitedByNoTeam"
+                ns="auth"
+                values={{ inviter: invite.inviter_name }}
+                components={{ strong: <strong /> }}
+              />
+            )}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleAccept} className="space-y-4">
             <div className="space-y-2">
-              <Label>Email</Label>
+              <Label>{t('acceptInvite.emailLabel')}</Label>
               <Input value={invite.email} disabled />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="accept-name">Seu nome *</Label>
+              <Label htmlFor="accept-name">{t('acceptInvite.nameLabel')}</Label>
               <Input
                 id="accept-name"
                 value={displayName}
@@ -154,7 +169,7 @@ const AcceptInvite = () => {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="accept-password">Senha *</Label>
+              <Label htmlFor="accept-password">{t('acceptInvite.passwordLabel')}</Label>
               <Input
                 id="accept-password"
                 type="password"
@@ -165,7 +180,7 @@ const AcceptInvite = () => {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="accept-confirm">Confirmar senha *</Label>
+              <Label htmlFor="accept-confirm">{t('acceptInvite.confirmPasswordLabel')}</Label>
               <Input
                 id="accept-confirm"
                 type="password"
@@ -181,7 +196,7 @@ const AcceptInvite = () => {
               ) : (
                 <CheckCircle2 className="h-4 w-4 mr-2" />
               )}
-              Criar conta e aceitar convite
+              {t('acceptInvite.submit')}
             </Button>
           </form>
         </CardContent>

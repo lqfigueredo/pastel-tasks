@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Navigate } from 'react-router-dom';
+import { useTranslation, Trans } from 'react-i18next';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { ArrowLeft } from 'lucide-react';
 import logo from '@/assets/logo.webp';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { Link } from 'react-router-dom';
 import { errorToast, successToast } from '@/lib/toast-helpers';
 import { cn } from '@/lib/utils';
@@ -17,6 +19,7 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 type FieldErrors = { name?: string; email?: string; password?: string };
 
 const Auth = () => {
+  const { t } = useTranslation('auth');
   const { user, loading, signIn, signUp } = useAuth();
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
@@ -28,7 +31,7 @@ const Auth = () => {
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
-        <div className="animate-pulse text-muted-foreground">Carregando...</div>
+        <div className="animate-pulse text-muted-foreground">{t('loading')}</div>
       </div>
     );
   }
@@ -37,20 +40,20 @@ const Auth = () => {
 
   const validateName = (v: string) => {
     if (isLogin) return undefined;
-    const t = v.trim();
-    if (!t) return 'Informe seu nome.';
-    if (t.length < 2) return 'Nome muito curto.';
+    const value = v.trim();
+    if (!value) return t('validation.nameRequired');
+    if (value.length < 2) return t('validation.nameTooShort');
     return undefined;
   };
   const validateEmail = (v: string) => {
-    const t = v.trim();
-    if (!t) return 'Informe seu e-mail.';
-    if (!EMAIL_RE.test(t)) return 'E-mail inválido.';
+    const value = v.trim();
+    if (!value) return t('validation.emailRequired');
+    if (!EMAIL_RE.test(value)) return t('validation.emailInvalid');
     return undefined;
   };
   const validatePassword = (v: string) => {
-    if (!v) return 'Informe sua senha.';
-    if (v.length < 6) return 'A senha deve ter ao menos 6 caracteres.';
+    if (!v) return t('validation.passwordRequired');
+    if (v.length < 6) return t('validation.passwordTooShort');
     return undefined;
   };
 
@@ -71,16 +74,13 @@ const Auth = () => {
     setSubmitting(true);
     if (isLogin) {
       const { error } = await signIn(email.trim(), password);
-      if (error) errorToast('entrar', error);
+      if (error) errorToast(t('errors.signIn'), error);
     } else {
       const { error } = await signUp(email.trim(), password, displayName.trim());
       if (error) {
-        errorToast('criar a conta', error);
+        errorToast(t('errors.signUp'), error);
       } else {
-        successToast(
-          'Conta criada! 🎉',
-          'Você tem 14 dias grátis para testar. Faça login para começar.',
-        );
+        successToast(t('signup.successTitle'), t('signup.successDescription'));
         setIsLogin(true);
         setPassword('');
       }
@@ -92,33 +92,34 @@ const Auth = () => {
     <div className="relative flex min-h-screen items-center justify-center bg-background px-4">
       <Link to="/" className="absolute left-4 top-4 flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
         <ArrowLeft className="h-4 w-4" />
-        Voltar
+        {t('back')}
       </Link>
-      <div className="absolute right-4 top-4">
+      <div className="absolute right-4 top-4 flex items-center gap-1">
+        <LanguageSwitcher compact />
         <ThemeToggle collapsed />
       </div>
       <div className="w-full max-w-md animate-fade-in">
         <div className="mb-8 text-center">
           <img src={logo} alt="NEVVOH" className="mx-auto mb-4 h-14 w-14 rounded-2xl" />
           <h1 className="font-display text-3xl font-bold text-foreground">NEVVOH</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Gerencie seus projetos com simplicidade</p>
+          <p className="mt-1 text-sm text-muted-foreground">{t('tagline')}</p>
         </div>
 
         <Card className="border-border/50 shadow-sm">
           <CardHeader className="pb-4">
-            <CardTitle className="text-xl">{isLogin ? 'Entrar' : 'Criar conta'}</CardTitle>
+            <CardTitle className="text-xl">{isLogin ? t('login.title') : t('signup.title')}</CardTitle>
             <CardDescription>
-              {isLogin ? 'Entre com seu e-mail e senha' : 'Preencha os dados para criar sua conta'}
+              {isLogin ? t('login.description') : t('signup.description')}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} noValidate className="space-y-4">
               {!isLogin && (
                 <div className="space-y-1.5">
-                  <Label htmlFor="name">Nome</Label>
+                  <Label htmlFor="name">{t('fields.name')}</Label>
                   <Input
                     id="name"
-                    placeholder="Seu nome"
+                    placeholder={t('fields.namePlaceholder')}
                     value={displayName}
                     onChange={(e) => {
                       setDisplayName(e.target.value);
@@ -132,11 +133,11 @@ const Auth = () => {
                 </div>
               )}
               <div className="space-y-1.5">
-                <Label htmlFor="email">E-mail</Label>
+                <Label htmlFor="email">{t('fields.email')}</Label>
                 <Input
                   id="email"
                   type="email"
-                  placeholder="seu@email.com"
+                  placeholder={t('fields.emailPlaceholder')}
                   value={email}
                   onChange={(e) => {
                     setEmail(e.target.value);
@@ -149,11 +150,11 @@ const Auth = () => {
                 {errors.email && <p className="text-xs text-destructive">{errors.email}</p>}
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="password">Senha</Label>
+                <Label htmlFor="password">{t('fields.password')}</Label>
                 <Input
                   id="password"
                   type="password"
-                  placeholder="••••••••"
+                  placeholder={t('fields.passwordPlaceholder')}
                   value={password}
                   onChange={(e) => {
                     setPassword(e.target.value);
@@ -166,7 +167,7 @@ const Auth = () => {
                 {errors.password && <p className="text-xs text-destructive">{errors.password}</p>}
               </div>
               <Button type="submit" className="w-full" disabled={submitting}>
-                {submitting ? 'Aguarde...' : isLogin ? 'Entrar' : 'Criar conta'}
+                {submitting ? t('submitting') : isLogin ? t('login.submit') : t('signup.submit')}
               </Button>
             </form>
             <div className="mt-4 text-center space-y-2">
@@ -178,18 +179,22 @@ const Auth = () => {
                 }}
                 className="text-sm text-primary hover:underline block w-full"
               >
-                {isLogin ? 'Não tem conta? Cadastre-se' : 'Já tem conta? Entrar'}
+                {isLogin ? t('login.toggle') : t('signup.toggle')}
               </button>
               <Link to="/precos" className="text-xs text-muted-foreground hover:text-foreground inline-block">
-                Veja os planos →
+                {t('viewPlans')}
               </Link>
             </div>
             {!isLogin && (
               <p className="mt-4 text-center text-xs text-muted-foreground">
-                Ao criar uma conta você concorda com nossos{' '}
-                <Link to="/termos" className="text-primary hover:underline">Termos de Uso</Link>
-                {' '}e{' '}
-                <Link to="/privacidade" className="text-primary hover:underline">Política de Privacidade</Link>.
+                <Trans
+                  i18nKey="signup.termsPrefix"
+                  ns="auth"
+                />
+                <Link to="/termos" className="text-primary hover:underline">{t('signup.termsLink')}</Link>
+                {t('signup.termsAnd')}
+                <Link to="/privacidade" className="text-primary hover:underline">{t('signup.privacyLink')}</Link>
+                {t('signup.termsSuffix')}
               </p>
             )}
           </CardContent>

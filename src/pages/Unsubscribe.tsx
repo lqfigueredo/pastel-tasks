@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import logo from '@/assets/logo.webp';
@@ -7,6 +8,7 @@ import logo from '@/assets/logo.webp';
 type Status = 'loading' | 'valid' | 'already' | 'invalid' | 'success' | 'error';
 
 const Unsubscribe = () => {
+  const { t } = useTranslation('public');
   const [params] = useSearchParams();
   const token = params.get('token');
   const [status, setStatus] = useState<Status>('loading');
@@ -38,16 +40,8 @@ const Unsubscribe = () => {
     } catch { setStatus('error'); }
   };
 
-  const messages: Record<Status, { title: string; desc: string }> = {
-    loading: { title: 'Verificando...', desc: 'Aguarde um momento.' },
-    valid: { title: 'Cancelar inscrição', desc: 'Clique no botão abaixo para confirmar o cancelamento de e-mails.' },
-    already: { title: 'Já cancelado', desc: 'Você já cancelou a inscrição anteriormente.' },
-    invalid: { title: 'Link inválido', desc: 'Este link de cancelamento é inválido ou expirou.' },
-    success: { title: 'Inscrição cancelada', desc: 'Você não receberá mais e-mails transacionais.' },
-    error: { title: 'Erro', desc: 'Não foi possível processar sua solicitação. Tente novamente.' },
-  };
-
-  const { title, desc } = messages[status];
+  const title = t(`unsubscribe.states.${status}.title`);
+  const desc = t(`unsubscribe.states.${status}.desc`);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
@@ -56,7 +50,7 @@ const Unsubscribe = () => {
         <h1 className="text-2xl font-bold text-foreground">{title}</h1>
         <p className="text-muted-foreground">{desc}</p>
         {status === 'valid' && (
-          <Button onClick={handleConfirm} variant="destructive">Confirmar cancelamento</Button>
+          <Button onClick={handleConfirm} variant="destructive">{t('unsubscribe.confirmButton')}</Button>
         )}
       </div>
     </div>
