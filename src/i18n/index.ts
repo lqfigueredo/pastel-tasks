@@ -133,7 +133,8 @@ i18n
     resources,
     fallbackLng: DEFAULT_LOCALE,
     supportedLngs: SUPPORTED_LOCALES as unknown as string[],
-    nonExplicitSupportedLngs: true, // accept "en-US" as "en"
+    load: 'currentOnly', // do not strip region (pt-BR -> pt) when looking up resources
+    nonExplicitSupportedLngs: false,
     defaultNS: 'common',
     ns: NAMESPACES as unknown as string[],
     detection: {
@@ -157,5 +158,6 @@ const applyHtmlLang = (lng: string) => {
 };
 applyHtmlLang(i18n.language);
 i18n.on('languageChanged', applyHtmlLang);
+
 
 export default i18n;
