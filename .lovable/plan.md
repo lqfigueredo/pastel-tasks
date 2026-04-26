@@ -1,32 +1,32 @@
+## Problema
+O perfil financeiro (`solution_admin`) recebe erro 403 (RLS) ao criar status:
+> `new row violates row-level security policy for table "task_statuses"`
 
-## Diagnóstico
+A política `Users can insert statuses` exige que o usuário tenha role `admin` quando `team_id IS NULL`. O `solution_admin` não tem essa role, então é bloqueado mesmo sendo o admin financeiro do sistema.
 
-O acesso à rota `/configuracoes` já foi liberado para `solution_admin` no passo anterior, mas o **item de menu** continua escondido na sidebar. Em `src/components/AppSidebar.tsx`:
+As políticas de UPDATE e DELETE também não contemplam `solution_admin`, então renomear, reordenar ou arquivar status criados por ele também falhariam.
 
-- `adminItems` (que contém **Configurações**, **Administração** e **Cobrança**) está dentro de um grupo renderizado apenas quando `isAdmin === true` (linha 127).
-- O usuário financeiro tem apenas as roles `user` + `solution_admin` (confirmado nos logs de rede: `[{"role":"user"},{"role":"solution_admin"}]`), portanto `isAdmin` é `false` e o grupo nunca aparece.
-- O grupo "Operação" (que mostra "Financeiro") já aparece corretamente para `solution_admin`, mas não inclui Configurações.
+## Solução — Migration de RLS
 
-## Mudanças propostas
+Atualizar as políticas da tabela `task_statuses` para incluir `solution_admin`:
 
-### 1. `src/components/AppSidebar.tsx`
-Separar o item **Configurações** dos itens exclusivos de admin, exibindo-o tanto para `isAdmin` quanto para `isSolutionAdmin`:
+### 1. INSERT
+Substituir `Users can insert statuses` para permitir:
+- `admin` com team (mantém atual), OU
+- `admin` sem team (mantém atual), OU
+- **`solution_admin` (qualquer caso)** ← novo
 
-- Remover `items.settings` da constante `adminItems` (deixar apenas `admin` e `billing` lá, que continuam restritos a `isAdmin`).
-- Adicionar `items.settings` ao grupo "Operação" para `solution_admin` (junto com **Financeiro**), OU criar um item Settings que apareça em ambos os grupos baseado na role.
+### 2. UPDATE
+Substituir `Users can update own statuses` para permitir owner/team_member **OU** `solution_admin` sobre seus próprios status.
 
-**Abordagem escolhida:** mover `items.settings` para um `settingsItem` isolado e renderizá-lo em um pequeno grupo visível quando `isAdmin || isSolutionAdmin`. Isso evita duplicação visual e mantém os outros itens administrativos restritos a `admin` puro.
+### 3. DELETE
+Substituir `Users can delete own statuses` similarmente — mantendo a proteção de não excluir `is_default`.
 
-Estrutura final dos grupos para `solution_admin` (sem `admin`):
-- (Trabalho + Documentação visíveis, pois `isOnlySolutionAdmin` é `false` quando há também a role `user`)
-- **Operação:** Financeiro
-- **Configurações:** Configurações ← novo grupo/item visível
+### 4. SELECT
+Manter inalterado — o filtro client-side em `useStatusesQuery` já restringe a visualização do solution_admin aos próprios + defaults.
 
-### 2. Verificação
-- Confirmar que `Settings.tsx` já permite `solution_admin` (feito no passo anterior).
-- Garantir que ao clicar em Configurações, o usuário consiga gerenciar apenas seus próprios status (já corrigido pelo filtro `.or` em `useStatusesQuery`).
+## Arquivo
+- Nova migration SQL com `DROP POLICY` + `CREATE POLICY` para INSERT/UPDATE/DELETE em `public.task_statuses`.
 
-## Arquivos a modificar
-- `src/components/AppSidebar.tsx` — único arquivo de código alterado.
-
-Sem mudanças em banco de dados, RLS, traduções ou outros componentes.
+## Validação
+Após aplicar, o solution_admin deverá conseguir criar "Aguardando" sem erro 403, e a listagem continuará mostrando apenas seus status + defaults.
