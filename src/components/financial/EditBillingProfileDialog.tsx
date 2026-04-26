@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation, Trans } from 'react-i18next';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -63,6 +64,7 @@ interface Props {
 }
 
 export default function EditBillingProfileDialog({ open, onClose, adminUserId, adminName, onSaved }: Props) {
+  const { t } = useTranslation('financial');
   const [profile, setProfile] = useState<Profile>(empty);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -126,7 +128,7 @@ export default function EditBillingProfileDialog({ open, onClose, adminUserId, a
     const result = await lookupCEP(profile.postal_code);
     setCepLoading(false);
     if (!result) {
-      toast.error('CEP não encontrado');
+      toast.error(t('drawer.fiscal.editDialog.errors.cepNotFound'));
       return;
     }
     setProfile((p) => ({
@@ -140,21 +142,22 @@ export default function EditBillingProfileDialog({ open, onClose, adminUserId, a
 
   const validate = (): boolean => {
     const e: Record<string, string> = {};
-    if (!profile.legal_name.trim()) e.legal_name = 'Obrigatório';
-    if (profile.entity_type === 'company' && !isValidCNPJ(profile.tax_id)) e.tax_id = 'CNPJ inválido';
-    if (profile.entity_type === 'individual' && !isValidCPF(profile.tax_id)) e.tax_id = 'CPF inválido';
-    if (!profile.email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(profile.email)) e.email = 'Email inválido';
-    if (profile.postal_code && !isValidCEP(profile.postal_code)) e.postal_code = 'CEP inválido';
-    if (profile.state && !UF_LIST.includes(profile.state.toUpperCase() as any)) e.state = 'UF inválida';
-    if (profile.address_line1 && !profile.address_number.trim()) e.address_number = 'Informe o número';
-    if (profile.address_line1 && !profile.neighborhood.trim()) e.neighborhood = 'Informe o bairro';
+    const er = (k: string) => t(`drawer.fiscal.editDialog.errors.${k}`);
+    if (!profile.legal_name.trim()) e.legal_name = er('required');
+    if (profile.entity_type === 'company' && !isValidCNPJ(profile.tax_id)) e.tax_id = er('invalidCnpj');
+    if (profile.entity_type === 'individual' && !isValidCPF(profile.tax_id)) e.tax_id = er('invalidCpf');
+    if (!profile.email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(profile.email)) e.email = er('invalidEmail');
+    if (profile.postal_code && !isValidCEP(profile.postal_code)) e.postal_code = er('invalidCep');
+    if (profile.state && !UF_LIST.includes(profile.state.toUpperCase() as any)) e.state = er('invalidUf');
+    if (profile.address_line1 && !profile.address_number.trim()) e.address_number = er('addressNumberRequired');
+    if (profile.address_line1 && !profile.neighborhood.trim()) e.neighborhood = er('neighborhoodRequired');
     setErrors(e);
     return Object.keys(e).length === 0;
   };
 
   const handleSave = async () => {
     if (!validate()) {
-      toast.error('Verifique os campos destacados');
+      toast.error(t('drawer.fiscal.editDialog.errors.checkFields'));
       return;
     }
     setSaving(true);
@@ -186,7 +189,7 @@ export default function EditBillingProfileDialog({ open, onClose, adminUserId, a
       toast.error(error.message);
       return;
     }
-    toast.success('Dados fiscais atualizados');
+    toast.success(t('drawer.fiscal.editDialog.success'));
     onSaved();
     onClose();
   };
@@ -197,18 +200,18 @@ export default function EditBillingProfileDialog({ open, onClose, adminUserId, a
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Editar dados fiscais — {adminName}</DialogTitle>
-          <DialogDescription>
-            Edição excepcional pelo solution_admin. Toda alteração fica registrada no log do banco.
-          </DialogDescription>
+          <DialogTitle>{t('drawer.fiscal.editDialog.title', { name: adminName })}</DialogTitle>
+          <DialogDescription>{t('drawer.fiscal.editDialog.description')}</DialogDescription>
         </DialogHeader>
 
         <Alert className="border-amber-500/40 bg-amber-500/10">
           <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
           <AlertDescription className="text-xs">
-            Você está editando os dados fiscais <strong>de outro cliente</strong>. Use somente em situações
-            excepcionais (ex.: cliente solicitou correção por outro canal). Sempre que possível, oriente
-            o cliente a atualizar pela própria tela de cobrança.
+            <Trans
+              i18nKey="drawer.fiscal.editDialog.warning"
+              t={t}
+              components={{ strong: <strong /> }}
+            />
           </AlertDescription>
         </Alert>
 
@@ -225,17 +228,17 @@ export default function EditBillingProfileDialog({ open, onClose, adminUserId, a
             >
               <div className="flex items-center gap-2">
                 <RadioGroupItem value="individual" id="ed-ind" />
-                <Label htmlFor="ed-ind" className="font-normal cursor-pointer">Pessoa física (CPF)</Label>
+                <Label htmlFor="ed-ind" className="font-normal cursor-pointer">{t('drawer.fiscal.editDialog.individualOpt')}</Label>
               </div>
               <div className="flex items-center gap-2">
                 <RadioGroupItem value="company" id="ed-comp" />
-                <Label htmlFor="ed-comp" className="font-normal cursor-pointer">Pessoa jurídica (CNPJ)</Label>
+                <Label htmlFor="ed-comp" className="font-normal cursor-pointer">{t('drawer.fiscal.editDialog.companyOpt')}</Label>
               </div>
             </RadioGroup>
 
             <div className="grid gap-4 md:grid-cols-2">
               <div>
-                <Label>{isCompany ? 'Razão social *' : 'Nome completo *'}</Label>
+                <Label>{isCompany ? t('drawer.fiscal.editDialog.legalNameCompany') : t('drawer.fiscal.editDialog.legalNameIndividual')}</Label>
                 <Input
                   value={profile.legal_name}
                   onChange={(e) => update('legal_name', e.target.value)}
@@ -245,7 +248,7 @@ export default function EditBillingProfileDialog({ open, onClose, adminUserId, a
               </div>
 
               <div>
-                <Label>{isCompany ? 'CNPJ *' : 'CPF *'}</Label>
+                <Label>{isCompany ? t('drawer.fiscal.editDialog.cnpj') : t('drawer.fiscal.editDialog.cpf')}</Label>
                 <Input
                   value={profile.tax_id}
                   onChange={(e) => update('tax_id', isCompany ? formatCNPJ(e.target.value) : formatCPF(e.target.value))}
@@ -258,7 +261,7 @@ export default function EditBillingProfileDialog({ open, onClose, adminUserId, a
               {isCompany && (
                 <>
                   <div>
-                    <Label>Nome fantasia</Label>
+                    <Label>{t('drawer.fiscal.editDialog.tradeName')}</Label>
                     <Input
                       value={profile.trade_name}
                       onChange={(e) => update('trade_name', e.target.value)}
@@ -266,18 +269,18 @@ export default function EditBillingProfileDialog({ open, onClose, adminUserId, a
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <Label>Inscrição municipal</Label>
+                      <Label>{t('drawer.fiscal.editDialog.municipalRegistration')}</Label>
                       <Input
                         value={profile.municipal_registration}
                         onChange={(e) => update('municipal_registration', e.target.value)}
                       />
                     </div>
                     <div>
-                      <Label>Inscrição estadual</Label>
+                      <Label>{t('drawer.fiscal.editDialog.stateRegistration')}</Label>
                       <Input
                         value={profile.state_registration}
                         onChange={(e) => update('state_registration', e.target.value)}
-                        placeholder="ISENTO se não tiver"
+                        placeholder={t('drawer.fiscal.editDialog.stateRegPlaceholder')}
                       />
                     </div>
                   </div>
@@ -285,7 +288,7 @@ export default function EditBillingProfileDialog({ open, onClose, adminUserId, a
               )}
 
               <div>
-                <Label>Email de cobrança *</Label>
+                <Label>{t('drawer.fiscal.editDialog.email')}</Label>
                 <Input
                   type="email"
                   value={profile.email}
@@ -296,7 +299,7 @@ export default function EditBillingProfileDialog({ open, onClose, adminUserId, a
               </div>
 
               <div>
-                <Label>Telefone</Label>
+                <Label>{t('drawer.fiscal.editDialog.phone')}</Label>
                 <Input
                   value={profile.phone}
                   onChange={(e) => update('phone', formatPhone(e.target.value))}
@@ -305,7 +308,7 @@ export default function EditBillingProfileDialog({ open, onClose, adminUserId, a
               </div>
 
               <div>
-                <Label>CEP *</Label>
+                <Label>{t('drawer.fiscal.editDialog.postalCode')}</Label>
                 <div className="relative">
                   <Input
                     value={profile.postal_code}
@@ -321,15 +324,15 @@ export default function EditBillingProfileDialog({ open, onClose, adminUserId, a
 
               <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-[1fr_140px] gap-3">
                 <div>
-                  <Label>Logradouro *</Label>
+                  <Label>{t('drawer.fiscal.editDialog.addressLine1')}</Label>
                   <Input
                     value={profile.address_line1}
                     onChange={(e) => update('address_line1', e.target.value)}
-                    placeholder="Rua, Avenida..."
+                    placeholder={t('drawer.fiscal.editDialog.addressLine1Placeholder')}
                   />
                 </div>
                 <div>
-                  <Label>Número *</Label>
+                  <Label>{t('drawer.fiscal.editDialog.addressNumber')}</Label>
                   <Input
                     value={profile.address_number}
                     onChange={(e) => update('address_number', e.target.value)}
@@ -340,16 +343,16 @@ export default function EditBillingProfileDialog({ open, onClose, adminUserId, a
               </div>
 
               <div>
-                <Label>Complemento</Label>
+                <Label>{t('drawer.fiscal.editDialog.addressComplement')}</Label>
                 <Input
                   value={profile.address_complement}
                   onChange={(e) => update('address_complement', e.target.value)}
-                  placeholder="Sala, andar..."
+                  placeholder={t('drawer.fiscal.editDialog.addressComplementPlaceholder')}
                 />
               </div>
 
               <div>
-                <Label>Bairro *</Label>
+                <Label>{t('drawer.fiscal.editDialog.neighborhood')}</Label>
                 <Input
                   value={profile.neighborhood}
                   onChange={(e) => update('neighborhood', e.target.value)}
@@ -359,7 +362,7 @@ export default function EditBillingProfileDialog({ open, onClose, adminUserId, a
               </div>
 
               <div>
-                <Label>Cidade *</Label>
+                <Label>{t('drawer.fiscal.editDialog.city')}</Label>
                 <Input
                   value={profile.city}
                   onChange={(e) => update('city', e.target.value)}
@@ -368,7 +371,7 @@ export default function EditBillingProfileDialog({ open, onClose, adminUserId, a
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <Label>UF *</Label>
+                  <Label>{t('drawer.fiscal.editDialog.state')}</Label>
                   <Select
                     value={profile.state}
                     onValueChange={(v) => update('state', v)}
@@ -385,7 +388,7 @@ export default function EditBillingProfileDialog({ open, onClose, adminUserId, a
                   {errors.state && <p className="text-xs text-destructive mt-1">{errors.state}</p>}
                 </div>
                 <div>
-                  <Label>País</Label>
+                  <Label>{t('drawer.fiscal.editDialog.country')}</Label>
                   <Input
                     value={profile.country}
                     onChange={(e) => update('country', e.target.value.toUpperCase().slice(0, 2))}
@@ -398,10 +401,10 @@ export default function EditBillingProfileDialog({ open, onClose, adminUserId, a
         )}
 
         <DialogFooter>
-          <Button variant="outline" onClick={onClose} disabled={saving}>Cancelar</Button>
+          <Button variant="outline" onClick={onClose} disabled={saving}>{t('drawer.fiscal.editDialog.cancel')}</Button>
           <Button onClick={handleSave} disabled={saving || loading}>
             {saving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-            Salvar dados fiscais
+            {t('drawer.fiscal.editDialog.save')}
           </Button>
         </DialogFooter>
       </DialogContent>
