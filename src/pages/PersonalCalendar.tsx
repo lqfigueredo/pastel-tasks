@@ -14,6 +14,7 @@ import { getCurrentLocale } from '@/lib/date';
 import { CreateEventDialog } from '@/components/calendar/CreateEventDialog';
 import { EventDetailDialog } from '@/components/calendar/EventDetailDialog';
 import { HelpButton } from '@/components/HelpButton';
+import { safeTArray } from '@/i18n/safeT';
 
 interface CalendarEvent {
   id: string;

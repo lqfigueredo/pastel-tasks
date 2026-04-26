@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { safeTArray, safeTObject } from '@/i18n/safeT';
 import {
   Play,
   Pause,
@@ -27,9 +28,9 @@ export type FeatureKey =
 
 export const KanbanPreview = () => {
   const { t } = useTranslation('landing');
-  const todoCards = t('previews.kanban.cards.todo', { returnObjects: true }) as string[];
-  const doingCards = t('previews.kanban.cards.doing', { returnObjects: true }) as string[];
-  const doneCards = t('previews.kanban.cards.done', { returnObjects: true }) as string[];
+  const todoCards = safeTArray<string>(t('previews.kanban.cards.todo', { returnObjects: true }));
+  const doingCards = safeTArray<string>(t('previews.kanban.cards.doing', { returnObjects: true }));
+  const doneCards = safeTArray<string>(t('previews.kanban.cards.done', { returnObjects: true }));
 
   const cols = [
     { title: t('previews.kanban.columns.todo'), color: 'bg-blue-500', cards: todoCards },
@@ -93,7 +94,7 @@ export const TeamPreview = () => {
 
 export const MeetingPreview = () => {
   const { t } = useTranslation('landing');
-  const items = t('previews.meeting.items', { returnObjects: true }) as Array<{ text: string; resp: string }>;
+  const items = safeTArray<{ text: string; resp: string }>(t('previews.meeting.items', { returnObjects: true }));
   // First item is "done" in the original mock
   const decorated = items.map((it, i) => ({ ...it, done: i === 0 }));
 
@@ -133,7 +134,7 @@ export const DashboardPreview = () => {
     { label: t('previews.dashboard.stats.warning'), value: 5, color: 'text-yellow-500', icon: Clock },
     { label: t('previews.dashboard.stats.late'), value: 3, color: 'text-red-500', icon: AlertCircle },
   ];
-  const tasksData = t('previews.dashboard.tasks', { returnObjects: true }) as Array<{ task: string; date: string }>;
+  const tasksData = safeTArray<{ task: string; date: string }>(t('previews.dashboard.tasks', { returnObjects: true }));
   const progresses = [85, 60, 30, 10];
   const tasks = tasksData.map((tk, i) => ({ ...tk, progress: progresses[i] ?? 0 }));
 
@@ -199,8 +200,8 @@ export const TimerPreview = () => {
 
 export const CalendarPreview = () => {
   const { t } = useTranslation('landing');
-  const days = t('previews.calendar.days', { returnObjects: true }) as string[];
-  const eventsRaw = t('previews.calendar.events', { returnObjects: true }) as Record<string, string>;
+  const days = safeTArray<string>(t('previews.calendar.days', { returnObjects: true }));
+  const eventsRaw = safeTObject<Record<string, string>>(t('previews.calendar.events', { returnObjects: true }));
   const colorMap: Record<string, string> = {
     '3': 'bg-blue-500',
     '7': 'bg-green-500',
@@ -241,7 +242,7 @@ export const CalendarPreview = () => {
 
 export const WorkInstructionsPreview = () => {
   const { t } = useTranslation('landing');
-  const steps = t('previews.workInstructions.steps', { returnObjects: true }) as Array<{ title: string; body: string }>;
+  const steps = safeTArray<{ title: string; body: string }>(t('previews.workInstructions.steps', { returnObjects: true }));
 
   return (
     <div className="space-y-3">
@@ -270,11 +271,11 @@ export const WorkInstructionsPreview = () => {
 
 export const IdeasPreview = () => {
   const { t } = useTranslation('landing');
-  const items = t('previews.ideas.items', { returnObjects: true }) as Array<{
+  const items = safeTArray<{
     title: string;
     desc: string;
     tags: string[];
-  }>;
+  }>(t('previews.ideas.items', { returnObjects: true }));
   // Second item is "implemented" in the original mock
   const decorated = items.map((it, i) => ({ ...it, implemented: i === 1 }));
 

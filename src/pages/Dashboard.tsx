@@ -31,6 +31,7 @@ import {
   min as dateMin,
 } from 'date-fns';
 import { getCurrentLocale } from '@/lib/date';
+import { safeTArray } from '@/i18n/safeT';
 const MAX_BAR_SLOTS = 3;
 const BAR_HEIGHT = 22;
 const BAR_GAP = 2;
