@@ -52,10 +52,11 @@ const docItems: NavItem[] = [
 ];
 
 const adminItems: NavItem[] = [
-  { key: 'items.settings', url: '/configuracoes', icon: Settings },
   { key: 'items.admin', url: '/admin', icon: ShieldCheck },
   { key: 'items.billing', url: '/cobranca', icon: CreditCard },
 ];
+
+const settingsItem: NavItem = { key: 'items.settings', url: '/configuracoes', icon: Settings };
 
 const operationItems: NavItem[] = [
   { key: 'items.financial', url: '/financeiro', icon: TrendingUp },
