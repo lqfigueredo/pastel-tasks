@@ -142,6 +142,15 @@ export function AppSidebar() {
             </SidebarGroupContent>
           </SidebarGroup>
         )}
+
+        {(isAdmin || isSolutionAdmin) && (
+          <SidebarGroup>
+            {!collapsed && <SidebarGroupLabel>{t('groups.administration')}</SidebarGroupLabel>}
+            <SidebarGroupContent>
+              <SidebarMenu>{renderItem(settingsItem)}</SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
       </SidebarContent>
 
       <SidebarFooter className="p-3">
