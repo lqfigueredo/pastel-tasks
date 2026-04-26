@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import ReactMarkdown from 'react-markdown';
 import { supabase } from '@/integrations/supabase/client';
 import { PageLoader } from '@/components/ui/loaders';
@@ -8,11 +9,12 @@ import { ArrowLeft } from 'lucide-react';
 import logo from '@/assets/logo.webp';
 
 const Privacy = () => {
+  const { t } = useTranslation('public');
   const [content, setContent] = useState<string>('');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    document.title = 'Política de Privacidade | NEVVOH';
+    document.title = t('legal.privacyTitle');
     supabase
       .from('legal_documents')
       .select('content')
@@ -21,10 +23,10 @@ const Privacy = () => {
       .limit(1)
       .maybeSingle()
       .then(({ data }) => {
-        setContent(data?.content || '# Política de Privacidade\n\nDocumento ainda não publicado.');
+        setContent(data?.content || `# ${t('legal.privacyHeading')}\n\n${t('legal.notPublished')}`);
         setLoading(false);
       });
-  }, []);
+  }, [t]);
 
   if (loading) return <PageLoader />;
 
@@ -37,7 +39,7 @@ const Privacy = () => {
             <span className="font-semibold">NEVVOH</span>
           </Link>
           <Button variant="ghost" size="sm" asChild>
-            <Link to="/"><ArrowLeft className="h-4 w-4 mr-2" />Início</Link>
+            <Link to="/"><ArrowLeft className="h-4 w-4 mr-2" />{t('legal.home')}</Link>
           </Button>
         </div>
       </header>
