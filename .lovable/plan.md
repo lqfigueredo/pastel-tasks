@@ -1,75 +1,69 @@
-# Plano — Completar tradução PT/EN das páginas públicas
+# Plano — Localizar conteúdo dos documentos legais por idioma
 
 ## Diagnóstico
 
-A **Landing page e seus componentes estão 100% traduzidos** (178 chaves PT/EN sincronizadas, sem diferenças). O problema está em **outras páginas públicas** que ainda estão totalmente hardcoded em PT-BR e quebram a experiência quando o visitante seleciona EN no switcher da Landing.
+Hoje a tabela `legal_documents` armazena **apenas uma versão por `doc_type`** (terms / privacy), sem coluna de idioma. As páginas `/termos` e `/privacidade` consultam essa tabela e renderizam o markdown como está — então mesmo com a UI já traduzida (cabeçalho, botão "Início", título da aba), o **corpo do documento continua sempre em PT-BR** independente do idioma do visitante.
 
-### Páginas afetadas
-| Página | Status | Problema |
-|---|---|---|
-| `Auth.tsx` | ❌ 100% PT hardcoded | Toda a tela de login/cadastro, validações, toasts, link "Voltar", aviso de Termos/Privacidade |
-| `AcceptInvite.tsx` | ❌ 100% PT hardcoded | Tela de aceite de convite por email |
-| `Unsubscribe.tsx` | ❌ 100% PT hardcoded | 6 estados (loading/valid/already/invalid/success/error) |
-| `NotFound.tsx` | ❌ Fixo em EN | "Oops! Page not found" |
-| `legal/Privacy.tsx` + `legal/Terms.tsx` | ⚠️ Parcial | `document.title`, fallback markdown e link "Início" em PT |
+**Estado atual no banco:**
+- `terms` v1 (2.587 caracteres, PT-BR)
+- `privacy` v1 (3.003 caracteres, PT-BR)
 
-### Achados menores (não bloqueantes)
-- 2 warnings de `forwardRef` no console em `IdeasPreview` e `TaskMarquee` (lazy components recebem ref do `Suspense` — vale anular envolvendo a função em `forwardRef`).
-- Conteúdo do markdown de Privacy/Terms vem do banco — só existe versão PT. Para localizar de verdade, seria preciso armazenar versões por idioma na tabela `legal_documents` (decisão de produto, **fora deste escopo**).
+**Arquivos que tocam essa tabela:**
+- `supabase/migrations/20260420184508_*.sql` (criação + seed PT)
+- `src/pages/legal/Terms.tsx` e `Privacy.tsx` (leitura pública)
+- `src/components/financial/LegalDocumentsEditor.tsx` (admin edita/publica versões)
 
 ---
 
 ## Mudanças propostas
 
-### 1. Adicionar chaves ao namespace `auth.json` (PT-BR e EN)
-Expandir o atual `auth.json` (hoje quase vazio) com:
-- `auth.back`, `auth.loading`, `auth.tagline`
-- `auth.login.title`, `auth.login.description`, `auth.login.submit`, `auth.login.toggle`
-- `auth.signup.title`, `auth.signup.description`, `auth.signup.submit`, `auth.signup.toggle`, `auth.signup.successTitle`, `auth.signup.successDescription`, `auth.signup.terms` (com `<Trans>` para os links)
-- `auth.fields.name/email/password` (label + placeholder)
-- `auth.validation.nameRequired/nameTooShort/emailRequired/emailInvalid/passwordRequired/passwordTooShort`
-- `auth.errors.signIn` / `auth.errors.signUp` (usados pelos `errorToast`)
-- `auth.viewPlans`, `auth.submitting`
+### 1. Migração de schema — adicionar coluna `locale`
+Nova migração SQL:
+- Adicionar `locale text NOT NULL DEFAULT 'pt-BR'` em `public.legal_documents`.
+- Restringir valores via CHECK: `locale IN ('pt-BR', 'en')`.
+- Substituir o índice `idx_legal_documents_type_version` por um composto `(doc_type, locale, version DESC)` para acelerar a busca da versão mais recente por idioma.
+- Atualizar a UNIQUE constraint (se existir) para incluir `locale`, permitindo `terms v1 pt-BR` e `terms v1 en` coexistirem.
+- Backfill: as 2 linhas existentes recebem `locale = 'pt-BR'` automaticamente pelo default.
 
-### 2. Refatorar `src/pages/Auth.tsx`
-- Adicionar `useTranslation('auth')`.
-- Substituir todas as strings hardcoded.
-- Usar `<Trans i18nKey="signup.terms" components={{ termsLink: <Link…/>, privacyLink: <Link…/> }} />` para preservar os links de Termos/Privacidade.
+### 2. Seed inicial em inglês
+Inserir versão v1 dos dois documentos em `en` traduzindo o conteúdo PT existente, para que `/terms` e `/privacy` em EN não caiam no fallback "Document not yet published". Conteúdo será uma tradução fiel do markdown atual (Termos de Uso e Política de Privacidade da NEVVOH).
 
-### 3. Criar/expandir namespace para AcceptInvite
-- Adicionar bloco `acceptInvite.*` no `auth.json` (mesmo namespace, para reduzir overhead de carregamento) com:
-  - `invalidTitle`, `invitedTitle`, `invitedBy` (com interpolação `{{inviter}}` e `{{team}}`)
-  - Labels do formulário, validações, toasts, botão "Ir para o início" / "Criar conta e aceitar convite"
-- Refatorar `src/pages/AcceptInvite.tsx` consumindo essas chaves.
+### 3. Atualizar páginas públicas (`Privacy.tsx` / `Terms.tsx`)
+- Importar `i18n` para detectar o idioma corrente (`i18n.language`).
+- Adicionar filtro `.eq('locale', currentLocale)` na query.
+- **Fallback inteligente**: se não houver documento no idioma corrente, fazer segunda query em `pt-BR` (idioma base) e exibir, evitando a tela "não publicado" quando admin esquecer de publicar uma das versões.
+- Reagir a mudanças de idioma: re-disparar a query quando `i18n.language` mudar (incluir no `useEffect` deps).
 
-### 4. Criar namespace `public.json` (PT-BR e EN) — para páginas públicas leves
-Cobre `Unsubscribe`, `NotFound` e títulos legais — namespace pequeno e reutilizável:
-- `unsubscribe.states.{loading|valid|already|invalid|success|error}.{title|desc}`
-- `unsubscribe.confirmButton`
-- `notFound.title`, `notFound.message`, `notFound.back`
-- `legal.privacyTitle`, `legal.termsTitle`, `legal.notPublished`, `legal.home`
+### 4. Atualizar o editor do solution_admin (`LegalDocumentsEditor.tsx`)
+- Adicionar um seletor de idioma (Tabs ou ToggleGroup) **dentro de cada aba** (Termos / Privacidade), com opções "Português (BR)" e "English".
+- O versionamento passa a ser **por (doc_type, locale)**: ao publicar, calcular `nextVersion = max(version) + 1` filtrando também por `locale`.
+- Histórico de versões na UI também filtrado por idioma.
+- Adicionar um pequeno badge/aviso "Não publicado neste idioma" quando o draft estiver vazio para um locale específico.
 
-Registrar `public` no `src/i18n/index.ts` (resources + NAMESPACES).
+### 5. Chaves i18n complementares
+Adicionar ao namespace `financial` (PT/EN):
+- `legal.localeTabs.ptBR`, `legal.localeTabs.en`
+- `legal.notPublishedYet` (badge no editor)
+- `legal.fallbackNotice` (opcional — exibido nas páginas públicas em EN quando estiver mostrando o conteúdo PT como fallback)
 
-### 5. Refatorar páginas restantes
-- `src/pages/Unsubscribe.tsx`: usar `t('unsubscribe.states.…')` no `messages` map.
-- `src/pages/NotFound.tsx`: usar `useTranslation('public')`.
-- `src/pages/legal/Privacy.tsx` + `Terms.tsx`: localizar `document.title`, fallback markdown e botão "Início".
-
-### 6. Limpeza dos warnings de `forwardRef` (bonus — opcional)
-Envolver `TaskMarquee` e `IdeasPreview` em `forwardRef((props, _ref) => …)` para silenciar os warnings React (vêm de `<Suspense>` passando ref aos children lazy).
+### 6. Documentação leve no editor
+Atualizar o texto do `<Alert>` no editor para deixar claro que documentos são por idioma e que cada um tem versionamento independente.
 
 ---
 
 ## Arquivos afetados
-- **Editar**: `src/i18n/index.ts`, `src/i18n/locales/pt-BR/auth.json`, `src/i18n/locales/en/auth.json`, `src/pages/Auth.tsx`, `src/pages/AcceptInvite.tsx`, `src/pages/Unsubscribe.tsx`, `src/pages/NotFound.tsx`, `src/pages/legal/Privacy.tsx`, `src/pages/legal/Terms.tsx`.
-- **Criar**: `src/i18n/locales/pt-BR/public.json`, `src/i18n/locales/en/public.json`.
-- **Opcional**: `src/components/landing/featurePreviews.tsx` e `src/components/landing/TaskMarquee.tsx` (forwardRef).
+
+- **Criar**: nova migração SQL em `supabase/migrations/` (schema + seed EN).
+- **Editar**: `src/pages/legal/Terms.tsx`, `src/pages/legal/Privacy.tsx`, `src/components/financial/LegalDocumentsEditor.tsx`, `src/i18n/locales/pt-BR/financial.json`, `src/i18n/locales/en/financial.json`.
 
 ## Validação
-1. `tsc --noEmit` para garantir build limpo.
-2. Testar `/auth`, `/aceitar-convite/:token`, `/unsubscribe`, rota inexistente e `/termos`/`/privacidade` em ambos os idiomas via switcher.
-3. Confirmar paridade de chaves com `python3` (igual à validação que usei na Landing).
+
+1. `tsc --noEmit` para garantir tipos coerentes (o `types.ts` é regenerado automaticamente após a migração).
+2. Acessar `/termos` e `/privacidade` em PT e EN via switcher — verificar conteúdo correto em cada idioma.
+3. Como solution_admin, abrir o editor: alternar entre tabs PT/EN, publicar uma nova versão em EN e confirmar que histórico fica isolado por idioma.
+4. Testar fallback: temporariamente desativar (ou simular ausência) da versão EN e confirmar que a página pública mostra o conteúdo PT em vez de "não publicado".
 
 ## Fora de escopo
-- **Tradução do conteúdo markdown** dos documentos legais (Privacy/Terms armazenados no banco). Isso requer mudança de schema (`locale` em `legal_documents`) e UI no `LegalDocumentsEditor`. Posso propor em plano separado se desejar.
+
+- Auto-tradução por IA dos documentos (ex.: usar Lovable AI para gerar a versão EN a partir da PT). Pode ser uma evolução futura, mas adiciona custo/risco de revisão jurídica.
+- Adicionar mais idiomas além de PT/EN — a estrutura já permitirá, mas o seed e a UI ficam restritos aos dois suportados pelo app.
