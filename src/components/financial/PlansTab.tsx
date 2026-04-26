@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Loader2, Plus, Pencil, Star, Power, PowerOff, Trash2 } from 'lucide-react';
+import { Loader2, Plus, Pencil, Star, Power, PowerOff } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface Plan {
@@ -39,16 +40,17 @@ const empty = {
   is_active: true,
 };
 
-const formatMoney = (cents: number, currency: string) =>
-  (cents / 100).toLocaleString('pt-BR', { style: 'currency', currency });
-
 export default function PlansTab() {
+  const { t, i18n } = useTranslation('financial');
   const [plans, setPlans] = useState<Plan[]>([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Plan | null>(null);
   const [form, setForm] = useState(empty);
   const [saving, setSaving] = useState(false);
+
+  const formatMoney = (cents: number, currency: string) =>
+    (cents / 100).toLocaleString(i18n.language || 'pt-BR', { style: 'currency', currency });
 
   const load = async () => {
     setLoading(true);
@@ -57,13 +59,14 @@ export default function PlansTab() {
       .select('*')
       .order('is_default', { ascending: false })
       .order('price_per_seat_cents');
-    if (error) toast.error('Erro ao carregar planos');
+    if (error) toast.error(t('plans.errors.loadFailed'));
     setPlans(((data || []) as any[]).map((p) => ({ ...p, features: p.features || [] })));
     setLoading(false);
   };
 
   useEffect(() => {
     load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const openNew = () => {
@@ -90,7 +93,7 @@ export default function PlansTab() {
 
   const handleSave = async () => {
     if (!form.code.trim() || !form.name.trim()) {
-      toast.error('Código e nome são obrigatórios');
+      toast.error(t('plans.errors.requiredFields'));
       return;
     }
     setSaving(true);
@@ -116,21 +119,20 @@ export default function PlansTab() {
       toast.error(res.error.message);
       return;
     }
-    toast.success(editing ? 'Plano atualizado' : 'Plano criado');
+    toast.success(editing ? t('plans.messages.updated') : t('plans.messages.created'));
     setOpen(false);
     load();
   };
 
   const setDefault = async (p: Plan) => {
-    // Limpa default atual, depois marca o novo
     const { error: e1 } = await supabase.from('plans').update({ is_default: false }).eq('is_default', true);
     if (e1) {
-      toast.error('Erro ao limpar default');
+      toast.error(t('plans.errors.clearDefault'));
       return;
     }
     const { error: e2 } = await supabase.from('plans').update({ is_default: true }).eq('id', p.id);
     if (e2) toast.error(e2.message);
-    else toast.success(`${p.name} é o novo plano padrão`);
+    else toast.success(t('plans.messages.newDefault', { name: p.name }));
     load();
   };
 
@@ -151,11 +153,9 @@ export default function PlansTab() {
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <p className="text-sm text-muted-foreground">
-          Catálogo de planos. Mudar o preço aqui só afeta novas assinaturas.
-        </p>
+        <p className="text-sm text-muted-foreground">{t('plans.intro')}</p>
         <Button onClick={openNew}>
-          <Plus className="h-4 w-4 mr-1" /> Novo plano
+          <Plus className="h-4 w-4 mr-1" /> {t('plans.new')}
         </Button>
       </div>
 
@@ -169,22 +169,24 @@ export default function PlansTab() {
                     {p.name}
                     {p.is_default && (
                       <Badge variant="default" className="text-xs">
-                        <Star className="h-3 w-3 mr-1" /> Padrão
+                        <Star className="h-3 w-3 mr-1" /> {t('plans.default')}
                       </Badge>
                     )}
-                    {!p.is_active && <Badge variant="outline">Inativo</Badge>}
+                    {!p.is_active && <Badge variant="outline">{t('plans.inactive')}</Badge>}
                   </CardTitle>
                   <CardDescription className="font-mono text-xs">{p.code}</CardDescription>
                 </div>
                 <div className="text-right">
                   <p className="text-2xl font-bold">{formatMoney(p.price_per_seat_cents, p.currency)}</p>
-                  <p className="text-xs text-muted-foreground">/assento/{p.billing_interval === 'month' ? 'mês' : 'ano'}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {t('plans.perSeat', { cycle: p.billing_interval === 'month' ? t('plans.month') : t('plans.year') })}
+                  </p>
                 </div>
               </div>
             </CardHeader>
             <CardContent className="space-y-3">
               {p.description && <p className="text-sm text-muted-foreground">{p.description}</p>}
-              <p className="text-xs text-muted-foreground">Mínimo {p.minimum_seats} assentos</p>
+              <p className="text-xs text-muted-foreground">{t('plans.minSeats', { n: p.minimum_seats })}</p>
               {p.features && p.features.length > 0 && (
                 <ul className="text-sm space-y-1">
                   {p.features.map((f, i) => (
@@ -197,17 +199,17 @@ export default function PlansTab() {
               )}
               <div className="flex flex-wrap gap-2 pt-2 border-t">
                 <Button size="sm" variant="outline" onClick={() => openEdit(p)}>
-                  <Pencil className="h-3 w-3 mr-1" /> Editar
+                  <Pencil className="h-3 w-3 mr-1" /> {t('plans.actions.edit')}
                 </Button>
                 {!p.is_default && p.is_active && (
                   <Button size="sm" variant="outline" onClick={() => setDefault(p)}>
-                    <Star className="h-3 w-3 mr-1" /> Tornar padrão
+                    <Star className="h-3 w-3 mr-1" /> {t('plans.actions.makeDefault')}
                   </Button>
                 )}
                 {!p.is_default && (
                   <Button size="sm" variant="ghost" onClick={() => toggleActive(p)}>
                     {p.is_active ? <PowerOff className="h-3 w-3 mr-1" /> : <Power className="h-3 w-3 mr-1" />}
-                    {p.is_active ? 'Desativar' : 'Ativar'}
+                    {p.is_active ? t('plans.actions.deactivate') : t('plans.actions.activate')}
                   </Button>
                 )}
               </div>
@@ -219,26 +221,30 @@ export default function PlansTab() {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{editing ? 'Editar plano' : 'Novo plano'}</DialogTitle>
+            <DialogTitle>{editing ? t('plans.edit') : t('plans.new')}</DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <Label>Código</Label>
+                <Label>{t('plans.form.code')}</Label>
                 <Input
                   value={form.code}
                   onChange={(e) => setForm({ ...form, code: e.target.value })}
-                  placeholder="starter"
+                  placeholder={t('plans.form.codePlaceholder')}
                   disabled={!!editing}
                 />
               </div>
               <div>
-                <Label>Nome</Label>
-                <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Starter" />
+                <Label>{t('plans.form.name')}</Label>
+                <Input
+                  value={form.name}
+                  onChange={(e) => setForm({ ...form, name: e.target.value })}
+                  placeholder={t('plans.form.namePlaceholder')}
+                />
               </div>
             </div>
             <div>
-              <Label>Descrição</Label>
+              <Label>{t('plans.form.description')}</Label>
               <Textarea
                 rows={2}
                 value={form.description}
@@ -247,7 +253,7 @@ export default function PlansTab() {
             </div>
             <div className="grid grid-cols-3 gap-3">
               <div>
-                <Label>Preço por assento (R$)</Label>
+                <Label>{t('plans.form.pricePerSeat')}</Label>
                 <Input
                   type="number"
                   step="0.01"
@@ -259,7 +265,7 @@ export default function PlansTab() {
                 />
               </div>
               <div>
-                <Label>Mínimo assentos</Label>
+                <Label>{t('plans.form.minSeats')}</Label>
                 <Input
                   type="number"
                   min="1"
@@ -268,7 +274,7 @@ export default function PlansTab() {
                 />
               </div>
               <div>
-                <Label>Ciclo</Label>
+                <Label>{t('plans.form.cycle')}</Label>
                 <Select
                   value={form.billing_interval}
                   onValueChange={(v: 'month' | 'year') => setForm({ ...form, billing_interval: v })}
@@ -277,23 +283,23 @@ export default function PlansTab() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="month">Mensal</SelectItem>
-                    <SelectItem value="year">Anual</SelectItem>
+                    <SelectItem value="month">{t('plans.form.monthly')}</SelectItem>
+                    <SelectItem value="year">{t('plans.form.yearly')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
             </div>
             <div>
-              <Label>Features (uma por linha)</Label>
+              <Label>{t('plans.form.features')}</Label>
               <Textarea
                 rows={4}
                 value={form.features}
                 onChange={(e) => setForm({ ...form, features: e.target.value })}
-                placeholder="Tarefas ilimitadas&#10;Suporte 24/7&#10;Relatórios avançados"
+                placeholder={t('plans.form.featuresPlaceholder')}
               />
             </div>
             <div className="flex items-center justify-between">
-              <Label htmlFor="active">Ativo</Label>
+              <Label htmlFor="active">{t('plans.form.active')}</Label>
               <Switch
                 id="active"
                 checked={form.is_active}
@@ -303,10 +309,10 @@ export default function PlansTab() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpen(false)}>
-              Cancelar
+              {t('plans.form.cancel')}
             </Button>
             <Button onClick={handleSave} disabled={saving}>
-              {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Salvar'}
+              {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : t('plans.form.save')}
             </Button>
           </DialogFooter>
         </DialogContent>
