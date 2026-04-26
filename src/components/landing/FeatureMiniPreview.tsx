@@ -1,11 +1,11 @@
-import { previewMap } from './featurePreviews';
+import { previewMap, type FeatureKey } from './featurePreviews';
 
 interface FeatureMiniPreviewProps {
-  featureTitle: string;
+  featureKey: FeatureKey;
 }
 
-const FeatureMiniPreview = ({ featureTitle }: FeatureMiniPreviewProps) => {
-  const Preview = previewMap[featureTitle];
+const FeatureMiniPreview = ({ featureKey }: FeatureMiniPreviewProps) => {
+  const Preview = previewMap[featureKey];
   if (!Preview) return null;
 
   return (

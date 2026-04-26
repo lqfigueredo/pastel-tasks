@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Turnstile, type TurnstileInstance } from '@marsidev/react-turnstile';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -23,6 +24,7 @@ const TURNSTILE_TEST_KEY = '1x00000000000000000000AA';
 const SITE_KEY = (import.meta.env.VITE_TURNSTILE_SITE_KEY as string | undefined) || TURNSTILE_TEST_KEY;
 
 const LeadFormDialog = ({ open, onOpenChange }: LeadFormDialogProps) => {
+  const { t } = useTranslation('landing');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [token, setToken] = useState<string>('');
@@ -40,7 +42,7 @@ const LeadFormDialog = ({ open, onOpenChange }: LeadFormDialogProps) => {
     e.preventDefault();
     if (!name.trim() || !email.trim()) return;
     if (!token) {
-      toast.error('Aguarde a verificação anti-bot.');
+      toast.error(t('lead.form.turnstileWait'));
       return;
     }
 
@@ -51,13 +53,13 @@ const LeadFormDialog = ({ open, onOpenChange }: LeadFormDialogProps) => {
     setLoading(false);
 
     if (error || (data as any)?.error) {
-      toast.error((data as any)?.error || 'Erro ao enviar. Tente novamente.');
+      toast.error((data as any)?.error || t('lead.toast.errorGeneric'));
       turnstileRef.current?.reset();
       setToken('');
       return;
     }
 
-    toast.success('Obrigado pelo interesse! Entraremos em contato.');
+    toast.success(t('lead.toast.success'));
     reset();
     onOpenChange(false);
   };
@@ -66,31 +68,31 @@ const LeadFormDialog = ({ open, onOpenChange }: LeadFormDialogProps) => {
     <Dialog open={open} onOpenChange={(o) => { if (!o) reset(); onOpenChange(o); }}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Demonstre seu interesse</DialogTitle>
+          <DialogTitle>{t('lead.dialog.title')}</DialogTitle>
           <DialogDescription>
-            Preencha seus dados e entraremos em contato para apresentar o NEVVOH.
+            {t('lead.dialog.description')}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="lead-name">Nome</Label>
+            <Label htmlFor="lead-name">{t('lead.form.name')}</Label>
             <Input
               id="lead-name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Seu nome completo"
+              placeholder={t('lead.form.namePlaceholder')}
               required
               maxLength={100}
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="lead-email">E-mail</Label>
+            <Label htmlFor="lead-email">{t('lead.form.email')}</Label>
             <Input
               id="lead-email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="seu@email.com"
+              placeholder={t('lead.form.emailPlaceholder')}
               required
               maxLength={255}
             />
@@ -106,7 +108,7 @@ const LeadFormDialog = ({ open, onOpenChange }: LeadFormDialogProps) => {
             />
           </div>
           <Button type="submit" className="w-full" disabled={loading || !token}>
-            {loading ? 'Enviando...' : 'Enviar'}
+            {loading ? t('lead.form.submitting') : t('lead.form.submit')}
           </Button>
         </form>
       </DialogContent>
