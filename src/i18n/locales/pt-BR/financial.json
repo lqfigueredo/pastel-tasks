@@ -289,7 +289,8 @@
     },
     "notes": {
       "empty": "Sem notas.",
-      "add": "Adicionar nota...",
+      "add": "Adicionar nota interna (visível só para solution_admin)...",
+      "addBtn": "Adicionar",
       "save": "Salvar nota",
       "errorSave": "Erro ao salvar nota"
     },
