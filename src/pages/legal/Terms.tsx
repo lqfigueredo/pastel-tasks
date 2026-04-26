@@ -9,24 +9,51 @@ import { ArrowLeft } from 'lucide-react';
 import logo from '@/assets/logo.webp';
 
 const Terms = () => {
-  const { t } = useTranslation('public');
+  const { t, i18n } = useTranslation('public');
   const [content, setContent] = useState<string>('');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let cancelled = false;
     document.title = t('legal.termsTitle');
-    supabase
-      .from('legal_documents')
-      .select('content')
-      .eq('doc_type', 'terms')
-      .order('version', { ascending: false })
-      .limit(1)
-      .maybeSingle()
-      .then(({ data }) => {
-        setContent(data?.content || `# ${t('legal.termsHeading')}\n\n${t('legal.notPublished')}`);
-        setLoading(false);
-      });
-  }, [t]);
+    setLoading(true);
+
+    const currentLocale = i18n.language?.startsWith('pt') ? 'pt-BR' : 'en';
+
+    const fetchDoc = async () => {
+      const { data } = await supabase
+        .from('legal_documents')
+        .select('content')
+        .eq('doc_type', 'terms')
+        .eq('locale', currentLocale)
+        .order('version', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      let resolved = data?.content;
+
+      if (!resolved && currentLocale !== 'pt-BR') {
+        const { data: fallback } = await supabase
+          .from('legal_documents')
+          .select('content')
+          .eq('doc_type', 'terms')
+          .eq('locale', 'pt-BR')
+          .order('version', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        resolved = fallback?.content;
+      }
+
+      if (cancelled) return;
+      setContent(resolved || `# ${t('legal.termsHeading')}\n\n${t('legal.notPublished')}`);
+      setLoading(false);
+    };
+
+    fetchDoc();
+    return () => {
+      cancelled = true;
+    };
+  }, [t, i18n.language]);
 
   if (loading) return <PageLoader />;
 
