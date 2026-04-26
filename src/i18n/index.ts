@@ -24,6 +24,7 @@ import ptPricing from './locales/pt-BR/pricing.json';
 import ptAdmin from './locales/pt-BR/admin.json';
 import ptFinancial from './locales/pt-BR/financial.json';
 import ptFinancialRegister from './locales/pt-BR/financialRegister.json';
+import ptLanding from './locales/pt-BR/landing.json';
 
 import enCommon from './locales/en/common.json';
 import enNav from './locales/en/nav.json';
@@ -45,6 +46,7 @@ import enPricing from './locales/en/pricing.json';
 import enAdmin from './locales/en/admin.json';
 import enFinancial from './locales/en/financial.json';
 import enFinancialRegister from './locales/en/financialRegister.json';
+import enLanding from './locales/en/landing.json';
 
 export const SUPPORTED_LOCALES = ['pt-BR', 'en'] as const;
 export type SupportedLocale = (typeof SUPPORTED_LOCALES)[number];
@@ -72,6 +74,7 @@ const NAMESPACES = [
   'admin',
   'financial',
   'financialRegister',
+  'landing',
 ] as const;
 
 const resources = {
@@ -96,6 +99,7 @@ const resources = {
     admin: ptAdmin,
     financial: ptFinancial,
     financialRegister: ptFinancialRegister,
+    landing: ptLanding,
   },
   en: {
     common: enCommon,
@@ -118,6 +122,7 @@ const resources = {
     admin: enAdmin,
     financial: enFinancial,
     financialRegister: enFinancialRegister,
+    landing: enLanding,
   },
 } as const;
 
