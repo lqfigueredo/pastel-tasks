@@ -52,10 +52,11 @@ const docItems: NavItem[] = [
 ];
 
 const adminItems: NavItem[] = [
-  { key: 'items.settings', url: '/configuracoes', icon: Settings },
   { key: 'items.admin', url: '/admin', icon: ShieldCheck },
   { key: 'items.billing', url: '/cobranca', icon: CreditCard },
 ];
+
+const settingsItem: NavItem = { key: 'items.settings', url: '/configuracoes', icon: Settings };
 
 const operationItems: NavItem[] = [
   { key: 'items.financial', url: '/financeiro', icon: TrendingUp },
@@ -128,7 +129,7 @@ export function AppSidebar() {
           <SidebarGroup>
             {!collapsed && <SidebarGroupLabel>{t('groups.administration')}</SidebarGroupLabel>}
             <SidebarGroupContent>
-              <SidebarMenu>{adminItems.map(renderItem)}</SidebarMenu>
+              <SidebarMenu>{[settingsItem, ...adminItems].map(renderItem)}</SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
         )}
@@ -138,6 +139,15 @@ export function AppSidebar() {
             {!collapsed && <SidebarGroupLabel>{t('groups.operation')}</SidebarGroupLabel>}
             <SidebarGroupContent>
               <SidebarMenu>{operationItems.map(renderItem)}</SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
+
+        {!isAdmin && isSolutionAdmin && (
+          <SidebarGroup>
+            {!collapsed && <SidebarGroupLabel>{t('groups.administration')}</SidebarGroupLabel>}
+            <SidebarGroupContent>
+              <SidebarMenu>{renderItem(settingsItem)}</SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
         )}
