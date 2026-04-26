@@ -46,6 +46,20 @@ const RevealOnScroll = ({
     const el = ref.current;
     if (!el) return;
 
+    // If already in viewport on mount (above-the-fold), reveal immediately
+    // to avoid delaying LCP paint behind opacity transition.
+    const rect = el.getBoundingClientRect();
+    const viewportH = window.innerHeight || document.documentElement.clientHeight;
+    if (rect.top < viewportH && rect.bottom > 0) {
+      setVisible(true);
+      return;
+    }
+
+    if (typeof IntersectionObserver === 'undefined') {
+      setVisible(true);
+      return;
+    }
+
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
