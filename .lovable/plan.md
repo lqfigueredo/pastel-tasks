@@ -1,70 +1,75 @@
+# Plano — Completar tradução PT/EN das páginas públicas
+
 ## Diagnóstico
 
-O erro `faqItems.map is not a function` ocorre na Landing exatamente após o usuário trocar o idioma para "Português (Brasil)" (visível no session replay).
+A **Landing page e seus componentes estão 100% traduzidos** (178 chaves PT/EN sincronizadas, sem diferenças). O problema está em **outras páginas públicas** que ainda estão totalmente hardcoded em PT-BR e quebram a experiência quando o visitante seleciona EN no switcher da Landing.
 
-**Causa raiz:** Várias partes da Landing (e Pricing/Dashboard/PersonalCalendar) usam `t('chave', { returnObjects: true })` para ler arrays/objetos do JSON. Durante a troca de idioma:
-1. O i18next altera `i18n.language` e dispara re-render.
-2. O cast TypeScript (`as Array<...>`) **não valida** o retorno em runtime.
-3. Se a chave ainda não está resolvida no novo namespace (race momentâneo) ou se o i18next por configuração padrão devolve a string da própria chave (`"faq.items"`) em vez do array, `.map()` quebra a página inteira via `ErrorBoundary`.
+### Páginas afetadas
+| Página | Status | Problema |
+|---|---|---|
+| `Auth.tsx` | ❌ 100% PT hardcoded | Toda a tela de login/cadastro, validações, toasts, link "Voltar", aviso de Termos/Privacidade |
+| `AcceptInvite.tsx` | ❌ 100% PT hardcoded | Tela de aceite de convite por email |
+| `Unsubscribe.tsx` | ❌ 100% PT hardcoded | 6 estados (loading/valid/already/invalid/success/error) |
+| `NotFound.tsx` | ❌ Fixo em EN | "Oops! Page not found" |
+| `legal/Privacy.tsx` + `legal/Terms.tsx` | ⚠️ Parcial | `document.title`, fallback markdown e link "Início" em PT |
 
-O problema é potencial em **todos** os locais listados abaixo — não só no FAQ. Hoje o JSON do FAQ está correto em pt-BR e en, então o gatilho mais provável é o instante de transição de idioma.
+### Achados menores (não bloqueantes)
+- 2 warnings de `forwardRef` no console em `IdeasPreview` e `TaskMarquee` (lazy components recebem ref do `Suspense` — vale anular envolvendo a função em `forwardRef`).
+- Conteúdo do markdown de Privacy/Terms vem do banco — só existe versão PT. Para localizar de verdade, seria preciso armazenar versões por idioma na tabela `legal_documents` (decisão de produto, **fora deste escopo**).
 
-## Locais afetados (mesmo padrão frágil)
+---
 
-- `src/pages/Landing.tsx` → `faq.items`
-- `src/pages/Pricing.tsx` → `faq.items`
-- `src/pages/Dashboard.tsx` → `weekdays`
-- `src/pages/PersonalCalendar.tsx` → `weekdays`
-- `src/components/landing/TaskMarquee.tsx` → `marquee.items`
-- `src/components/landing/FloatingTasksBackground.tsx` → `floating.items`
-- `src/components/landing/featurePreviews.tsx` (8 ocorrências):
-  - `previews.kanban.cards.todo|doing|done`
-  - `previews.meeting.items`
-  - `previews.dashboard.tasks`
-  - `previews.calendar.days`
-  - `previews.calendar.events` (Record)
-  - `previews.workInstructions.steps`
-  - `previews.ideas.items`
+## Mudanças propostas
 
-## Plano de correção
+### 1. Adicionar chaves ao namespace `auth.json` (PT-BR e EN)
+Expandir o atual `auth.json` (hoje quase vazio) com:
+- `auth.back`, `auth.loading`, `auth.tagline`
+- `auth.login.title`, `auth.login.description`, `auth.login.submit`, `auth.login.toggle`
+- `auth.signup.title`, `auth.signup.description`, `auth.signup.submit`, `auth.signup.toggle`, `auth.signup.successTitle`, `auth.signup.successDescription`, `auth.signup.terms` (com `<Trans>` para os links)
+- `auth.fields.name/email/password` (label + placeholder)
+- `auth.validation.nameRequired/nameTooShort/emailRequired/emailInvalid/passwordRequired/passwordTooShort`
+- `auth.errors.signIn` / `auth.errors.signUp` (usados pelos `errorToast`)
+- `auth.viewPlans`, `auth.submitting`
 
-### 1. Criar helper utilitário `safeTArray` / `safeTObject`
-Arquivo novo: `src/i18n/safeT.ts`
-- `safeTArray<T>(value: unknown, fallback: T[] = []): T[]` → retorna `value` se for array, senão `fallback`.
-- `safeTObject<T>(value: unknown, fallback: T = {} as T): T` → retorna `value` se for objeto plano, senão `fallback`.
+### 2. Refatorar `src/pages/Auth.tsx`
+- Adicionar `useTranslation('auth')`.
+- Substituir todas as strings hardcoded.
+- Usar `<Trans i18nKey="signup.terms" components={{ termsLink: <Link…/>, privacyLink: <Link…/> }} />` para preservar os links de Termos/Privacidade.
 
-Esse helper blinda **todo** local que faz `returnObjects: true`, evitando crashes em qualquer transição de idioma futura.
+### 3. Criar/expandir namespace para AcceptInvite
+- Adicionar bloco `acceptInvite.*` no `auth.json` (mesmo namespace, para reduzir overhead de carregamento) com:
+  - `invalidTitle`, `invitedTitle`, `invitedBy` (com interpolação `{{inviter}}` e `{{team}}`)
+  - Labels do formulário, validações, toasts, botão "Ir para o início" / "Criar conta e aceitar convite"
+- Refatorar `src/pages/AcceptInvite.tsx` consumindo essas chaves.
 
-### 2. Refatorar os 12 pontos de uso
-Substituir o padrão atual:
-```ts
-const faqItems = t('faq.items', { returnObjects: true }) as Array<{ q: string; a: string }>;
-```
-Por:
-```ts
-const faqItems = safeTArray<{ q: string; a: string }>(
-  t('faq.items', { returnObjects: true })
-);
-```
+### 4. Criar namespace `public.json` (PT-BR e EN) — para páginas públicas leves
+Cobre `Unsubscribe`, `NotFound` e títulos legais — namespace pequeno e reutilizável:
+- `unsubscribe.states.{loading|valid|already|invalid|success|error}.{title|desc}`
+- `unsubscribe.confirmButton`
+- `notFound.title`, `notFound.message`, `notFound.back`
+- `legal.privacyTitle`, `legal.termsTitle`, `legal.notPublished`, `legal.home`
 
-E análogo para `safeTObject` no caso de `previews.calendar.events` (que é um Record).
+Registrar `public` no `src/i18n/index.ts` (resources + NAMESPACES).
 
-### 3. Garantir que i18n inicializou antes de renderizar a Landing
-No `src/i18n/index.ts`, atualmente `useSuspense: false`. Isso é correto porque os recursos são estáticos, mas vou adicionar uma proteção extra:
-- Em `Landing.tsx` (e Pricing.tsx), adicionar early-return curto enquanto `i18n.isInitialized` for `false` (mostra um placeholder simples) — evita o instante de transição.
+### 5. Refatorar páginas restantes
+- `src/pages/Unsubscribe.tsx`: usar `t('unsubscribe.states.…')` no `messages` map.
+- `src/pages/NotFound.tsx`: usar `useTranslation('public')`.
+- `src/pages/legal/Privacy.tsx` + `Terms.tsx`: localizar `document.title`, fallback markdown e botão "Início".
 
-### 4. Validação
-- Trocar idioma EN → PT-BR e vice-versa várias vezes na Landing.
-- Recarregar com `app_locale=pt-BR` no localStorage.
-- Verificar console limpo e nenhuma quebra do ErrorBoundary.
-- Conferir que Pricing também não quebra.
+### 6. Limpeza dos warnings de `forwardRef` (bonus — opcional)
+Envolver `TaskMarquee` e `IdeasPreview` em `forwardRef((props, _ref) => …)` para silenciar os warnings React (vêm de `<Suspense>` passando ref aos children lazy).
 
-## Arquivos que serão modificados
+---
 
-- **Criado:** `src/i18n/safeT.ts`
-- **Editado:** `src/pages/Landing.tsx`, `src/pages/Pricing.tsx`, `src/pages/Dashboard.tsx`, `src/pages/PersonalCalendar.tsx`
-- **Editado:** `src/components/landing/TaskMarquee.tsx`, `FloatingTasksBackground.tsx`, `featurePreviews.tsx`
+## Arquivos afetados
+- **Editar**: `src/i18n/index.ts`, `src/i18n/locales/pt-BR/auth.json`, `src/i18n/locales/en/auth.json`, `src/pages/Auth.tsx`, `src/pages/AcceptInvite.tsx`, `src/pages/Unsubscribe.tsx`, `src/pages/NotFound.tsx`, `src/pages/legal/Privacy.tsx`, `src/pages/legal/Terms.tsx`.
+- **Criar**: `src/i18n/locales/pt-BR/public.json`, `src/i18n/locales/en/public.json`.
+- **Opcional**: `src/components/landing/featurePreviews.tsx` e `src/components/landing/TaskMarquee.tsx` (forwardRef).
 
-## Resultado esperado
+## Validação
+1. `tsc --noEmit` para garantir build limpo.
+2. Testar `/auth`, `/aceitar-convite/:token`, `/unsubscribe`, rota inexistente e `/termos`/`/privacidade` em ambos os idiomas via switcher.
+3. Confirmar paridade de chaves com `python3` (igual à validação que usei na Landing).
 
-Trocar idioma na Landing (e em qualquer lugar do app que use `returnObjects: true`) nunca mais derruba a página — no pior cenário, o conteúdo aparece vazio por uma fração de segundo até o próximo render aplicar o idioma novo.
+## Fora de escopo
+- **Tradução do conteúdo markdown** dos documentos legais (Privacy/Terms armazenados no banco). Isso requer mudança de schema (`locale` em `legal_documents`) e UI no `LegalDocumentsEditor`. Posso propor em plano separado se desejar.

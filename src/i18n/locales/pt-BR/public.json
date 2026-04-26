@@ -1,0 +1,26 @@
+{
+  "unsubscribe": {
+    "states": {
+      "loading": { "title": "Verificando...", "desc": "Aguarde um momento." },
+      "valid": { "title": "Cancelar inscrição", "desc": "Clique no botão abaixo para confirmar o cancelamento de e-mails." },
+      "already": { "title": "Já cancelado", "desc": "Você já cancelou a inscrição anteriormente." },
+      "invalid": { "title": "Link inválido", "desc": "Este link de cancelamento é inválido ou expirou." },
+      "success": { "title": "Inscrição cancelada", "desc": "Você não receberá mais e-mails transacionais." },
+      "error": { "title": "Erro", "desc": "Não foi possível processar sua solicitação. Tente novamente." }
+    },
+    "confirmButton": "Confirmar cancelamento"
+  },
+  "notFound": {
+    "title": "404",
+    "message": "Ops! Página não encontrada",
+    "back": "Voltar para o início"
+  },
+  "legal": {
+    "privacyTitle": "Política de Privacidade | NEVVOH",
+    "termsTitle": "Termos de Uso | NEVVOH",
+    "privacyHeading": "Política de Privacidade",
+    "termsHeading": "Termos de Uso",
+    "notPublished": "Documento ainda não publicado.",
+    "home": "Início"
+  }
+}

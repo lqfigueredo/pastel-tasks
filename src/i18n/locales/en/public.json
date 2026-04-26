@@ -1,0 +1,26 @@
+{
+  "unsubscribe": {
+    "states": {
+      "loading": { "title": "Checking...", "desc": "Please wait a moment." },
+      "valid": { "title": "Unsubscribe", "desc": "Click the button below to confirm the email unsubscription." },
+      "already": { "title": "Already unsubscribed", "desc": "You have already unsubscribed previously." },
+      "invalid": { "title": "Invalid link", "desc": "This unsubscribe link is invalid or has expired." },
+      "success": { "title": "Unsubscribed", "desc": "You will no longer receive transactional emails." },
+      "error": { "title": "Error", "desc": "We couldn't process your request. Please try again." }
+    },
+    "confirmButton": "Confirm unsubscription"
+  },
+  "notFound": {
+    "title": "404",
+    "message": "Oops! Page not found",
+    "back": "Return to Home"
+  },
+  "legal": {
+    "privacyTitle": "Privacy Policy | NEVVOH",
+    "termsTitle": "Terms of Use | NEVVOH",
+    "privacyHeading": "Privacy Policy",
+    "termsHeading": "Terms of Use",
+    "notPublished": "Document not yet published.",
+    "home": "Home"
+  }
+}
