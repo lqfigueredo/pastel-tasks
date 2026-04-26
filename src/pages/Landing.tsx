@@ -27,6 +27,7 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import LeadFormTrigger from '@/components/landing/LeadFormTrigger';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
+import { safeTArray } from '@/i18n/safeT';
 
 /* ── Scroll-reveal wrapper ────────────────────────────── */
 const RevealOnScroll = ({
