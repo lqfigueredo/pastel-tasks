@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, lazy, Suspense, type ReactNode } from 'react';
-import { KanbanPreview } from '@/components/landing/featurePreviews';
+import { useTranslation } from 'react-i18next';
+import { KanbanPreview, type FeatureKey } from '@/components/landing/featurePreviews';
 
 // Lazy-load heavy below-the-fold pieces — keeps initial Landing bundle light
 const FeaturePreviewDialog = lazy(() => import('@/components/landing/FeaturePreviewDialog'));
@@ -18,7 +19,6 @@ import {
   UserPlus,
   ListChecks,
   BarChart3,
-  ArrowRight,
   Sparkles,
   CheckSquare,
 } from 'lucide-react';
@@ -26,6 +26,7 @@ import logo from '@/assets/logo.webp';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import LeadFormTrigger from '@/components/landing/LeadFormTrigger';
+import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 
 /* ── Scroll-reveal wrapper ────────────────────────────── */
 const RevealOnScroll = ({
@@ -73,78 +74,29 @@ const RevealOnScroll = ({
   );
 };
 
-const features = [
-  {
-    icon: LayoutDashboard,
-    title: 'Kanban Intuitivo',
-    description: 'Organize tarefas em colunas personalizáveis com arrastar e soltar.',
-  },
-  {
-    icon: Users,
-    title: 'Gestão de Equipes',
-    description: 'Crie equipes, atribua tarefas e acompanhe o progresso de cada membro.',
-  },
-  {
-    icon: FileText,
-    title: 'Atas de Reunião',
-    description: 'Registre reuniões, pendências e vincule tarefas automaticamente.',
-  },
-  {
-    icon: CalendarDays,
-    title: 'Dashboard de Prazos',
-    description: 'Visualize entregas por período e nunca perca um prazo importante.',
-  },
-  {
-    icon: Timer,
-    title: 'Temporizador Pomodoro',
-    description: 'Controle seu tempo com timer, countdown, pausa e retomada.',
-  },
-  {
-    icon: Calendar,
-    title: 'Agenda Pessoal',
-    description: 'Gerencie eventos e compromissos em um calendário integrado.',
-  },
-  {
-    icon: BookOpen,
-    title: 'Instruções de Trabalho',
-    description: 'Documentos versionados com histórico completo de alterações.',
-  },
-  {
-    icon: Lightbulb,
-    title: 'Registro de Ideias',
-    description: 'Capture insights e vincule ideias diretamente a tarefas.',
-  },
+const FEATURES: Array<{ icon: typeof LayoutDashboard; key: FeatureKey }> = [
+  { icon: LayoutDashboard, key: 'kanban' },
+  { icon: Users, key: 'team' },
+  { icon: FileText, key: 'meetings' },
+  { icon: CalendarDays, key: 'dashboard' },
+  { icon: Timer, key: 'timer' },
+  { icon: Calendar, key: 'calendar' },
+  { icon: BookOpen, key: 'workInstructions' },
+  { icon: Lightbulb, key: 'ideas' },
 ];
 
-const steps = [
-  {
-    icon: UserPlus,
-    number: '01',
-    title: 'Crie sua conta',
-    description: 'Cadastro rápido e sem complicações.',
-  },
-  {
-    icon: ListChecks,
-    number: '02',
-    title: 'Organize suas tarefas',
-    description: 'Monte seu quadro Kanban e distribua para a equipe.',
-  },
-  {
-    icon: BarChart3,
-    number: '03',
-    title: 'Acompanhe os resultados',
-    description: 'Dashboards em tempo real para decisões mais inteligentes.',
-  },
+const STEPS: Array<{ icon: typeof UserPlus; key: 'signup' | 'organize' | 'track'; number: string }> = [
+  { icon: UserPlus, key: 'signup', number: '01' },
+  { icon: ListChecks, key: 'organize', number: '02' },
+  { icon: BarChart3, key: 'track', number: '03' },
 ];
 
-const highlights = [
-  { label: 'Tudo em um só lugar', value: '8+ módulos' },
-  { label: 'Gestão simplificada', value: '100% visual' },
-  { label: 'Equipes conectadas', value: 'Tempo real' },
-];
+const HIGHLIGHT_KEYS = ['allInOne', 'simpleManagement', 'connectedTeams'] as const;
 
 const Landing = () => {
-  const [previewFeature, setPreviewFeature] = useState<string | null>(null);
+  const { t } = useTranslation('landing');
+  const [previewFeature, setPreviewFeature] = useState<FeatureKey | null>(null);
+  const faqItems = t('faq.items', { returnObjects: true }) as Array<{ q: string; a: string }>;
 
   return (
     <div className="min-h-screen bg-background text-foreground scroll-smooth">
@@ -156,11 +108,12 @@ const Landing = () => {
             <span className="text-lg font-bold font-display">NEVVOH</span>
           </div>
           <nav className="flex items-center gap-2">
+            <LanguageSwitcher compact />
             <Link to="/precos" className="text-sm font-medium text-muted-foreground hover:text-foreground px-3 py-2">
-              Preços
+              {t('header.pricing')}
             </Link>
             <Link to="/auth">
-              <Button variant="outline" size="sm">Já tenho conta</Button>
+              <Button variant="outline" size="sm">{t('header.haveAccount')}</Button>
             </Link>
           </nav>
         </div>
@@ -179,23 +132,22 @@ const Landing = () => {
             <div className="text-center lg:text-left">
               <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 text-sm font-medium text-primary mb-6 animate-fade-in">
                 <Sparkles className="h-4 w-4" />
-                Produtividade sem complexidade
+                {t('hero.badge')}
               </div>
 
               <h1
                 className="text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl font-display animate-fade-in"
                 style={{ animationDelay: '100ms', animationFillMode: 'both' }}
               >
-                Gestão de tarefas
-                <span className="text-primary"> simples e eficiente</span>
+                {t('hero.title1')}
+                <span className="text-primary">{t('hero.titleHighlight')}</span>
               </h1>
 
               <p
                 className="mx-auto lg:mx-0 mt-6 max-w-2xl text-lg text-muted-foreground animate-fade-in"
                 style={{ animationDelay: '200ms', animationFillMode: 'both' }}
               >
-                Organize projetos, gerencie equipes e acompanhe reuniões em um único lugar.
-                O NEVVOH foi criado para times que querem produtividade sem complexidade.
+                {t('hero.subtitle')}
               </p>
 
               <div
@@ -205,7 +157,7 @@ const Landing = () => {
                 <Link to="/auth">
                   <Button size="lg" className="text-base px-8 gap-2">
                     <Sparkles className="h-5 w-5" />
-                    Realizar trial grátis
+                    {t('hero.cta.trial')}
                   </Button>
                 </Link>
 
@@ -216,7 +168,7 @@ const Landing = () => {
                 className="mt-4 text-xs text-muted-foreground animate-fade-in lg:text-left text-center"
                 style={{ animationDelay: '400ms', animationFillMode: 'both' }}
               >
-                14 dias grátis · sem cartão de crédito
+                {t('hero.trialNote')}
               </p>
             </div>
 
@@ -236,11 +188,11 @@ const Landing = () => {
                     <div className="h-2.5 w-2.5 rounded-full bg-yellow-500/70" />
                     <div className="h-2.5 w-2.5 rounded-full bg-green-500/70" />
                   </div>
-                  <span className="text-xs text-muted-foreground font-medium">Quadro · Equipe Produto</span>
+                  <span className="text-xs text-muted-foreground font-medium">{t('hero.mockup.boardLabel')}</span>
                 </div>
                 <KanbanPreview />
                 <div className="absolute -bottom-3 -right-3 rounded-full bg-primary text-primary-foreground px-3 py-1 text-xs font-semibold shadow-lg">
-                  Tempo real
+                  {t('hero.mockup.realtime')}
                 </div>
               </div>
             </div>
@@ -253,32 +205,32 @@ const Landing = () => {
         <div className="mx-auto max-w-6xl px-6">
           <RevealOnScroll>
             <h2 className="text-center text-2xl font-bold sm:text-3xl font-display">
-              Tudo que você precisa
+              {t('features.title')}
             </h2>
             <p className="mx-auto mt-3 max-w-xl text-center text-muted-foreground">
-              8 módulos integrados para cobrir todo o ciclo de gestão da sua equipe.
+              {t('features.subtitle')}
             </p>
           </RevealOnScroll>
 
           <div className="mt-14 grid gap-6 sm:grid-cols-2">
-            {features.map((f, i) => (
-              <RevealOnScroll key={f.title} delay={i * 60}>
+            {FEATURES.map((f, i) => (
+              <RevealOnScroll key={f.key} delay={i * 60}>
                 <div
                   className="group rounded-xl border border-border bg-card p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg h-full cursor-pointer"
-                  onClick={() => setPreviewFeature(f.title)}
+                  onClick={() => setPreviewFeature(f.key)}
                 >
                   <Suspense fallback={<div className="h-24" />}>
-                    <FeatureMiniPreview featureTitle={f.title} />
+                    <FeatureMiniPreview featureKey={f.key} />
                   </Suspense>
                   <div className="mt-5 flex items-start gap-3">
                     <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10">
                       <f.icon className="h-5 w-5 text-primary" />
                     </div>
                     <div className="flex-1">
-                      <h3 className="font-semibold">{f.title}</h3>
-                      <p className="mt-1 text-sm text-muted-foreground">{f.description}</p>
+                      <h3 className="font-semibold">{t(`features.items.${f.key}.title`)}</h3>
+                      <p className="mt-1 text-sm text-muted-foreground">{t(`features.items.${f.key}.description`)}</p>
                       <p className="mt-2 text-xs text-primary font-medium opacity-80 group-hover:opacity-100 transition-opacity">
-                        Clique para ver exemplo →
+                        {t('features.clickHint')}
                       </p>
                     </div>
                   </div>
@@ -305,28 +257,28 @@ const Landing = () => {
         <div className="relative mx-auto max-w-6xl px-6">
           <RevealOnScroll>
             <h2 className="text-center text-2xl font-bold sm:text-3xl font-display">
-              Como funciona
+              {t('steps.title')}
             </h2>
             <p className="mx-auto mt-3 max-w-xl text-center text-muted-foreground">
-              Comece em minutos. Sem curva de aprendizado.
+              {t('steps.subtitle')}
             </p>
           </RevealOnScroll>
 
           <div className="mt-14 grid gap-8 sm:grid-cols-3">
-            {steps.map((step, i) => (
+            {STEPS.map((step, i) => (
               <RevealOnScroll key={step.number} delay={i * 150}>
                 <div className="relative text-center">
-                  {i < steps.length - 1 && (
+                  {i < STEPS.length - 1 && (
                     <div className="hidden sm:block absolute top-8 left-[60%] w-[80%] h-px bg-border" />
                   )}
                   <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10">
                     <step.icon className="h-7 w-7 text-primary" />
                   </div>
                   <span className="text-xs font-bold text-primary tracking-widest uppercase">
-                    Passo {step.number}
+                    {t('steps.stepLabel', { number: step.number })}
                   </span>
-                  <h3 className="mt-2 text-lg font-semibold">{step.title}</h3>
-                  <p className="mt-1 text-sm text-muted-foreground">{step.description}</p>
+                  <h3 className="mt-2 text-lg font-semibold">{t(`steps.items.${step.key}.title`)}</h3>
+                  <p className="mt-1 text-sm text-muted-foreground">{t(`steps.items.${step.key}.description`)}</p>
                 </div>
               </RevealOnScroll>
             ))}
@@ -338,13 +290,13 @@ const Landing = () => {
       <section className="bg-primary py-16">
         <div className="mx-auto max-w-6xl px-6">
           <div className="grid gap-8 sm:grid-cols-3 text-center">
-            {highlights.map((h, i) => (
-              <RevealOnScroll key={h.label} delay={i * 120}>
+            {HIGHLIGHT_KEYS.map((key, i) => (
+              <RevealOnScroll key={key} delay={i * 120}>
                 <div>
                   <p className="text-2xl font-bold text-primary-foreground sm:text-3xl font-display">
-                    {h.value}
+                    {t(`highlights.${key}.value`)}
                   </p>
-                  <p className="mt-1 text-primary-foreground/80 text-sm">{h.label}</p>
+                  <p className="mt-1 text-primary-foreground/80 text-sm">{t(`highlights.${key}.label`)}</p>
                 </div>
               </RevealOnScroll>
             ))}
@@ -363,40 +315,15 @@ const Landing = () => {
         <div className="relative mx-auto max-w-3xl px-6">
           <RevealOnScroll>
             <h2 className="text-center text-2xl font-bold sm:text-3xl font-display">
-              Perguntas Frequentes
+              {t('faq.title')}
             </h2>
             <p className="mx-auto mt-3 max-w-xl text-center text-muted-foreground">
-              Tire suas dúvidas sobre o NEVVOH e gestão de tarefas.
+              {t('faq.subtitle')}
             </p>
           </RevealOnScroll>
 
           <div className="mt-12 space-y-6">
-            {[
-              {
-                q: 'O que é um gerenciador de tarefas online?',
-                a: 'Um gerenciador de tarefas online é um software que permite criar, organizar e acompanhar atividades de forma digital. O NEVVOH vai além: integra Kanban, gestão de equipes, atas de reunião, temporizador Pomodoro e agenda pessoal em uma única plataforma.',
-              },
-              {
-                q: 'Como organizar as tarefas da minha equipe?',
-                a: 'Com o NEVVOH, você cria equipes, distribui tarefas no quadro Kanban com arrastar e soltar, define prazos e acompanha o progresso em tempo real pelo dashboard. Cada membro visualiza suas responsabilidades de forma clara.',
-              },
-              {
-                q: 'O NEVVOH substitui ferramentas como Trello ou Asana?',
-                a: 'Sim. O NEVVOH oferece funcionalidades equivalentes — Kanban, gestão de equipes, prazos — e ainda inclui módulos exclusivos como atas de reunião com pendências, instruções de trabalho versionadas e registro de ideias.',
-              },
-              {
-                q: 'Posso usar o NEVVOH para gerenciar reuniões?',
-                a: 'Sim! O módulo de Atas de Reunião permite registrar participantes, criar pendências com responsáveis e prazos, e vincular automaticamente tarefas geradas a partir da reunião.',
-              },
-              {
-                q: 'O NEVVOH é gratuito?',
-                a: 'O NEVVOH oferece um período de teste gratuito para que você conheça todas as funcionalidades. Entre em contato para saber mais sobre os planos disponíveis.',
-              },
-              {
-                q: 'Como funciona o temporizador Pomodoro do NEVVOH?',
-                a: 'O temporizador integrado permite controlar seu tempo de trabalho com sessões focadas, pausas e contagem regressiva. Você pode associar o timer a tarefas específicas para medir o tempo gasto em cada atividade.',
-              },
-            ].map((faq, i) => (
+            {faqItems.map((faq, i) => (
               <RevealOnScroll key={i} delay={i * 80}>
                 <details className="group rounded-xl border border-border bg-card p-5">
                   <summary className="cursor-pointer list-none flex items-center justify-between font-semibold">
@@ -422,13 +349,13 @@ const Landing = () => {
               <span className="text-sm font-semibold">NEVVOH</span>
             </div>
             <nav className="flex items-center gap-4 text-sm text-muted-foreground">
-              <Link to="/termos" className="hover:text-foreground">Termos de Uso</Link>
-              <Link to="/privacidade" className="hover:text-foreground">Política de Privacidade</Link>
-              <Link to="/auth" className="text-primary hover:underline">Acessar plataforma</Link>
+              <Link to="/termos" className="hover:text-foreground">{t('footer.terms')}</Link>
+              <Link to="/privacidade" className="hover:text-foreground">{t('footer.privacy')}</Link>
+              <Link to="/auth" className="text-primary hover:underline">{t('footer.access')}</Link>
             </nav>
           </div>
           <p className="text-xs text-muted-foreground text-center">
-            © {new Date().getFullYear()} NEVVOH. Todos os direitos reservados.
+            {t('footer.copyright', { year: new Date().getFullYear() })}
           </p>
         </div>
       </footer>
@@ -437,7 +364,7 @@ const Landing = () => {
           <FeaturePreviewDialog
             open={!!previewFeature}
             onOpenChange={(open) => !open && setPreviewFeature(null)}
-            featureTitle={previewFeature}
+            featureKey={previewFeature}
           />
         </Suspense>
       )}
