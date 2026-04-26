@@ -413,7 +413,7 @@
       "terms": "Terms of Use",
       "privacy": "Privacy Policy"
     },
-    "alert": "Use markdown. Published versions are immutable and visible at <code>/terms</code> or <code>/privacy</code>. Legal review is recommended before public go-live.",
+    "alert": "Use markdown. Each language has its own independent versioning. Published versions are immutable and visible at <code>/terms</code> or <code>/privacy</code>. Legal review is recommended before public go-live.",
     "editor": "Editor (markdown)",
     "preview": "Preview",
     "empty": "_Empty_",
@@ -426,6 +426,11 @@
       "noChanges": "No changes to publish.",
       "publish": "Failed to publish: {{message}}"
     },
-    "success": "Version {{n}} published."
+    "success": "Version {{n}} published.",
+    "localeTabs": {
+      "ptBR": "Português (BR)",
+      "en": "English"
+    },
+    "notPublishedYet": "No published version in this language yet"
   }
 }
