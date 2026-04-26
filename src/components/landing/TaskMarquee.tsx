@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { CheckCircle2, ArrowRight, Pin, Timer, Calendar, Lightbulb } from 'lucide-react';
+import { safeTArray } from '@/i18n/safeT';
 
 const icons = [CheckCircle2, ArrowRight, Pin, Timer, Calendar, Lightbulb];
 const colors = [
@@ -13,7 +14,7 @@ const colors = [
 
 const TaskMarquee = () => {
   const { t } = useTranslation('landing');
-  const labels = t('marquee.items', { returnObjects: true }) as string[];
+  const labels = safeTArray<string>(t('marquee.items', { returnObjects: true }));
   const items = labels.map((text, i) => ({
     icon: icons[i] ?? CheckCircle2,
     color: colors[i] ?? 'text-primary',

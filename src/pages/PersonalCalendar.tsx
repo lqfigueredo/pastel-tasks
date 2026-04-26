@@ -14,6 +14,7 @@ import { getCurrentLocale } from '@/lib/date';
 import { CreateEventDialog } from '@/components/calendar/CreateEventDialog';
 import { EventDetailDialog } from '@/components/calendar/EventDetailDialog';
 import { HelpButton } from '@/components/HelpButton';
+import { safeTArray } from '@/i18n/safeT';
 
 interface CalendarEvent {
   id: string;
@@ -36,7 +37,7 @@ export default function PersonalCalendar() {
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>();
-  const WEEKDAYS = t('weekdays', { returnObjects: true }) as string[];
+  const WEEKDAYS = safeTArray<string>(t('weekdays', { returnObjects: true }));
 
   const monthKey = format(currentMonth, 'yyyy-MM');
 

@@ -31,6 +31,7 @@ import {
   min as dateMin,
 } from 'date-fns';
 import { getCurrentLocale } from '@/lib/date';
+import { safeTArray } from '@/i18n/safeT';
 const MAX_BAR_SLOTS = 3;
 const BAR_HEIGHT = 22;
 const BAR_GAP = 2;
@@ -71,7 +72,7 @@ export default function Dashboard() {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [filter, setFilter] = useState<TaskFilter>('all');
-  const WEEKDAYS = t('weekdays', { returnObjects: true }) as string[];
+  const WEEKDAYS = safeTArray<string>(t('weekdays', { returnObjects: true }));
 
   const { data: tasksData } = useTasksQuery();
   const { data: statuses = [] } = useStatusesQuery();
