@@ -25,11 +25,6 @@ import ptAdmin from './locales/pt-BR/admin.json';
 import ptFinancial from './locales/pt-BR/financial.json';
 import ptFinancialRegister from './locales/pt-BR/financialRegister.json';
 import ptLanding from './locales/pt-BR/landing.json';
-// Debug: verify pt-BR landing namespace is loaded
-if (typeof window !== 'undefined') {
-  console.log('[i18n debug] ptLanding keys:', Object.keys(ptLanding ?? {}));
-  console.log('[i18n debug] ptLanding.hero?.title1:', (ptLanding as { hero?: { title1?: string } })?.hero?.title1);
-}
 
 import enCommon from './locales/en/common.json';
 import enNav from './locales/en/nav.json';
