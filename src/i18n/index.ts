@@ -166,8 +166,11 @@ i18n.on('languageChanged', applyHtmlLang);
 if (typeof window !== 'undefined') {
   console.log('[i18n debug] post-init — language:', i18n.language, 'languages:', i18n.languages, 'resolvedLanguage:', i18n.resolvedLanguage);
   console.log('[i18n debug] hasResourceBundle pt-BR/landing:', i18n.hasResourceBundle('pt-BR', 'landing'));
-  console.log('[i18n debug] hasResourceBundle pt/landing:', i18n.hasResourceBundle('pt', 'landing'));
-  console.log('[i18n debug] t(landing:hero.title1):', i18n.t('hero.title1', { ns: 'landing' }));
+  const bundle = i18n.getResourceBundle('pt-BR', 'landing');
+  console.log('[i18n debug] bundle pt-BR/landing keys:', bundle ? Object.keys(bundle) : 'null');
+  console.log('[i18n debug] bundle.hero:', bundle?.hero);
+  console.log('[i18n debug] t(hero.title1) lng=pt-BR:', i18n.t('hero.title1', { ns: 'landing', lng: 'pt-BR' }));
+  console.log('[i18n debug] t(hero.title1) lng=en:', i18n.t('hero.title1', { ns: 'landing', lng: 'en' }));
   i18n.on('languageChanged', (lng) => {
     console.log('[i18n debug] languageChanged →', lng, 'resolved:', i18n.resolvedLanguage);
   });
