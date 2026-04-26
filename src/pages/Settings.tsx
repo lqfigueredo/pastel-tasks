@@ -68,8 +68,12 @@ const Settings = () => {
 
   useEffect(() => {
     if (!user) return;
-    supabase.rpc('has_role', { _user_id: user.id, _role: 'admin' }).then(({ data }) => {
-      setIsAdmin(!!data);
+    // Allow both regular admins and solution_admin (financial admin) to access settings.
+    Promise.all([
+      supabase.rpc('has_role', { _user_id: user.id, _role: 'admin' }),
+      supabase.rpc('has_role', { _user_id: user.id, _role: 'solution_admin' }),
+    ]).then(([a, b]) => {
+      setIsAdmin(!!a.data || !!b.data);
     });
   }, [user]);
 
