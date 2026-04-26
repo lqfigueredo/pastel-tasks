@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation, Trans } from 'react-i18next';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
@@ -7,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { getCurrentLocale } from '@/lib/date';
 import { toast } from 'sonner';
 import { Loader2, Plus, FileText, History, StickyNote, Settings2, Receipt, AlertCircle, CheckCircle2, Tag } from 'lucide-react';
 import type { SubscriptionRow } from './SubscriptionsTab';
@@ -72,23 +73,8 @@ interface BillingProfile {
   country: string | null;
 }
 
-const CHANGE_LABELS: Record<string, string> = {
-  seats_changed: 'Assentos alterados',
-  status_changed: 'Status alterado',
-  trial_extended: 'Trial estendido',
-  manual_payment: 'Pagamento manual',
-  cycle_advanced: 'Ciclo avançado',
-  created: 'Assinatura criada',
-  cancellation_scheduled: 'Cancelamento agendado',
-  reactivated: 'Reativada',
-  note: 'Anotação',
-  comp_activation: 'Ativação como cortesia',
-  voucher_applied: 'Voucher aplicado',
-  voucher_removed: 'Voucher removido',
-  direct_discount: 'Desconto direto aplicado',
-};
-
 export default function SubscriptionDetailDrawer({ subscription, open, onClose, onChanged }: Props) {
+  const { t, i18n } = useTranslation('financial');
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [changes, setChanges] = useState<Change[]>([]);
   const [notes, setNotes] = useState<Note[]>([]);
@@ -131,7 +117,7 @@ export default function SubscriptionDetailDrawer({ subscription, open, onClose, 
     });
     setSavingNote(false);
     if (error) {
-      toast.error('Erro ao salvar nota');
+      toast.error(t('drawer.notes.errorSave'));
       return;
     }
     setNewNote('');
@@ -142,7 +128,9 @@ export default function SubscriptionDetailDrawer({ subscription, open, onClose, 
 
   const monthly = (subscription.seats_purchased * subscription.price_per_seat_cents) / 100;
   const formatMoney = (cents: number, currency: string) =>
-    (cents / 100).toLocaleString('pt-BR', { style: 'currency', currency });
+    (cents / 100).toLocaleString(i18n.language, { style: 'currency', currency });
+
+  const statusLabel = (s: string) => t(`subscriptions.status.${s}`, { defaultValue: s });
 
   return (
     <>
@@ -152,7 +140,7 @@ export default function SubscriptionDetailDrawer({ subscription, open, onClose, 
             <SheetTitle>{subscription.admin_name}</SheetTitle>
             <SheetDescription className="flex flex-wrap items-center gap-2">
               <Badge variant="outline">{subscription.provider}</Badge>
-              <Badge>{subscription.status}</Badge>
+              <Badge>{statusLabel(subscription.status)}</Badge>
               {(() => {
                 const lastComp = changes.find((c) => c.change_type === 'comp_activation');
                 if (!lastComp) return null;
@@ -160,9 +148,9 @@ export default function SubscriptionDetailDrawer({ subscription, open, onClose, 
                   <Badge
                     variant="secondary"
                     className="bg-primary/15 text-primary border-primary/30"
-                    title={lastComp.reason || 'Cortesia ativa'}
+                    title={lastComp.reason || t('drawer.courtesyTitle')}
                   >
-                    🎁 Cortesia
+                    {t('drawer.courtesyBadge')}
                   </Badge>
                 );
               })()}
@@ -173,23 +161,23 @@ export default function SubscriptionDetailDrawer({ subscription, open, onClose, 
             {/* Resumo rápido */}
             <div className="grid grid-cols-2 gap-3 text-sm">
               <div>
-                <p className="text-muted-foreground">Assentos</p>
+                <p className="text-muted-foreground">{t('drawer.summary.seats')}</p>
                 <p className="font-semibold">{subscription.active_users} / {subscription.seats_purchased}</p>
               </div>
               <div>
-                <p className="text-muted-foreground">Mensalidade</p>
+                <p className="text-muted-foreground">{t('drawer.summary.monthly')}</p>
                 <p className="font-semibold">{subscription.price_per_seat_cents > 0 ? formatMoney(monthly * 100, subscription.currency) : '—'}</p>
               </div>
               <div>
-                <p className="text-muted-foreground">Próximo ciclo</p>
+                <p className="text-muted-foreground">{t('drawer.summary.nextCycle')}</p>
                 <p className="font-semibold">
-                  {subscription.current_period_end ? format(new Date(subscription.current_period_end), 'dd/MM/yyyy', { locale: ptBR }) : '—'}
+                  {subscription.current_period_end ? format(new Date(subscription.current_period_end), 'dd/MM/yyyy', { locale: getCurrentLocale() }) : '—'}
                 </p>
               </div>
               <div>
-                <p className="text-muted-foreground">Trial termina</p>
+                <p className="text-muted-foreground">{t('drawer.summary.trialEnds')}</p>
                 <p className="font-semibold">
-                  {subscription.trial_ends_at ? format(new Date(subscription.trial_ends_at), 'dd/MM/yyyy', { locale: ptBR }) : '—'}
+                  {subscription.trial_ends_at ? format(new Date(subscription.trial_ends_at), 'dd/MM/yyyy', { locale: getCurrentLocale() }) : '—'}
                 </p>
               </div>
             </div>
@@ -202,10 +190,13 @@ export default function SubscriptionDetailDrawer({ subscription, open, onClose, 
               <div className="flex items-start gap-2 rounded-lg border border-amber-500/40 bg-amber-500/10 p-3 text-amber-700 dark:text-amber-400">
                 <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
                 <div className="text-xs space-y-1">
-                  <p className="font-semibold">Dados fiscais incompletos</p>
+                  <p className="font-semibold">{t('drawer.fiscalIncomplete.title')}</p>
                   <p>
-                    Não é possível registrar pagamento ou gerar fatura até o cliente completar
-                    o cadastro fiscal. Veja os campos pendentes na aba <strong>Fiscal</strong>.
+                    <Trans
+                      i18nKey="drawer.fiscalIncomplete.description"
+                      t={t}
+                      components={{ strong: <strong /> }}
+                    />
                   </p>
                 </div>
               </div>
@@ -214,10 +205,10 @@ export default function SubscriptionDetailDrawer({ subscription, open, onClose, 
             {/* Ações rápidas */}
             <div className="flex flex-wrap gap-2">
               <Button size="sm" onClick={() => setPaymentOpen(true)}>
-                <Plus className="h-4 w-4 mr-1" /> Registrar pagamento
+                <Plus className="h-4 w-4 mr-1" /> {t('drawer.actions.registerPayment')}
               </Button>
               <Button size="sm" variant="outline" onClick={() => setActionsOpen(true)}>
-                <Settings2 className="h-4 w-4 mr-1" /> Gerenciar assinatura
+                <Settings2 className="h-4 w-4 mr-1" /> {t('drawer.actions.manage')}
               </Button>
             </div>
 
@@ -225,11 +216,11 @@ export default function SubscriptionDetailDrawer({ subscription, open, onClose, 
 
             <Tabs defaultValue="invoices">
               <TabsList className="grid w-full grid-cols-5">
-                <TabsTrigger value="invoices"><FileText className="h-4 w-4 mr-1" /> Faturas</TabsTrigger>
-                <TabsTrigger value="discounts"><Tag className="h-4 w-4 mr-1" /> Descontos</TabsTrigger>
-                <TabsTrigger value="fiscal"><Receipt className="h-4 w-4 mr-1" /> Fiscal</TabsTrigger>
-                <TabsTrigger value="changes"><History className="h-4 w-4 mr-1" /> Histórico</TabsTrigger>
-                <TabsTrigger value="notes"><StickyNote className="h-4 w-4 mr-1" /> Notas</TabsTrigger>
+                <TabsTrigger value="invoices"><FileText className="h-4 w-4 mr-1" /> {t('drawer.tabs.invoices')}</TabsTrigger>
+                <TabsTrigger value="discounts"><Tag className="h-4 w-4 mr-1" /> {t('drawer.tabs.discounts')}</TabsTrigger>
+                <TabsTrigger value="fiscal"><Receipt className="h-4 w-4 mr-1" /> {t('drawer.tabs.fiscal')}</TabsTrigger>
+                <TabsTrigger value="changes"><History className="h-4 w-4 mr-1" /> {t('drawer.tabs.history')}</TabsTrigger>
+                <TabsTrigger value="notes"><StickyNote className="h-4 w-4 mr-1" /> {t('drawer.tabs.notes')}</TabsTrigger>
               </TabsList>
 
               {loading ? (
@@ -238,13 +229,13 @@ export default function SubscriptionDetailDrawer({ subscription, open, onClose, 
                 <>
                   <TabsContent value="invoices" className="space-y-2 mt-4">
                     {invoices.length === 0 ? (
-                      <p className="text-center text-muted-foreground text-sm py-6">Sem faturas registradas.</p>
+                      <p className="text-center text-muted-foreground text-sm py-6">{t('drawer.invoices.empty')}</p>
                     ) : invoices.map((inv) => (
                       <div key={inv.id} className="flex items-start justify-between border rounded-lg p-3">
                         <div>
                           <p className="font-medium">{formatMoney(inv.amount_cents, inv.currency)}</p>
                           <p className="text-xs text-muted-foreground">
-                            {format(new Date(inv.period_start), 'dd/MM/yy', { locale: ptBR })} → {format(new Date(inv.period_end), 'dd/MM/yy', { locale: ptBR })}
+                            {format(new Date(inv.period_start), 'dd/MM/yy', { locale: getCurrentLocale() })} → {format(new Date(inv.period_end), 'dd/MM/yy', { locale: getCurrentLocale() })}
                           </p>
                           {inv.notes && <p className="text-xs text-muted-foreground mt-1">{inv.notes}</p>}
                         </div>
@@ -269,14 +260,14 @@ export default function SubscriptionDetailDrawer({ subscription, open, onClose, 
                     <div className="flex justify-end">
                       <Button size="sm" variant="outline" onClick={() => setEditFiscalOpen(true)}>
                         <Pencil className="h-3.5 w-3.5 mr-1" />
-                        {billingProfile ? 'Editar dados fiscais' : 'Cadastrar dados fiscais'}
+                        {billingProfile ? t('drawer.fiscal.edit') : t('drawer.fiscal.create')}
                       </Button>
                     </div>
                     {!billingProfile ? (
                       <div className="text-center py-8 space-y-2">
                         <AlertCircle className="h-8 w-8 text-amber-500 mx-auto" />
                         <p className="text-sm text-muted-foreground">
-                          Cliente ainda não preencheu os dados fiscais.
+                          {t('drawer.fiscal.notFilled')}
                         </p>
                       </div>
                     ) : (() => {
@@ -291,51 +282,51 @@ export default function SubscriptionDetailDrawer({ subscription, open, onClose, 
                           <div className={`flex items-center gap-2 text-sm p-3 rounded-lg ${missing.length === 0 ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400' : 'bg-amber-500/10 text-amber-700 dark:text-amber-400'}`}>
                             {missing.length === 0 ? <CheckCircle2 className="h-4 w-4" /> : <AlertCircle className="h-4 w-4" />}
                             {missing.length === 0
-                              ? 'Dados completos para emissão de NF'
-                              : `Faltam ${missing.length} campo(s) para emissão de NF`}
+                              ? t('drawer.fiscal.complete')
+                              : t('drawer.fiscal.missing', { n: missing.length })}
                           </div>
 
                           <div className="grid grid-cols-2 gap-3 text-sm">
                             <div>
-                              <p className="text-muted-foreground text-xs">Tipo</p>
-                              <p>{isCompany ? 'Pessoa jurídica' : 'Pessoa física'}</p>
+                              <p className="text-muted-foreground text-xs">{t('drawer.fiscal.type')}</p>
+                              <p>{isCompany ? t('drawer.fiscal.company') : t('drawer.fiscal.individual')}</p>
                             </div>
                             <div>
-                              <p className="text-muted-foreground text-xs">{isCompany ? 'CNPJ' : 'CPF'}</p>
+                              <p className="text-muted-foreground text-xs">{isCompany ? t('drawer.fiscal.cnpj') : t('drawer.fiscal.cpf')}</p>
                               <p className="font-mono">{taxIdFmt}</p>
                             </div>
                             <div className="col-span-2">
-                              <p className="text-muted-foreground text-xs">{isCompany ? 'Razão social' : 'Nome'}</p>
+                              <p className="text-muted-foreground text-xs">{isCompany ? t('drawer.fiscal.legalNameCompany') : t('drawer.fiscal.legalNameIndividual')}</p>
                               <p>{billingProfile.legal_name || '—'}</p>
                             </div>
                             {isCompany && billingProfile.trade_name && (
                               <div className="col-span-2">
-                                <p className="text-muted-foreground text-xs">Nome fantasia</p>
+                                <p className="text-muted-foreground text-xs">{t('drawer.fiscal.tradeName')}</p>
                                 <p>{billingProfile.trade_name}</p>
                               </div>
                             )}
                             {isCompany && (
                               <>
                                 <div>
-                                  <p className="text-muted-foreground text-xs">Inscrição municipal</p>
+                                  <p className="text-muted-foreground text-xs">{t('drawer.fiscal.municipalRegistration')}</p>
                                   <p>{billingProfile.municipal_registration || '—'}</p>
                                 </div>
                                 <div>
-                                  <p className="text-muted-foreground text-xs">Inscrição estadual</p>
+                                  <p className="text-muted-foreground text-xs">{t('drawer.fiscal.stateRegistration')}</p>
                                   <p>{billingProfile.state_registration || '—'}</p>
                                 </div>
                               </>
                             )}
                             <div>
-                              <p className="text-muted-foreground text-xs">Email</p>
+                              <p className="text-muted-foreground text-xs">{t('drawer.fiscal.email')}</p>
                               <p className="break-all">{billingProfile.email || '—'}</p>
                             </div>
                             <div>
-                              <p className="text-muted-foreground text-xs">Telefone</p>
+                              <p className="text-muted-foreground text-xs">{t('drawer.fiscal.phone')}</p>
                               <p>{billingProfile.phone ? formatPhone(billingProfile.phone) : '—'}</p>
                             </div>
                             <div className="col-span-2">
-                              <p className="text-muted-foreground text-xs">Endereço</p>
+                              <p className="text-muted-foreground text-xs">{t('drawer.fiscal.address')}</p>
                               <p>
                                 {[
                                   billingProfile.address_line1,
@@ -345,7 +336,7 @@ export default function SubscriptionDetailDrawer({ subscription, open, onClose, 
                               </p>
                               <p className="text-xs text-muted-foreground">
                                 {[billingProfile.neighborhood, billingProfile.city, billingProfile.state].filter(Boolean).join(' · ')}
-                                {billingProfile.postal_code && ` · CEP ${formatCEP(billingProfile.postal_code)}`}
+                                {billingProfile.postal_code && ` · ${t('drawer.fiscal.postalCodeLabel', { code: formatCEP(billingProfile.postal_code) })}`}
                               </p>
                             </div>
                           </div>
@@ -356,17 +347,17 @@ export default function SubscriptionDetailDrawer({ subscription, open, onClose, 
 
                   <TabsContent value="changes" className="space-y-2 mt-4">
                     {changes.length === 0 ? (
-                      <p className="text-center text-muted-foreground text-sm py-6">Sem mudanças registradas.</p>
+                      <p className="text-center text-muted-foreground text-sm py-6">{t('drawer.history.empty')}</p>
                     ) : changes.map((ch) => (
                       <div key={ch.id} className="border-l-2 border-primary/40 pl-3 py-1">
-                        <p className="text-sm font-medium">{CHANGE_LABELS[ch.change_type] || ch.change_type}</p>
+                        <p className="text-sm font-medium">{t(`drawer.changeLabels.${ch.change_type}`, { defaultValue: ch.change_type })}</p>
                         <p className="text-xs text-muted-foreground">
-                          {format(new Date(ch.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+                          {format(new Date(ch.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: getCurrentLocale() })}
                         </p>
                         {(ch.old_value || ch.new_value) && (
                           <p className="text-xs mt-1 font-mono text-muted-foreground">
-                            {ch.old_value && <>de: {JSON.stringify(ch.old_value)}<br /></>}
-                            {ch.new_value && <>para: {JSON.stringify(ch.new_value)}</>}
+                            {ch.old_value && <>{t('drawer.history.from')} {JSON.stringify(ch.old_value)}<br /></>}
+                            {ch.new_value && <>{t('drawer.history.to')} {JSON.stringify(ch.new_value)}</>}
                           </p>
                         )}
                         {ch.reason && <p className="text-xs italic mt-1">{ch.reason}</p>}
@@ -377,22 +368,22 @@ export default function SubscriptionDetailDrawer({ subscription, open, onClose, 
                   <TabsContent value="notes" className="space-y-3 mt-4">
                     <div className="space-y-2">
                       <Textarea
-                        placeholder="Adicionar nota interna (visível só para solution_admin)..."
+                        placeholder={t('drawer.notes.add')}
                         value={newNote}
                         onChange={(e) => setNewNote(e.target.value)}
                         rows={2}
                       />
                       <Button size="sm" onClick={handleAddNote} disabled={!newNote.trim() || savingNote}>
-                        {savingNote ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Adicionar'}
+                        {savingNote ? <Loader2 className="h-4 w-4 animate-spin" /> : t('drawer.notes.addBtn')}
                       </Button>
                     </div>
                     {notes.length === 0 ? (
-                      <p className="text-center text-muted-foreground text-sm py-4">Sem notas.</p>
+                      <p className="text-center text-muted-foreground text-sm py-4">{t('drawer.notes.empty')}</p>
                     ) : notes.map((n) => (
                       <div key={n.id} className="border rounded-lg p-3 bg-muted/30">
                         <p className="text-sm whitespace-pre-wrap">{n.content}</p>
                         <p className="text-xs text-muted-foreground mt-1">
-                          {format(new Date(n.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+                          {format(new Date(n.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: getCurrentLocale() })}
                         </p>
                       </div>
                     ))}
