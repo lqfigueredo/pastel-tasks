@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation, Trans } from 'react-i18next';
 import ReactMarkdown from 'react-markdown';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -9,7 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertTriangle, FileText, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { getCurrentLocale } from '@/lib/date';
 import { toast } from 'sonner';
 
 type DocType = 'terms' | 'privacy';
@@ -22,12 +23,8 @@ interface LegalDoc {
   published_at: string;
 }
 
-const LABELS: Record<DocType, string> = {
-  terms: 'Termos de Uso',
-  privacy: 'Política de Privacidade',
-};
-
 const DocEditor = ({ docType }: { docType: DocType }) => {
+  const { t } = useTranslation('financial');
   const { user } = useAuth();
   const [versions, setVersions] = useState<LegalDoc[]>([]);
   const [draft, setDraft] = useState('');
@@ -53,11 +50,11 @@ const DocEditor = ({ docType }: { docType: DocType }) => {
 
   const handlePublish = async () => {
     if (!draft.trim()) {
-      toast.error('Conteúdo não pode estar vazio.');
+      toast.error(t('legal.errors.empty'));
       return;
     }
     if (draft === versions[0]?.content) {
-      toast.info('Nenhuma alteração para publicar.');
+      toast.info(t('legal.errors.noChanges'));
       return;
     }
     setPublishing(true);
@@ -70,10 +67,10 @@ const DocEditor = ({ docType }: { docType: DocType }) => {
     });
     setPublishing(false);
     if (error) {
-      toast.error('Erro ao publicar: ' + error.message);
+      toast.error(t('legal.errors.publish', { message: error.message }));
       return;
     }
-    toast.success(`Versão ${nextVersion} publicada.`);
+    toast.success(t('legal.success', { n: nextVersion }));
     await load();
   };
 
@@ -86,15 +83,14 @@ const DocEditor = ({ docType }: { docType: DocType }) => {
       <Alert>
         <AlertTriangle className="h-4 w-4" />
         <AlertDescription>
-          Use markdown. As versões publicadas são imutáveis e ficam visíveis em <code>/termos</code> ou <code>/privacidade</code>.
-          Recomenda-se revisão jurídica antes do go-live público.
+          <Trans i18nKey="legal.alert" t={t} components={{ code: <code /> }} />
         </AlertDescription>
       </Alert>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Editor (markdown)</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('legal.editor')}</CardTitle>
           </CardHeader>
           <CardContent>
             <Textarea
@@ -108,11 +104,11 @@ const DocEditor = ({ docType }: { docType: DocType }) => {
 
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Pré-visualização</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('legal.preview')}</CardTitle>
           </CardHeader>
           <CardContent>
             <article className="prose prose-sm dark:prose-invert max-w-none min-h-[500px] max-h-[500px] overflow-auto rounded-md border border-border p-4">
-              <ReactMarkdown>{draft || '_Vazio_'}</ReactMarkdown>
+              <ReactMarkdown>{draft || t('legal.empty')}</ReactMarkdown>
             </article>
           </CardContent>
         </Card>
@@ -120,13 +116,18 @@ const DocEditor = ({ docType }: { docType: DocType }) => {
 
       <div className="flex items-center justify-between">
         <p className="text-xs text-muted-foreground">
-          Versão atual publicada: <strong>v{versions[0]?.version || 0}</strong>
+          <Trans
+            i18nKey="legal.currentVersion"
+            t={t}
+            values={{ n: versions[0]?.version || 0 }}
+            components={{ bold: <strong /> }}
+          />
           {versions[0] && (
-            <> · {format(new Date(versions[0].published_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}</>
+            <> · {format(new Date(versions[0].published_at), "dd/MM/yyyy 'às' HH:mm", { locale: getCurrentLocale() })}</>
           )}
         </p>
         <Button onClick={handlePublish} disabled={publishing}>
-          {publishing ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Publicando...</> : 'Publicar nova versão'}
+          {publishing ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />{t('legal.publishing')}</> : t('legal.publish')}
         </Button>
       </div>
 
@@ -135,7 +136,7 @@ const DocEditor = ({ docType }: { docType: DocType }) => {
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium flex items-center gap-2">
               <FileText className="h-4 w-4" />
-              Histórico de versões
+              {t('legal.history')}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -144,7 +145,7 @@ const DocEditor = ({ docType }: { docType: DocType }) => {
                 <li key={v.id} className="flex items-center justify-between border-b border-border/50 py-1.5 last:border-0">
                   <span>v{v.version}</span>
                   <span className="text-xs text-muted-foreground">
-                    {format(new Date(v.published_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}
+                    {format(new Date(v.published_at), "dd/MM/yyyy HH:mm", { locale: getCurrentLocale() })}
                   </span>
                 </li>
               ))}
@@ -157,11 +158,12 @@ const DocEditor = ({ docType }: { docType: DocType }) => {
 };
 
 const LegalDocumentsEditor = () => {
+  const { t } = useTranslation('financial');
   return (
     <Tabs defaultValue="terms" className="space-y-4">
       <TabsList>
-        <TabsTrigger value="terms">{LABELS.terms}</TabsTrigger>
-        <TabsTrigger value="privacy">{LABELS.privacy}</TabsTrigger>
+        <TabsTrigger value="terms">{t('legal.tabs.terms')}</TabsTrigger>
+        <TabsTrigger value="privacy">{t('legal.tabs.privacy')}</TabsTrigger>
       </TabsList>
       <TabsContent value="terms"><DocEditor docType="terms" /></TabsContent>
       <TabsContent value="privacy"><DocEditor docType="privacy" /></TabsContent>

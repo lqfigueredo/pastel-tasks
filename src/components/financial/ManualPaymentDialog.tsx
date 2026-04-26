@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation, Trans } from 'react-i18next';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -21,6 +22,7 @@ interface Props {
 }
 
 export default function ManualPaymentDialog({ subscription, open, onClose, onSuccess }: Props) {
+  const { t } = useTranslation('financial');
   const defaultAmount = ((subscription.seats_purchased * subscription.price_per_seat_cents) / 100).toFixed(2);
   const [amount, setAmount] = useState(defaultAmount);
   const [method, setMethod] = useState('pix');
@@ -41,12 +43,12 @@ export default function ManualPaymentDialog({ subscription, open, onClose, onSuc
 
   const handleSave = async () => {
     if (fiscal && !fiscal.ready) {
-      toast.error('Dados fiscais incompletos. Não é possível gerar fatura.');
+      toast.error(t('manualPayment.errors.fiscal'));
       return;
     }
     const amountCents = Math.round(parseFloat(amount) * 100);
     if (!amountCents || amountCents < 0) {
-      toast.error('Valor inválido');
+      toast.error(t('manualPayment.errors.invalidAmount'));
       return;
     }
     setSaving(true);
@@ -62,13 +64,13 @@ export default function ManualPaymentDialog({ subscription, open, onClose, onSuc
     if (error) {
       const msg = error.message || '';
       if (msg.includes('FISCAL_INCOMPLETE')) {
-        toast.error('Dados fiscais incompletos no servidor. Atualize o cadastro do cliente.');
+        toast.error(t('manualPayment.errors.fiscalServer'));
       } else {
         toast.error(msg);
       }
       return;
     }
-    toast.success('Pagamento registrado');
+    toast.success(t('manualPayment.success'));
     onSuccess();
   };
 
@@ -78,10 +80,8 @@ export default function ManualPaymentDialog({ subscription, open, onClose, onSuc
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Registrar pagamento manual</DialogTitle>
-          <DialogDescription>
-            Cria uma fatura paga e (opcionalmente) avança o ciclo da assinatura.
-          </DialogDescription>
+          <DialogTitle>{t('manualPayment.title')}</DialogTitle>
+          <DialogDescription>{t('manualPayment.description')}</DialogDescription>
         </DialogHeader>
 
         {checkingFiscal ? (
@@ -91,64 +91,68 @@ export default function ManualPaymentDialog({ subscription, open, onClose, onSuc
         ) : blocked ? (
           <Alert variant="destructive">
             <AlertTriangle className="h-4 w-4" />
-            <AlertTitle>Dados fiscais incompletos</AlertTitle>
+            <AlertTitle>{t('manualPayment.fiscalIncomplete.title')}</AlertTitle>
             <AlertDescription className="space-y-2">
               <p>
-                Não é possível gerar fatura sem os dados fiscais necessários para emissão de NF.
-                {!fiscal!.hasProfile && ' Este cliente ainda não preencheu nenhum dado fiscal.'}
+                {t('manualPayment.fiscalIncomplete.intro')}
+                {!fiscal!.hasProfile && ' ' + t('manualPayment.fiscalIncomplete.noProfile')}
               </p>
               <div>
-                <p className="text-xs font-semibold mb-1">Campos pendentes:</p>
+                <p className="text-xs font-semibold mb-1">{t('manualPayment.fiscalIncomplete.missingHeader')}</p>
                 <ul className="text-xs list-disc pl-4 space-y-0.5">
                   {fiscal!.missingLabels.map((l) => <li key={l}>{l}</li>)}
                 </ul>
               </div>
               <p className="text-xs">
-                Peça ao cliente para completar em <strong>Cobrança → Dados fiscais</strong>.
+                <Trans
+                  i18nKey="manualPayment.fiscalIncomplete.askClient"
+                  t={t}
+                  components={{ strong: <strong /> }}
+                />
               </p>
             </AlertDescription>
           </Alert>
         ) : (
           <div className="space-y-4">
             <div>
-              <Label>Valor (R$)</Label>
+              <Label>{t('manualPayment.fields.amount')}</Label>
               <Input type="number" step="0.01" value={amount} onChange={(e) => setAmount(e.target.value)} />
             </div>
             <div>
-              <Label>Método</Label>
+              <Label>{t('manualPayment.fields.method')}</Label>
               <Select value={method} onValueChange={setMethod}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="pix">PIX</SelectItem>
-                  <SelectItem value="boleto">Boleto</SelectItem>
-                  <SelectItem value="card">Cartão</SelectItem>
-                  <SelectItem value="manual">Outro / Manual</SelectItem>
+                  <SelectItem value="pix">{t('manualPayment.methods.pix')}</SelectItem>
+                  <SelectItem value="boleto">{t('manualPayment.methods.boleto')}</SelectItem>
+                  <SelectItem value="card">{t('manualPayment.methods.card')}</SelectItem>
+                  <SelectItem value="manual">{t('manualPayment.methods.manual')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div>
-              <Label>Referência (opcional)</Label>
-              <Input value={reference} onChange={(e) => setReference(e.target.value)} placeholder="ID transação, comprovante..." />
+              <Label>{t('manualPayment.fields.reference')}</Label>
+              <Input value={reference} onChange={(e) => setReference(e.target.value)} placeholder={t('manualPayment.fields.referencePlaceholder')} />
             </div>
             <div>
-              <Label>Observações</Label>
+              <Label>{t('manualPayment.fields.notes')}</Label>
               <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} />
             </div>
             <div className="flex items-center gap-2">
               <Checkbox id="advance" checked={advance} onCheckedChange={(c) => setAdvance(!!c)} />
               <Label htmlFor="advance" className="font-normal cursor-pointer">
-                Avançar ciclo (+1 mês) e reativar se estava inadimplente
+                {t('manualPayment.fields.advance')}
               </Label>
             </div>
           </div>
         )}
 
         <DialogFooter>
-          <Button variant="ghost" onClick={onClose}>{blocked ? 'Fechar' : 'Cancelar'}</Button>
+          <Button variant="ghost" onClick={onClose}>{blocked ? t('manualPayment.close') : t('manualPayment.cancel')}</Button>
           {!blocked && (
             <Button onClick={handleSave} disabled={saving || checkingFiscal}>
               {saving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-              Registrar
+              {t('manualPayment.submit')}
             </Button>
           )}
         </DialogFooter>
