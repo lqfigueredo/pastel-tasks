@@ -1,244 +1,131 @@
 ## Objetivo
 
-Tornar a aplicação totalmente bilíngue (Português Brasil / Inglês) **sem desotimizar performance**, com seletor de idioma no header, persistência em `localStorage` + campo `profiles.locale`, e tradução de toda a interface, validações, toasts, datas e e-mails transacionais.
+Tornar a Landing page (`/landing`) totalmente bilíngue (PT-BR / EN), igual ao restante do app, e permitir que visitantes anônimos troquem o idioma direto no header — sem precisar logar.
 
-## Por que isso não desotimiza
-
-- **`react-i18next`** (lib mais usada do ecossistema React, ~12 KB gzipped) com **lazy loading**: só o JSON do idioma ativo é baixado.
-- **Sem re-renders extras**: `useTranslation()` retorna referência estável; só re-renderiza componentes quando o idioma muda.
-- **Datas via `date-fns`**: o projeto já usa `ptBR`; basta importar `enUS` e selecionar dinamicamente.
-- **Cache forte**: arquivos JSON servidos como assets estáticos com hash de versão.
-- **Bundle inicial**: aumento estimado de **~15–25 KB gzipped total** (lib + 1 idioma carregado), diluído pelo cache.
+A infraestrutura de i18n (react-i18next + `LanguageSwitcher` + persistência em `localStorage`) já existe e funciona, então só precisamos criar o namespace `landing`, refatorar os componentes para usarem `useTranslation`, e expor o seletor.
 
 ---
 
-## Fase 0 — Infraestrutura (base obrigatória)
+## 1. Novo namespace `landing`
 
-### Migração SQL
-Adicionar campo de preferência de idioma no perfil:
+Criar:
+- `src/i18n/locales/pt-BR/landing.json`
+- `src/i18n/locales/en/landing.json`
 
-```sql
-ALTER TABLE public.profiles
-ADD COLUMN locale text NOT NULL DEFAULT 'pt-BR'
-CHECK (locale IN ('pt-BR', 'en'));
+Registrar em `src/i18n/index.ts` (imports + arrays `NAMESPACES` e `resources`).
+
+**Estrutura proposta de chaves** (mesma forma nas duas línguas):
+
+```
+header.pricing / header.haveAccount
+hero.badge / hero.title1 / hero.titleHighlight / hero.subtitle
+hero.cta.trial / hero.cta.contact / hero.trialNote
+hero.mockup.boardLabel / hero.mockup.realtime
+features.title / features.subtitle / features.clickHint
+features.items.kanban.{title,description}
+features.items.team.{title,description}
+features.items.meetings.{title,description}
+features.items.dashboard.{title,description}
+features.items.timer.{title,description}
+features.items.calendar.{title,description}
+features.items.workInstructions.{title,description}
+features.items.ideas.{title,description}
+steps.title / steps.subtitle / steps.stepLabel
+steps.items.signup.{title,description}
+steps.items.organize.{title,description}
+steps.items.track.{title,description}
+highlights.allInOne.{label,value}
+highlights.simpleManagement.{label,value}
+highlights.connectedTeams.{label,value}
+faq.title / faq.subtitle
+faq.items[] (array de {q,a}, igual ao padrão usado em `pricing.json`)
+footer.terms / footer.privacy / footer.access / footer.copyright
+lead.dialog.title / lead.dialog.description
+lead.form.{name,namePlaceholder,email,emailPlaceholder,submit,submitting,turnstileWait}
+lead.toast.{success,errorGeneric}
+previews.mock.* (textos dos mini-previews — ver §4)
 ```
 
-### Dependências a instalar
-- `i18next`
-- `react-i18next`
-- `i18next-browser-languagedetector`
-- `i18next-http-backend` (para lazy loading dos JSONs)
+## 2. Header da Landing — adicionar `LanguageSwitcher`
 
-### Estrutura de arquivos a criar
-```
-src/i18n/
-├── index.ts                       # Configuração do i18next
-├── locales/
-│   ├── pt-BR/
-│   │   ├── common.json            # Botões, labels comuns, ações
-│   │   ├── nav.json               # Sidebar, header, breadcrumbs
-│   │   ├── auth.json              # Login, registro, onboarding
-│   │   ├── tasks.json             # Kanban, tarefas, filtros
-│   │   ├── team.json              # Equipes, convites
-│   │   ├── meetings.json          # Atas, agenda, calendário
-│   │   ├── ideas.json             # Ideias
-│   │   ├── knowledge.json         # Base de conhecimento, instruções
-│   │   ├── financial.json         # Cobrança, planos, faturas
-│   │   ├── admin.json             # Admin, suporte
-│   │   ├── notifications.json     # Notificações e toasts
-│   │   ├── validation.json        # Mensagens de erro de form
-│   │   └── dates.json             # Formatos de data customizados
-│   └── en/
-│       └── (mesma estrutura)
-└── locale-context.tsx             # Hook para sincronizar com perfil
-```
+Em `src/pages/Landing.tsx`, no `<nav>` do header, inserir o `<LanguageSwitcher compact />` antes dos links existentes.
 
-### Configuração do `i18n/index.ts`
-- Detector de idioma na ordem: `localStorage → navigator → 'pt-BR'`
-- `fallbackLng: 'pt-BR'`
-- Namespaces carregados sob demanda
-- `interpolation.escapeValue: false` (React já escapa)
-- Suporte a interpolação (ex: `t('greeting', { name: 'Ana' })`)
+O componente já é totalmente client-side e funciona sem usuário logado (persiste em `localStorage`). Quando o visitante eventualmente fizer signup, o hook `useLocaleSync` propaga a escolha para `profiles.locale`.
 
-### Hook de sincronização com o perfil
-`src/hooks/useLocaleSync.ts`:
-- Ao logar, lê `profiles.locale` e aplica via `i18n.changeLanguage()`
-- Quando usuário troca o idioma, atualiza `localStorage` E faz `UPDATE profiles SET locale = ?`
-- Atualiza `<html lang="...">` dinamicamente
+## 3. Refatorar `Landing.tsx`
 
-### Componente `LanguageSwitcher`
-`src/components/LanguageSwitcher.tsx`:
-- Dropdown compacto (bandeira + label) integrado ao header em `AppLayout.tsx`
-- Também visível na Landing page para usuários não logados (só localStorage)
-- Acessível via teclado, com `aria-label`
+- `useTranslation('landing')` no topo do componente.
+- Substituir os 4 arrays in-file (`features`, `steps`, `highlights`, FAQ inline) por estruturas que combinam **dados estáveis** (ícone + chave i18n) com **strings traduzidas** vindas do `t()`.
+  - Exemplo: `const features = [{ icon: LayoutDashboard, key: 'kanban' }, ...]`, e no JSX `t('features.items.${f.key}.title')`.
+  - FAQ: `t('faq.items', { returnObjects: true })` retornando `Array<{q,a}>`, mesmo padrão já usado em `Pricing.tsx`.
+- Strings inline (header, hero, badges, CTAs, footer, copyright) também passam por `t()`.
+- Copyright continua usando `new Date().getFullYear()` interpolado via `{{year}}`.
 
-### Integração inicial
-- Atualizar `src/main.tsx` para importar `./i18n` antes do render
-- Atualizar `src/components/AppLayout.tsx` para incluir `<LanguageSwitcher />` no header
-- Atualizar `src/contexts/AuthContext.tsx` para invocar o sync de locale ao logar
+## 4. Refatorar `featurePreviews.tsx` + `FeatureMiniPreview` + `FeaturePreviewDialog`
 
-### Helper de datas
-`src/lib/date.ts`:
-- Adicionar função `getCurrentLocale()` que retorna `ptBR` ou `enUS` do `date-fns/locale` baseado no `i18n.language`
-- Atualizar `safeFormatDate()` para usar esse helper como default
+Esse é o ponto mais delicado: hoje o `previewMap` é indexado pelo **título traduzido em PT-BR** (`'Kanban Intuitivo'`, etc.). Trocar a chave dinamicamente quebra o map.
+
+**Solução**: trocar a indexação para uma **chave estável** (`'kanban' | 'team' | 'meetings' | ...`) independente da tradução.
+
+- Em `featurePreviews.tsx`:
+  - Exportar `previewMap: Record<FeatureKey, () => JSX.Element>` indexado pelas chaves estáveis.
+  - Cada componente preview (`KanbanPreview`, `TeamPreview`, `MeetingPreview`, `DashboardPreview`, `TimerPreview`, `CalendarPreview`, `WorkInstructionsPreview`, `IdeasPreview`) passa a usar `useTranslation('landing')` e ler seus textos de `t('previews.kanban.columns.todo')`, etc.
+  - Dados internos (nomes fictícios "Ana Silva", labels "Sprint Review", dias da semana, mês "Abril 2026", etc.) ficam todos no JSON, com versão PT e EN. Isso inclui:
+    - colunas e cards do Kanban
+    - membros e funções do time
+    - reunião + pendências
+    - rótulos do dashboard de prazos
+    - botões "Iniciar/Pausar/Resetar" + "Foco" do timer
+    - dias da semana, nome do mês, eventos do calendário
+    - texto da instrução de trabalho (IT-001)
+    - ideias e tags
+- Em `Landing.tsx` e `FeaturePreviewDialog.tsx`, passar a `featureKey` (estável) em vez do `featureTitle` para escolher o preview, e usar `t()` para o título exibido no diálogo.
+- `FeatureMiniPreview` recebe `featureKey` em vez de `featureTitle`.
+
+## 5. Refatorar `LeadFormDialog.tsx` + `LeadFormTrigger.tsx`
+
+- `LeadFormTrigger`: traduzir "Entrar em contato".
+- `LeadFormDialog`: traduzir título, descrição, labels, placeholders, botão (com estado loading), toasts (`success`, `errorGeneric`, `turnstileWait`). Mensagens de erro vindas do servidor (`(data as any)?.error`) continuam exibidas como estão (já são mensagens dinâmicas controladas pelo backend).
+
+## 6. Refatorar `TaskMarquee.tsx` e `FloatingTasksBackground.tsx`
+
+Esses componentes são `aria-hidden` (puramente decorativos), mas mostram texto visível em PT-BR. Vou traduzi-los também para consistência visual quando o idioma estiver em EN. Ambos passam a usar `useTranslation('landing')` lendo de `landing.marquee.items[]` e `landing.floating.items[]` (arrays paralelos aos arrays de ícones que continuam no código).
+
+## 7. SEO / `<title>` da Landing
+
+A Landing hoje não atualiza `document.title` dinamicamente (usa o título estático do `index.html`). **Fora do escopo** desta tarefa — o `index.html` continuará em PT-BR. Se quiser SEO bilíngue depois, é tema para outra fase (precisa de `react-helmet` ou similar e tags `hreflang`).
+
+## 8. Validação
+
+- `tsc --noEmit` limpo.
+- Visitar `/landing` em PT-BR (default) e clicar no `LanguageSwitcher` → todo o texto da página, mini-previews, dialog de feature, formulário de lead, footer e marquee devem trocar para EN sem reload.
+- Voltar para PT-BR e confirmar que a escolha persiste após reload (localStorage).
 
 ---
 
-## Fase 1 — Layout global e textos compartilhados
+## Arquivos afetados
 
-Traduzir tudo que aparece em **toda navegação**:
+**Criados** (2):
+- `src/i18n/locales/pt-BR/landing.json`
+- `src/i18n/locales/en/landing.json`
 
-### Arquivos a editar
-- `src/components/AppSidebar.tsx` — todos os labels de menu
-- `src/components/AppLayout.tsx` — `PAGE_TITLES`, placeholder "Buscar", "⌘K"
-- `src/components/NotificationBell.tsx` — labels e estados vazios
-- `src/components/GlobalSearch.tsx` — placeholders e categorias
-- `src/components/GlobalTimerIndicator.tsx`
-- `src/components/HelpButton.tsx`
-- `src/components/ThemeToggle.tsx`
-- `src/components/ErrorBoundary.tsx`
-- `src/components/TrialBanner.tsx`
-- `src/components/billing/SubscriptionStatusBanner.tsx`
-- `src/components/ui/empty-state.tsx`
-- `src/components/ui/loaders.tsx`
-- `src/lib/toast-helpers.ts` — toasts genéricos ("Sucesso", "Erro", "Tente novamente")
-- `src/components/ui/responsive-table.tsx` — labels mobile
+**Modificados** (7):
+- `src/i18n/index.ts` — registrar namespace `landing`
+- `src/pages/Landing.tsx` — `useTranslation`, `LanguageSwitcher` no header, chaves estáveis para features
+- `src/components/landing/featurePreviews.tsx` — `previewMap` por chave estável + `useTranslation` em cada preview
+- `src/components/landing/FeatureMiniPreview.tsx` — receber `featureKey`
+- `src/components/landing/FeaturePreviewDialog.tsx` — receber `featureKey`, traduzir título
+- `src/components/landing/LeadFormDialog.tsx` — traduzir formulário e toasts
+- `src/components/landing/LeadFormTrigger.tsx` — traduzir CTA
+- `src/components/landing/TaskMarquee.tsx` — traduzir cards
+- `src/components/landing/FloatingTasksBackground.tsx` — traduzir cards
 
-### Namespace usado
-Principalmente `common` e `nav`.
+## Fora de escopo
 
----
+- Tradução do `index.html` (meta tags estáticas) e SEO bilíngue com `hreflang`.
+- Tradução das páginas legais (`/termos`, `/privacidade`) — conteúdo legal exige revisão jurídica antes de publicar em EN.
+- Tradução do conteúdo enviado por e-mail após submissão do lead (esses templates já têm tratamento próprio na Fase 2 do plano de i18n).
 
-## Fase 2 — Páginas principais
+## Memória
 
-### Tarefas (Kanban)
-- `src/pages/Index.tsx` — header, popover de export CSV (datas, botões)
-- `src/components/kanban/KanbanBoard.tsx`, `KanbanColumn.tsx`, `KanbanCard.tsx`, `KanbanMobileView.tsx`
-- `src/components/kanban/CreateTaskDialog.tsx`, `TaskDetailDialog.tsx` (incluindo "ID copiado!")
-- `src/components/kanban/TaskAttachments.tsx`, `TaskTimer.tsx`, `TaskChangeHistory.tsx`, `TaskLinkedIdeas.tsx`
-- `src/components/kanban/AssigneeSelector.tsx`, `KanbanSavedFilters.tsx`
-- `src/lib/csv-export.ts` — cabeçalhos do CSV traduzidos conforme idioma ativo
-
-### Dashboard / Agenda / Timer
-- `src/pages/Dashboard.tsx`
-- `src/pages/PersonalCalendar.tsx`
-- `src/pages/Timer.tsx`
-- `src/components/dashboard/TaskTooltip.tsx`, `TimeReport.tsx`
-- `src/components/calendar/CreateEventDialog.tsx`, `EventDetailDialog.tsx`
-- `src/components/timer/TimerDashboard.tsx`
-
-### Equipe
-- `src/pages/Team.tsx`, `TeamList.tsx`
-- `src/components/team/InviteUserDialog.tsx`, `TeamAttachments.tsx`
-
-### Configurações
-- `src/pages/Settings.tsx`
-- `src/components/settings/RecurringTasksSettings.tsx`
-
----
-
-## Fase 3 — Páginas restantes, validações, e-mails
-
-### Páginas de conteúdo
-- `src/pages/Ideas.tsx` + `src/components/ideas/*`
-- `src/pages/MeetingMinutes.tsx`, `MeetingMinuteDetail.tsx` + `src/components/meetings/*`
-- `src/pages/WorkInstructions.tsx` + `src/components/work-instructions/*`
-- `src/pages/KnowledgeBase.tsx` + `src/components/knowledge/*`
-
-### Auth e onboarding
-- `src/pages/Auth.tsx`, `AcceptInvite.tsx`, `Unsubscribe.tsx`
-- `src/components/onboarding/OnboardingWizard.tsx` + steps 1–4
-- Mensagens de validação Zod (campos obrigatórios, e-mail inválido, etc.)
-
-### Financeiro / Cobrança / Admin
-- `src/pages/Financial.tsx`, `FinancialRegister.tsx`, `Billing.tsx`, `Pricing.tsx`, `Admin.tsx`
-- Todos os componentes em `src/components/financial/*`, `src/components/billing/*`, `src/components/admin/*`
-- `src/components/support/SupportChat.tsx`, `SupportTicketList.tsx`
-- `src/lib/br-validators.ts` — mensagens de erro de CPF/CNPJ/CEP
-- `src/lib/fiscal-readiness.ts` — labels de campos pendentes
-
-### Landing e páginas públicas
-- `src/pages/Landing.tsx` + `src/components/landing/*`
-- `src/pages/legal/Privacy.tsx`, `Terms.tsx`
-- `src/pages/NotFound.tsx`
-- Atualizar meta tags (`<title>`, `<meta description>`) dinamicamente via `react-helmet-async` ou efeito direto no `document`
-- Atualizar `<html lang>` dinamicamente
-
-### E-mails do backend (Edge Functions)
-Estratégia: cada função que envia e-mail recebe (ou consulta) o `locale` do destinatário e renderiza o template correto.
-
-**Mudanças**:
-1. `supabase/functions/_shared/transactional-email-templates/registry.ts` — aceitar `locale` como parâmetro e ter strings PT/EN inline em cada template.
-2. Atualizar templates existentes para receber `locale: 'pt-BR' | 'en'`:
-   - `daily-pending-summary.tsx`
-   - `lead-reply.tsx`
-   - `recurring-task-reminder.tsx`
-   - `team-invite.tsx`
-3. `supabase/functions/auth-email-hook/index.ts` e templates auth (`signup.tsx`, `magic-link.tsx`, `recovery.tsx`, `invite.tsx`, `email-change.tsx`, `reauthentication.tsx`) — buscar `profiles.locale` pelo `user_id` quando disponível e renderizar o idioma certo.
-4. `process-email-queue`, `send-transactional-email`, `send-daily-pending-email`, `check-notifications` — propagar `locale` no payload da fila.
-
----
-
-## Padrões e convenções de código
-
-### Como usar nos componentes
-```tsx
-import { useTranslation } from 'react-i18next';
-
-export function MyComponent() {
-  const { t } = useTranslation('tasks');
-  return <button>{t('createTask')}</button>;
-}
-```
-
-### Como usar com interpolação
-```tsx
-t('welcome', { name: user.displayName })
-// JSON: { "welcome": "Olá, {{name}}!" } / "Hello, {{name}}!"
-```
-
-### Pluralização
-```tsx
-t('itemCount', { count: 5 })
-// JSON: { "itemCount_one": "1 item", "itemCount_other": "{{count}} itens" }
-```
-
-### Convenção de chaves
-- camelCase, agrupadas por domínio dentro do JSON
-- Ex: `tasks.create.title`, `tasks.create.submit`, `tasks.filters.assignee`
-- Evitar chaves genéricas demais — preferir `tasks.empty.message` a `empty.message`
-
----
-
-## Validação ao final de cada fase
-
-1. `bunx tsc --noEmit` — verificar tipos
-2. Testar fluxo com PT-BR (idioma padrão)
-3. Trocar para EN no header e revisitar as mesmas telas
-4. Verificar persistência: deslogar/logar, abrir em outro navegador (sincroniza via `profiles.locale`)
-5. Confirmar `<html lang>` muda corretamente
-6. Datas formatadas no locale certo (ex: "April 25, 2026" vs "25 de abril de 2026")
-
----
-
-## Estimativa de impacto
-
-| Métrica | Impacto |
-|---|---|
-| **Bundle inicial** | +15–25 KB gzipped (lib + 1 namespace base) |
-| **Bundle por idioma extra** | +5–10 KB gzipped (lazy, só baixa quando trocar) |
-| **Performance runtime** | Praticamente zero |
-| **Tempo de carregamento inicial** | +30–80ms na 1ª visita (negligível com cache) |
-| **Manutenção futura** | Cada texto novo precisa entrar em PT e EN |
-
----
-
-## Entrega faseada
-
-Aplicarei nesta ordem dentro do mesmo ciclo de implementação após sua aprovação:
-1. **Fase 0** (infra + migração + seletor no header) — base funcional sem traduções
-2. **Fase 1** (layout global) — sidebar, header, toasts já bilíngues
-3. **Fase 2** (páginas principais) — Tarefas, Dashboard, Equipe, Configurações
-4. **Fase 3** (resto + e-mails) — landing, financeiro, admin, e-mails transacionais
-
-Ao final, todo o app responde ao seletor de idioma e os e-mails enviados respeitam a preferência do destinatário.
+Após concluir, atualizar `mem://features/i18n.md` mencionando que a Landing também passa a ser bilíngue e que o `LanguageSwitcher` está disponível para visitantes anônimos.
