@@ -20,12 +20,17 @@ export function useStatusesQuery() {
   const { user } = useAuth();
 
   return useQuery({
-    queryKey: ['task-statuses'],
+    queryKey: ['task-statuses', user?.id],
     queryFn: async () => {
+      if (!user) return [] as TaskStatus[];
+      // Filter explicitly to: own statuses + global defaults.
+      // This prevents solution_admin (which has an RLS bypass policy)
+      // from seeing statuses created by other admins.
       const { data } = await supabase
         .from('task_statuses')
         .select(STATUS_COLUMNS)
         .is('deleted_at', null)
+        .or(`created_by.eq.${user.id},is_default.eq.true`)
         .order('position');
       return (data || []) as TaskStatus[];
     },
@@ -38,12 +43,14 @@ export function useArchivedStatusesQuery() {
   const { user } = useAuth();
 
   return useQuery({
-    queryKey: ['task-statuses-archived'],
+    queryKey: ['task-statuses-archived', user?.id],
     queryFn: async () => {
+      if (!user) return [] as TaskStatus[];
       const { data } = await supabase
         .from('task_statuses')
         .select(STATUS_COLUMNS)
         .not('deleted_at', 'is', null)
+        .or(`created_by.eq.${user.id},is_default.eq.true`)
         .order('position');
       return (data || []) as TaskStatus[];
     },
