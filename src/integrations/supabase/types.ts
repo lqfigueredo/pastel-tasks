@@ -767,6 +767,7 @@ export type Database = {
           created_at: string
           doc_type: string
           id: string
+          locale: string
           published_at: string
           updated_by: string | null
           version: number
@@ -776,6 +777,7 @@ export type Database = {
           created_at?: string
           doc_type: string
           id?: string
+          locale?: string
           published_at?: string
           updated_by?: string | null
           version: number
@@ -785,6 +787,7 @@ export type Database = {
           created_at?: string
           doc_type?: string
           id?: string
+          locale?: string
           published_at?: string
           updated_by?: string | null
           version?: number

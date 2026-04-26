@@ -9,24 +9,53 @@ import { ArrowLeft } from 'lucide-react';
 import logo from '@/assets/logo.webp';
 
 const Privacy = () => {
-  const { t } = useTranslation('public');
+  const { t, i18n } = useTranslation('public');
   const [content, setContent] = useState<string>('');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let cancelled = false;
     document.title = t('legal.privacyTitle');
-    supabase
-      .from('legal_documents')
-      .select('content')
-      .eq('doc_type', 'privacy')
-      .order('version', { ascending: false })
-      .limit(1)
-      .maybeSingle()
-      .then(({ data }) => {
-        setContent(data?.content || `# ${t('legal.privacyHeading')}\n\n${t('legal.notPublished')}`);
-        setLoading(false);
-      });
-  }, [t]);
+    setLoading(true);
+
+    const currentLocale = i18n.language?.startsWith('pt') ? 'pt-BR' : 'en';
+
+    const fetchDoc = async () => {
+      // Try requested locale first
+      const { data } = await supabase
+        .from('legal_documents')
+        .select('content')
+        .eq('doc_type', 'privacy')
+        .eq('locale', currentLocale)
+        .order('version', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      let resolved = data?.content;
+
+      // Fallback to pt-BR if requested locale has no published version
+      if (!resolved && currentLocale !== 'pt-BR') {
+        const { data: fallback } = await supabase
+          .from('legal_documents')
+          .select('content')
+          .eq('doc_type', 'privacy')
+          .eq('locale', 'pt-BR')
+          .order('version', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        resolved = fallback?.content;
+      }
+
+      if (cancelled) return;
+      setContent(resolved || `# ${t('legal.privacyHeading')}\n\n${t('legal.notPublished')}`);
+      setLoading(false);
+    };
+
+    fetchDoc();
+    return () => {
+      cancelled = true;
+    };
+  }, [t, i18n.language]);
 
   if (loading) return <PageLoader />;
 
