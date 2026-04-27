@@ -1,32 +1,53 @@
 ## Problema
-O perfil financeiro (`solution_admin`) recebe erro 403 (RLS) ao criar status:
-> `new row violates row-level security policy for table "task_statuses"`
 
-A política `Users can insert statuses` exige que o usuário tenha role `admin` quando `team_id IS NULL`. O `solution_admin` não tem essa role, então é bloqueado mesmo sendo o admin financeiro do sistema.
+Na lista de Atas de Reunião (`/atas`), o badge laranja de "pendências" e a borda laranja no card permanecem aparecendo mesmo quando todas as pendências da ata já foram marcadas como concluídas.
 
-As políticas de UPDATE e DELETE também não contemplam `solution_admin`, então renomear, reordenar ou arquivar status criados por ele também falhariam.
+**Causa:** em `src/pages/MeetingMinutes.tsx` (linha 48), a query usa `meeting_pendencies(count)` sem filtro, ou seja, conta também as pendências com `is_completed = true`.
 
-## Solução — Migration de RLS
+## Solução
 
-Atualizar as políticas da tabela `task_statuses` para incluir `solution_admin`:
+Alterar a contagem para considerar **apenas pendências em aberto** (`is_completed = false`).
 
-### 1. INSERT
-Substituir `Users can insert statuses` para permitir:
-- `admin` com team (mantém atual), OU
-- `admin` sem team (mantém atual), OU
-- **`solution_admin` (qualquer caso)** ← novo
+### Mudança em `src/pages/MeetingMinutes.tsx`
 
-### 2. UPDATE
-Substituir `Users can update own statuses` para permitir owner/team_member **OU** `solution_admin` sobre seus próprios status.
+Trocar o select para usar um alias com filtro do PostgREST:
 
-### 3. DELETE
-Substituir `Users can delete own statuses` similarmente — mantendo a proteção de não excluir `is_default`.
+```ts
+.select('*, meeting_participants(count), meeting_pendencies!inner(count)')
+```
 
-### 4. SELECT
-Manter inalterado — o filtro client-side em `useStatusesQuery` já restringe a visualização do solution_admin aos próprios + defaults.
+não funciona bem aqui porque `!inner` esconderia atas sem pendências. A abordagem correta é usar embed com filtro de coluna via alias:
 
-## Arquivo
-- Nova migration SQL com `DROP POLICY` + `CREATE POLICY` para INSERT/UPDATE/DELETE em `public.task_statuses`.
+```ts
+.select(`
+  *,
+  meeting_participants(count),
+  open_pendencies:meeting_pendencies(count)
+`)
+```
 
-## Validação
-Após aplicar, o solution_admin deverá conseguir criar "Aguardando" sem erro 403, e a listagem continuará mostrando apenas seus status + defaults.
+e filtrar o embed com `.eq` em escopo aninhado não é suportado diretamente; portanto a forma confiável é trazer só as pendências em aberto via filtro no embed usando a sintaxe:
+
+```ts
+.select(`
+  *,
+  meeting_participants(count),
+  meeting_pendencies(count).eq(is_completed,false)
+`)
+```
+
+Como essa sintaxe inline pode ser frágil, a solução robusta e consistente com o resto do código é fazer uma **segunda query agregada** apenas das pendências abertas e mesclar o resultado no client:
+
+1. Manter o select atual mas remover o `meeting_pendencies(count)`.
+2. Executar `supabase.from('meeting_pendencies').select('meeting_id').eq('is_completed', false)` para todas as atas.
+3. No client, contar por `meeting_id` e atribuir `pendency_count` em cada ata.
+
+Isso garante que o badge "pendências" e a borda laranja só aparecem enquanto existir pelo menos uma pendência **em aberto**. Quando todas forem marcadas como concluídas, o card volta ao estado normal e mostra "Sem pendências".
+
+### Comportamento após a correção
+
+- Ata com pendências abertas → borda laranja + badge "X pendência(s)".
+- Ata com todas as pendências concluídas → sem borda laranja, exibe "Sem pendências".
+- Filtro "Apenas com pendências" também passa a considerar somente pendências em aberto.
+
+Nenhuma mudança de schema, RLS ou tradução é necessária.

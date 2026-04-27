@@ -45,13 +45,28 @@ export default function MeetingMinutes() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('meeting_minutes')
-        .select('*, meeting_participants(count), meeting_pendencies(count)')
+        .select('*, meeting_participants(count)')
         .order('created_at', { ascending: false });
       if (error) throw error;
+
+      const meetingIds = (data || []).map((m: any) => m.id);
+      const openCounts = new Map<string, number>();
+      if (meetingIds.length > 0) {
+        const { data: openPend, error: pErr } = await supabase
+          .from('meeting_pendencies')
+          .select('meeting_id')
+          .eq('is_completed', false)
+          .in('meeting_id', meetingIds);
+        if (pErr) throw pErr;
+        for (const row of openPend || []) {
+          openCounts.set(row.meeting_id, (openCounts.get(row.meeting_id) || 0) + 1);
+        }
+      }
+
       return (data || []).map((m: any) => ({
         ...m,
         participant_count: m.meeting_participants?.[0]?.count ?? 0,
-        pendency_count: m.meeting_pendencies?.[0]?.count ?? 0,
+        pendency_count: openCounts.get(m.id) ?? 0,
       })) as MeetingRow[];
     },
     enabled: !!user,
