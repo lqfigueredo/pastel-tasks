@@ -13,13 +13,6 @@ Deno.serve(async (req) => {
   // Require shared cron secret to block public callers
   const cronSecret = Deno.env.get('CRON_SECRET')?.trim()
   const provided = req.headers.get('x-cron-secret')?.trim()
-  console.log('CRON_SECRET debug:', {
-    envLen: cronSecret?.length ?? 0,
-    providedLen: provided?.length ?? 0,
-    envFirst8: cronSecret?.slice(0, 8),
-    providedFirst8: provided?.slice(0, 8),
-    match: cronSecret === provided,
-  })
   if (!cronSecret || provided !== cronSecret) {
     return new Response(JSON.stringify({ error: 'Unauthorized' }), {
       status: 401,
