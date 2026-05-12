@@ -8,7 +8,7 @@ interface PageLoaderProps {
 }
 
 /** Loader de tela cheia centralizado. Use em rotas/páginas inteiras carregando. */
-export function PageLoader({ label = 'Carregando...', className }: PageLoaderProps) {
+export function PageLoader({ className }: PageLoaderProps) {
   return (
     <div
       className={cn(
@@ -19,7 +19,6 @@ export function PageLoader({ label = 'Carregando...', className }: PageLoaderPro
       aria-live="polite"
     >
       <Loader2 className="h-8 w-8 animate-spin text-primary" aria-hidden />
-      <span className="text-sm text-muted-foreground">{label}</span>
     </div>
   );
 }
