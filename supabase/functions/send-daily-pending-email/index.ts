@@ -97,10 +97,41 @@ Deno.serve(async (req) => {
     })
   }
 
-  const userIds = Object.keys(userItems)
-  if (userIds.length === 0) {
+  const allUserIds = Object.keys(userItems)
+  if (allUserIds.length === 0) {
     console.log('No pending items found for any user')
     return new Response(JSON.stringify({ success: true, emailsSent: 0 }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    })
+  }
+
+  // 3.1 Filter to only ACTIVE users (approved + license valid)
+  const nowIso = new Date().toISOString()
+  const { data: activeApprovals, error: approvalsError } = await supabase
+    .from('user_approvals')
+    .select('user_id, license_expires_at')
+    .in('user_id', allUserIds)
+    .eq('status', 'approved')
+
+  if (approvalsError) {
+    console.error('Error fetching user_approvals', approvalsError)
+    return new Response(JSON.stringify({ error: 'Failed to fetch approvals' }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    })
+  }
+
+  const activeIds = new Set(
+    (activeApprovals || [])
+      .filter(a => !a.license_expires_at || a.license_expires_at > nowIso)
+      .map(a => a.user_id)
+  )
+  const userIds = allUserIds.filter(id => activeIds.has(id))
+  const skipped = allUserIds.length - userIds.length
+  console.log(`Active recipients: ${userIds.length}, skipped (inactive): ${skipped}`)
+
+  if (userIds.length === 0) {
+    return new Response(JSON.stringify({ success: true, emailsSent: 0, skipped }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   }

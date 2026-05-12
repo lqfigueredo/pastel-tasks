@@ -1,16 +1,39 @@
-## Sincronizar CRON_SECRET para destravar agendamentos
+## Filtrar envio diário apenas para usuários ativos
 
 ### Problema
-O valor de `CRON_SECRET` no Vault do banco está diferente do valor configurado como secret das Edge Functions. Por isso, todas as execuções automáticas (envio de email diário, notificações, tarefas recorrentes, expiração de trials e licenças) retornam 401.
+A função `send-daily-pending-email` hoje envia o resumo para qualquer responsável de tarefa ou pendência, sem checar se o usuário está ativo. Isso pode mandar email para:
+- Usuários com status `pending` (ainda não aprovados)
+- Usuários com status `rejected` (recusados pelo admin)
+- Usuários com licença expirada (`license_expires_at < now()`)
+- Usuários cujo admin está com assinatura `suspended` ou `canceled`
 
-### Passos
-1. Abrir o formulário seguro de atualização do secret `CRON_SECRET` para você colar o valor:
-   `4de7f1c7a912c165af86ce0b29751f0d59882ff7cd08b7f52ea2d70eebd0552e`
-2. Disparar manualmente `send-daily-pending-email` e `check-notifications` para validar resposta 200.
-3. Conferir `email_send_log` para confirmar entrada de `daily-pending-summary`.
-4. Verificar a próxima execução agendada do cron para confirmar 200 em produção real.
+### Definição de "usuário ativo"
+- `user_approvals.status = 'approved'`
+- `user_approvals.license_expires_at IS NULL OR license_expires_at > now()`
+- (opcional) admin do usuário com `subscriptions.status NOT IN ('suspended','canceled')`
 
-### Resultado
-Após a sincronização, todos os 5 cron jobs voltam a funcionar permanentemente nos seus horários agendados. Não é envio único — é a correção definitiva do agendamento.
+Confirmar se incluímos a regra de admin suspenso ou apenas approved+licença válida.
 
-Sem alterações de código.
+### Mudança
+Em `supabase/functions/send-daily-pending-email/index.ts`, após coletar `userIds`, filtrar contra `user_approvals` antes de buscar emails:
+
+```ts
+const { data: active } = await supabase
+  .from('user_approvals')
+  .select('user_id')
+  .in('user_id', userIds)
+  .eq('status', 'approved')
+  .or('license_expires_at.is.null,license_expires_at.gt.' + new Date().toISOString())
+
+const activeIds = new Set((active || []).map(a => a.user_id))
+const filteredUserIds = userIds.filter(id => activeIds.has(id))
+```
+
+Loop subsequente passa a usar `filteredUserIds`. Logar quantos foram pulados por inatividade.
+
+### Validação
+1. Disparar manualmente a função após o deploy.
+2. Conferir nos logs `Skipped (inactive): N` e `Emails sent: M`.
+3. Conferir em `email_send_log` que nenhum recipient pulado recebeu.
+
+Sem mudanças no banco. Apenas edição da Edge Function + redeploy.
