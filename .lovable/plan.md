@@ -1,39 +1,20 @@
-## Filtrar envio diário apenas para usuários ativos
+## Objetivo
 
-### Problema
-A função `send-daily-pending-email` hoje envia o resumo para qualquer responsável de tarefa ou pendência, sem checar se o usuário está ativo. Isso pode mandar email para:
-- Usuários com status `pending` (ainda não aprovados)
-- Usuários com status `rejected` (recusados pelo admin)
-- Usuários com licença expirada (`license_expires_at < now()`)
-- Usuários cujo admin está com assinatura `suspended` ou `canceled`
+Adicionar um botão **"New Kanban"** no cabeçalho da página de Tarefas (`/tarefas`) que serve apenas como atalho — ao clicar, leva o usuário para a tela de Configurações (`/configuracoes`).
 
-### Definição de "usuário ativo"
-- `user_approvals.status = 'approved'`
-- `user_approvals.license_expires_at IS NULL OR license_expires_at > now()`
-- (opcional) admin do usuário com `subscriptions.status NOT IN ('suspended','canceled')`
+## Mudanças
 
-Confirmar se incluímos a regra de admin suspenso ou apenas approved+licença válida.
+### 1. `src/pages/Index.tsx`
+- Importar o ícone `LayoutGrid` (ou `KanbanSquare`) do `lucide-react`.
+- Adicionar um `<Button variant="outline">` dentro do grupo de ações do cabeçalho (linha 175–286), posicionado antes do botão "Nova tarefa".
+- `onClick` chama `navigate('/configuracoes')` — `useNavigate` já está disponível.
+- Texto via `t('page.newKanban')`.
 
-### Mudança
-Em `supabase/functions/send-daily-pending-email/index.ts`, após coletar `userIds`, filtrar contra `user_approvals` antes de buscar emails:
+### 2. i18n — `src/i18n/locales/{pt-BR,en}/kanban.json`
+Adicionar a chave em `page`:
+- pt-BR: `"newKanban": "Novo Kanban"`
+- en: `"newKanban": "New Kanban"`
 
-```ts
-const { data: active } = await supabase
-  .from('user_approvals')
-  .select('user_id')
-  .in('user_id', userIds)
-  .eq('status', 'approved')
-  .or('license_expires_at.is.null,license_expires_at.gt.' + new Date().toISOString())
+## Fora de escopo
 
-const activeIds = new Set((active || []).map(a => a.user_id))
-const filteredUserIds = userIds.filter(id => activeIds.has(id))
-```
-
-Loop subsequente passa a usar `filteredUserIds`. Logar quantos foram pulados por inatividade.
-
-### Validação
-1. Disparar manualmente a função após o deploy.
-2. Conferir nos logs `Skipped (inactive): N` e `Emails sent: M`.
-3. Conferir em `email_send_log` que nenhum recipient pulado recebeu.
-
-Sem mudanças no banco. Apenas edição da Edge Function + redeploy.
+- Criar de fato um novo Kanban / quadro adicional. O botão é apenas um atalho de navegação para a tela de configurações, conforme solicitado.
