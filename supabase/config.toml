@@ -23,3 +23,5 @@ project_id = "pzhwmxmlozmwvscndirw"
     verify_jwt = false
   [functions.process-recurring-tasks]
     verify_jwt = false
+  [functions.sync-cron-secret]
+    verify_jwt = false
