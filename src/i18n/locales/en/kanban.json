@@ -10,7 +10,8 @@
     "filterByAssignee": "Filter by assignee",
     "allAssignees": "All assignees",
     "noName": "No name",
-    "newTask": "New Task"
+    "newTask": "New Task",
+    "newKanban": "New Kanban"
   },
   "export": {
     "trigger": "Export CSV",
