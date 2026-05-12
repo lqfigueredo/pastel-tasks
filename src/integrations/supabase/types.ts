@@ -2238,10 +2238,6 @@ export type Database = {
         Args: { _subscription_discount_id: string }
         Returns: boolean
       }
-      sync_cron_secret_from_value: {
-        Args: { _value: string }
-        Returns: undefined
-      }
     }
     Enums: {
       app_role: "admin" | "user" | "solution_admin"
