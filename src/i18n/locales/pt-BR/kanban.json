@@ -10,7 +10,8 @@
     "filterByAssignee": "Filtrar por responsável",
     "allAssignees": "Todos os responsáveis",
     "noName": "Sem nome",
-    "newTask": "Nova Tarefa"
+    "newTask": "Nova Tarefa",
+    "newKanban": "Novo Kanban"
   },
   "export": {
     "trigger": "Exportar CSV",

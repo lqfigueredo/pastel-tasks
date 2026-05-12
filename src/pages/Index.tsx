@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
-import { Plus, X, Download, Calendar as CalendarIcon } from 'lucide-react';
+import { Plus, X, Download, Calendar as CalendarIcon, LayoutGrid } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
@@ -279,6 +279,14 @@ const Index = () => {
               </div>
             </PopoverContent>
           </Popover>
+          <Button
+            variant="outline"
+            onClick={() => navigate('/configuracoes')}
+            className="gap-2 flex-1 sm:flex-none"
+          >
+            <LayoutGrid className="h-4 w-4" />
+            {t('page.newKanban')}
+          </Button>
           <Button onClick={() => setCreateOpen(true)} className="gap-2 flex-1 sm:flex-none">
             <Plus className="h-4 w-4" />
             {t('page.newTask')}
