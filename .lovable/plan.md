@@ -1,33 +1,40 @@
-# Corrigir travamento do Focus Timer
+## Objetivo
 
-## Problema
-O timer usa `setInterval` decrementando `secondsLeft` a cada 1s. Isso falha em dois cenários comuns:
-1. **Aba/janela em background**: navegadores reduzem `setInterval` para ~1x/min, fazendo o timer "travar" visualmente — quando volta para a aba, o tempo está muito atrasado.
-2. **Reload/perda do provider**: hoje o estado vive só em memória; qualquer recarga zera tudo.
-
-Como o `TimerProvider` está montado no root (`App.tsx`), navegar entre páginas não desmonta o provider — mas o throttling de background é o que causa a sensação de travamento ao voltar para a tela.
+Permitir marcar uma tarefa como concluída para ocultá-la do Kanban, mantendo-a consultável quando necessário.
 
 ## Solução
-Reescrever o `TimerContext` para **calcular o tempo a partir de timestamps absolutos** em vez de decrementar a cada tick, e persistir em `localStorage`.
 
-### Mudanças em `src/contexts/TimerContext.tsx`
-- Trocar a lógica baseada em contador por timestamps:
-  - `endAt` (ms): quando o timer deve terminar.
-  - `pausedRemaining` (s): tempo restante salvo ao pausar.
-- A cada tick (mantém 1s só para atualizar UI), calcular `secondsLeft = Math.max(0, Math.ceil((endAt - Date.now())/1000))`. Assim, mesmo que o `setInterval` seja throttled, ao voltar à aba o valor é recomputado corretamente.
-- Disparar `finished` quando `Date.now() >= endAt`, mesmo que o tick tenha sido pulado.
-- Adicionar listener de `document.visibilitychange`: ao voltar a ficar visível, recomputar imediatamente (sem esperar o próximo tick) e checar se já terminou (toca alerta nesse caso).
-- Persistir `{ state, endAt, pausedRemaining, totalSeconds, minutes }` em `localStorage` sob a chave `focus-timer-state`. Ao montar o provider, restaurar o estado:
-  - Se `running` e `endAt` no futuro → retomar.
-  - Se `running` e `endAt` no passado → marcar `finished`.
-  - Se `paused` → restaurar com `pausedRemaining`.
-- Limpar o `localStorage` em `finish`/`cancel`.
+### 1. Marcar como concluída
+- Adicionar botão **"Concluir e arquivar"** no `TaskDetailDialog` (ao lado das ações existentes) e uma ação rápida de check no `KanbanCard` (ícone ✓ no hover).
+- Ao clicar: faz `UPDATE tasks SET actual_end_date = CURRENT_DATE` (e mantém o status atual). Tarefas com `actual_end_date != null` são consideradas arquivadas.
+- Botão complementar **"Reabrir"** quando `actual_end_date` já estiver preenchido (limpa o campo, voltando a aparecer no board).
 
-### Sem mudanças funcionais visíveis
-- API pública do hook (`start/pause/resume/stop/finish/cancel`, `secondsLeft`, `elapsedSeconds`, etc.) permanece igual.
-- `Timer.tsx` e `GlobalTimerIndicator.tsx` não precisam ser alterados.
+### 2. Ocultar do board por padrão
+- Em `KanbanBoard.tsx`, filtrar `tasks` removendo as que têm `actual_end_date` quando o toggle estiver desligado (padrão).
+- Mesmo filtro aplicado ao `KanbanMobileView`.
 
-## Detalhes técnicos
-- `elapsedSeconds` continua exposto, calculado como `totalSeconds - secondsLeft` (ou acumulado entre pausas para precisão).
-- `playAlertSound` só é disparado uma vez quando a transição para `finished` ocorre (guarda com flag para não tocar duas vezes ao retornar à aba).
-- Nada de mudanças no backend, banco ou outras telas.
+### 3. Visualizar concluídas
+- Adicionar **toggle "Mostrar concluídas"** (Switch + label) no header da página `Index.tsx` (ao lado dos filtros de assignee / "New Kanban").
+- Estado persistido em `localStorage` (`kanban-show-completed`) para sobreviver à navegação.
+- Quando ligado: tarefas concluídas reaparecem nas suas colunas originais com estilo apagado (`opacity-60`, badge "Concluída em DD/MM").
+
+### 4. i18n
+- Adicionar chaves em `src/i18n/locales/{pt-BR,en}/kanban.json`:
+  - `card.completeAndArchive`, `card.reopen`, `card.completedOn`
+  - `board.showCompleted`, `board.hideCompleted`
+
+## Arquivos a alterar
+
+- `src/components/kanban/KanbanBoard.tsx` — nova prop `showCompleted`, filtro.
+- `src/components/kanban/KanbanCard.tsx` — botão check rápido, estilo apagado quando concluída.
+- `src/components/kanban/TaskDetailDialog.tsx` — botões Concluir / Reabrir.
+- `src/pages/Index.tsx` — toggle no header + persistência localStorage.
+- `src/i18n/locales/pt-BR/kanban.json` e `src/i18n/locales/en/kanban.json` — novas chaves.
+
+## Por que não usar uma coluna "Concluído"?
+
+Você pediu uma ação explícita "Concluir e arquivar". Usar `actual_end_date` como flag de arquivamento mantém a coluna/status atual da tarefa intactos para o histórico, evita migração de dados e aproveita um campo que já existe e já é editável no detalhe.
+
+## Sem alterações de schema
+
+Nenhuma migration necessária — `actual_end_date` já existe em `tasks`.
