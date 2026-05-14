@@ -11,7 +11,9 @@
     "allAssignees": "All assignees",
     "noName": "No name",
     "newTask": "New Task",
-    "newKanban": "New Kanban"
+    "newKanban": "New Kanban",
+    "showCompleted": "Show completed",
+    "hideCompleted": "Hide completed"
   },
   "export": {
     "trigger": "Export CSV",
@@ -70,7 +72,10 @@
     "minimizeCard": "Minimize card",
     "movePrev": "Move to previous status",
     "moveNext": "Move to next status",
-    "moveLabel": "Move"
+    "moveLabel": "Move",
+    "completeAndArchive": "Complete & archive",
+    "reopen": "Reopen task",
+    "completedOn": "Completed on {{date}}"
   },
   "mobile": {
     "emptyStatus": "No tasks in this status"
@@ -173,6 +178,8 @@
     "save": "Save",
     "cancel": "Cancel",
     "moveTask": "move the task",
+    "completeAndArchive": "Complete & archive",
+    "reopen": "Reopen task",
     "justifyTitle": "Justification Required",
     "justifyDescription": "The estimated delivery date is being changed. Please explain the reason.",
     "justifyPlaceholder": "Reason for the date change...",

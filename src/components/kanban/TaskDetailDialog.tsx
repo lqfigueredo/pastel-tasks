@@ -13,7 +13,7 @@ import { Separator } from '@/components/ui/separator';
 import { AssigneeSelector } from './AssigneeSelector';
 import { format } from 'date-fns';
 import { getCurrentLocale } from '@/lib/date';
-import { MessageSquare, Send, AlertTriangle, FileText, Copy } from 'lucide-react';
+import { MessageSquare, Send, AlertTriangle, FileText, Copy, CheckCircle2, RotateCcw } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Switch } from '@/components/ui/switch';
@@ -329,7 +329,28 @@ export function TaskDetailDialog({ task, allStatuses, open, onOpenChange, onRefr
 
             <TaskChangeHistory taskId={task.id} />
 
-            <div className="flex justify-end gap-2">
+            <div className="flex flex-wrap justify-end gap-2">
+              {actualEndDate ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="gap-2"
+                  onClick={() => setActualEndDate('')}
+                >
+                  <RotateCcw className="h-4 w-4" />
+                  {t('detail.reopen')}
+                </Button>
+              ) : (
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="gap-2 text-success border-success/40 hover:bg-success/10 hover:text-success"
+                  onClick={() => setActualEndDate(new Date().toISOString().slice(0, 10))}
+                >
+                  <CheckCircle2 className="h-4 w-4" />
+                  {t('detail.completeAndArchive')}
+                </Button>
+              )}
               <Button variant="outline" onClick={() => onOpenChange(false)}>{t('detail.cancel')}</Button>
               <Button onClick={handleSave} disabled={saving}>{saving ? t('detail.saving') : t('detail.save')}</Button>
             </div>

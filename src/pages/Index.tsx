@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
-import { Plus, X, Download, Calendar as CalendarIcon, LayoutGrid } from 'lucide-react';
+import { Plus, X, Download, Calendar as CalendarIcon, LayoutGrid, Archive } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
@@ -34,6 +34,13 @@ const Index = () => {
   const [exportStartDate, setExportStartDate] = useState<Date | undefined>(undefined);
   const [exportEndDate, setExportEndDate] = useState<Date | undefined>(undefined);
   const [exportPopoverOpen, setExportPopoverOpen] = useState(false);
+  const [showCompleted, setShowCompleted] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return false;
+    return window.localStorage.getItem('kanban-show-completed') === '1';
+  });
+  useEffect(() => {
+    window.localStorage.setItem('kanban-show-completed', showCompleted ? '1' : '0');
+  }, [showCompleted]);
   const boardRef = useRef<KanbanBoardRef>(null);
   const { isSolutionAdmin, isAdmin, isRegularUser } = useUserRoles();
   const navigate = useNavigate();
@@ -280,6 +287,15 @@ const Index = () => {
             </PopoverContent>
           </Popover>
           <Button
+            variant={showCompleted ? 'secondary' : 'outline'}
+            onClick={() => setShowCompleted((v) => !v)}
+            className="gap-2 flex-1 sm:flex-none"
+            title={showCompleted ? t('page.hideCompleted') : t('page.showCompleted')}
+          >
+            <Archive className="h-4 w-4" />
+            {showCompleted ? t('page.hideCompleted') : t('page.showCompleted')}
+          </Button>
+          <Button
             variant="outline"
             onClick={() => navigate('/configuracoes')}
             className="gap-2 flex-1 sm:flex-none"
@@ -293,7 +309,7 @@ const Index = () => {
           </Button>
         </div>
       </div>
-      <KanbanBoard ref={boardRef} filterAssigneeId={filterAssigneeId} onCountChange={handleCountChange} />
+      <KanbanBoard ref={boardRef} filterAssigneeId={filterAssigneeId} showCompleted={showCompleted} onCountChange={handleCountChange} />
       <CreateTaskDialog open={createOpen} onOpenChange={setCreateOpen} onTaskCreated={handleTaskCreated} />
     </div>
   );

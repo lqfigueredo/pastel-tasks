@@ -19,10 +19,11 @@ export interface KanbanBoardRef {
 
 interface KanbanBoardProps {
   filterAssigneeId?: string | null;
+  showCompleted?: boolean;
   onCountChange?: (visible: number, total: number) => void;
 }
 
-export const KanbanBoard = forwardRef<KanbanBoardRef, KanbanBoardProps>(({ filterAssigneeId, onCountChange }, ref) => {
+export const KanbanBoard = forwardRef<KanbanBoardRef, KanbanBoardProps>(({ filterAssigneeId, showCompleted = false, onCountChange }, ref) => {
   const [dragColIdx, setDragColIdx] = useState<number | null>(null);
   const [dragOverColIdx, setDragOverColIdx] = useState<number | null>(null);
   const isMobile = useIsMobile();
@@ -113,13 +114,12 @@ export const KanbanBoard = forwardRef<KanbanBoardRef, KanbanBoardProps>(({ filte
     [dragOverColIdx, handleColumnReorder]
   );
 
-  const filteredTasks = useMemo(
-    () =>
-      filterAssigneeId
-        ? tasks.filter((t) => t.assignees.some((a) => a.user_id === filterAssigneeId))
-        : tasks,
-    [tasks, filterAssigneeId],
-  );
+  const filteredTasks = useMemo(() => {
+    let list = tasks;
+    if (!showCompleted) list = list.filter((t) => !t.actual_end_date);
+    if (filterAssigneeId) list = list.filter((t) => t.assignees.some((a) => a.user_id === filterAssigneeId));
+    return list;
+  }, [tasks, filterAssigneeId, showCompleted]);
 
   // Notify parent of counts whenever they change. Must be declared before any early return.
   useEffect(() => {

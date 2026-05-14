@@ -11,7 +11,9 @@
     "allAssignees": "Todos os responsáveis",
     "noName": "Sem nome",
     "newTask": "Nova Tarefa",
-    "newKanban": "Novo Kanban"
+    "newKanban": "Novo Kanban",
+    "showCompleted": "Mostrar concluídas",
+    "hideCompleted": "Ocultar concluídas"
   },
   "export": {
     "trigger": "Exportar CSV",
@@ -70,7 +72,10 @@
     "minimizeCard": "Minimizar card",
     "movePrev": "Mover para status anterior",
     "moveNext": "Mover para próximo status",
-    "moveLabel": "Mover"
+    "moveLabel": "Mover",
+    "completeAndArchive": "Concluir e arquivar",
+    "reopen": "Reabrir tarefa",
+    "completedOn": "Concluída em {{date}}"
   },
   "mobile": {
     "emptyStatus": "Sem tarefas neste status"
@@ -173,6 +178,8 @@
     "save": "Salvar",
     "cancel": "Cancelar",
     "moveTask": "mover a tarefa",
+    "completeAndArchive": "Concluir e arquivar",
+    "reopen": "Reabrir tarefa",
     "justifyTitle": "Justificativa Obrigatória",
     "justifyDescription": "A data de previsão de entrega está sendo alterada. Informe o motivo da mudança.",
     "justifyPlaceholder": "Motivo da alteração da data...",
