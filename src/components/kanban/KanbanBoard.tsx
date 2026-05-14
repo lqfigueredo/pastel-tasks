@@ -19,10 +19,11 @@ export interface KanbanBoardRef {
 
 interface KanbanBoardProps {
   filterAssigneeId?: string | null;
+  showCompleted?: boolean;
   onCountChange?: (visible: number, total: number) => void;
 }
 
-export const KanbanBoard = forwardRef<KanbanBoardRef, KanbanBoardProps>(({ filterAssigneeId, onCountChange }, ref) => {
+export const KanbanBoard = forwardRef<KanbanBoardRef, KanbanBoardProps>(({ filterAssigneeId, showCompleted = false, onCountChange }, ref) => {
   const [dragColIdx, setDragColIdx] = useState<number | null>(null);
   const [dragOverColIdx, setDragOverColIdx] = useState<number | null>(null);
   const isMobile = useIsMobile();
