@@ -1,5 +1,5 @@
 import { memo, useCallback, useMemo, useState } from 'react';
-import { Calendar, Minimize2, Maximize2, Repeat, FileText, AlertTriangle, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Calendar, Minimize2, Maximize2, Repeat, FileText, AlertTriangle, ChevronLeft, ChevronRight, CheckCircle2, RotateCcw } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import i18nInstance from '@/i18n';
 
@@ -59,6 +59,32 @@ function KanbanCardImpl({ task, allStatuses, onRefresh, onMoveTask }: KanbanCard
       if (error) rollback();
     },
     [task.id, task.is_minimized, optimisticUpdate]
+  );
+
+  const isArchived = !!task.actual_end_date;
+
+  const toggleArchived = useCallback(
+    async (e: React.MouseEvent) => {
+      e.stopPropagation();
+      const newVal = isArchived ? null : new Date().toISOString().slice(0, 10);
+      const rollback = optimisticUpdate(task.id, { actual_end_date: newVal });
+      const { error } = await supabase
+        .from('tasks')
+        .update({ actual_end_date: newVal })
+        .eq('id', task.id);
+      if (error) rollback();
+      // Sync linked meeting pendency
+      if (!error && task.meeting_pendency_id) {
+        await supabase
+          .from('meeting_pendencies')
+          .update({
+            is_completed: !!newVal,
+            completed_at: newVal ? new Date().toISOString() : null,
+          })
+          .eq('id', task.meeting_pendency_id);
+      }
+    },
+    [task.id, task.meeting_pendency_id, isArchived, optimisticUpdate]
   );
 
   const handleDragStart = useCallback(
