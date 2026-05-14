@@ -105,9 +105,11 @@ function KanbanCardImpl({ task, allStatuses, onRefresh, onMoveTask }: KanbanCard
         className={cn(
           "group/card cursor-grab border-border/30 bg-card shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5 active:cursor-grabbing",
           minimized && "opacity-70",
-          isMine && !task.is_critical && "border-l-4 border-l-primary",
-          isMine && "bg-primary/5",
-          task.is_critical && "border-l-4 border-l-destructive"
+          isArchived && "opacity-60 bg-muted/40",
+          isMine && !task.is_critical && !isArchived && "border-l-4 border-l-primary",
+          isMine && !isArchived && "bg-primary/5",
+          task.is_critical && !isArchived && "border-l-4 border-l-destructive",
+          isArchived && "border-l-4 border-l-success"
         )}
       >
         <CardContent className={cn("p-3", minimized && "p-2")}>
@@ -144,19 +146,43 @@ function KanbanCardImpl({ task, allStatuses, onRefresh, onMoveTask }: KanbanCard
                 {task.title}
               </h4>
             </div>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button
-                  onClick={toggleMinimize}
-                  className="shrink-0 rounded p-0.5 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-                  aria-label={minimized ? t('card.expand') : t('card.minimize')}
-                >
-                  {minimized ? <Maximize2 className="h-3 w-3" /> : <Minimize2 className="h-3 w-3" />}
-                </button>
-              </TooltipTrigger>
-              <TooltipContent>{minimized ? t('card.expandCard') : t('card.minimizeCard')}</TooltipContent>
-            </Tooltip>
+            <div className="flex items-center gap-0.5 shrink-0">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    onClick={toggleArchived}
+                    className={cn(
+                      "rounded p-0.5 transition-colors",
+                      isArchived
+                        ? "text-success hover:text-foreground hover:bg-muted"
+                        : "text-muted-foreground hover:text-success hover:bg-muted"
+                    )}
+                    aria-label={isArchived ? t('card.reopen') : t('card.completeAndArchive')}
+                  >
+                    {isArchived ? <RotateCcw className="h-3 w-3" /> : <CheckCircle2 className="h-3 w-3" />}
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>{isArchived ? t('card.reopen') : t('card.completeAndArchive')}</TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    onClick={toggleMinimize}
+                    className="rounded p-0.5 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                    aria-label={minimized ? t('card.expand') : t('card.minimize')}
+                  >
+                    {minimized ? <Maximize2 className="h-3 w-3" /> : <Minimize2 className="h-3 w-3" />}
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>{minimized ? t('card.expandCard') : t('card.minimizeCard')}</TooltipContent>
+              </Tooltip>
+            </div>
           </div>
+          {isArchived && !minimized && (
+            <p className="mt-1 text-[10px] text-success font-medium">
+              {t('card.completedOn', { date: task.actual_end_date })}
+            </p>
+          )}
           {!minimized && (
             <>
               {task.description && (
