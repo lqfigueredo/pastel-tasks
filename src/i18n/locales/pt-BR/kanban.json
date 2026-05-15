@@ -180,6 +180,8 @@
     "moveTask": "mover a tarefa",
     "completeAndArchive": "Concluir e arquivar",
     "reopen": "Reabrir tarefa",
+    "archivedToast": "Tarefa concluída e arquivada",
+    "reopenedToast": "Tarefa reaberta",
     "justifyTitle": "Justificativa Obrigatória",
     "justifyDescription": "A data de previsão de entrega está sendo alterada. Informe o motivo da mudança.",
     "justifyPlaceholder": "Motivo da alteração da data...",
