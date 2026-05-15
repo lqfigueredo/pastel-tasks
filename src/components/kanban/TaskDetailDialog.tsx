@@ -204,6 +204,34 @@ export function TaskDetailDialog({ task, allStatuses, open, onOpenChange, onRefr
     setSaving(false);
   };
 
+  const handleToggleArchive = async (currentlyArchived: boolean) => {
+    setSaving(true);
+    const newDate = currentlyArchived ? null : new Date().toISOString().slice(0, 10);
+    const { error } = await supabase
+      .from('tasks')
+      .update({ actual_end_date: newDate })
+      .eq('id', task.id);
+    if (error) {
+      toast({ title: t('detail.errorSave'), variant: 'destructive' });
+      setSaving(false);
+      return;
+    }
+    if (task.meeting_pendency_id) {
+      await supabase
+        .from('meeting_pendencies')
+        .update({
+          is_completed: !!newDate,
+          completed_at: newDate ? new Date().toISOString() : null,
+        })
+        .eq('id', task.meeting_pendency_id);
+    }
+    setActualEndDate(newDate || '');
+    toast({ title: currentlyArchived ? t('detail.reopenedToast') : t('detail.archivedToast') });
+    onRefresh();
+    onOpenChange(false);
+    setSaving(false);
+  };
+
   const addComment = async () => {
     if (!newComment.trim() || !user) return;
     const { error } = await supabase.from('task_comments').insert({
@@ -335,7 +363,8 @@ export function TaskDetailDialog({ task, allStatuses, open, onOpenChange, onRefr
                   type="button"
                   variant="outline"
                   className="gap-2"
-                  onClick={() => setActualEndDate('')}
+                  disabled={saving}
+                  onClick={() => handleToggleArchive(true)}
                 >
                   <RotateCcw className="h-4 w-4" />
                   {t('detail.reopen')}
@@ -345,7 +374,8 @@ export function TaskDetailDialog({ task, allStatuses, open, onOpenChange, onRefr
                   type="button"
                   variant="outline"
                   className="gap-2 text-success border-success/40 hover:bg-success/10 hover:text-success"
-                  onClick={() => setActualEndDate(new Date().toISOString().slice(0, 10))}
+                  disabled={saving}
+                  onClick={() => handleToggleArchive(false)}
                 >
                   <CheckCircle2 className="h-4 w-4" />
                   {t('detail.completeAndArchive')}

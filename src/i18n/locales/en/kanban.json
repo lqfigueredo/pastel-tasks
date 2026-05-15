@@ -180,6 +180,8 @@
     "moveTask": "move the task",
     "completeAndArchive": "Complete & archive",
     "reopen": "Reopen task",
+    "archivedToast": "Task completed and archived",
+    "reopenedToast": "Task reopened",
     "justifyTitle": "Justification Required",
     "justifyDescription": "The estimated delivery date is being changed. Please explain the reason.",
     "justifyPlaceholder": "Reason for the date change...",
