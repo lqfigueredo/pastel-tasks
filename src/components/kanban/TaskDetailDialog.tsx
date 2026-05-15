@@ -335,7 +335,8 @@ export function TaskDetailDialog({ task, allStatuses, open, onOpenChange, onRefr
                   type="button"
                   variant="outline"
                   className="gap-2"
-                  onClick={() => setActualEndDate('')}
+                  disabled={saving}
+                  onClick={() => handleToggleArchive(true)}
                 >
                   <RotateCcw className="h-4 w-4" />
                   {t('detail.reopen')}
@@ -345,7 +346,8 @@ export function TaskDetailDialog({ task, allStatuses, open, onOpenChange, onRefr
                   type="button"
                   variant="outline"
                   className="gap-2 text-success border-success/40 hover:bg-success/10 hover:text-success"
-                  onClick={() => setActualEndDate(new Date().toISOString().slice(0, 10))}
+                  disabled={saving}
+                  onClick={() => handleToggleArchive(false)}
                 >
                   <CheckCircle2 className="h-4 w-4" />
                   {t('detail.completeAndArchive')}
