@@ -1,40 +1,37 @@
-## Objetivo
+## Diagnóstico
 
-Permitir marcar uma tarefa como concluída para ocultá-la do Kanban, mantendo-a consultável quando necessário.
+Verifiquei a tarefa "REC Horário" no banco: `actual_end_date` continua `NULL`. O clique não foi persistido.
 
-## Solução
+A causa é o comportamento do botão **"Concluir e arquivar"** dentro do `TaskDetailDialog`:
 
-### 1. Marcar como concluída
-- Adicionar botão **"Concluir e arquivar"** no `TaskDetailDialog` (ao lado das ações existentes) e uma ação rápida de check no `KanbanCard` (ícone ✓ no hover).
-- Ao clicar: faz `UPDATE tasks SET actual_end_date = CURRENT_DATE` (e mantém o status atual). Tarefas com `actual_end_date != null` são consideradas arquivadas.
-- Botão complementar **"Reabrir"** quando `actual_end_date` já estiver preenchido (limpa o campo, voltando a aparecer no board).
+```tsx
+onClick={() => setActualEndDate(new Date().toISOString().slice(0, 10))}
+```
 
-### 2. Ocultar do board por padrão
-- Em `KanbanBoard.tsx`, filtrar `tasks` removendo as que têm `actual_end_date` quando o toggle estiver desligado (padrão).
-- Mesmo filtro aplicado ao `KanbanMobileView`.
+Ele apenas atualiza o estado local do campo de data — a gravação só ocorre quando o usuário também clica em **"Salvar"**. Se o diálogo é fechado (X / clicar fora / Cancelar) sem clicar em Salvar, nada é persistido e a tarefa continua aparecendo no board.
 
-### 3. Visualizar concluídas
-- Adicionar **toggle "Mostrar concluídas"** (Switch + label) no header da página `Index.tsx` (ao lado dos filtros de assignee / "New Kanban").
-- Estado persistido em `localStorage` (`kanban-show-completed`) para sobreviver à navegação.
-- Quando ligado: tarefas concluídas reaparecem nas suas colunas originais com estilo apagado (`opacity-60`, badge "Concluída em DD/MM").
+O botão de check no `KanbanCard` (canto superior direito) já persiste corretamente via `UPDATE tasks SET actual_end_date = ...`. Provavelmente passou despercebido porque é pequeno.
 
-### 4. i18n
-- Adicionar chaves em `src/i18n/locales/{pt-BR,en}/kanban.json`:
-  - `card.completeAndArchive`, `card.reopen`, `card.completedOn`
-  - `board.showCompleted`, `board.hideCompleted`
+## Correção
+
+Tornar o botão **"Concluir e arquivar" / "Reabrir"** do `TaskDetailDialog` uma ação direta, igual ao botão do card:
+
+1. Em `TaskDetailDialog.tsx`, trocar o `onClick` que só altera estado local por uma função `handleToggleArchive` que:
+   - Faz `UPDATE tasks SET actual_end_date = <hoje | null>` via Supabase.
+   - Sincroniza `meeting_pendencies` (`is_completed`, `completed_at`) quando a tarefa veio de uma reunião — mesmo padrão já usado no `KanbanCard`.
+   - Em sucesso: dispara `onRefresh()` e fecha o diálogo (`onOpenChange(false)`), exibindo um toast de confirmação ("Tarefa arquivada" / "Tarefa reaberta").
+   - Em erro: usa `errorToast` e mantém o diálogo aberto.
+2. Manter o input de data `actual_end_date` editável para casos onde o usuário queira registrar uma data diferente de hoje — esse fluxo continua usando o botão "Salvar".
+3. Também destacar visualmente o botão de check no `KanbanCard`: aumentar levemente o ícone (`h-4 w-4`) e adicionar `bg-success/10` no hover do estado não-arquivado, para ficar mais perceptível.
+
+## Por que não exigir um Salvar separado?
+
+A ação "Concluir e arquivar" é uma decisão única e atômica — pedir um segundo clique em Salvar quebra a expectativa do usuário (foi exatamente o que aconteceu no teste com REC Horário). O botão do card já segue esse padrão; o do detalhe deve fazer o mesmo.
 
 ## Arquivos a alterar
 
-- `src/components/kanban/KanbanBoard.tsx` — nova prop `showCompleted`, filtro.
-- `src/components/kanban/KanbanCard.tsx` — botão check rápido, estilo apagado quando concluída.
-- `src/components/kanban/TaskDetailDialog.tsx` — botões Concluir / Reabrir.
-- `src/pages/Index.tsx` — toggle no header + persistência localStorage.
-- `src/i18n/locales/pt-BR/kanban.json` e `src/i18n/locales/en/kanban.json` — novas chaves.
+- `src/components/kanban/TaskDetailDialog.tsx` — nova função `handleToggleArchive`, novos handlers nos dois botões, fechar/refresh ao concluir.
+- `src/components/kanban/KanbanCard.tsx` — leve melhoria visual no botão de check.
+- `src/i18n/locales/{pt-BR,en}/kanban.json` — chaves de toast: `detail.archivedToast`, `detail.reopenedToast`.
 
-## Por que não usar uma coluna "Concluído"?
-
-Você pediu uma ação explícita "Concluir e arquivar". Usar `actual_end_date` como flag de arquivamento mantém a coluna/status atual da tarefa intactos para o histórico, evita migração de dados e aproveita um campo que já existe e já é editável no detalhe.
-
-## Sem alterações de schema
-
-Nenhuma migration necessária — `actual_end_date` já existe em `tasks`.
+## Sem alterações de schema, hooks ou queries.
