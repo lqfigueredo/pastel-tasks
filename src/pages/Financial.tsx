@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, lazy, Suspense } from 'react';
-import { useTranslation } from 'react-i18next';
+import { useTranslation, Trans } from 'react-i18next';
 import { useSupportTicketsQuery } from '@/hooks/useSupportTicketsQuery';
 import {
   useFinancialDataQuery,
