@@ -31,7 +31,20 @@ function generateToken(): string {
 }
 
 // Auth: verify_jwt = false in config.toml (signing-keys system).
-// We validate the JWT in code instead.
+// We validate the JWT in code instead — must be service_role or an
+// authenticated solution_admin user. Without this check, anyone could
+// send emails from our verified domain to arbitrary recipients.
+function decodeJwtClaims(token: string): Record<string, unknown> | null {
+  try {
+    const parts = token.split('.')
+    if (parts.length !== 3) return null
+    const payload = parts[1].replace(/-/g, '+').replace(/_/g, '/')
+    const padded = payload + '='.repeat((4 - (payload.length % 4)) % 4)
+    return JSON.parse(atob(padded))
+  } catch {
+    return null
+  }
+}
 
 Deno.serve(async (req) => {
   // Handle CORS preflight
@@ -52,6 +65,41 @@ Deno.serve(async (req) => {
       }
     )
   }
+
+  // AuthZ: require service_role JWT (internal callers) or an authenticated
+  // solution_admin user (client-side admin actions like ReplyLeadDialog).
+  const authHeader = req.headers.get('Authorization') ?? ''
+  const token = authHeader.replace(/^Bearer\s+/i, '').trim()
+  if (!token) {
+    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+      status: 401,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    })
+  }
+  const claims = decodeJwtClaims(token)
+  const role = claims?.role as string | undefined
+  if (role !== 'service_role') {
+    // Validate user JWT and require solution_admin role
+    const userClient = createClient(supabaseUrl, supabaseServiceKey)
+    const { data: userData, error: userErr } = await userClient.auth.getUser(token)
+    if (userErr || !userData?.user) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+    const { data: hasRole } = await userClient.rpc('has_role', {
+      _user_id: userData.user.id,
+      _role: 'solution_admin',
+    })
+    if (!hasRole) {
+      return new Response(JSON.stringify({ error: 'Forbidden' }), {
+        status: 403,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+  }
+
 
   // Parse request body
   let templateName: string
