@@ -31,7 +31,20 @@ function generateToken(): string {
 }
 
 // Auth: verify_jwt = false in config.toml (signing-keys system).
-// We validate the JWT in code instead.
+// We validate the JWT in code instead — must be service_role or an
+// authenticated solution_admin user. Without this check, anyone could
+// send emails from our verified domain to arbitrary recipients.
+function decodeJwtClaims(token: string): Record<string, unknown> | null {
+  try {
+    const parts = token.split('.')
+    if (parts.length !== 3) return null
+    const payload = parts[1].replace(/-/g, '+').replace(/_/g, '/')
+    const padded = payload + '='.repeat((4 - (payload.length % 4)) % 4)
+    return JSON.parse(atob(padded))
+  } catch {
+    return null
+  }
+}
 
 Deno.serve(async (req) => {
   // Handle CORS preflight
