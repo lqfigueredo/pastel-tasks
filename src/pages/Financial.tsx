@@ -331,11 +331,14 @@ const Financial = () => {
                               <AlertDialogContent>
                                 <AlertDialogHeader>
                                   <AlertDialogTitle>{t('approvals.deactivateDialog.title')}</AlertDialogTitle>
-                                  <AlertDialogDescription
-                                    dangerouslySetInnerHTML={{
-                                      __html: t('approvals.deactivateDialog.description', { name: approval.display_name }),
-                                    }}
-                                  />
+                                  <AlertDialogDescription>
+                                    <Trans
+                                      i18nKey="approvals.deactivateDialog.description"
+                                      t={t}
+                                      values={{ name: approval.display_name }}
+                                      components={{ strong: <strong /> }}
+                                    />
+                                  </AlertDialogDescription>
                                 </AlertDialogHeader>
                                 <AlertDialogFooter>
                                   <AlertDialogCancel>{t('approvals.deactivateDialog.cancel')}</AlertDialogCancel>
