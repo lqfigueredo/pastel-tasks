@@ -88,12 +88,12 @@ Deno.serve(async (req) => {
     )
   }
 
-  // Defense in depth: verify_jwt=true already requires a valid JWT at the
-  // gateway layer. This adds an explicit role check so only service-role
-  // callers can trigger queue processing.
+  // verify_jwt = false at gateway. Authenticate by constant-time comparing the
+  // bearer token against the actual service_role key. Decoding the JWT payload
+  // without signature verification is insecure — forged {"role":"service_role"}
+  // payloads would otherwise bypass this check.
   const token = authHeader.slice('Bearer '.length).trim()
-  const claims = parseJwtClaims(token)
-  if (claims?.role !== 'service_role') {
+  if (!timingSafeEqual(token, supabaseServiceKey)) {
     return new Response(
       JSON.stringify({ error: 'Forbidden' }),
       { status: 403, headers: { 'Content-Type': 'application/json' } }
