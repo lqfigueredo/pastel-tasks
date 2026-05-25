@@ -82,9 +82,16 @@ const Auth = () => {
       const { error } = await signIn(email.trim(), password);
       if (error) errorToast(t('errors.signIn'), error);
     } else {
-      const { error } = await signUp(email.trim(), password, displayName.trim());
+      if (!turnstileToken) {
+        errorToast(t('errors.signUp'), { message: t('validation.turnstileRequired') });
+        setSubmitting(false);
+        return;
+      }
+      const { error } = await signUp(email.trim(), password, displayName.trim(), turnstileToken);
       if (error) {
         errorToast(t('errors.signUp'), error);
+        turnstileRef.current?.reset();
+        setTurnstileToken('');
       } else {
         successToast(t('signup.successTitle'), t('signup.successDescription'));
         setIsLogin(true);
