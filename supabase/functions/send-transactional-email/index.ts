@@ -30,20 +30,16 @@ function generateToken(): string {
     .join('')
 }
 
-// Auth: verify_jwt = false in config.toml (signing-keys system).
-// We validate the JWT in code instead — must be service_role or an
-// authenticated solution_admin user. Without this check, anyone could
-// send emails from our verified domain to arbitrary recipients.
-function decodeJwtClaims(token: string): Record<string, unknown> | null {
-  try {
-    const parts = token.split('.')
-    if (parts.length !== 3) return null
-    const payload = parts[1].replace(/-/g, '+').replace(/_/g, '/')
-    const padded = payload + '='.repeat((4 - (payload.length % 4)) % 4)
-    return JSON.parse(atob(padded))
-  } catch {
-    return null
-  }
+// Auth: verify_jwt = false in config.toml. We validate in code.
+// Service-role callers authenticate by presenting the actual service_role key
+// (constant-time compared). Decoding the JWT payload without signature
+// verification is insecure — attackers can forge {"role":"service_role"}.
+// Authenticated users must be solution_admin (validated via auth.getUser).
+function timingSafeEqual(a: string, b: string): boolean {
+  if (a.length !== b.length) return false
+  let diff = 0
+  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i)
+  return diff === 0
 }
 
 Deno.serve(async (req) => {
@@ -66,8 +62,8 @@ Deno.serve(async (req) => {
     )
   }
 
-  // AuthZ: require service_role JWT (internal callers) or an authenticated
-  // solution_admin user (client-side admin actions like ReplyLeadDialog).
+  // AuthZ: require the actual service_role key (internal callers) or an
+  // authenticated solution_admin user (client-side admin actions).
   const authHeader = req.headers.get('Authorization') ?? ''
   const token = authHeader.replace(/^Bearer\s+/i, '').trim()
   if (!token) {
@@ -76,10 +72,9 @@ Deno.serve(async (req) => {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   }
-  const claims = decodeJwtClaims(token)
-  const role = claims?.role as string | undefined
-  if (role !== 'service_role') {
-    // Validate user JWT and require solution_admin role
+  const isServiceRole = timingSafeEqual(token, supabaseServiceKey)
+  if (!isServiceRole) {
+    // Validate user JWT cryptographically and require solution_admin role
     const userClient = createClient(supabaseUrl, supabaseServiceKey)
     const { data: userData, error: userErr } = await userClient.auth.getUser(token)
     if (userErr || !userData?.user) {
