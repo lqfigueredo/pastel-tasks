@@ -59,7 +59,8 @@ const Auth = () => {
   };
   const validatePassword = (v: string) => {
     if (!v) return t('validation.passwordRequired');
-    if (v.length < 6) return t('validation.passwordTooShort');
+    const minLen = isLogin ? 6 : 8;
+    if (v.length < minLen) return t('validation.passwordTooShort', { min: minLen });
     return undefined;
   };
 
