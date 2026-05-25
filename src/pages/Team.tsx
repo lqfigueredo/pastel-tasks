@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
+import { useTranslation, Trans } from 'react-i18next';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -190,13 +190,15 @@ const Team = () => {
             <DialogTitle className="flex items-center gap-2">
               <AlertTriangle className="h-5 w-5 text-destructive" /> {t('detail.deleteTitle')}
             </DialogTitle>
-            <DialogDescription>
-              <span dangerouslySetInnerHTML={{ __html: t('detail.deleteDesc', { name: team.name }) }} />
+            <DialogDescription asChild>
+              <span>
+                <Trans i18nKey="detail.deleteDesc" ns="team" values={{ name: team.name }} components={{ strong: <strong /> }} />
+              </span>
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-2 py-2">
             <p className="text-sm text-muted-foreground">
-              <span dangerouslySetInnerHTML={{ __html: t('detail.confirmType', { name: team.name }) }} />
+              <Trans i18nKey="detail.confirmType" ns="team" values={{ name: team.name }} components={{ strong: <strong /> }} />
             </p>
             <Input
               value={deleteConfirmName}
