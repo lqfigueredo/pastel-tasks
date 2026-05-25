@@ -180,7 +180,19 @@ const Auth = () => {
                 />
                 {errors.password && <p className="text-xs text-destructive">{errors.password}</p>}
               </div>
-              <Button type="submit" className="w-full" disabled={submitting}>
+              {!isLogin && (
+                <div className="flex justify-center">
+                  <Turnstile
+                    ref={turnstileRef}
+                    siteKey={SITE_KEY}
+                    onSuccess={setTurnstileToken}
+                    onError={() => setTurnstileToken('')}
+                    onExpire={() => setTurnstileToken('')}
+                    options={{ theme: 'auto', size: 'flexible' }}
+                  />
+                </div>
+              )}
+              <Button type="submit" className="w-full" disabled={submitting || (!isLogin && !turnstileToken)}>
                 {submitting ? t('submitting') : isLogin ? t('login.submit') : t('signup.submit')}
               </Button>
             </form>
