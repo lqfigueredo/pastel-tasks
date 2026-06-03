@@ -208,11 +208,11 @@ const Pricing = () => {
               description: primary.description || 'Plataforma de gestão de tarefas e equipes',
               offers: {
                 '@type': 'Offer',
-                price: (primary.price_per_seat_cents / 100).toFixed(2),
+                price: '0.00',
                 priceCurrency: primary.currency,
                 priceSpecification: {
                   '@type': 'UnitPriceSpecification',
-                  price: (primary.price_per_seat_cents / 100).toFixed(2),
+                  price: '0.00',
                   priceCurrency: primary.currency,
                   unitText: 'usuário/mês',
                 },
