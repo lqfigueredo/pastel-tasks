@@ -111,44 +111,28 @@ const Pricing = () => {
           ) : (
             <div className="rounded-2xl border-2 border-primary/30 bg-card shadow-xl overflow-hidden">
               <div className="bg-primary/5 border-b border-primary/20 p-8 text-center">
+                <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-primary mb-4">
+                  {t('plan.freeBadge')}
+                </div>
                 <h2 className="text-2xl font-bold font-display">{primary.name}</h2>
                 {primary.description && (
                   <p className="mt-2 text-muted-foreground">{primary.description}</p>
                 )}
                 <div className="mt-6 flex items-baseline justify-center gap-2">
                   <span className="text-5xl font-bold text-primary font-display">
-                    {formatMoney(primary.price_per_seat_cents, primary.currency)}
+                    {t('plan.freePrice')}
                   </span>
                   <span className="text-muted-foreground">{t('plan.perSeatMonth')}</span>
                 </div>
                 <p className="mt-2 text-sm text-muted-foreground">
-                  {t('plan.fromSeats', { n: primary.minimum_seats })} •{' '}
-                  <span className="font-semibold text-foreground">
-                    {t('plan.minValue', { value: formatMoney(primary.minimum_seats * primary.price_per_seat_cents, primary.currency) })}
-                  </span>
+                  {t('plan.freeForOneYear')}
+                </p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {t('plan.minValue', { n: primary.minimum_seats })}
                 </p>
               </div>
 
               <div className="p-8 space-y-8">
-                <div className="rounded-xl bg-muted/50 p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <span className="font-medium">{t('plan.howManyUsers')}</span>
-                    <span className="text-2xl font-bold text-primary font-display">{seats}</span>
-                  </div>
-                  <Slider
-                    value={[seats]}
-                    onValueChange={([v]) => setSeats(v)}
-                    min={primary.minimum_seats}
-                    max={500}
-                    step={1}
-                    className="mb-4"
-                  />
-                  <div className="flex items-center justify-between pt-4 border-t border-border">
-                    <span className="text-sm text-muted-foreground">{t('plan.monthlyEstimate')}</span>
-                    <span className="text-3xl font-bold font-display">{formatMoney(monthlyTotal, primary.currency)}</span>
-                  </div>
-                </div>
-
                 {featuresList.length > 0 && (
                   <ul className="space-y-3">
                     {featuresList.map((feat, i) => (
