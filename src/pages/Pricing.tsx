@@ -4,7 +4,6 @@ import { useTranslation } from 'react-i18next';
 import { Check, Sparkles, ArrowRight } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
-import { Slider } from '@/components/ui/slider';
 import LeadFormTrigger from '@/components/landing/LeadFormTrigger';
 import logo from '@/assets/logo.webp';
 import { safeTArray } from '@/i18n/safeT';
