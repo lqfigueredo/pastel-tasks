@@ -143,6 +143,20 @@ export default function Billing() {
       </div>
 
       {/* Banners */}
+      {sub.price_per_seat_cents === 0 && (
+        <Card className="border-primary/40 bg-primary/5">
+          <CardContent className="flex items-start gap-3 pt-6 flex-wrap">
+            <Sparkles className="mt-1 h-5 w-5 text-primary shrink-0" />
+            <div className="flex-1 min-w-[200px]">
+              <p className="font-semibold">{t('alerts.freePlanTitle')}</p>
+              <p className="text-sm text-muted-foreground">
+                {t('alerts.freePlanDesc', { date: sub.current_period_end ? dateFmt(sub.current_period_end) : '—' })}
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {isProblem && (
         <Card className="border-destructive">
           <CardContent className="flex items-start gap-3 pt-6">
