@@ -4,7 +4,7 @@ project_id = "pzhwmxmlozmwvscndirw"
   [functions.auth-email-hook]
     verify_jwt = false
   [functions.process-email-queue]
-    verify_jwt = false
+    verify_jwt = true
   [functions.send-transactional-email]
     verify_jwt = false
   [functions.preview-transactional-email]
