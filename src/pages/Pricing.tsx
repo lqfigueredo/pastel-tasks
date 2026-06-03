@@ -20,13 +20,9 @@ interface Plan {
 }
 
 const Pricing = () => {
-  const { t, i18n } = useTranslation('pricing');
+  const { t } = useTranslation('pricing');
   const [plans, setPlans] = useState<Plan[]>([]);
   const [loading, setLoading] = useState(true);
-  const [seats, setSeats] = useState(10);
-
-  const formatMoney = (cents: number, currency: string) =>
-    new Intl.NumberFormat(i18n.language || 'pt-BR', { style: 'currency', currency }).format(cents / 100);
 
   useEffect(() => {
     document.title = t('meta.title');
@@ -43,17 +39,11 @@ const Pricing = () => {
       .order('price_per_seat_cents', { ascending: true })
       .then(({ data }) => {
         setPlans((data as Plan[]) ?? []);
-        if (data && data.length > 0) setSeats((data[0] as Plan).minimum_seats);
         setLoading(false);
       });
   }, [t]);
 
   const primary = plans[0];
-  const monthlyTotal = useMemo(() => {
-    if (!primary) return 0;
-    const effective = Math.max(seats, primary.minimum_seats);
-    return effective * primary.price_per_seat_cents;
-  }, [primary, seats]);
 
   const featuresList: string[] = useMemo(() => {
     if (!primary) return [];
