@@ -1,49 +1,52 @@
 {
   "meta": {
-    "title": "NEVVOH Pricing — Task management starting from a low per-user price",
-    "description": "Discover NEVVOH plans: monthly billing per user, minimum of 10 seats and 14-day free trial without a credit card."
+    "title": "NEVVOH — Free access for 1 year for your team",
+    "description": "NEVVOH is now free for 1 year for every team. Sign up without a credit card, minimum 10 seats, automatic renewal."
   },
   "header": {
     "home": "Home",
     "haveAccount": "I have an account"
   },
   "hero": {
-    "badge": "14 days free, no credit card",
-    "title1": "Transparent pricing,",
-    "titleHighlight": "per user",
-    "subtitle": "No fine print. Pay only for your team's seats and cancel anytime."
+    "badge": "Free for 1 year — no credit card",
+    "title1": "Free access,",
+    "titleHighlight": "for everyone",
+    "subtitle": "We released NEVVOH for free for 1 year to any team that wants to use it. Auto-renewing, no card and no fine print."
   },
   "noPlans": "No plans available at the moment.",
   "plan": {
     "perSeatMonth": "/user/month",
     "fromSeats": "From {{n}} seats",
-    "minValue": "minimum {{value}}/month",
-    "howManyUsers": "How many users?",
-    "monthlyEstimate": "Estimated monthly",
-    "startTrial": "Start free trial"
+    "minValue": "Access for up to {{n}} users at no cost",
+    "howManyUsers": "How many users on your team?",
+    "monthlyEstimate": "Monthly cost",
+    "startTrial": "Get started — free",
+    "freeBadge": "Free plan",
+    "freePrice": "$0",
+    "freeForOneYear": "Access granted for 1 year with automatic renewal"
   },
   "faq": {
     "title": "Frequently asked questions",
     "items": [
       {
-        "q": "Can I cancel anytime?",
-        "a": "Yes. You can cancel your subscription anytime from the billing panel. Access continues until the end of the paid period."
+        "q": "How much does NEVVOH cost?",
+        "a": "Today NEVVOH is completely free for 1 year for any team. No credit card, no hidden charges."
       },
       {
-        "q": "How does the free trial work?",
-        "a": "14 full days with access to all modules, no credit card required. At the end, you decide whether to activate the subscription."
+        "q": "What happens when the year ends?",
+        "a": "Your access is automatically renewed for another year, at no cost. You keep using NEVVOH normally without doing anything."
+      },
+      {
+        "q": "Do I need to enter a credit card?",
+        "a": "No. Since usage is free, we don't ask for any payment information at signup."
       },
       {
         "q": "Why is the minimum 10 seats?",
         "a": "NEVVOH was designed for teams. The 10-seat minimum ensures room to grow and effective collaboration between members from day one."
       },
       {
-        "q": "Can I increase or decrease seats later?",
-        "a": "Yes. From the billing panel you adjust the number of seats when needed and the next invoice is automatically recalculated."
-      },
-      {
-        "q": "Which payment methods are accepted?",
-        "a": "Currently payments are processed manually by our sales team. Automatic checkout with card and Pix is coming soon."
+        "q": "How many users can I invite?",
+        "a": "Each admin account can invite up to 10 active users for free. If you need more seats, get in touch with us."
       }
     ]
   },

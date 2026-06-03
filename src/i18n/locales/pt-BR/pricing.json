@@ -1,49 +1,52 @@
 {
   "meta": {
-    "title": "Preços do NEVVOH — Gestão de tarefas a partir de R$ por usuário",
-    "description": "Conheça os planos do NEVVOH: cobrança mensal por usuário, mínimo de 10 assentos e 14 dias de teste grátis sem cartão."
+    "title": "NEVVOH — Acesso gratuito por 1 ano para sua equipe",
+    "description": "O NEVVOH agora é gratuito por 1 ano para todos os times. Cadastre-se sem cartão de crédito, mínimo de 10 assentos, renovação automática."
   },
   "header": {
     "home": "Início",
     "haveAccount": "Já tenho conta"
   },
   "hero": {
-    "badge": "14 dias grátis, sem cartão",
-    "title1": "Preço transparente,",
-    "titleHighlight": "por usuário",
-    "subtitle": "Sem letras miúdas. Pague apenas pelos assentos da sua equipe e cancele quando quiser."
+    "badge": "Gratuito por 1 ano — sem cartão",
+    "title1": "Acesso gratuito,",
+    "titleHighlight": "para todos",
+    "subtitle": "Liberamos o NEVVOH gratuitamente por 1 ano para todos os times que quiserem usar. Renovação automática, sem cartão e sem letras miúdas."
   },
   "noPlans": "Nenhum plano disponível no momento.",
   "plan": {
     "perSeatMonth": "/usuário/mês",
     "fromSeats": "A partir de {{n}} assentos",
-    "minValue": "valor mínimo {{value}}/mês",
-    "howManyUsers": "Quantos usuários?",
-    "monthlyEstimate": "Mensalidade estimada",
-    "startTrial": "Começar teste grátis"
+    "minValue": "Acesso liberado para até {{n}} usuários sem custo",
+    "howManyUsers": "Quantos usuários da sua equipe?",
+    "monthlyEstimate": "Mensalidade",
+    "startTrial": "Começar de graça",
+    "freeBadge": "Plano gratuito",
+    "freePrice": "R$ 0",
+    "freeForOneYear": "Acesso liberado por 1 ano com renovação automática"
   },
   "faq": {
     "title": "Perguntas frequentes",
     "items": [
       {
-        "q": "Posso cancelar quando quiser?",
-        "a": "Sim. Você pode cancelar a assinatura a qualquer momento pelo painel de cobrança. O acesso continua até o fim do período já pago."
+        "q": "Quanto custa o NEVVOH?",
+        "a": "Hoje o NEVVOH é totalmente gratuito por 1 ano para qualquer equipe. Sem cartão de crédito, sem cobrança escondida."
       },
       {
-        "q": "Como funciona o teste grátis?",
-        "a": "São 14 dias completos com acesso a todos os módulos, sem precisar cadastrar cartão. Ao final, você decide se ativa a assinatura."
+        "q": "O que acontece quando o ano acabar?",
+        "a": "Seu acesso é renovado automaticamente por mais 1 ano, gratuitamente. Você continua usando normalmente sem precisar fazer nada."
+      },
+      {
+        "q": "Preciso cadastrar cartão de crédito?",
+        "a": "Não. Como o uso é gratuito, não pedimos nenhum dado de pagamento no cadastro."
       },
       {
         "q": "Por que o mínimo é de 10 assentos?",
         "a": "O NEVVOH foi desenhado para times. O mínimo de 10 assentos garante que você tenha espaço para crescer e que a colaboração entre membros seja efetiva desde o início."
       },
       {
-        "q": "Posso aumentar ou diminuir assentos depois?",
-        "a": "Sim. Pelo painel de cobrança você ajusta o número de assentos quando precisar e a próxima fatura é recalculada automaticamente."
-      },
-      {
-        "q": "Quais formas de pagamento são aceitas?",
-        "a": "No momento o pagamento é processado manualmente pelo time comercial. Em breve teremos checkout automático com cartão e Pix."
+        "q": "Posso convidar quantos usuários quiser?",
+        "a": "Cada conta admin pode convidar até 10 usuários ativos gratuitamente. Se precisar de mais assentos, fale com a gente."
       }
     ]
   },

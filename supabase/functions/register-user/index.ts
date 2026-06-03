@@ -5,7 +5,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 }
 
-const TRIAL_DAYS = 14
+const FREE_ACCESS_DAYS = 365
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -101,30 +101,30 @@ Deno.serve(async (req) => {
     const planId = plan?.id ?? null
 
     const now = new Date()
-    const trialEnds = new Date(now.getTime() + TRIAL_DAYS * 24 * 60 * 60 * 1000)
+    const periodEnd = new Date(now.getTime() + FREE_ACCESS_DAYS * 24 * 60 * 60 * 1000)
 
     const { error: subError } = await supabaseAdmin.from('subscriptions').insert({
       admin_user_id: newUserId,
-      status: 'trialing',
-      provider: 'pending',
+      status: 'active',
+      provider: 'free',
       plan_id: planId,
       seats_purchased: minimumSeats,
       minimum_seats: minimumSeats,
-      price_per_seat_cents: priceCents,
+      price_per_seat_cents: 0,
       currency,
-      trial_ends_at: trialEnds.toISOString(),
+      trial_ends_at: null,
       current_period_start: now.toISOString(),
-      current_period_end: trialEnds.toISOString(),
+      current_period_end: periodEnd.toISOString(),
     })
 
     if (subError) {
-      console.error('Failed to create trial subscription:', subError)
+      console.error('Failed to create free subscription:', subError)
     }
 
     return new Response(
       JSON.stringify({
         success: true,
-        message: `Conta criada! Você tem ${TRIAL_DAYS} dias grátis para testar. Faça login para começar.`,
+        message: 'Conta criada! Você tem acesso gratuito por 1 ano. Faça login para começar.',
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
     )

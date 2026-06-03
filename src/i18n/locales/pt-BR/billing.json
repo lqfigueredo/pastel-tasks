@@ -25,7 +25,9 @@
     "trialActivateCta": "Ative sua assinatura agora para garantir continuidade do acesso da equipe.",
     "activateNow": "Ativar agora",
     "cancelScheduledTitle": "Cancelamento agendado",
-    "cancelScheduledDesc": "Sua assinatura será cancelada em {{date}}."
+    "cancelScheduledDesc": "Sua assinatura será cancelada em {{date}}.",
+    "freePlanTitle": "Plano gratuito ativo",
+    "freePlanDesc": "Seu acesso está liberado gratuitamente até {{date}}. A renovação acontece automaticamente, sem cobrança."
   },
   "summary": {
     "seatsPurchased": "Assentos contratados",

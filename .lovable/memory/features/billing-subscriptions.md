@@ -1,38 +1,44 @@
 ---
 name: Billing & Subscriptions
-description: Per-seat monthly billing for admins with 10-seat minimum, subscription as source of truth syncing admin_settings.max_users
+description: Free-for-everyone access. All subscriptions price = 0, 1-year period that auto-renews indefinitely; 10-seat minimum preserved.
 type: feature
 ---
 
-## Modelo
-- Cobrança mensal por assento, mínimo 10 (hard floor via CHECK constraint).
-- Cliente pagante = admin. Solution_admin gerencia tudo.
-- `subscriptions` é fonte de verdade; trigger `subscriptions_sync_max_users` espelha `seats_purchased` em `admin_settings.max_users` (0 quando suspended/canceled).
+## Modelo atual (acesso gratuito)
+- O NEVVOH é gratuito para todos: `plans.price_per_seat_cents = 0`, default da coluna em `plans` e `subscriptions` = 0.
+- Cada admin recebe uma `subscriptions` com `status='active'`, `provider='free'`, `current_period_end = now() + 1 year`, sem trial.
+- Mínimo de 10 assentos mantido (hard floor via CHECK).
+- `subscriptions` continua sendo a fonte de verdade; trigger `subscriptions_sync_max_users` espelha seats em `admin_settings.max_users`.
+
+## Auto-renovação
+- Edge function `auto-renew-free-subscriptions` roda diariamente via pg_cron (`0 3 * * *`, job `auto-renew-free-subscriptions-daily`).
+- Estende por mais 1 ano qualquer subscription com `price_per_seat_cents = 0` cujo `current_period_end < now() + 30 days`.
+- Registra cada renovação em `subscription_changes` (`change_type='auto_renewed_free'`).
+- Protegida via header `x-cron-secret` = `CRON_SECRET`.
 
 ## Tabelas
-- `subscriptions` (1 por admin, UNIQUE admin_user_id): provider, status (`trialing|active|past_due|canceled|suspended|pending`), seats_purchased, minimum_seats=10, price_per_seat_cents, currency=BRL, trial_ends_at, current_period_*, cancel_at_period_end, past_due_since.
+- `subscriptions` (1 por admin, UNIQUE admin_user_id): status (`trialing|active|past_due|canceled|suspended|pending|free` em uso atual: `active`).
 - `billing_events`: log de webhooks com idempotência via UNIQUE (provider, event_id).
 
-## Funções
-- `sync_admin_max_users()` trigger AFTER INSERT/UPDATE em subscriptions.
-- `get_admin_active_users_count(_admin_id)` — conta user_approvals approved.
-- `admin_can_add_user(_admin_id)` — usado em `admin-create-user` para bloquear acima do limite. Considera status suspended/canceled.
-
-## Enforcement
-- `supabase/functions/admin-create-user/index.ts` chama RPC `admin_can_add_user` antes de criar.
-- Mensagem específica para suspensão/cancelamento vs. limite atingido.
+## Funções relevantes (mantidas)
+- `sync_admin_max_users()` AFTER INSERT/UPDATE em subscriptions.
+- `admin_can_add_user(_admin_id)` — bloqueia acima do limite. Free subs com status='active' permitem até `seats_purchased`.
+- `calculate_invoice_amount` — retorna 0 naturalmente com price=0.
+- Funções de pagamento manual / vouchers / comp_activation seguem disponíveis para uso futuro.
 
 ## Frontend
-- Rota `/cobranca` (Billing.tsx) — exibe assinatura, slider de assentos, mensalidade estimada, ciclo, status.
-- Link na sidebar para admins (CreditCard icon).
-- Botões de upgrade/portal são placeholders (provider="Decidir depois") — exibem toast informativo.
+- Pricing page (`/precos`): mostra "Plano gratuito — R$ 0", badge "Gratuito por 1 ano" e CTA "Começar de graça". Sem slider de preço.
+- Landing (`/`): hero CTA "Começar de graça", note "Gratuito por 1 ano · sem cartão de crédito".
+- Billing (`/cobranca`): banner "Plano gratuito ativo — liberado até {date}" quando `price_per_seat_cents = 0`.
+- Cadastro (`register-user`): cria subscription gratuita de 1 ano (constant `FREE_ACCESS_DAYS = 365`).
 
-## Seed
-- Admins existentes ganharam subscription `provider='manual'`, `status='active'` com seats_purchased = max(admin_settings.max_users, 10).
+## Histórico
+- Migração de "cobrança mensal por assento" para acesso gratuito feita em Jun/2026.
+- Toda subscription existente em `trialing|pending|past_due` foi convertida para `active` com 1 ano grátis.
+- Subscriptions já `active` pagantes foram preservadas.
 
-## Pendente (próximas fases)
-- Escolher e habilitar provider (Paddle/Stripe via tools de pagamento Lovable).
-- Edge functions: `create-checkout`, `billing-portal`, `billing-webhook`.
-- Trial 14 dias com cartão (decisão do usuário).
-- Lógica de suspensão automática (cron) após 3 dias em past_due.
-- Visão MRR/churn em `Financial.tsx` para solution_admin.
+## Reativando cobrança (se necessário no futuro)
+1. Restaurar `price_per_seat_cents > 0` em `plans`.
+2. Reverter `register-user` para criar `trialing` com `trial_ends_at`.
+3. Desativar o cron `auto-renew-free-subscriptions-daily`.
+4. Restaurar copy de Pricing/Landing/Billing.
