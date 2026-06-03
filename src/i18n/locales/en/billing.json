@@ -25,7 +25,9 @@
     "trialActivateCta": "Activate your subscription now to ensure your team's continued access.",
     "activateNow": "Activate now",
     "cancelScheduledTitle": "Cancellation scheduled",
-    "cancelScheduledDesc": "Your subscription will be canceled on {{date}}."
+    "cancelScheduledDesc": "Your subscription will be canceled on {{date}}.",
+    "freePlanTitle": "Free plan active",
+    "freePlanDesc": "Your access is free until {{date}}. Renewal happens automatically, at no charge."
   },
   "summary": {
     "seatsPurchased": "Seats purchased",
