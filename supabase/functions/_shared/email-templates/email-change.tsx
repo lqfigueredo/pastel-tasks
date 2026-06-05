@@ -32,13 +32,13 @@ export const EmailChangeEmail = ({
 }: EmailChangeEmailProps) => (
   <Html lang="pt-BR" dir="ltr">
     <Head />
-    <Preview>Confirme a alteração de e-mail no NEVVOH</Preview>
+    <Preview>Confirme a alteração de e-mail no Flowly</Preview>
     <Body style={main}>
       <Container style={container}>
-        <Img src={LOGO_URL} alt="NEVVOH" width="48" height="48" style={logo} />
+        <Img src={LOGO_URL} alt="Flowly" width="48" height="48" style={logo} />
         <Heading style={h1}>Confirme a alteração de e-mail</Heading>
         <Text style={text}>
-          Você solicitou a alteração do seu e-mail no NEVVOH de{' '}
+          Você solicitou a alteração do seu e-mail no Flowly de{' '}
           <Link href={`mailto:${email}`} style={link}>
             {email}
           </Link>{' '}

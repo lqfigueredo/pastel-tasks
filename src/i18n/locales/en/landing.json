@@ -7,13 +7,13 @@
     "badge": "Productivity without complexity",
     "title1": "Task management",
     "titleHighlight": " simple and efficient",
-    "subtitle": "Organize projects, manage teams, and track meetings in one place. NEVVOH was built for teams that want productivity without complexity.",
+    "subtitle": "Organize projects, manage teams, and track meetings in one place. Flowly was built for teams that want productivity without complexity.",
     "cta": {
       "trial": "Get started — free",
       "contact": "Get in touch"
     },
     "trialNote": "Free for 1 year · no credit card required",
-    "meaning": "NEVVOH — born from \"new\" with the energy of \"now\": a new way to organize the present. The productivity tool for modern teams.",
+    "meaning": "Flowly — born from \"new\" with the energy of \"now\": a new way to organize the present. The productivity tool for modern teams.",
     "mockup": {
       "boardLabel": "Board · Product Team",
       "realtime": "Real time"
@@ -84,30 +84,30 @@
   },
   "faq": {
     "title": "Frequently Asked Questions",
-    "subtitle": "Clear up your doubts about NEVVOH and task management.",
+    "subtitle": "Clear up your doubts about Flowly and task management.",
     "items": [
       {
         "q": "What is an online task manager?",
-        "a": "An online task manager is software that lets you create, organize, and track activities digitally. NEVVOH goes further: it integrates Kanban, team management, meeting minutes, Pomodoro timer, and personal calendar in a single platform."
+        "a": "An online task manager is software that lets you create, organize, and track activities digitally. Flowly goes further: it integrates Kanban, team management, meeting minutes, Pomodoro timer, and personal calendar in a single platform."
       },
       {
         "q": "How do I organize my team's tasks?",
-        "a": "With NEVVOH, you create teams, distribute tasks on the Kanban board with drag and drop, set deadlines, and track progress in real time on the dashboard. Each member sees their responsibilities clearly."
+        "a": "With Flowly, you create teams, distribute tasks on the Kanban board with drag and drop, set deadlines, and track progress in real time on the dashboard. Each member sees their responsibilities clearly."
       },
       {
-        "q": "Does NEVVOH replace tools like Trello or Asana?",
-        "a": "Yes. NEVVOH offers equivalent features — Kanban, team management, deadlines — and also includes exclusive modules such as meeting minutes with action items, versioned work instructions, and idea registry."
+        "q": "Does Flowly replace tools like Trello or Asana?",
+        "a": "Yes. Flowly offers equivalent features — Kanban, team management, deadlines — and also includes exclusive modules such as meeting minutes with action items, versioned work instructions, and idea registry."
       },
       {
-        "q": "Can I use NEVVOH to manage meetings?",
+        "q": "Can I use Flowly to manage meetings?",
         "a": "Yes! The Meeting Minutes module lets you record participants, create action items with owners and deadlines, and automatically link tasks generated from the meeting."
       },
       {
-        "q": "Is NEVVOH free?",
-        "a": "Yes! NEVVOH is fully free for 1 year for any team, with automatic renewal. No credit card and no hidden charges."
+        "q": "Is Flowly free?",
+        "a": "Yes! Flowly is fully free for 1 year for any team, with automatic renewal. No credit card and no hidden charges."
       },
       {
-        "q": "How does NEVVOH's Pomodoro timer work?",
+        "q": "How does Flowly's Pomodoro timer work?",
         "a": "The built-in timer lets you manage your work time with focused sessions, breaks, and countdown. You can associate the timer with specific tasks to measure time spent on each activity."
       }
     ]
@@ -116,13 +116,13 @@
     "terms": "Terms of Use",
     "privacy": "Privacy Policy",
     "access": "Open platform",
-    "copyright": "© {{year}} NEVVOH. All rights reserved."
+    "copyright": "© {{year}} Flowly. All rights reserved."
   },
   "lead": {
     "trigger": "Get in touch",
     "dialog": {
       "title": "Show your interest",
-      "description": "Fill in your details and we'll get in touch to introduce NEVVOH."
+      "description": "Fill in your details and we'll get in touch to introduce Flowly."
     },
     "form": {
       "name": "Name",

@@ -22,7 +22,8 @@ import {
   Sparkles,
   CheckSquare,
 } from 'lucide-react';
-import logo from '@/assets/logo.webp';
+import { Wordmark } from '@/components/Wordmark';
+import logo from '@/assets/flowly-logo.svg';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import LeadFormTrigger from '@/components/landing/LeadFormTrigger';
@@ -119,8 +120,8 @@ const Landing = () => {
       <header className="border-b border-border/50 bg-background/80 backdrop-blur-sm sticky top-0 z-10">
         <div className="mx-auto max-w-6xl flex items-center justify-between px-6 py-4">
           <div className="flex items-center gap-2">
-            <img src={logo} alt="NEVVOH" className="h-9 w-9 rounded-xl" />
-            <span className="text-lg font-bold font-display">NEVVOH</span>
+            <img src={logo} alt="Flowly" className="h-9 w-9 rounded-xl" />
+            <Wordmark className="text-lg font-display" />
           </div>
           <nav className="flex items-center gap-2">
             <LanguageSwitcher compact />
@@ -369,8 +370,8 @@ const Landing = () => {
         <div className="mx-auto max-w-6xl px-6 flex flex-col gap-6">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-2">
-              <img src={logo} alt="NEVVOH" className="h-7 w-7 rounded-lg" />
-              <span className="text-sm font-semibold">NEVVOH</span>
+              <img src={logo} alt="Flowly" className="h-7 w-7 rounded-lg" />
+              <Wordmark className="text-sm font-display" />
             </div>
             <nav className="flex items-center gap-4 text-sm text-muted-foreground">
               <Link to="/termos" className="hover:text-foreground">{t('footer.terms')}</Link>

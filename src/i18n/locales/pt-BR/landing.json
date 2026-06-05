@@ -7,13 +7,13 @@
     "badge": "Produtividade sem complexidade",
     "title1": "Gestão de tarefas",
     "titleHighlight": " simples e eficiente",
-    "subtitle": "Organize projetos, gerencie equipes e acompanhe reuniões em um único lugar. O NEVVOH foi criado para times que querem produtividade sem complexidade.",
+    "subtitle": "Organize projetos, gerencie equipes e acompanhe reuniões em um único lugar. O Flowly foi criado para times que querem produtividade sem complexidade.",
     "cta": {
       "trial": "Começar de graça",
       "contact": "Entrar em contato"
     },
     "trialNote": "Gratuito por 1 ano · sem cartão de crédito",
-    "meaning": "NEVVOH — do inglês \"new\" com a energia do \"now\": a nova forma de organizar o agora. A ferramenta de produtividade para times modernos.",
+    "meaning": "Flowly — do inglês \"new\" com a energia do \"now\": a nova forma de organizar o agora. A ferramenta de produtividade para times modernos.",
     "mockup": {
       "boardLabel": "Quadro · Equipe Produto",
       "realtime": "Tempo real"
@@ -84,30 +84,30 @@
   },
   "faq": {
     "title": "Perguntas Frequentes",
-    "subtitle": "Tire suas dúvidas sobre o NEVVOH e gestão de tarefas.",
+    "subtitle": "Tire suas dúvidas sobre o Flowly e gestão de tarefas.",
     "items": [
       {
         "q": "O que é um gerenciador de tarefas online?",
-        "a": "Um gerenciador de tarefas online é um software que permite criar, organizar e acompanhar atividades de forma digital. O NEVVOH vai além: integra Kanban, gestão de equipes, atas de reunião, temporizador Pomodoro e agenda pessoal em uma única plataforma."
+        "a": "Um gerenciador de tarefas online é um software que permite criar, organizar e acompanhar atividades de forma digital. O Flowly vai além: integra Kanban, gestão de equipes, atas de reunião, temporizador Pomodoro e agenda pessoal em uma única plataforma."
       },
       {
         "q": "Como organizar as tarefas da minha equipe?",
-        "a": "Com o NEVVOH, você cria equipes, distribui tarefas no quadro Kanban com arrastar e soltar, define prazos e acompanha o progresso em tempo real pelo dashboard. Cada membro visualiza suas responsabilidades de forma clara."
+        "a": "Com o Flowly, você cria equipes, distribui tarefas no quadro Kanban com arrastar e soltar, define prazos e acompanha o progresso em tempo real pelo dashboard. Cada membro visualiza suas responsabilidades de forma clara."
       },
       {
-        "q": "O NEVVOH substitui ferramentas como Trello ou Asana?",
-        "a": "Sim. O NEVVOH oferece funcionalidades equivalentes — Kanban, gestão de equipes, prazos — e ainda inclui módulos exclusivos como atas de reunião com pendências, instruções de trabalho versionadas e registro de ideias."
+        "q": "O Flowly substitui ferramentas como Trello ou Asana?",
+        "a": "Sim. O Flowly oferece funcionalidades equivalentes — Kanban, gestão de equipes, prazos — e ainda inclui módulos exclusivos como atas de reunião com pendências, instruções de trabalho versionadas e registro de ideias."
       },
       {
-        "q": "Posso usar o NEVVOH para gerenciar reuniões?",
+        "q": "Posso usar o Flowly para gerenciar reuniões?",
         "a": "Sim! O módulo de Atas de Reunião permite registrar participantes, criar pendências com responsáveis e prazos, e vincular automaticamente tarefas geradas a partir da reunião."
       },
       {
-        "q": "O NEVVOH é gratuito?",
-        "a": "Sim! O NEVVOH é totalmente gratuito por 1 ano para qualquer equipe, com renovação automática. Sem cartão de crédito e sem cobrança escondida."
+        "q": "O Flowly é gratuito?",
+        "a": "Sim! O Flowly é totalmente gratuito por 1 ano para qualquer equipe, com renovação automática. Sem cartão de crédito e sem cobrança escondida."
       },
       {
-        "q": "Como funciona o temporizador Pomodoro do NEVVOH?",
+        "q": "Como funciona o temporizador Pomodoro do Flowly?",
         "a": "O temporizador integrado permite controlar seu tempo de trabalho com sessões focadas, pausas e contagem regressiva. Você pode associar o timer a tarefas específicas para medir o tempo gasto em cada atividade."
       }
     ]
@@ -116,13 +116,13 @@
     "terms": "Termos de Uso",
     "privacy": "Política de Privacidade",
     "access": "Acessar plataforma",
-    "copyright": "© {{year}} NEVVOH. Todos os direitos reservados."
+    "copyright": "© {{year}} Flowly. Todos os direitos reservados."
   },
   "lead": {
     "trigger": "Entrar em contato",
     "dialog": {
       "title": "Demonstre seu interesse",
-      "description": "Preencha seus dados e entraremos em contato para apresentar o NEVVOH."
+      "description": "Preencha seus dados e entraremos em contato para apresentar o Flowly."
     },
     "form": {
       "name": "Nome",

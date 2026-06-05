@@ -32,15 +32,15 @@ export const SignupEmail = ({
 }: SignupEmailProps) => (
   <Html lang="pt-BR" dir="ltr">
     <Head />
-    <Preview>Confirme seu e-mail no NEVVOH</Preview>
+    <Preview>Confirme seu e-mail no Flowly</Preview>
     <Body style={main}>
       <Container style={container}>
-        <Img src={LOGO_URL} alt="NEVVOH" width="48" height="48" style={logo} />
+        <Img src={LOGO_URL} alt="Flowly" width="48" height="48" style={logo} />
         <Heading style={h1}>Confirme seu cadastro</Heading>
         <Text style={text}>
           Obrigado por se cadastrar no{' '}
           <Link href={siteUrl} style={link}>
-            <strong>NEVVOH</strong>
+            <strong>Flowly</strong>
           </Link>
           !
         </Text>
