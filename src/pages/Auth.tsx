@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { ArrowLeft } from 'lucide-react';
+import { Wordmark } from '@/components/Wordmark';
 import logo from '@/assets/flowly-logo.svg';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
@@ -115,7 +116,7 @@ const Auth = () => {
       <div className="w-full max-w-md animate-fade-in">
         <div className="mb-8 text-center">
           <img src={logo} alt="Flowly" className="mx-auto mb-4 h-14 w-14 rounded-2xl" />
-          <h1 className="font-display text-3xl font-bold text-foreground">Flowly</h1>
+          <Wordmark className="font-display text-3xl" />
           <p className="mt-1 text-sm text-muted-foreground">{t('tagline')}</p>
         </div>
 

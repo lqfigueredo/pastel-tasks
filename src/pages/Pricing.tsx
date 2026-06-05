@@ -5,6 +5,7 @@ import { Check, Sparkles, ArrowRight } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import LeadFormTrigger from '@/components/landing/LeadFormTrigger';
+import { Wordmark } from '@/components/Wordmark';
 import logo from '@/assets/flowly-logo.svg';
 import { safeTArray } from '@/i18n/safeT';
 

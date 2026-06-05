@@ -22,6 +22,7 @@ import {
   Sparkles,
   CheckSquare,
 } from 'lucide-react';
+import { Wordmark } from '@/components/Wordmark';
 import logo from '@/assets/flowly-logo.svg';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';

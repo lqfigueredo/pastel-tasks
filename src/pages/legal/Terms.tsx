@@ -6,6 +6,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { PageLoader } from '@/components/ui/loaders';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
+import { Wordmark } from '@/components/Wordmark';
 import logo from '@/assets/flowly-logo.svg';
 
 const Terms = () => {
