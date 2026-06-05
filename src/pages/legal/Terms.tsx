@@ -62,8 +62,8 @@ const Terms = () => {
       <header className="border-b border-border/50">
         <div className="mx-auto max-w-3xl px-6 py-4 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2">
-            <img src={logo} alt="NEVVOH" className="h-7 w-7 rounded-lg" />
-            <span className="font-semibold">NEVVOH</span>
+            <img src={logo} alt="Flowly" className="h-7 w-7 rounded-lg" />
+            <span className="font-semibold">Flowly</span>
           </Link>
           <Button variant="ghost" size="sm" asChild>
             <Link to="/"><ArrowLeft className="h-4 w-4 mr-2" />{t('legal.home')}</Link>

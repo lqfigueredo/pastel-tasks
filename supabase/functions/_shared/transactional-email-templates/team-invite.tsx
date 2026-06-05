@@ -12,7 +12,7 @@ import {
 } from 'npm:@react-email/components@0.0.22'
 import type { TemplateEntry } from './registry.ts'
 
-const SITE_NAME = 'NEVVOH'
+const SITE_NAME = 'Flowly'
 const SITE_URL = 'https://nevvoh.com'
 const LOGO_URL = 'https://pzhwmxmlozmwvscndirw.supabase.co/storage/v1/object/public/email-assets/logo.png'
 

@@ -59,8 +59,8 @@ const Pricing = () => {
       <header className="border-b border-border/50 bg-background/80 backdrop-blur-sm sticky top-0 z-10">
         <div className="mx-auto max-w-6xl flex items-center justify-between px-6 py-4">
           <Link to="/" className="flex items-center gap-2">
-            <img src={logo} alt="NEVVOH" className="h-9 w-9 rounded-xl" />
-            <span className="text-lg font-bold font-display">NEVVOH</span>
+            <img src={logo} alt="Flowly" className="h-9 w-9 rounded-xl" />
+            <span className="text-lg font-bold font-display">Flowly</span>
           </Link>
           <nav className="flex items-center gap-2">
             <Link to="/" className="text-sm text-muted-foreground hover:text-foreground px-3">
@@ -174,8 +174,8 @@ const Pricing = () => {
       <footer className="border-t border-border/50 py-10">
         <div className="mx-auto max-w-6xl px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
-            <img src={logo} alt="NEVVOH" className="h-7 w-7 rounded-lg" />
-            <span className="text-sm font-semibold">NEVVOH</span>
+            <img src={logo} alt="Flowly" className="h-7 w-7 rounded-lg" />
+            <span className="text-sm font-semibold">Flowly</span>
           </div>
           <p className="text-sm text-muted-foreground">
             {t('footer.copyright', { year: new Date().getFullYear() })}
@@ -193,7 +193,7 @@ const Pricing = () => {
             __html: JSON.stringify({
               '@context': 'https://schema.org',
               '@type': 'Product',
-              name: `NEVVOH — ${primary.name}`,
+              name: `Flowly — ${primary.name}`,
               description: primary.description || 'Plataforma de gestão de tarefas e equipes',
               offers: {
                 '@type': 'Offer',

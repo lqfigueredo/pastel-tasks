@@ -1,4 +1,4 @@
-# Checklist de Go-Live — NEVVOH
+# Checklist de Go-Live — Flowly
 
 Validação manual antes de liberar o produto a clientes pagantes. Faça em ambiente de produção, com conta nova de teste.
 

@@ -114,8 +114,8 @@ const Auth = () => {
       </div>
       <div className="w-full max-w-md animate-fade-in">
         <div className="mb-8 text-center">
-          <img src={logo} alt="NEVVOH" className="mx-auto mb-4 h-14 w-14 rounded-2xl" />
-          <h1 className="font-display text-3xl font-bold text-foreground">NEVVOH</h1>
+          <img src={logo} alt="Flowly" className="mx-auto mb-4 h-14 w-14 rounded-2xl" />
+          <h1 className="font-display text-3xl font-bold text-foreground">Flowly</h1>
           <p className="mt-1 text-sm text-muted-foreground">{t('tagline')}</p>
         </div>
 

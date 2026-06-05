@@ -99,9 +99,9 @@ export function AppSidebar() {
     <Sidebar collapsible="icon">
       <SidebarHeader className={collapsed ? 'p-2' : 'p-4'}>
         <div className="flex items-center gap-2">
-          <img src={logo} alt="NEVVOH" className="h-9 w-9 shrink-0 rounded-xl object-contain" />
+          <img src={logo} alt="Flowly" className="h-9 w-9 shrink-0 rounded-xl object-contain" />
           {!collapsed && (
-            <span className="font-display text-lg font-bold text-foreground">NEVVOH</span>
+            <span className="font-display text-lg font-bold text-foreground">Flowly</span>
           )}
         </div>
       </SidebarHeader>
