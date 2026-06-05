@@ -69,18 +69,27 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        flowly: {
+          navy: "#26215C",
+          purple: "#3C3489",
+          mid: "#534AB7",
+          soft: "#7F77DD",
+          lilac: "#CECBF6",
+          ghost: "#EEEDFE",
+        },
+        // Legacy aliases kept so any leftover usages still resolve to brand colors
         mint: {
-          DEFAULT: "hsl(var(--mint))",
-          light: "hsl(var(--mint-light))",
-          medium: "hsl(var(--mint-medium))",
+          DEFAULT: "#534AB7",
+          light: "#CECBF6",
+          medium: "#7F77DD",
         },
         cream: {
-          DEFAULT: "hsl(var(--cream))",
-          light: "hsl(var(--cream-light))",
+          DEFAULT: "#EEEDFE",
+          light: "#FFFFFF",
         },
         sage: {
-          DEFAULT: "hsl(var(--sage))",
-          dark: "hsl(var(--sage-dark))",
+          DEFAULT: "#CECBF6",
+          dark: "#3C3489",
         },
       },
       borderRadius: {

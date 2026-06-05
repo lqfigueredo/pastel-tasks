@@ -6,26 +6,32 @@
 
 @layer base {
   :root {
-    --background: 150 20% 98%;
-    --foreground: 200 15% 15%;
+    /* Flowly — Light Mode
+       Background: Ghost White #EEEDFE
+       Surfaces:   Pure White #FFFFFF (with Accent Lilac border)
+       Text:       Deep Navy #26215C
+       Muted text: Soft Purple #7F77DD
+    */
+    --background: 245 79% 96%;        /* #EEEDFE Ghost White */
+    --foreground: 247 47% 25%;        /* #26215C Deep Navy */
 
-    --card: 0 0% 100%;
-    --card-foreground: 200 15% 15%;
+    --card: 0 0% 100%;                /* #FFFFFF */
+    --card-foreground: 247 47% 25%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 200 15% 15%;
+    --popover-foreground: 247 47% 25%;
 
-    --primary: 168 42% 48%;
+    --primary: 246 43% 50%;           /* #534AB7 Mid Purple — CTA */
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 48 80% 92%;
-    --secondary-foreground: 200 15% 15%;
+    --secondary: 244 60% 88%;         /* #CECBF6 Accent Lilac */
+    --secondary-foreground: 247 47% 25%;
 
-    --muted: 150 15% 94%;
-    --muted-foreground: 200 10% 46%;
+    --muted: 245 60% 94%;
+    --muted-foreground: 245 60% 67%;  /* #7F77DD Soft Purple */
 
-    --accent: 90 30% 88%;
-    --accent-foreground: 200 15% 15%;
+    --accent: 244 60% 88%;            /* #CECBF6 */
+    --accent-foreground: 247 47% 25%;
 
     --destructive: 0 65% 55%;
     --destructive-foreground: 0 0% 100%;
@@ -36,73 +42,79 @@
     --success: 142 71% 38%;
     --success-foreground: 0 0% 100%;
 
-    --border: 150 12% 89%;
-    --input: 150 12% 89%;
-    --ring: 168 42% 48%;
+    --border: 244 60% 88%;            /* Accent Lilac border */
+    --input: 244 60% 88%;
+    --ring: 245 60% 67%;              /* Soft Purple focus ring */
 
     --radius: 0.75rem;
 
-    --sidebar-background: 150 25% 96%;
-    --sidebar-foreground: 200 15% 25%;
-    --sidebar-primary: 168 42% 48%;
+    --sidebar-background: 247 47% 25%;          /* Deep Navy */
+    --sidebar-foreground: 0 0% 100%;
+    --sidebar-primary: 246 43% 50%;             /* Mid Purple */
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 150 20% 92%;
-    --sidebar-accent-foreground: 200 15% 15%;
-    --sidebar-border: 150 12% 89%;
-    --sidebar-ring: 168 42% 48%;
+    --sidebar-accent: 247 45% 38%;              /* Brand Purple */
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 247 45% 38%;
+    --sidebar-ring: 245 60% 67%;
 
-    --mint: 168 42% 48%;
-    --mint-light: 174 44% 92%;
-    --mint-medium: 172 38% 85%;
-    --cream: 48 80% 92%;
-    --cream-light: 48 80% 97%;
-    --sage: 90 30% 88%;
-    --sage-dark: 90 20% 40%;
+    /* Flowly brand tokens */
+    --flowly-navy: 247 47% 25%;        /* #26215C */
+    --flowly-purple: 247 45% 38%;      /* #3C3489 */
+    --flowly-mid: 246 43% 50%;         /* #534AB7 */
+    --flowly-soft: 245 60% 67%;        /* #7F77DD */
+    --flowly-lilac: 244 60% 88%;       /* #CECBF6 */
+    --flowly-ghost: 245 79% 96%;       /* #EEEDFE */
   }
 
   .dark {
-    --background: 200 20% 8%;
-    --foreground: 150 15% 92%;
+    /* Flowly — Dark Mode
+       Background: Deep Navy #26215C
+       Surfaces:   Brand Purple #3C3489
+       Text:       Pure White #FFFFFF
+       Muted text: Accent Lilac #CECBF6
+    */
+    --background: 247 47% 25%;        /* #26215C */
+    --foreground: 0 0% 100%;
 
-    --card: 200 18% 12%;
-    --card-foreground: 150 15% 92%;
+    --card: 247 45% 38%;              /* #3C3489 */
+    --card-foreground: 0 0% 100%;
 
-    --popover: 200 18% 12%;
-    --popover-foreground: 150 15% 92%;
+    --popover: 247 45% 38%;
+    --popover-foreground: 0 0% 100%;
 
-    --primary: 168 42% 48%;
+    --primary: 246 43% 50%;           /* #534AB7 */
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 48 30% 18%;
-    --secondary-foreground: 150 15% 92%;
+    --secondary: 247 45% 38%;
+    --secondary-foreground: 0 0% 100%;
 
-    --muted: 200 15% 16%;
-    --muted-foreground: 150 10% 60%;
+    --muted: 247 45% 32%;
+    --muted-foreground: 244 60% 88%;  /* #CECBF6 Accent Lilac */
 
-    --accent: 90 15% 18%;
-    --accent-foreground: 150 15% 92%;
+    --accent: 245 60% 67%;            /* Soft Purple */
+    --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 62% 30%;
-    --destructive-foreground: 150 15% 92%;
+    --destructive: 0 62% 45%;
+    --destructive-foreground: 0 0% 100%;
 
     --warning: 38 92% 55%;
-    --warning-foreground: 0 0% 8%;
+    --warning-foreground: 247 47% 15%;
 
     --success: 142 65% 45%;
-    --success-foreground: 0 0% 8%;
+    --success-foreground: 0 0% 100%;
 
-    --border: 200 15% 18%;
-    --input: 200 15% 18%;
-    --ring: 168 42% 48%;
+    --border: 247 45% 38%;
+    --input: 247 45% 38%;
+    --ring: 245 60% 67%;
 
-    --sidebar-background: 200 18% 10%;
-    --sidebar-foreground: 150 15% 85%;
-    --sidebar-primary: 168 42% 48%;
+    --sidebar-background: 247 50% 18%;
+    --sidebar-foreground: 0 0% 100%;
+    --sidebar-primary: 246 43% 50%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 200 15% 14%;
-    --sidebar-accent-foreground: 150 15% 92%;
-    --sidebar-border: 200 15% 18%;
-    --sidebar-ring: 168 42% 48%;
+    --sidebar-accent: 247 45% 38%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 247 45% 30%;
+    --sidebar-ring: 245 60% 67%;
   }
 }
 
