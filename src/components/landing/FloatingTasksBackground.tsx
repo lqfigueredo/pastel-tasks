@@ -28,7 +28,7 @@ const FloatingTasksBackground = () => {
       {cards.map((c, i) => (
         <div
           key={i}
-          className={`absolute opacity-[0.10] dark:opacity-[0.08] ${c.rotate} animate-float-slow`}
+          className={`absolute opacity-[0.18] dark:opacity-[0.35] ${c.rotate} animate-float-slow`}
           style={{
             top: c.top,
             left: c.left,
@@ -37,9 +37,9 @@ const FloatingTasksBackground = () => {
             willChange: 'transform',
           }}
         >
-          <div className="flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 shadow-lg">
-            <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary/10">
-              <c.icon className="h-3.5 w-3.5 text-primary" />
+          <div className="flex items-center gap-2 rounded-lg border border-brand-accent/40 bg-card px-3 py-2 shadow-lg">
+            <div className="flex h-7 w-7 items-center justify-center rounded-md bg-brand-accent/15">
+              <c.icon className="h-3.5 w-3.5 text-brand-accent" />
             </div>
             <div className="text-left">
               <p className="text-[11px] font-semibold leading-tight whitespace-nowrap">{c.title}</p>
