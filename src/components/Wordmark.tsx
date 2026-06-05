@@ -4,7 +4,7 @@ interface WordmarkProps {
 
 export const Wordmark = ({ className }: WordmarkProps) => (
   <span className={className}>
-    <span className="font-bold">flow</span>
-    <span className="font-normal text-[#7F77DD]">ly</span>
+    <span className="font-semibold text-foreground">flow</span>
+    <span className="font-normal text-primary dark:text-flowly-soft">ly</span>
   </span>
 );
