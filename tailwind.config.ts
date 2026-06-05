@@ -71,11 +71,15 @@ export default {
           ring: "hsl(var(--sidebar-ring))",
         },
         flowly: {
-          navy: "#26215C",
-          purple: "#3C3489",
-          mid: "#534AB7",
+          black: "#0D0D0D",
+          offblack: "#1A1A1A",
+          darkgray: "#2E2E2E",
+          midgray: "#6B6B6B",
+          lightgray: "#E8E8E8",
+          softwhite: "#F5F5F5",
+          purple: "#534AB7",
           soft: "#7F77DD",
-          lilac: "#CECBF6",
+          lavender: "#CECBF6",
           ghost: "#EEEDFE",
         },
         // Legacy aliases kept so any leftover usages still resolve to brand colors
@@ -85,12 +89,12 @@ export default {
           medium: "#7F77DD",
         },
         cream: {
-          DEFAULT: "#EEEDFE",
+          DEFAULT: "#F5F5F5",
           light: "#FFFFFF",
         },
         sage: {
           DEFAULT: "#CECBF6",
-          dark: "#3C3489",
+          dark: "#2E2E2E",
         },
       },
       borderRadius: {

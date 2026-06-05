@@ -102,7 +102,7 @@ export function AppSidebar() {
           <img src={logo} alt="Flowly" className="h-9 w-9 shrink-0 rounded-xl object-contain" />
           {!collapsed && (
             <span className="font-display text-lg text-sidebar-foreground">
-              <span className="font-bold">flow</span><span className="font-normal text-[#7F77DD]">ly</span>
+              <span className="font-semibold">flow</span><span className="font-normal text-flowly-soft">ly</span>
             </span>
           )}
         </div>
