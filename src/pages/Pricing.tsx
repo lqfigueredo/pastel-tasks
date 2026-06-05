@@ -60,7 +60,7 @@ const Pricing = () => {
         <div className="mx-auto max-w-6xl flex items-center justify-between px-6 py-4">
           <Link to="/" className="flex items-center gap-2">
             <img src={logo} alt="Flowly" className="h-9 w-9 rounded-xl" />
-            <span className="text-lg font-bold font-display">Flowly</span>
+            <Wordmark className="text-lg font-display" />
           </Link>
           <nav className="flex items-center gap-2">
             <Link to="/" className="text-sm text-muted-foreground hover:text-foreground px-3">
@@ -175,7 +175,7 @@ const Pricing = () => {
         <div className="mx-auto max-w-6xl px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
             <img src={logo} alt="Flowly" className="h-7 w-7 rounded-lg" />
-            <span className="text-sm font-semibold">Flowly</span>
+            <Wordmark className="text-sm font-display" />
           </div>
           <p className="text-sm text-muted-foreground">
             {t('footer.copyright', { year: new Date().getFullYear() })}

@@ -120,7 +120,7 @@ const Landing = () => {
         <div className="mx-auto max-w-6xl flex items-center justify-between px-6 py-4">
           <div className="flex items-center gap-2">
             <img src={logo} alt="Flowly" className="h-9 w-9 rounded-xl" />
-            <span className="text-lg font-bold font-display">Flowly</span>
+            <Wordmark className="text-lg font-display" />
           </div>
           <nav className="flex items-center gap-2">
             <LanguageSwitcher compact />
@@ -370,7 +370,7 @@ const Landing = () => {
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-2">
               <img src={logo} alt="Flowly" className="h-7 w-7 rounded-lg" />
-              <span className="text-sm font-semibold">Flowly</span>
+              <Wordmark className="text-sm font-display" />
             </div>
             <nav className="flex items-center gap-4 text-sm text-muted-foreground">
               <Link to="/termos" className="hover:text-foreground">{t('footer.terms')}</Link>
