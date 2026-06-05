@@ -82,7 +82,7 @@ const Pricing = () => {
             {t('hero.badge')}
           </div>
           <h1 className="text-4xl font-bold tracking-tight sm:text-5xl font-display">
-            {t('hero.title1')} <span className="text-brand-accent">{t("hero.titleHighlight')}</span>
+            {t('hero.title1')} <span className="text-brand-accent">{t('hero.titleHighlight')}</span>
           </h1>
           <p className="mx-auto mt-6 max-w-2xl text-lg text-muted-foreground">
             {t('hero.subtitle')}
