@@ -64,6 +64,9 @@
     --flowly-soft: 245 60% 67%;        /* #7F77DD */
     --flowly-lilac: 244 60% 88%;       /* #CECBF6 */
     --flowly-ghost: 245 79% 96%;       /* #EEEDFE */
+
+    /* Accent text on light surfaces — Mid Purple reads well on Ghost White */
+    --brand-accent: 246 43% 50%;       /* #534AB7 */
   }
 
   .dark {
@@ -115,6 +118,9 @@
     --sidebar-accent-foreground: 0 0% 100%;
     --sidebar-border: 247 45% 30%;
     --sidebar-ring: 245 60% 67%;
+
+    /* Accent text on dark surfaces — Soft Purple lifts contrast vs navy */
+    --brand-accent: 245 60% 67%;       /* #7F77DD */
   }
 }
 

@@ -147,7 +147,7 @@ const Landing = () => {
           <div className="grid items-center gap-12 lg:grid-cols-2">
             {/* Left: copy */}
             <div className="text-center lg:text-left">
-              <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 text-sm font-medium text-primary mb-6 animate-fade-in">
+              <div className="inline-flex items-center gap-2 rounded-full border border-brand-accent/30 bg-brand-accent/10 px-4 py-1.5 text-sm font-medium text-brand-accent mb-6 animate-fade-in">
                 <Sparkles className="h-4 w-4" />
                 {t('hero.badge')}
               </div>
@@ -157,11 +157,11 @@ const Landing = () => {
                 style={{ animationDelay: '100ms', animationFillMode: 'both' }}
               >
                 {t('hero.title1')}
-                <span className="text-primary">{t('hero.titleHighlight')}</span>
+                <span className="text-brand-accent">{t('hero.titleHighlight')}</span>
               </h1>
 
               <p
-                className="mx-auto lg:mx-0 mt-4 max-w-2xl text-sm italic text-primary/80 animate-fade-in"
+                className="mx-auto lg:mx-0 mt-4 max-w-2xl text-sm italic text-brand-accent animate-fade-in"
                 style={{ animationDelay: '150ms', animationFillMode: 'both' }}
               >
                 {t('hero.meaning')}
@@ -376,7 +376,7 @@ const Landing = () => {
             <nav className="flex items-center gap-4 text-sm text-muted-foreground">
               <Link to="/termos" className="hover:text-foreground">{t('footer.terms')}</Link>
               <Link to="/privacidade" className="hover:text-foreground">{t('footer.privacy')}</Link>
-              <Link to="/auth" className="text-primary hover:underline">{t('footer.access')}</Link>
+              <Link to="/auth" className="text-brand-accent hover:underline">{t('footer.access')}</Link>
             </nav>
           </div>
           <p className="text-xs text-muted-foreground text-center">

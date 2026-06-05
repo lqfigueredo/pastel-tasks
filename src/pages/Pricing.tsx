@@ -77,12 +77,12 @@ const Pricing = () => {
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-mint-light/40 via-transparent to-transparent pointer-events-none" />
         <div className="relative mx-auto max-w-4xl px-6 py-20 text-center">
-          <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 text-sm font-medium text-primary mb-6">
+          <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 text-sm font-medium text-brand-accent mb-6">
             <Sparkles className="h-4 w-4" />
             {t('hero.badge')}
           </div>
           <h1 className="text-4xl font-bold tracking-tight sm:text-5xl font-display">
-            {t('hero.title1')} <span className="text-primary">{t('hero.titleHighlight')}</span>
+            {t('hero.title1')} <span className="text-brand-accent">{t("hero.titleHighlight')}</span>
           </h1>
           <p className="mx-auto mt-6 max-w-2xl text-lg text-muted-foreground">
             {t('hero.subtitle')}
@@ -101,7 +101,7 @@ const Pricing = () => {
           ) : (
             <div className="rounded-2xl border-2 border-primary/30 bg-card shadow-xl overflow-hidden">
               <div className="bg-primary/5 border-b border-primary/20 p-8 text-center">
-                <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-primary mb-4">
+                <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-brand-accent mb-4">
                   {t('plan.freeBadge')}
                 </div>
                 <h2 className="text-2xl font-bold font-display">{primary.name}</h2>
@@ -109,7 +109,7 @@ const Pricing = () => {
                   <p className="mt-2 text-muted-foreground">{primary.description}</p>
                 )}
                 <div className="mt-6 flex items-baseline justify-center gap-2">
-                  <span className="text-5xl font-bold text-primary font-display">
+                  <span className="text-5xl font-bold text-brand-accent font-display">
                     {t('plan.freePrice')}
                   </span>
                   <span className="text-muted-foreground">{t('plan.perSeatMonth')}</span>
@@ -181,7 +181,7 @@ const Pricing = () => {
           <p className="text-sm text-muted-foreground">
             {t('footer.copyright', { year: new Date().getFullYear() })}
           </p>
-          <Link to="/auth" className="text-sm text-primary hover:underline">
+          <Link to="/auth" className="text-sm text-brand-accent hover:underline">
             {t('footer.access')}
           </Link>
         </div>
