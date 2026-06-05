@@ -160,6 +160,13 @@ const Landing = () => {
               </h1>
 
               <p
+                className="mx-auto lg:mx-0 mt-4 max-w-2xl text-sm italic text-primary/80 animate-fade-in"
+                style={{ animationDelay: '150ms', animationFillMode: 'both' }}
+              >
+                {t('hero.meaning')}
+              </p>
+
+              <p
                 className="mx-auto lg:mx-0 mt-6 max-w-2xl text-lg text-muted-foreground animate-fade-in"
                 style={{ animationDelay: '200ms', animationFillMode: 'both' }}
               >
