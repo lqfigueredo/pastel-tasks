@@ -22,7 +22,7 @@ import {
   Sparkles,
   CheckSquare,
 } from 'lucide-react';
-import logo from '@/assets/logo.webp';
+import logo from '@/assets/flowly-logo.svg';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import LeadFormTrigger from '@/components/landing/LeadFormTrigger';

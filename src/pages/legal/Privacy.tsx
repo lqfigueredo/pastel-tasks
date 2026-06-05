@@ -6,7 +6,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { PageLoader } from '@/components/ui/loaders';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
-import logo from '@/assets/logo.webp';
+import logo from '@/assets/flowly-logo.svg';
 
 const Privacy = () => {
   const { t, i18n } = useTranslation('public');
