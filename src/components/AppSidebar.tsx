@@ -102,7 +102,7 @@ export function AppSidebar() {
           <img src={logo} alt="Nevvoh" className="h-9 w-9 shrink-0 rounded-xl object-contain" />
           {!collapsed && (
             <span className="font-display text-lg text-sidebar-foreground">
-              <span className="font-semibold">flow</span><span className="font-normal text-nevvoh-soft">ly</span>
+              <span className="font-semibold">Nevvoh</span>
             </span>
           )}
         </div>
