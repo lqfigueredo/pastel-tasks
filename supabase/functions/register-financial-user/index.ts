@@ -70,6 +70,9 @@ Deno.serve(async (req) => {
 
     const newUserId = userData.user.id
 
+    // Remove default 'user' role created by handle_new_user trigger
+    await supabaseAdmin.from('user_roles').delete().eq('user_id', newUserId).eq('role', 'user')
+
     const { error: roleError } = await supabaseAdmin
       .from('user_roles')
       .insert({ user_id: newUserId, role: 'solution_admin' })
@@ -77,6 +80,12 @@ Deno.serve(async (req) => {
     if (roleError) {
       logAttempt(req, 'error', `role assignment failed: ${roleError.message}`, email)
       console.error('Error assigning role:', roleError)
+      // Rollback: remove o usuário criado, pois sem o role correto ele fica inutilizável
+      await supabaseAdmin.auth.admin.deleteUser(newUserId)
+      return new Response(
+        JSON.stringify({ error: 'Falha ao atribuir papel de operador financeiro. Tente novamente.' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
     }
 
     logAttempt(req, 'success', `solution_admin created ${newUserId}`, email)

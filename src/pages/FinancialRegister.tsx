@@ -26,10 +26,7 @@ const FinancialRegister = () => {
       return;
     }
 
-    if (token !== "445") {
-      toast.error(t('errors.invalidToken'));
-      return;
-    }
+    // Token validado no servidor via FINANCIAL_REGISTER_TOKEN
 
     if (password.length < 6) {
       toast.error(t('errors.passwordShort'));
