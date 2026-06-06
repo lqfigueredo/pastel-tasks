@@ -1,11 +1,19 @@
-## Diagnóstico
+# Corrigir erro de carregamento da Landing
 
-A sidebar **já tem fundo navy estático** nos dois modos (`--sidebar-background` resolve para Deep Navy tanto no light quanto no dark). O problema não é o fundo — é a cor do texto do wordmark.
+## Causa
+Na rebrand anterior (Flowly → Nevvoh), o substituidor de texto atualizou os imports em 7 arquivos para `@/assets/nevvoh-logo.svg`, mas o arquivo no disco continua sendo `src/assets/flowly-logo.svg`. O Vite falha com:
 
-No `AppSidebar.tsx` linha 104, o "flow" usa `text-foreground`. Em light mode, `--foreground` é Deep Navy `#26215C` — exatamente a mesma família de cor do fundo da sidebar. Resultado: o "flow" some.
+```
+Failed to resolve import "@/assets/nevvoh-logo.svg" from "src/pages/Landing.tsx"
+```
 
-## Correção
+E isso quebra qualquer rota lazy-loaded que importe o logo (Landing, Auth, Pricing, Privacy, Terms, Unsubscribe, AppSidebar).
 
-Trocar `text-foreground` por `text-sidebar-foreground` no span do wordmark da sidebar. O token `--sidebar-foreground` é branco nos dois modos, garantindo que "flow" leia limpo sobre o navy estático da sidebar — independente do tema. O "ly" em Soft Purple já está OK.
+## Mudança
+- Renomear `src/assets/flowly-logo.svg` → `src/assets/nevvoh-logo.svg` (`mv`).
 
-Fora de escopo: não preciso mexer no fundo da sidebar nem criar tokens novos, o navy estático já existe.
+Nenhum outro arquivo precisa ser alterado — todos os imports já apontam para o novo nome.
+
+## Verificação
+- Pré-visualização carrega `/` (Landing) sem o erro de import.
+- Sidebar, Auth e demais páginas continuam exibindo o logo.
