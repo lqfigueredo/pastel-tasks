@@ -6,7 +6,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import LeadFormTrigger from '@/components/landing/LeadFormTrigger';
 import { Wordmark } from '@/components/Wordmark';
-import logo from '@/assets/flowly-logo.svg';
+import logo from '@/assets/nevvoh-logo.svg';
 import { safeTArray } from '@/i18n/safeT';
 
 interface Plan {
@@ -60,7 +60,7 @@ const Pricing = () => {
       <header className="border-b border-border/50 bg-background/80 backdrop-blur-sm sticky top-0 z-10">
         <div className="mx-auto max-w-6xl flex items-center justify-between px-6 py-4">
           <Link to="/" className="flex items-center gap-2">
-            <img src={logo} alt="Flowly" className="h-9 w-9 rounded-xl" />
+            <img src={logo} alt="Nevvoh" className="h-9 w-9 rounded-xl" />
             <Wordmark className="text-lg font-display" />
           </Link>
           <nav className="flex items-center gap-2">
@@ -175,7 +175,7 @@ const Pricing = () => {
       <footer className="border-t border-border/50 py-10">
         <div className="mx-auto max-w-6xl px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
-            <img src={logo} alt="Flowly" className="h-7 w-7 rounded-lg" />
+            <img src={logo} alt="Nevvoh" className="h-7 w-7 rounded-lg" />
             <Wordmark className="text-sm font-display" />
           </div>
           <p className="text-sm text-muted-foreground">
@@ -194,7 +194,7 @@ const Pricing = () => {
             __html: JSON.stringify({
               '@context': 'https://schema.org',
               '@type': 'Product',
-              name: `Flowly — ${primary.name}`,
+              name: `Nevvoh — ${primary.name}`,
               description: primary.description || 'Plataforma de gestão de tarefas e equipes',
               offers: {
                 '@type': 'Offer',

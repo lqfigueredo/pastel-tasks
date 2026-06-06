@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
-import logo from '@/assets/flowly-logo.svg';
+import logo from '@/assets/nevvoh-logo.svg';
 
 type Status = 'loading' | 'valid' | 'already' | 'invalid' | 'success' | 'error';
 
@@ -46,7 +46,7 @@ const Unsubscribe = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <div className="max-w-md w-full text-center space-y-6">
-        <img src={logo} alt="Flowly" className="h-12 w-12 mx-auto rounded-xl" />
+        <img src={logo} alt="Nevvoh" className="h-12 w-12 mx-auto rounded-xl" />
         <h1 className="text-2xl font-bold text-foreground">{title}</h1>
         <p className="text-muted-foreground">{desc}</p>
         {status === 'valid' && (

@@ -1,7 +1,7 @@
 {
   "meta": {
-    "title": "Flowly — Acesso gratuito por 1 ano para sua equipe",
-    "description": "O Flowly agora é gratuito por 1 ano para todos os times. Cadastre-se sem cartão de crédito, mínimo de 10 assentos, renovação automática."
+    "title": "Nevvoh — Acesso gratuito por 1 ano para sua equipe",
+    "description": "O Nevvoh agora é gratuito por 1 ano para todos os times. Cadastre-se sem cartão de crédito, mínimo de 10 assentos, renovação automática."
   },
   "header": {
     "home": "Início",
@@ -11,7 +11,7 @@
     "badge": "Gratuito por 1 ano — sem cartão",
     "title1": "Acesso gratuito,",
     "titleHighlight": "para todos",
-    "subtitle": "Liberamos o Flowly gratuitamente por 1 ano para todos os times que quiserem usar. Renovação automática, sem cartão e sem letras miúdas."
+    "subtitle": "Liberamos o Nevvoh gratuitamente por 1 ano para todos os times que quiserem usar. Renovação automática, sem cartão e sem letras miúdas."
   },
   "noPlans": "Nenhum plano disponível no momento.",
   "plan": {
@@ -29,8 +29,8 @@
     "title": "Perguntas frequentes",
     "items": [
       {
-        "q": "Quanto custa o Flowly?",
-        "a": "Hoje o Flowly é totalmente gratuito por 1 ano para qualquer equipe. Sem cartão de crédito, sem cobrança escondida."
+        "q": "Quanto custa o Nevvoh?",
+        "a": "Hoje o Nevvoh é totalmente gratuito por 1 ano para qualquer equipe. Sem cartão de crédito, sem cobrança escondida."
       },
       {
         "q": "O que acontece quando o ano acabar?",
@@ -42,7 +42,7 @@
       },
       {
         "q": "Por que o mínimo é de 10 assentos?",
-        "a": "O Flowly foi desenhado para times. O mínimo de 10 assentos garante que você tenha espaço para crescer e que a colaboração entre membros seja efetiva desde o início."
+        "a": "O Nevvoh foi desenhado para times. O mínimo de 10 assentos garante que você tenha espaço para crescer e que a colaboração entre membros seja efetiva desde o início."
       },
       {
         "q": "Posso convidar quantos usuários quiser?",
@@ -51,7 +51,7 @@
     ]
   },
   "footer": {
-    "copyright": "© {{year}} Flowly. Todos os direitos reservados.",
+    "copyright": "© {{year}} Nevvoh. Todos os direitos reservados.",
     "access": "Acessar plataforma"
   }
 }

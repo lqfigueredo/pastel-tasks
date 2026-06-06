@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Label } from '@/components/ui/label';
 import { ArrowLeft } from 'lucide-react';
 import { Wordmark } from '@/components/Wordmark';
-import logo from '@/assets/flowly-logo.svg';
+import logo from '@/assets/nevvoh-logo.svg';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { Link } from 'react-router-dom';
@@ -115,7 +115,7 @@ const Auth = () => {
       </div>
       <div className="w-full max-w-md animate-fade-in">
         <div className="mb-8 text-center">
-          <img src={logo} alt="Flowly" className="mx-auto mb-4 h-14 w-14 rounded-2xl" />
+          <img src={logo} alt="Nevvoh" className="mx-auto mb-4 h-14 w-14 rounded-2xl" />
           <Wordmark className="font-display text-3xl" />
           <p className="mt-1 text-sm text-muted-foreground">{t('tagline')}</p>
         </div>

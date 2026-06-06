@@ -70,7 +70,7 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
-        flowly: {
+        nevvoh: {
           black: "#0D0D0D",
           offblack: "#1A1A1A",
           darkgray: "#2E2E2E",

@@ -64,7 +64,7 @@ Deno.serve(async (req) => {
     const userExists = existingUsers?.users?.some(u => u.email?.toLowerCase() === email)
     if (userExists) {
       return new Response(JSON.stringify({
-        error: 'Este email já tem uma conta no Flowly. Peça para o usuário fazer login ou adicione-o diretamente ao time.'
+        error: 'Este email já tem uma conta no Nevvoh. Peça para o usuário fazer login ou adicione-o diretamente ao time.'
       }), { status: 400, headers: corsHeaders })
     }
 
