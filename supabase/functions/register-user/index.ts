@@ -73,6 +73,12 @@ Deno.serve(async (req) => {
 
     if (roleError) {
       console.error('Failed to assign admin role:', roleError)
+      // Rollback: sem role admin o onboarding nem dispara, então removemos o usuário
+      await supabaseAdmin.auth.admin.deleteUser(newUserId)
+      return new Response(
+        JSON.stringify({ error: 'Falha ao criar conta (papel admin). Tente novamente.' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
     }
 
     // Pick default plan (or first active, or fallback values)
@@ -119,6 +125,13 @@ Deno.serve(async (req) => {
 
     if (subError) {
       console.error('Failed to create free subscription:', subError)
+      // Rollback: sem subscription o admin_settings.max_users não é populado e ele não pode convidar ninguém
+      await supabaseAdmin.from('user_roles').delete().eq('user_id', newUserId)
+      await supabaseAdmin.auth.admin.deleteUser(newUserId)
+      return new Response(
+        JSON.stringify({ error: 'Falha ao criar assinatura gratuita. Tente novamente.' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
     }
 
     return new Response(
