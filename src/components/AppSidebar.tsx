@@ -4,7 +4,7 @@ import {
   LayoutDashboard, Users, Settings, LogOut, ShieldCheck, CalendarDays,
   FileText, TrendingUp, BookOpen, Calendar, Lightbulb, BookMarked, Timer, CreditCard,
 } from 'lucide-react';
-import logo from '@/assets/flowly-logo.svg';
+import logo from '@/assets/nevvoh-logo.svg';
 import { NavLink } from '@/components/NavLink';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserRoles } from '@/hooks/useUserRoles';
@@ -99,10 +99,10 @@ export function AppSidebar() {
     <Sidebar collapsible="icon">
       <SidebarHeader className={collapsed ? 'p-2' : 'p-4'}>
         <div className="flex items-center gap-2">
-          <img src={logo} alt="Flowly" className="h-9 w-9 shrink-0 rounded-xl object-contain" />
+          <img src={logo} alt="Nevvoh" className="h-9 w-9 shrink-0 rounded-xl object-contain" />
           {!collapsed && (
             <span className="font-display text-lg text-sidebar-foreground">
-              <span className="font-semibold">flow</span><span className="font-normal text-flowly-soft">ly</span>
+              <span className="font-semibold">flow</span><span className="font-normal text-nevvoh-soft">ly</span>
             </span>
           )}
         </div>

@@ -1,8 +1,8 @@
-# Flowly
+# Nevvoh
 
 > Software de gestão de tarefas, projetos e equipes. Kanban, atas de reunião, temporizador Pomodoro e agenda integrada em uma única plataforma.
 
-Flowly is a Brazilian-Portuguese (with English support) team productivity platform that combines Kanban task management, team collaboration, meeting minutes, work instructions, idea tracking, a personal calendar, a knowledge base and a Pomodoro focus timer. Pricing is per user/month with a 10-seat minimum and a 14-day free trial.
+Nevvoh is a Brazilian-Portuguese (with English support) team productivity platform that combines Kanban task management, team collaboration, meeting minutes, work instructions, idea tracking, a personal calendar, a knowledge base and a Pomodoro focus timer. Pricing is per user/month with a 10-seat minimum and a 14-day free trial.
 
 ## Pages
 

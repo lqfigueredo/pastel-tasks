@@ -22,10 +22,10 @@ const LOGO_URL = 'https://pzhwmxmlozmwvscndirw.supabase.co/storage/v1/object/pub
 export const ReauthenticationEmail = ({ token }: ReauthenticationEmailProps) => (
   <Html lang="pt-BR" dir="ltr">
     <Head />
-    <Preview>Seu código de verificação do Flowly</Preview>
+    <Preview>Seu código de verificação do Nevvoh</Preview>
     <Body style={main}>
       <Container style={container}>
-        <Img src={LOGO_URL} alt="Flowly" width="48" height="48" style={logo} />
+        <Img src={LOGO_URL} alt="Nevvoh" width="48" height="48" style={logo} />
         <Heading style={h1}>Código de verificação</Heading>
         <Text style={text}>Use o código abaixo para confirmar sua identidade:</Text>
         <Text style={codeStyle}>{token}</Text>

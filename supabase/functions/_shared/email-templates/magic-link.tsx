@@ -27,16 +27,16 @@ export const MagicLinkEmail = ({
 }: MagicLinkEmailProps) => (
   <Html lang="pt-BR" dir="ltr">
     <Head />
-    <Preview>Seu link de acesso ao Flowly</Preview>
+    <Preview>Seu link de acesso ao Nevvoh</Preview>
     <Body style={main}>
       <Container style={container}>
-        <Img src={LOGO_URL} alt="Flowly" width="48" height="48" style={logo} />
+        <Img src={LOGO_URL} alt="Nevvoh" width="48" height="48" style={logo} />
         <Heading style={h1}>Seu link de acesso</Heading>
         <Text style={text}>
-          Clique no botão abaixo para acessar o Flowly. Este link expira em breve.
+          Clique no botão abaixo para acessar o Nevvoh. Este link expira em breve.
         </Text>
         <Button style={button} href={confirmationUrl}>
-          Acessar Flowly
+          Acessar Nevvoh
         </Button>
         <Text style={footer}>
           Se você não solicitou este link, ignore este e-mail.

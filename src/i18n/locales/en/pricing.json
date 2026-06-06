@@ -1,7 +1,7 @@
 {
   "meta": {
-    "title": "Flowly — Free access for 1 year for your team",
-    "description": "Flowly is now free for 1 year for every team. Sign up without a credit card, minimum 10 seats, automatic renewal."
+    "title": "Nevvoh — Free access for 1 year for your team",
+    "description": "Nevvoh is now free for 1 year for every team. Sign up without a credit card, minimum 10 seats, automatic renewal."
   },
   "header": {
     "home": "Home",
@@ -11,7 +11,7 @@
     "badge": "Free for 1 year — no credit card",
     "title1": "Free access,",
     "titleHighlight": "for everyone",
-    "subtitle": "We released Flowly for free for 1 year to any team that wants to use it. Auto-renewing, no card and no fine print."
+    "subtitle": "We released Nevvoh for free for 1 year to any team that wants to use it. Auto-renewing, no card and no fine print."
   },
   "noPlans": "No plans available at the moment.",
   "plan": {
@@ -29,12 +29,12 @@
     "title": "Frequently asked questions",
     "items": [
       {
-        "q": "How much does Flowly cost?",
-        "a": "Today Flowly is completely free for 1 year for any team. No credit card, no hidden charges."
+        "q": "How much does Nevvoh cost?",
+        "a": "Today Nevvoh is completely free for 1 year for any team. No credit card, no hidden charges."
       },
       {
         "q": "What happens when the year ends?",
-        "a": "Your access is automatically renewed for another year, at no cost. You keep using Flowly normally without doing anything."
+        "a": "Your access is automatically renewed for another year, at no cost. You keep using Nevvoh normally without doing anything."
       },
       {
         "q": "Do I need to enter a credit card?",
@@ -42,7 +42,7 @@
       },
       {
         "q": "Why is the minimum 10 seats?",
-        "a": "Flowly was designed for teams. The 10-seat minimum ensures room to grow and effective collaboration between members from day one."
+        "a": "Nevvoh was designed for teams. The 10-seat minimum ensures room to grow and effective collaboration between members from day one."
       },
       {
         "q": "How many users can I invite?",
@@ -51,7 +51,7 @@
     ]
   },
   "footer": {
-    "copyright": "© {{year}} Flowly. All rights reserved.",
+    "copyright": "© {{year}} Nevvoh. All rights reserved.",
     "access": "Open platform"
   }
 }

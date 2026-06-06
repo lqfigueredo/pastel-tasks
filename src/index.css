@@ -6,7 +6,7 @@
 
 @layer base {
   :root {
-    /* Flowly — Light Mode
+    /* Nevvoh — Light Mode
        Page bg:    Soft White  #F5F5F5
        Surfaces:   Pure White  #FFFFFF (Light Gray #E8E8E8 border)
        Text:       Pitch Black #0D0D0D
@@ -59,24 +59,24 @@
     --sidebar-border: 0 0% 18%;
     --sidebar-ring: 245 60% 67%;
 
-    /* Flowly brand tokens */
-    --flowly-black: 0 0% 5%;           /* #0D0D0D */
-    --flowly-offblack: 0 0% 10%;       /* #1A1A1A */
-    --flowly-darkgray: 0 0% 18%;       /* #2E2E2E */
-    --flowly-midgray: 0 0% 42%;        /* #6B6B6B */
-    --flowly-lightgray: 0 0% 91%;      /* #E8E8E8 */
-    --flowly-softwhite: 0 0% 96%;      /* #F5F5F5 */
-    --flowly-purple: 246 43% 50%;      /* #534AB7 */
-    --flowly-soft: 245 60% 67%;        /* #7F77DD */
-    --flowly-lavender: 244 60% 88%;    /* #CECBF6 */
-    --flowly-ghost: 244 79% 96%;       /* #EEEDFE */
+    /* Nevvoh brand tokens */
+    --nevvoh-black: 0 0% 5%;           /* #0D0D0D */
+    --nevvoh-offblack: 0 0% 10%;       /* #1A1A1A */
+    --nevvoh-darkgray: 0 0% 18%;       /* #2E2E2E */
+    --nevvoh-midgray: 0 0% 42%;        /* #6B6B6B */
+    --nevvoh-lightgray: 0 0% 91%;      /* #E8E8E8 */
+    --nevvoh-softwhite: 0 0% 96%;      /* #F5F5F5 */
+    --nevvoh-purple: 246 43% 50%;      /* #534AB7 */
+    --nevvoh-soft: 245 60% 67%;        /* #7F77DD */
+    --nevvoh-lavender: 244 60% 88%;    /* #CECBF6 */
+    --nevvoh-ghost: 244 79% 96%;       /* #EEEDFE */
 
     /* Accent text — Brand Purple on light surfaces */
     --brand-accent: 246 43% 50%;       /* #534AB7 */
   }
 
   .dark {
-    /* Flowly — Dark Mode
+    /* Nevvoh — Dark Mode
        Page bg:    Pitch Black #0D0D0D
        Surfaces:   Off Black   #1A1A1A
        Text:       Pure White  #FFFFFF

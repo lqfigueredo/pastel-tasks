@@ -27,13 +27,13 @@ export const RecoveryEmail = ({
 }: RecoveryEmailProps) => (
   <Html lang="pt-BR" dir="ltr">
     <Head />
-    <Preview>Redefinir sua senha no Flowly</Preview>
+    <Preview>Redefinir sua senha no Nevvoh</Preview>
     <Body style={main}>
       <Container style={container}>
-        <Img src={LOGO_URL} alt="Flowly" width="48" height="48" style={logo} />
+        <Img src={LOGO_URL} alt="Nevvoh" width="48" height="48" style={logo} />
         <Heading style={h1}>Redefinir senha</Heading>
         <Text style={text}>
-          Recebemos uma solicitação para redefinir sua senha no Flowly. Clique no botão abaixo para escolher uma nova senha.
+          Recebemos uma solicitação para redefinir sua senha no Nevvoh. Clique no botão abaixo para escolher uma nova senha.
         </Text>
         <Button style={button} href={confirmationUrl}>
           Redefinir Senha

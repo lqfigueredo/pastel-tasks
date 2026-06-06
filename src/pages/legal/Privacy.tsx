@@ -7,7 +7,7 @@ import { PageLoader } from '@/components/ui/loaders';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import { Wordmark } from '@/components/Wordmark';
-import logo from '@/assets/flowly-logo.svg';
+import logo from '@/assets/nevvoh-logo.svg';
 
 const Privacy = () => {
   const { t, i18n } = useTranslation('public');
@@ -65,7 +65,7 @@ const Privacy = () => {
       <header className="border-b border-border/50">
         <div className="mx-auto max-w-3xl px-6 py-4 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2">
-            <img src={logo} alt="Flowly" className="h-7 w-7 rounded-lg" />
+            <img src={logo} alt="Nevvoh" className="h-7 w-7 rounded-lg" />
             <Wordmark />
           </Link>
           <Button variant="ghost" size="sm" asChild>

@@ -30,15 +30,15 @@ export const InviteEmail = ({
 }: InviteEmailProps) => (
   <Html lang="pt-BR" dir="ltr">
     <Head />
-    <Preview>Você foi convidado para o Flowly</Preview>
+    <Preview>Você foi convidado para o Nevvoh</Preview>
     <Body style={main}>
       <Container style={container}>
-        <Img src={LOGO_URL} alt="Flowly" width="48" height="48" style={logo} />
+        <Img src={LOGO_URL} alt="Nevvoh" width="48" height="48" style={logo} />
         <Heading style={h1}>Você foi convidado!</Heading>
         <Text style={text}>
           Você foi convidado para o{' '}
           <Link href={siteUrl} style={link}>
-            <strong>Flowly</strong>
+            <strong>Nevvoh</strong>
           </Link>
           . Clique no botão abaixo para aceitar o convite e criar sua conta.
         </Text>

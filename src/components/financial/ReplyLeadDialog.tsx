@@ -16,7 +16,7 @@ interface ReplyLeadDialogProps {
   onSuccess: () => void;
 }
 
-const DEFAULT_MESSAGE = 'Agradecemos pelo seu interesse no Flowly! Informamos que você já pode se cadastrar na nossa plataforma e começar a utilizar todas as funcionalidades. Acesse o link abaixo para criar sua conta.';
+const DEFAULT_MESSAGE = 'Agradecemos pelo seu interesse no Nevvoh! Informamos que você já pode se cadastrar na nossa plataforma e começar a utilizar todas as funcionalidades. Acesse o link abaixo para criar sua conta.';
 
 const ReplyLeadDialog = ({ lead, open, onOpenChange, onSuccess }: ReplyLeadDialogProps) => {
   const [message, setMessage] = useState(DEFAULT_MESSAGE);

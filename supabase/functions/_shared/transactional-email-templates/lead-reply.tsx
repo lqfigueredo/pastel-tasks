@@ -12,7 +12,7 @@ import {
 } from 'npm:@react-email/components@0.0.22'
 import type { TemplateEntry } from './registry.ts'
 
-const SITE_NAME = 'Flowly'
+const SITE_NAME = 'Nevvoh'
 const SITE_URL = 'https://nevvoh.com'
 const LOGO_URL = 'https://pzhwmxmlozmwvscndirw.supabase.co/storage/v1/object/public/email-assets/logo.png'
 
@@ -32,7 +32,7 @@ const LeadReplyEmail = ({ leadName, message }: LeadReplyProps) => (
           {leadName ? `Olá, ${leadName}!` : 'Olá!'}
         </Heading>
         <Text style={text}>
-          {message || 'Agradecemos pelo seu interesse no Flowly! Estamos entrando em contato para informá-lo que você já pode se cadastrar na nossa plataforma.'}
+          {message || 'Agradecemos pelo seu interesse no Nevvoh! Estamos entrando em contato para informá-lo que você já pode se cadastrar na nossa plataforma.'}
         </Text>
         <Button style={button} href={`${SITE_URL}/financeiro/cadastro`}>
           Cadastre-se agora
@@ -47,9 +47,9 @@ const LeadReplyEmail = ({ leadName, message }: LeadReplyProps) => (
 
 export const template = {
   component: LeadReplyEmail,
-  subject: 'Mensagem da equipe Flowly',
+  subject: 'Mensagem da equipe Nevvoh',
   displayName: 'Resposta ao lead',
-  previewData: { leadName: 'Maria', message: 'Você já pode se cadastrar no Flowly! Acesse o link abaixo para criar sua conta.' },
+  previewData: { leadName: 'Maria', message: 'Você já pode se cadastrar no Nevvoh! Acesse o link abaixo para criar sua conta.' },
 } satisfies TemplateEntry
 
 const main = { backgroundColor: '#ffffff', fontFamily: "'DM Sans', 'Inter', Arial, sans-serif" }
