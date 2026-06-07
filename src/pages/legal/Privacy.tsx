@@ -7,7 +7,8 @@ import { PageLoader } from '@/components/ui/loaders';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import { Wordmark } from '@/components/Wordmark';
-import logo from '@/assets/nevvoh-logo.svg';
+import logoAsset from '@/assets/nevvoh-logo.png.asset.json';
+const logo = logoAsset.url;
 
 const Privacy = () => {
   const { t, i18n } = useTranslation('public');

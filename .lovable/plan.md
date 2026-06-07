@@ -1,78 +1,41 @@
-# Revisão do fluxo de cadastro inicial
+## Atualizar logo em todo o sistema
 
-## Resumo
+Vou substituir o logo atual (SVG com chevrons em azul/branco) pelo novo PNG enviado (chevrons brancos sobre fundo roxo arredondado) em todos os locais onde aparece.
 
-O fluxo está funcional. O cadastro público (`/auth`) cria admin com acesso free de 1 ano e dispara onboarding. O cadastro financeiro (`/financeiro/cadastro`) cria `solution_admin`. Convites de equipe (`/convite/:token`) também funcionam.
+### Onde o logo é usado hoje
 
-Encontrei alguns pontos para corrigir antes de testar — alguns silenciosos, outros de segurança. Listo os que recomendo corrigir agora; os demais ficam como observação.
+**App (frontend):**
+- `src/assets/nevvoh-logo.svg` — importado por `AppSidebar`, `Auth`, `Landing` (header + footer), `Pricing` (header + footer), `Unsubscribe`, `legal/Privacy`, `legal/Terms`
+- `public/favicon.svg` — favicon do browser
+- `public/manifest.webmanifest` — ícone do PWA
+- `index.html` — `<link rel="icon">` e `apple-touch-icon`
 
----
+**E-mails (Supabase Edge Functions):**
+- 6 templates de auth: `signup`, `magic-link`, `recovery`, `invite`, `email-change`, `reauthentication`
+- 4 templates transacionais: `daily-pending-summary`, `lead-reply`, `recurring-task-reminder`, `team-invite`
+- Todos referenciam `LOGO_URL = https://pzhwmxmlozmwvscndirw.supabase.co/storage/v1/object/public/email-assets/logo.png`
 
-## Bugs que recomendo corrigir agora
+### Passos
 
-### 1. `register-user` — falhas silenciosas (CRÍTICO p/ confiabilidade)
-**Arquivo:** `supabase/functions/register-user/index.ts:74-76` e `121-122`
+1. **Hospedar o novo PNG no CDN da Lovable**
+   - Rodar `lovable-assets create` a partir de `/mnt/user-uploads/Logo_em_alta_HD_a_partir_do_original.png` → gerar `src/assets/nevvoh-logo.png.asset.json`
 
-Se `roleError` (insert do role `admin`) ou `subError` (insert da subscription) acontecer, o erro é só logado e a função retorna `success: true`. O usuário acha que cadastrou normalmente, mas fica:
-- sem role `admin` → onboarding não dispara, não vê telas administrativas
-- sem subscription → `admin_settings.max_users` não populado, não consegue convidar ninguém
+2. **Trocar o import nos 7 arquivos do app**
+   - Substituir `import logo from '@/assets/nevvoh-logo.svg'` por `import logoAsset from '@/assets/nevvoh-logo.png.asset.json'` e usar `logoAsset.url` em `src={...}`
+   - Remover o `src/assets/nevvoh-logo.svg` antigo
 
-**Correção:** se qualquer um dos dois falhar, fazer rollback (`auth.admin.deleteUser(userId)`) e retornar erro real ao frontend.
+3. **Atualizar favicon e manifest**
+   - Copiar o PNG para `public/favicon.png`
+   - Em `index.html`: trocar as duas tags para `href="/favicon.png" type="image/png"`
+   - Em `manifest.webmanifest`: trocar o ícone para `/favicon.png` (type `image/png`)
+   - Remover `public/favicon.svg`
 
-### 2. `register-financial-user` — role `user` duplicado
-**Arquivo:** `supabase/functions/register-financial-user/index.ts:73-75`
+4. **Atualizar logo dos e-mails**
+   - Fazer upload do PNG para o bucket `email-assets` como `logo.png` (mesma URL já usada pelos templates — `overwrite: true`)
+   - Resultado: os 10 templates passam a exibir o novo logo automaticamente, sem alterar código nem precisar redeploy das functions
+   - Observação: clientes de e-mail podem manter o logo antigo em cache por algumas horas
 
-O trigger `handle_new_user` cria role `user` automaticamente. O `register-user` faz `DELETE` dele antes de inserir `admin`, mas o `register-financial-user` não. Resultado: `solution_admin` fica com `['user','solution_admin']`.
-
-**Correção:** adicionar o mesmo `DELETE` de role `user` antes do INSERT de `solution_admin`, espelhando `register-user`.
-
-### 3. `FinancialRegister.tsx` — token hardcoded no frontend
-**Arquivo:** `src/pages/FinancialRegister.tsx:29`
-
-```ts
-if (token !== "445") { ... }
-```
-
-Qualquer pessoa vendo o JS descobre o token. A validação real está no servidor (env `FINANCIAL_REGISTER_TOKEN`), então a checagem do frontend é dispensável e perigosa.
-
-**Correção:** remover a comparação `=== "445"`; deixar apenas a validação server-side. O frontend só precisa exigir que o campo não esteja vazio.
-
----
-
-## Bugs/observações que NÃO vou alterar agora (só registro)
-
-- **`accept-team-invite` / `invite-team-member`** usam `listUsers({ perPage: 1000 })` sem paginação real → falha com >1000 usuários cadastrados. Não é problema imediato. *(Sugiro tratar quando a base crescer.)*
-- **Step4 do Onboarding** trava se a tabela `task_statuses` estiver vazia. *(Edge case — em produção sempre há status padrão.)*
-- **Step1 do Onboarding** chama ViaCEP sem timeout. *(UX raro de falhar.)*
-- **Turnstile bypass** quando env vars não setadas (já documentado).
-
----
-
-## Teste do fluxo de cadastro de nova empresa
-
-Após aplicar as 3 correções acima, vou testar no preview com o browser:
-
-1. **Abrir `/auth`** → preencher nome, e-mail novo (`teste-rebrand+<timestamp>@nevvoh.com`), senha (≥8 chars), resolver Turnstile, submeter.
-2. **Verificar** no banco (via `read_query`):
-   - `auth.users` tem o registro com `email_confirmed_at` preenchido
-   - `profiles` tem `display_name`
-   - `user_roles` tem **apenas** `admin` (sem `user`)
-   - `subscriptions` tem `status='active'`, `provider='free'`, `current_period_end` ≈ hoje + 365 dias
-   - `admin_settings.max_users` populado pelo trigger
-3. **Login** com a nova conta → confirmar que **OnboardingWizard** abre.
-4. **Cancelar / pular** o wizard (não preciso completar todos os steps — só validar que abre e os campos carregam).
-5. **Limpar** o usuário de teste do banco no final.
-
-## Como verifico
-
-- Após cada correção: rebuild automático.
-- Teste no preview com `view_preview` + `observe` + `act`.
-- Validação dos inserts via `supabase--read_query`.
-- Logs das edge functions via `supabase--edge_function_logs` se algo falhar.
-
-## Fora de escopo
-
-- Re-arquitetar a aprovação/ativação de subscriptions pagas.
-- Implementar paginação real no `listUsers`.
-- Adicionar timeout no ViaCEP.
-- Mexer em qualquer coisa que não seja diretamente o fluxo de signup.
+### Fora do escopo
+- Mudar a paleta de cores do app (o roxo do novo logo já se aproxima da identidade atual; não vou redesenhar o sistema de cores)
+- Trocar a wordmark "Nevvoh" (continua como texto)
+- Gerar variações claro/escuro do logo
