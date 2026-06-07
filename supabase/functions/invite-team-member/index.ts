@@ -8,6 +8,21 @@ const corsHeaders = {
 const SITE_URL = 'https://nevvoh.com'
 const TRIAL_INVITE_DAYS = 7
 
+// Paginated check for existing user by email (handles >1000 users)
+async function emailExists(supabaseAdmin: any, email: string): Promise<boolean> {
+  const target = email.toLowerCase()
+  const perPage = 1000
+  for (let page = 1; page <= 50; page++) {
+    const { data, error } = await supabaseAdmin.auth.admin.listUsers({ page, perPage })
+    if (error) throw error
+    const users = data?.users || []
+    if (users.some((u: any) => u.email?.toLowerCase() === target)) return true
+    if (users.length < perPage) return false
+  }
+  return false
+}
+
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
