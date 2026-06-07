@@ -32,10 +32,19 @@ export const Step4Task = ({ teamId, onFinish, onBack, onSkip }: Props) => {
       toast({ title: t('step4.errors.titleRequired'), variant: 'destructive' });
       return;
     }
-    const defaultStatus = statuses?.find((s) => s.is_default) || statuses?.[0];
+    let defaultStatus = statuses?.find((s) => s.is_default) || statuses?.[0];
     if (!defaultStatus) {
-      toast({ title: t('step4.errors.noStatus'), variant: 'destructive' });
-      return;
+      // Fallback: cria status "A fazer" on-the-fly se não houver nenhum
+      const { data: created, error: statusErr } = await supabase
+        .from('task_statuses')
+        .insert({ name: 'A fazer', color: '#6366f1', position: 0, created_by: user.id })
+        .select('id, name, color, position, is_default, team_id, created_by, created_at, deleted_at')
+        .single();
+      if (statusErr || !created) {
+        toast({ title: t('step4.errors.noStatus'), description: statusErr?.message, variant: 'destructive' });
+        return;
+      }
+      defaultStatus = created as typeof defaultStatus;
     }
     setLoading(true);
     try {

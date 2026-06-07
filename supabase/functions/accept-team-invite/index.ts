@@ -5,6 +5,20 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 }
 
+async function emailExists(supabaseAdmin: any, email: string): Promise<boolean> {
+  const target = email.toLowerCase()
+  const perPage = 1000
+  for (let page = 1; page <= 50; page++) {
+    const { data, error } = await supabaseAdmin.auth.admin.listUsers({ page, perPage })
+    if (error) throw error
+    const users = data?.users || []
+    if (users.some((u: any) => u.email?.toLowerCase() === target)) return true
+    if (users.length < perPage) return false
+  }
+  return false
+}
+
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
@@ -96,9 +110,8 @@ Deno.serve(async (req) => {
       }), { status: 403, headers: corsHeaders })
     }
 
-    // Verifica se email já foi cadastrado entre envio e aceite
-    const { data: existingUsers } = await supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 1000 })
-    const userExists = existingUsers?.users?.some(u => u.email?.toLowerCase() === invite.email.toLowerCase())
+    // Verifica se email já foi cadastrado entre envio e aceite (paginado)
+    const userExists = await emailExists(supabaseAdmin, invite.email)
     if (userExists) {
       return new Response(JSON.stringify({
         error: 'Este email já tem uma conta. Faça login normalmente.'
