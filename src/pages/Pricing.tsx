@@ -50,8 +50,24 @@ const Pricing = () => {
 
   const faqItems = safeTArray<{ q: string; a: string }>(t('faq.items', { returnObjects: true }));
 
+  const faqJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: faqItems.map((f) => ({
+      '@type': 'Question',
+      name: f.q,
+      acceptedAnswer: { '@type': 'Answer', text: f.a },
+    })),
+  };
+
   return (
     <div className="min-h-screen bg-background text-foreground scroll-smooth">
+      <SEO
+        title={t('meta.title')}
+        description={t('meta.description')}
+        path="/precos"
+        jsonLd={faqItems.length > 0 ? faqJsonLd : undefined}
+      />
       <header className="border-b border-border/50 bg-background/80 backdrop-blur-sm sticky top-0 z-10">
         <div className="mx-auto max-w-6xl flex items-center justify-between px-6 py-4">
           <Link to="/" className="flex items-center gap-2">
