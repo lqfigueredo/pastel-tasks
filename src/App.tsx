@@ -1,6 +1,7 @@
 import { lazy, Suspense } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { HelmetProvider } from "react-helmet-async";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -46,51 +47,53 @@ const queryClient = new QueryClient({
 const LazyFallback = () => <PageLoader />;
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <ThemeProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <AuthProvider>
-            <ErrorBoundary>
-              <Suspense fallback={<LazyFallback />}>
-                <Routes>
-                <Route path="/" element={<Landing />} />
-                <Route path="/landing" element={<Landing />} />
-                <Route path="/auth" element={<Auth />} />
-                <Route path="/precos" element={<Pricing />} />
-                <Route path="/financeiro/cadastro" element={<FinancialRegister />} />
-                <Route path="/unsubscribe" element={<Unsubscribe />} />
-                <Route path="/convite/:token" element={<AcceptInvite />} />
-                <Route path="/termos" element={<Terms />} />
-                <Route path="/privacidade" element={<Privacy />} />
-                <Route element={<AppLayout />}>
-                  <Route path="/tarefas" element={<Index />} />
-                  <Route path="/dashboard" element={<Dashboard />} />
-                  <Route path="/equipe" element={<TeamList />} />
-                  <Route path="/equipe/:teamId" element={<Team />} />
-                  <Route path="/atas" element={<MeetingMinutes />} />
-                  <Route path="/atas/:meetingId" element={<MeetingMinuteDetail />} />
-                  <Route path="/configuracoes" element={<Settings />} />
-                  <Route path="/admin" element={<Admin />} />
-                  <Route path="/financeiro" element={<Financial />} />
-                  <Route path="/instrucoes" element={<WorkInstructions />} />
-                  <Route path="/agenda" element={<PersonalCalendar />} />
-                  <Route path="/ideias" element={<Ideas />} />
-                  <Route path="/conhecimento" element={<KnowledgeBase />} />
-                  <Route path="/temporizador" element={<Timer />} />
-                  <Route path="/cobranca" element={<Billing />} />
-                </Route>
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-              </Suspense>
-            </ErrorBoundary>
-          </AuthProvider>
-        </BrowserRouter>
-      </TooltipProvider>
-    </ThemeProvider>
-  </QueryClientProvider>
+  <HelmetProvider>
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <AuthProvider>
+              <ErrorBoundary>
+                <Suspense fallback={<LazyFallback />}>
+                  <Routes>
+                  <Route path="/" element={<Landing />} />
+                  <Route path="/landing" element={<Landing />} />
+                  <Route path="/auth" element={<Auth />} />
+                  <Route path="/precos" element={<Pricing />} />
+                  <Route path="/financeiro/cadastro" element={<FinancialRegister />} />
+                  <Route path="/unsubscribe" element={<Unsubscribe />} />
+                  <Route path="/convite/:token" element={<AcceptInvite />} />
+                  <Route path="/termos" element={<Terms />} />
+                  <Route path="/privacidade" element={<Privacy />} />
+                  <Route element={<AppLayout />}>
+                    <Route path="/tarefas" element={<Index />} />
+                    <Route path="/dashboard" element={<Dashboard />} />
+                    <Route path="/equipe" element={<TeamList />} />
+                    <Route path="/equipe/:teamId" element={<Team />} />
+                    <Route path="/atas" element={<MeetingMinutes />} />
+                    <Route path="/atas/:meetingId" element={<MeetingMinuteDetail />} />
+                    <Route path="/configuracoes" element={<Settings />} />
+                    <Route path="/admin" element={<Admin />} />
+                    <Route path="/financeiro" element={<Financial />} />
+                    <Route path="/instrucoes" element={<WorkInstructions />} />
+                    <Route path="/agenda" element={<PersonalCalendar />} />
+                    <Route path="/ideias" element={<Ideas />} />
+                    <Route path="/conhecimento" element={<KnowledgeBase />} />
+                    <Route path="/temporizador" element={<Timer />} />
+                    <Route path="/cobranca" element={<Billing />} />
+                  </Route>
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                </Suspense>
+              </ErrorBoundary>
+            </AuthProvider>
+          </BrowserRouter>
+        </TooltipProvider>
+      </ThemeProvider>
+    </QueryClientProvider>
+  </HelmetProvider>
 );
 
 export default App;
