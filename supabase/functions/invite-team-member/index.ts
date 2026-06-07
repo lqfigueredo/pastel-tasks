@@ -59,9 +59,8 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: 'Nome muito longo' }), { status: 400, headers: corsHeaders })
     }
 
-    // Verifica se já existe usuário com esse email
-    const { data: existingUsers } = await supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 1000 })
-    const userExists = existingUsers?.users?.some(u => u.email?.toLowerCase() === email)
+    // Verifica se já existe usuário com esse email (paginado)
+    const userExists = await emailExists(supabaseAdmin, email)
     if (userExists) {
       return new Response(JSON.stringify({
         error: 'Este email já tem uma conta no Nevvoh. Peça para o usuário fazer login ou adicione-o diretamente ao time.'
