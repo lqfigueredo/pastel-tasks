@@ -110,9 +110,8 @@ Deno.serve(async (req) => {
       }), { status: 403, headers: corsHeaders })
     }
 
-    // Verifica se email já foi cadastrado entre envio e aceite
-    const { data: existingUsers } = await supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 1000 })
-    const userExists = existingUsers?.users?.some(u => u.email?.toLowerCase() === invite.email.toLowerCase())
+    // Verifica se email já foi cadastrado entre envio e aceite (paginado)
+    const userExists = await emailExists(supabaseAdmin, invite.email)
     if (userExists) {
       return new Response(JSON.stringify({
         error: 'Este email já tem uma conta. Faça login normalmente.'
