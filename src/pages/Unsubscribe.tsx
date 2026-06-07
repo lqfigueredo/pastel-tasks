@@ -3,7 +3,8 @@ import { useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
-import logo from '@/assets/nevvoh-logo.svg';
+import logoAsset from '@/assets/nevvoh-logo.png.asset.json';
+const logo = logoAsset.url;
 
 type Status = 'loading' | 'valid' | 'already' | 'invalid' | 'success' | 'error';
 

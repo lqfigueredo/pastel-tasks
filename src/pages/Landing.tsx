@@ -23,7 +23,8 @@ import {
   CheckSquare,
 } from 'lucide-react';
 import { Wordmark } from '@/components/Wordmark';
-import logo from '@/assets/nevvoh-logo.svg';
+import logoAsset from '@/assets/nevvoh-logo.png.asset.json';
+const logo = logoAsset.url;
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import LeadFormTrigger from '@/components/landing/LeadFormTrigger';

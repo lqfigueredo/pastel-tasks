@@ -4,7 +4,8 @@ import {
   LayoutDashboard, Users, Settings, LogOut, ShieldCheck, CalendarDays,
   FileText, TrendingUp, BookOpen, Calendar, Lightbulb, BookMarked, Timer, CreditCard,
 } from 'lucide-react';
-import logo from '@/assets/nevvoh-logo.svg';
+import logoAsset from '@/assets/nevvoh-logo.png.asset.json';
+const logo = logoAsset.url;
 import { NavLink } from '@/components/NavLink';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserRoles } from '@/hooks/useUserRoles';

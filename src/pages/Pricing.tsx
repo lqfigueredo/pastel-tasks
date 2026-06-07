@@ -6,7 +6,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import LeadFormTrigger from '@/components/landing/LeadFormTrigger';
 import { Wordmark } from '@/components/Wordmark';
-import logo from '@/assets/nevvoh-logo.svg';
+import logoAsset from '@/assets/nevvoh-logo.png.asset.json';
+const logo = logoAsset.url;
 import { safeTArray } from '@/i18n/safeT';
 
 interface Plan {
