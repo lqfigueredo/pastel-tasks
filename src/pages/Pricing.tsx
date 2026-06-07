@@ -9,6 +9,7 @@ import { Wordmark } from '@/components/Wordmark';
 import logoAsset from '@/assets/nevvoh-logo.png.asset.json';
 const logo = logoAsset.url;
 import { safeTArray } from '@/i18n/safeT';
+import { SEO } from '@/components/SEO';
 
 interface Plan {
   id: string;
@@ -27,13 +28,6 @@ const Pricing = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    document.title = t('meta.title');
-    const meta =
-      document.querySelector('meta[name="description"]') ||
-      Object.assign(document.createElement('meta'), { name: 'description' });
-    meta.setAttribute('content', t('meta.description'));
-    if (!meta.parentNode) document.head.appendChild(meta);
-
     supabase
       .from('plans')
       .select('id, name, description, price_per_seat_cents, currency, minimum_seats, billing_interval, features')
@@ -43,7 +37,7 @@ const Pricing = () => {
         setPlans((data as Plan[]) ?? []);
         setLoading(false);
       });
-  }, [t]);
+  }, []);
 
   const primary = plans[0];
 
