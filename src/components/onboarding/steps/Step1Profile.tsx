@@ -63,8 +63,10 @@ export const Step1Profile = ({ onNext, onSkip }: Props) => {
     const digits = onlyDigits(cep);
     if (digits.length !== 8) return;
     setCepLoading(true);
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 5000);
     try {
-      const res = await fetch(`https://viacep.com.br/ws/${digits}/json/`);
+      const res = await fetch(`https://viacep.com.br/ws/${digits}/json/`, { signal: controller.signal });
       const data = await res.json();
       if (data.erro) {
         toast({ title: t('step1.errors.cepNotFound'), variant: 'destructive' });
@@ -77,6 +79,7 @@ export const Step1Profile = ({ onNext, onSkip }: Props) => {
     } catch {
       toast({ title: t('step1.errors.cepFailed'), variant: 'destructive' });
     } finally {
+      clearTimeout(timer);
       setCepLoading(false);
     }
   };
