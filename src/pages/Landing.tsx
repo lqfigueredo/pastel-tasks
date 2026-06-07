@@ -30,6 +30,7 @@ import { Button } from '@/components/ui/button';
 import LeadFormTrigger from '@/components/landing/LeadFormTrigger';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { safeTArray } from '@/i18n/safeT';
+import { SEO } from '@/components/SEO';
 
 /* ── Scroll-reveal wrapper ────────────────────────────── */
 const RevealOnScroll = ({
@@ -115,8 +116,24 @@ const Landing = () => {
   const [previewFeature, setPreviewFeature] = useState<FeatureKey | null>(null);
   const faqItems = safeTArray<{ q: string; a: string }>(t('faq.items', { returnObjects: true }));
 
+  const faqJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: faqItems.map((f) => ({
+      '@type': 'Question',
+      name: f.q,
+      acceptedAnswer: { '@type': 'Answer', text: f.a },
+    })),
+  };
+
   return (
     <div className="min-h-screen bg-background text-foreground scroll-smooth">
+      <SEO
+        title="Nevvoh — Gerenciador de Tarefas e Projetos para Equipes"
+        description="Gestão de tarefas, projetos e equipes em um só lugar: Kanban, atas, Pomodoro e agenda. Experimente grátis."
+        path="/"
+        jsonLd={faqItems.length > 0 ? faqJsonLd : undefined}
+      />
       {/* Header */}
       <header className="border-b border-border/50 bg-background/80 backdrop-blur-sm sticky top-0 z-10">
         <div className="mx-auto max-w-6xl flex items-center justify-between px-6 py-4">

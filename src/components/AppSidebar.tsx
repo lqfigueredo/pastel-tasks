@@ -73,6 +73,8 @@ function useRenderItem(collapsed: boolean) {
           <NavLink
             to={item.url}
             end={item.end}
+            aria-label={label}
+            title={collapsed ? label : undefined}
             className="hover:bg-sidebar-accent/60"
             activeClassName="bg-sidebar-accent text-primary font-medium"
           >
@@ -165,6 +167,8 @@ export function AppSidebar() {
           variant="ghost"
           size={collapsed ? 'icon' : 'sm'}
           onClick={() => setLogoutOpen(true)}
+          aria-label={t('logout.trigger')}
+          title={collapsed ? t('logout.trigger') : undefined}
           className="w-full justify-start text-muted-foreground hover:text-destructive"
         >
           <LogOut className="h-4 w-4" />

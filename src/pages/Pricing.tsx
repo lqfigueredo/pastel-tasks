@@ -9,6 +9,7 @@ import { Wordmark } from '@/components/Wordmark';
 import logoAsset from '@/assets/nevvoh-logo.png.asset.json';
 const logo = logoAsset.url;
 import { safeTArray } from '@/i18n/safeT';
+import { SEO } from '@/components/SEO';
 
 interface Plan {
   id: string;
@@ -27,13 +28,6 @@ const Pricing = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    document.title = t('meta.title');
-    const meta =
-      document.querySelector('meta[name="description"]') ||
-      Object.assign(document.createElement('meta'), { name: 'description' });
-    meta.setAttribute('content', t('meta.description'));
-    if (!meta.parentNode) document.head.appendChild(meta);
-
     supabase
       .from('plans')
       .select('id, name, description, price_per_seat_cents, currency, minimum_seats, billing_interval, features')
@@ -43,7 +37,7 @@ const Pricing = () => {
         setPlans((data as Plan[]) ?? []);
         setLoading(false);
       });
-  }, [t]);
+  }, []);
 
   const primary = plans[0];
 
@@ -56,8 +50,24 @@ const Pricing = () => {
 
   const faqItems = safeTArray<{ q: string; a: string }>(t('faq.items', { returnObjects: true }));
 
+  const faqJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: faqItems.map((f) => ({
+      '@type': 'Question',
+      name: f.q,
+      acceptedAnswer: { '@type': 'Answer', text: f.a },
+    })),
+  };
+
   return (
     <div className="min-h-screen bg-background text-foreground scroll-smooth">
+      <SEO
+        title={t('meta.title')}
+        description={t('meta.description')}
+        path="/precos"
+        jsonLd={faqItems.length > 0 ? faqJsonLd : undefined}
+      />
       <header className="border-b border-border/50 bg-background/80 backdrop-blur-sm sticky top-0 z-10">
         <div className="mx-auto max-w-6xl flex items-center justify-between px-6 py-4">
           <Link to="/" className="flex items-center gap-2">
