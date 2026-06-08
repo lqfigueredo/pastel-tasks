@@ -13,7 +13,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { email, password, displayName, turnstile_token: turnstileToken } = await req.json()
+    const { email, password, displayName } = await req.json()
 
     if (!email || !password || !displayName) {
       return new Response(JSON.stringify({ error: 'Email, senha e nome são obrigatórios' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
@@ -23,23 +23,7 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: 'A senha deve ter pelo menos 8 caracteres' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
     }
 
-    // Verify Cloudflare Turnstile (bot protection)
-    const turnstileSecret = Deno.env.get('TURNSTILE_SECRET_KEY')
-    if (turnstileSecret) {
-      if (!turnstileToken || typeof turnstileToken !== 'string') {
-        return new Response(JSON.stringify({ error: 'Verificação anti-bot ausente.' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
-      }
-      const formData = new FormData()
-      formData.append('secret', turnstileSecret)
-      formData.append('response', turnstileToken)
-      const remoteIp = req.headers.get('cf-connecting-ip') || req.headers.get('x-forwarded-for')
-      if (remoteIp) formData.append('remoteip', remoteIp.split(',')[0].trim())
-      const verifyRes = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', { method: 'POST', body: formData })
-      const verifyJson = (await verifyRes.json()) as { success?: boolean }
-      if (!verifyJson.success) {
-        return new Response(JSON.stringify({ error: 'Falha na verificação anti-bot. Tente novamente.' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
-      }
-    }
+
 
 
     const supabaseAdmin = createClient(
