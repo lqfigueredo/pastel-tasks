@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useTranslation, Trans } from 'react-i18next';
 import { useAuth } from '@/contexts/AuthContext';
@@ -15,10 +15,7 @@ import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { Link } from 'react-router-dom';
 import { errorToast, successToast } from '@/lib/toast-helpers';
 import { cn } from '@/lib/utils';
-import { Turnstile, type TurnstileInstance } from '@marsidev/react-turnstile';
 
-const TURNSTILE_TEST_KEY = '1x00000000000000000000AA';
-const SITE_KEY = (import.meta.env.VITE_TURNSTILE_SITE_KEY as string | undefined) || TURNSTILE_TEST_KEY;
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -33,8 +30,7 @@ const Auth = () => {
   const [displayName, setDisplayName] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState<FieldErrors>({});
-  const [turnstileToken, setTurnstileToken] = useState('');
-  const turnstileRef = useRef<TurnstileInstance | null>(null);
+
 
   if (loading) {
     return (
@@ -85,22 +81,16 @@ const Auth = () => {
       const { error } = await signIn(email.trim(), password);
       if (error) errorToast(t('errors.signIn'), error);
     } else {
-      if (!turnstileToken) {
-        errorToast(t('errors.signUp'), { message: t('validation.turnstileRequired') });
-        setSubmitting(false);
-        return;
-      }
-      const { error } = await signUp(email.trim(), password, displayName.trim(), turnstileToken);
+      const { error } = await signUp(email.trim(), password, displayName.trim());
       if (error) {
         errorToast(t('errors.signUp'), error);
-        turnstileRef.current?.reset();
-        setTurnstileToken('');
       } else {
         successToast(t('signup.successTitle'), t('signup.successDescription'));
         setIsLogin(true);
         setPassword('');
       }
     }
+
     setSubmitting(false);
   };
 
@@ -182,21 +172,10 @@ const Auth = () => {
                 />
                 {errors.password && <p className="text-xs text-destructive">{errors.password}</p>}
               </div>
-              {!isLogin && (
-                <div className="flex justify-center">
-                  <Turnstile
-                    ref={turnstileRef}
-                    siteKey={SITE_KEY}
-                    onSuccess={setTurnstileToken}
-                    onError={() => setTurnstileToken('')}
-                    onExpire={() => setTurnstileToken('')}
-                    options={{ theme: 'auto', size: 'flexible' }}
-                  />
-                </div>
-              )}
-              <Button type="submit" className="w-full" disabled={submitting || (!isLogin && !turnstileToken)}>
+              <Button type="submit" className="w-full" disabled={submitting}>
                 {submitting ? t('submitting') : isLogin ? t('login.submit') : t('signup.submit')}
               </Button>
+
             </form>
             <div className="mt-4 text-center space-y-2">
               <button

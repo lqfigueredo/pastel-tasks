@@ -1,6 +1,5 @@
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Turnstile, type TurnstileInstance } from '@marsidev/react-turnstile';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -19,43 +18,29 @@ interface LeadFormDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-// Cloudflare's testing site key — always passes. Replace by setting VITE_TURNSTILE_SITE_KEY.
-const TURNSTILE_TEST_KEY = '1x00000000000000000000AA';
-const SITE_KEY = (import.meta.env.VITE_TURNSTILE_SITE_KEY as string | undefined) || TURNSTILE_TEST_KEY;
-
 const LeadFormDialog = ({ open, onOpenChange }: LeadFormDialogProps) => {
   const { t } = useTranslation('landing');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
-  const [token, setToken] = useState<string>('');
   const [loading, setLoading] = useState(false);
-  const turnstileRef = useRef<TurnstileInstance | null>(null);
 
   const reset = () => {
     setName('');
     setEmail('');
-    setToken('');
-    turnstileRef.current?.reset();
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim() || !email.trim()) return;
-    if (!token) {
-      toast.error(t('lead.form.turnstileWait'));
-      return;
-    }
 
     setLoading(true);
     const { data, error } = await supabase.functions.invoke('submit-lead', {
-      body: { name: name.trim(), email: email.trim(), turnstile_token: token },
+      body: { name: name.trim(), email: email.trim() },
     });
     setLoading(false);
 
     if (error || (data as any)?.error) {
       toast.error((data as any)?.error || t('lead.toast.errorGeneric'));
-      turnstileRef.current?.reset();
-      setToken('');
       return;
     }
 
@@ -97,17 +82,7 @@ const LeadFormDialog = ({ open, onOpenChange }: LeadFormDialogProps) => {
               maxLength={255}
             />
           </div>
-          <div className="flex justify-center">
-            <Turnstile
-              ref={turnstileRef}
-              siteKey={SITE_KEY}
-              onSuccess={setToken}
-              onError={() => setToken('')}
-              onExpire={() => setToken('')}
-              options={{ theme: 'auto', size: 'flexible' }}
-            />
-          </div>
-          <Button type="submit" className="w-full" disabled={loading || !token}>
+          <Button type="submit" className="w-full" disabled={loading}>
             {loading ? t('lead.form.submitting') : t('lead.form.submit')}
           </Button>
         </form>

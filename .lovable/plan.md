@@ -1,41 +1,24 @@
-## Atualizar logo em todo o sistema
+# Remover Cloudflare Turnstile
 
-Vou substituir o logo atual (SVG com chevrons em azul/branco) pelo novo PNG enviado (chevrons brancos sobre fundo roxo arredondado) em todos os locais onde aparece.
+O Turnstile está bloqueando o cadastro porque o frontend usa a chave de teste do Cloudflare, gerando tokens que não validam contra o secret real. Em vez de configurar oficialmente, vou removê-lo completamente do fluxo.
 
-### Onde o logo é usado hoje
+## Mudanças
 
-**App (frontend):**
-- `src/assets/nevvoh-logo.svg` — importado por `AppSidebar`, `Auth`, `Landing` (header + footer), `Pricing` (header + footer), `Unsubscribe`, `legal/Privacy`, `legal/Terms`
-- `public/favicon.svg` — favicon do browser
-- `public/manifest.webmanifest` — ícone do PWA
-- `index.html` — `<link rel="icon">` e `apple-touch-icon`
+### Frontend
+1. **`src/pages/Auth.tsx`** — Remover o widget `<Turnstile />`, constantes `TURNSTILE_TEST_KEY`/`SITE_KEY`, estado `token`, ref `turnstileRef`, validação anti-bot, e o parâmetro `turnstileToken` passado ao `signUp`. Botão "Criar conta" volta a depender só do `loading`.
+2. **`src/components/landing/LeadFormDialog.tsx`** — Mesma remoção (widget, estado, validação) na chamada ao edge `submit-lead`.
+3. **`src/contexts/AuthContext.tsx`** — Remover o parâmetro `turnstileToken` da assinatura de `signUp` e do body enviado ao `register-user`.
 
-**E-mails (Supabase Edge Functions):**
-- 6 templates de auth: `signup`, `magic-link`, `recovery`, `invite`, `email-change`, `reauthentication`
-- 4 templates transacionais: `daily-pending-summary`, `lead-reply`, `recurring-task-reminder`, `team-invite`
-- Todos referenciam `LOGO_URL = https://pzhwmxmlozmwvscndirw.supabase.co/storage/v1/object/public/email-assets/logo.png`
+### Backend (Edge Functions)
+4. **`supabase/functions/register-user/index.ts`** — Remover o bloco que lê `TURNSTILE_SECRET_KEY` e chama `challenges.cloudflare.com/turnstile/v0/siteverify`. Também remover a leitura de `turnstile_token` do body.
+5. **`supabase/functions/submit-lead/index.ts`** — Mesma remoção.
 
-### Passos
+### i18n
+6. Remover as chaves `validation.turnstileRequired` e `lead.form.turnstileWait` dos JSONs `pt-BR` e `en` se não forem mais referenciadas.
 
-1. **Hospedar o novo PNG no CDN da Lovable**
-   - Rodar `lovable-assets create` a partir de `/mnt/user-uploads/Logo_em_alta_HD_a_partir_do_original.png` → gerar `src/assets/nevvoh-logo.png.asset.json`
+### Não mexer
+- Dependência `@marsidev/react-turnstile` no `package.json` — deixar instalada (custo zero, facilita reativar depois).
+- Secret `TURNSTILE_SECRET_KEY` no Lovable Cloud — deixar configurada (não atrapalha).
 
-2. **Trocar o import nos 7 arquivos do app**
-   - Substituir `import logo from '@/assets/nevvoh-logo.svg'` por `import logoAsset from '@/assets/nevvoh-logo.png.asset.json'` e usar `logoAsset.url` em `src={...}`
-   - Remover o `src/assets/nevvoh-logo.svg` antigo
-
-3. **Atualizar favicon e manifest**
-   - Copiar o PNG para `public/favicon.png`
-   - Em `index.html`: trocar as duas tags para `href="/favicon.png" type="image/png"`
-   - Em `manifest.webmanifest`: trocar o ícone para `/favicon.png` (type `image/png`)
-   - Remover `public/favicon.svg`
-
-4. **Atualizar logo dos e-mails**
-   - Fazer upload do PNG para o bucket `email-assets` como `logo.png` (mesma URL já usada pelos templates — `overwrite: true`)
-   - Resultado: os 10 templates passam a exibir o novo logo automaticamente, sem alterar código nem precisar redeploy das functions
-   - Observação: clientes de e-mail podem manter o logo antigo em cache por algumas horas
-
-### Fora do escopo
-- Mudar a paleta de cores do app (o roxo do novo logo já se aproxima da identidade atual; não vou redesenhar o sistema de cores)
-- Trocar a wordmark "Nevvoh" (continua como texto)
-- Gerar variações claro/escuro do logo
+## Risco
+Sem Turnstile, os endpoints `register-user` e `submit-lead` ficam expostos a bots. Mitigações já existentes que continuam ativas: validação de senha (≥8 caracteres no signup), confirmação de e-mail desativada mas o `auth.users` ainda detecta duplicatas, e Supabase tem rate limiting básico por IP. Se aparecer abuso, dá pra reativar o Turnstile com chaves oficiais depois.

@@ -9,7 +9,6 @@ const corsHeaders = {
 interface LeadPayload {
   name?: unknown;
   email?: unknown;
-  turnstile_token?: unknown;
 }
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -23,7 +22,6 @@ Deno.serve(async (req) => {
     const body = (await req.json()) as LeadPayload;
     const name = typeof body.name === "string" ? body.name.trim() : "";
     const email = typeof body.email === "string" ? body.email.trim() : "";
-    const token = typeof body.turnstile_token === "string" ? body.turnstile_token : "";
 
     if (!name || name.length > 100) {
       return new Response(JSON.stringify({ error: "Nome inválido." }), {
@@ -38,33 +36,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Verifica Turnstile (se a chave secreta estiver configurada)
-    const secret = Deno.env.get("TURNSTILE_SECRET_KEY");
-    if (secret) {
-      if (!token) {
-        return new Response(JSON.stringify({ error: "Verificação anti-bot ausente." }), {
-          status: 400,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      const formData = new FormData();
-      formData.append("secret", secret);
-      formData.append("response", token);
-      const remoteIp = req.headers.get("cf-connecting-ip") || req.headers.get("x-forwarded-for");
-      if (remoteIp) formData.append("remoteip", remoteIp.split(",")[0].trim());
 
-      const verifyRes = await fetch(
-        "https://challenges.cloudflare.com/turnstile/v0/siteverify",
-        { method: "POST", body: formData },
-      );
-      const verifyJson = (await verifyRes.json()) as { success?: boolean };
-      if (!verifyJson.success) {
-        return new Response(
-          JSON.stringify({ error: "Falha na verificação anti-bot. Tente novamente." }),
-          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-        );
-      }
-    }
 
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
