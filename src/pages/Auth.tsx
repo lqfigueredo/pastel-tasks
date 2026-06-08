@@ -172,21 +172,10 @@ const Auth = () => {
                 />
                 {errors.password && <p className="text-xs text-destructive">{errors.password}</p>}
               </div>
-              {!isLogin && (
-                <div className="flex justify-center">
-                  <Turnstile
-                    ref={turnstileRef}
-                    siteKey={SITE_KEY}
-                    onSuccess={setTurnstileToken}
-                    onError={() => setTurnstileToken('')}
-                    onExpire={() => setTurnstileToken('')}
-                    options={{ theme: 'auto', size: 'flexible' }}
-                  />
-                </div>
-              )}
-              <Button type="submit" className="w-full" disabled={submitting || (!isLogin && !turnstileToken)}>
+              <Button type="submit" className="w-full" disabled={submitting}>
                 {submitting ? t('submitting') : isLogin ? t('login.submit') : t('signup.submit')}
               </Button>
+
             </form>
             <div className="mt-4 text-center space-y-2">
               <button
