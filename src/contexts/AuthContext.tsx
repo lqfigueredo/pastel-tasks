@@ -37,10 +37,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => subscription.unsubscribe();
   }, []);
 
-  const signUp = async (email: string, password: string, displayName: string, turnstileToken: string) => {
+  const signUp = async (email: string, password: string, displayName: string) => {
     const { data, error: invokeError } = await supabase.functions.invoke('register-user', {
-      body: { email, password, displayName, turnstile_token: turnstileToken },
+      body: { email, password, displayName },
     });
+
 
     if (invokeError) {
       return { error: { message: invokeError.message || 'Erro ao criar conta' } };
