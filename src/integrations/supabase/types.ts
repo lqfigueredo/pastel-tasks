@@ -1974,6 +1974,53 @@ export type Database = {
         }
         Relationships: []
       }
+      user_legal_acceptances: {
+        Row: {
+          accepted_at: string
+          created_at: string
+          doc_type: string
+          document_id: string | null
+          id: string
+          ip_address: string | null
+          locale: string | null
+          user_agent: string | null
+          user_id: string
+          version: number | null
+        }
+        Insert: {
+          accepted_at?: string
+          created_at?: string
+          doc_type: string
+          document_id?: string | null
+          id?: string
+          ip_address?: string | null
+          locale?: string | null
+          user_agent?: string | null
+          user_id: string
+          version?: number | null
+        }
+        Update: {
+          accepted_at?: string
+          created_at?: string
+          doc_type?: string
+          document_id?: string | null
+          id?: string
+          ip_address?: string | null
+          locale?: string | null
+          user_agent?: string | null
+          user_id?: string
+          version?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_legal_acceptances_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "legal_documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           id: string
