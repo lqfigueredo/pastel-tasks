@@ -7,6 +7,7 @@ import { PageLoader } from '@/components/ui/loaders';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import { Wordmark } from '@/components/Wordmark';
+import { SEO } from '@/components/SEO';
 import logoAsset from '@/assets/nevvoh-logo.png.asset.json';
 const logo = logoAsset.url;
 
@@ -59,12 +60,22 @@ const Terms = () => {
 
   if (loading) return <PageLoader />;
 
+  const isPt = i18n.language?.startsWith('pt');
   return (
     <div className="min-h-screen bg-background">
+      <SEO
+        title={isPt ? 'Termos de Uso — Nevvoh' : 'Terms of Use — Nevvoh'}
+        description={
+          isPt
+            ? 'Termos de uso do Nevvoh: regras de utilização, responsabilidades e condições do gerenciador de tarefas e equipes.'
+            : 'Nevvoh Terms of Use: rules, responsibilities and conditions for using the task and team management platform.'
+        }
+        path="/termos"
+      />
       <header className="border-b border-border/50">
         <div className="mx-auto max-w-3xl px-6 py-4 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2">
-            <img src={logo} alt="Nevvoh" className="h-7 w-7 rounded-lg" />
+            <img src={logo} alt="Nevvoh - Gerenciador de tarefas e equipes" className="h-7 w-7 rounded-lg" />
             <Wordmark />
           </Link>
           <Button variant="ghost" size="sm" asChild>
