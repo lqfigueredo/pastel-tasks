@@ -1,11 +1,12 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
-import { Plus, X, Download, Calendar as CalendarIcon, LayoutGrid, Archive } from 'lucide-react';
+import { Plus, X, Download, Calendar as CalendarIcon, LayoutGrid, Archive, SlidersHorizontal } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 import { getCurrentLocale } from '@/lib/date';
@@ -15,6 +16,7 @@ import { useUserRoles } from '@/hooks/useUserRoles';
 import { HelpButton } from '@/components/HelpButton';
 import { useProfilesQuery } from '@/hooks/useProfilesQuery';
 import { useAuth } from '@/contexts/AuthContext';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -26,6 +28,8 @@ import { toast } from 'sonner';
 import { format } from 'date-fns';
 
 const Index = () => {
+  const isMobile = useIsMobile();
+  const [filtersSheetOpen, setFiltersSheetOpen] = useState(false);
   const { t } = useTranslation('kanban');
   const [createOpen, setCreateOpen] = useState(false);
   const { user } = useAuth();
@@ -179,7 +183,7 @@ const Index = () => {
             )}
           </div>
         </div>
-        <div className="flex flex-wrap items-center gap-2 md:gap-3 w-full md:w-auto">
+        <div className="hidden md:flex flex-wrap items-center gap-2 md:gap-3 w-full md:w-auto">
           <KanbanSavedFilters
             current={{ assigneeId: filterAssigneeId }}
             onApply={(f) => setFilterAssigneeId(f.assigneeId ?? null)}
@@ -308,8 +312,77 @@ const Index = () => {
             {t('page.newTask')}
           </Button>
         </div>
+
+        {/* Mobile compact controls */}
+        <div className="flex md:hidden items-center gap-2 w-full">
+          <Select
+            value={filterAssigneeId ?? 'all'}
+            onValueChange={(v) => setFilterAssigneeId(v === 'all' ? null : v)}
+          >
+            <SelectTrigger className="h-11 flex-1">
+              <SelectValue placeholder={t('page.filterByAssignee')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t('page.allAssignees')}</SelectItem>
+              {profiles.map((p) => (
+                <SelectItem key={p.user_id} value={p.user_id}>
+                  {p.display_name || t('page.noName')}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Sheet open={filtersSheetOpen} onOpenChange={setFiltersSheetOpen}>
+            <SheetTrigger asChild>
+              <Button variant="outline" size="icon" className="h-11 w-11 shrink-0" aria-label={t('export.title')}>
+                <SlidersHorizontal className="h-5 w-5" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="bottom" className="rounded-t-2xl">
+              <SheetHeader>
+                <SheetTitle>{t('export.title')}</SheetTitle>
+              </SheetHeader>
+              <div className="mt-4 space-y-3">
+                <Button
+                  variant={showCompleted ? 'secondary' : 'outline'}
+                  onClick={() => setShowCompleted((v) => !v)}
+                  className="w-full h-12 justify-start gap-2"
+                >
+                  <Archive className="h-4 w-4" />
+                  {showCompleted ? t('page.hideCompleted') : t('page.showCompleted')}
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => { setFiltersSheetOpen(false); navigate('/configuracoes'); }}
+                  className="w-full h-12 justify-start gap-2"
+                >
+                  <LayoutGrid className="h-4 w-4" />
+                  {t('page.newKanban')}
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={handleExportCsv}
+                  className="w-full h-12 justify-start gap-2"
+                >
+                  <Download className="h-4 w-4" />
+                  {t('export.download')}
+                </Button>
+              </div>
+            </SheetContent>
+          </Sheet>
+        </div>
       </div>
       <KanbanBoard ref={boardRef} filterAssigneeId={filterAssigneeId} showCompleted={showCompleted} onCountChange={handleCountChange} />
+      {isMobile && (
+        <button
+          type="button"
+          onClick={() => setCreateOpen(true)}
+          aria-label={t('page.newTask')}
+          className="md:hidden fixed right-4 z-40 h-14 w-14 rounded-full bg-primary text-primary-foreground shadow-lg flex items-center justify-center active:scale-95 transition-transform"
+          style={{ bottom: 'calc(env(safe-area-inset-bottom) + 5.5rem)' }}
+        >
+          <Plus className="h-6 w-6" />
+        </button>
+      )}
       <CreateTaskDialog open={createOpen} onOpenChange={setCreateOpen} onTaskCreated={handleTaskCreated} />
     </div>
   );
