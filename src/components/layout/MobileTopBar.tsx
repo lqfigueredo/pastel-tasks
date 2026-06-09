@@ -17,30 +17,32 @@ interface Props {
   onOpenSearch: () => void;
 }
 
-export function MobileTopBar({ pageTitle, onOpenSearch }: Props) {
+export function MobileTopBar({ pageTitle: _pageTitle, onOpenSearch }: Props) {
   const { t } = useTranslation('common');
   return (
     <header
-      className="sticky top-0 z-30 h-14 flex items-center gap-2 px-3 border-b border-border bg-background/90 backdrop-blur"
+      className="sticky top-0 z-30 h-14 flex items-center gap-1 px-3 border-b border-border bg-background/90 backdrop-blur"
       style={{ paddingTop: 'env(safe-area-inset-top)' }}
     >
       <img src={logo} alt="Nevvoh" className="h-8 w-8 rounded-lg object-contain shrink-0" />
-      <h1 className="font-display text-sm font-semibold truncate min-w-0 flex-1">
-        {pageTitle || 'Nevvoh'}
-      </h1>
+      <div className="flex-1 min-w-0" />
       <Button
         variant="ghost"
         size="icon"
         onClick={onOpenSearch}
-        className="h-9 w-9"
+        className="h-8 w-8 shrink-0"
         aria-label={t('search.openLabel')}
       >
         <Search className="h-4 w-4" />
       </Button>
-      <LanguageSwitcher />
+      <div className="shrink-0 [&_button]:h-8 [&_button]:px-1.5">
+        <LanguageSwitcher />
+      </div>
       <Suspense fallback={null}>
-        <GlobalTimerIndicator />
-        <NotificationBell />
+        <div className="shrink-0 flex items-center gap-1 [&_button]:h-8 [&_button]:w-8">
+          <GlobalTimerIndicator />
+          <NotificationBell />
+        </div>
       </Suspense>
     </header>
   );
