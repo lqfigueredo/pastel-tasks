@@ -7,6 +7,7 @@ import { PageLoader } from '@/components/ui/loaders';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import { Wordmark } from '@/components/Wordmark';
+import { SEO } from '@/components/SEO';
 import logoAsset from '@/assets/nevvoh-logo.png.asset.json';
 const logo = logoAsset.url;
 
@@ -61,12 +62,22 @@ const Privacy = () => {
 
   if (loading) return <PageLoader />;
 
+  const isPt = i18n.language?.startsWith('pt');
   return (
     <div className="min-h-screen bg-background">
+      <SEO
+        title={isPt ? 'Política de Privacidade — Nevvoh' : 'Privacy Policy — Nevvoh'}
+        description={
+          isPt
+            ? 'Política de privacidade do Nevvoh: como coletamos, usamos e protegemos seus dados no gerenciador de tarefas e equipes.'
+            : 'Nevvoh Privacy Policy: how we collect, use and protect your data in our task and team management platform.'
+        }
+        path="/privacidade"
+      />
       <header className="border-b border-border/50">
         <div className="mx-auto max-w-3xl px-6 py-4 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2">
-            <img src={logo} alt="Nevvoh" className="h-7 w-7 rounded-lg" />
+            <img src={logo} alt="Nevvoh - Gerenciador de tarefas e equipes" className="h-7 w-7 rounded-lg" />
             <Wordmark />
           </Link>
           <Button variant="ghost" size="sm" asChild>

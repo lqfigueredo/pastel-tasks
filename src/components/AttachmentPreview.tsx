@@ -86,7 +86,7 @@ export function AttachmentPreview({ open, onOpenChange, bucket, filePath, fileNa
             <div className="flex items-center justify-center p-4">
               <img
                 src={signedUrl}
-                alt={fileName}
+                alt=""
                 className="max-w-full max-h-[75vh] object-contain rounded-lg shadow-md"
               />
             </div>

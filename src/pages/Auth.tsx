@@ -118,7 +118,7 @@ const Auth = () => {
       </div>
       <div className="w-full max-w-md animate-fade-in">
         <div className="mb-8 text-center">
-          <img src={logo} alt="Nevvoh" className="mx-auto mb-4 h-14 w-14 rounded-2xl" />
+          <img src={logo} alt="Nevvoh - Gerenciador de tarefas e equipes" className="mx-auto mb-4 h-14 w-14 rounded-2xl" />
           <Wordmark className="font-display text-3xl" />
           <p className="mt-1 text-sm text-muted-foreground">{t('tagline')}</p>
         </div>
