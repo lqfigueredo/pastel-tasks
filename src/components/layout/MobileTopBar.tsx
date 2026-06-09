@@ -4,6 +4,7 @@ import { Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import logoAsset from '@/assets/nevvoh-logo.png.asset.json';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
+import { InstallAppButton } from '@/components/pwa/InstallAppButton';
 
 const NotificationBell = lazy(() =>
   import('@/components/NotificationBell').then((m) => ({ default: m.NotificationBell })),
@@ -38,6 +39,7 @@ export function MobileTopBar({ pageTitle: _pageTitle, onOpenSearch }: Props) {
       <div className="shrink-0 [&_button]:h-8 [&_button]:px-1.5">
         <LanguageSwitcher />
       </div>
+      <InstallAppButton />
       <Suspense fallback={null}>
         <div className="shrink-0 flex items-center gap-1 [&_button]:h-8 [&_button]:w-8">
           <GlobalTimerIndicator />
