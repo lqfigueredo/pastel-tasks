@@ -85,7 +85,8 @@ Deno.serve(async (req) => {
       plan = anyActive
     }
 
-    const minimumSeats = plan?.minimum_seats ?? 10
+    // DB constraint enforces minimum_seats >= 10
+    const minimumSeats = Math.max(plan?.minimum_seats ?? 10, 10)
     const priceCents = plan?.price_per_seat_cents ?? 0
     const currency = plan?.currency ?? 'BRL'
     const planId = plan?.id ?? null
