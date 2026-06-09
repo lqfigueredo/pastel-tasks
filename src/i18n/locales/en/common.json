@@ -76,6 +76,15 @@
     "darkMode": "Dark mode",
     "toggle": "Toggle theme"
   },
+  "pwa": {
+    "install": "Install app",
+    "installTitle": "Install Nevvoh",
+    "iosTitle": "Add to Home Screen",
+    "iosSubtitle": "Install Nevvoh on your home screen to open it like an app.",
+    "iosStep1": "Tap the Share button",
+    "iosStep2": "Choose \"Add to Home Screen\"",
+    "iosStep3": "Confirm by tapping \"Add\""
+  },
   "errors": {
     "generic": "Something went wrong. Please try again.",
     "network": "Check your connection and try again.",
