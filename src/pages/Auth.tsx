@@ -16,6 +16,7 @@ import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { Link } from 'react-router-dom';
 import { errorToast, successToast } from '@/lib/toast-helpers';
 import { cn } from '@/lib/utils';
+import { LegalDocumentDialog } from '@/components/legal/LegalDocumentDialog';
 
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -32,6 +33,7 @@ const Auth = () => {
   const [submitting, setSubmitting] = useState(false);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [termsError, setTermsError] = useState<string | undefined>(undefined);
+  const [legalDialog, setLegalDialog] = useState<'terms' | 'privacy' | null>(null);
   const [errors, setErrors] = useState<FieldErrors>({});
 
 
@@ -198,9 +200,9 @@ const Auth = () => {
                     />
                     <Label htmlFor="acceptTerms" className="text-xs font-normal leading-snug text-muted-foreground cursor-pointer">
                       {t('signup.acceptTermsPrefix')}
-                      <Link to="/termos" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">{t('signup.acceptTermsLink')}</Link>
+                      <button type="button" onClick={() => setLegalDialog('terms')} className="text-primary hover:underline">{t('signup.acceptTermsLink')}</button>
                       {t('signup.acceptTermsAnd')}
-                      <Link to="/privacidade" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">{t('signup.acceptPrivacyLink')}</Link>
+                      <button type="button" onClick={() => setLegalDialog('privacy')} className="text-primary hover:underline">{t('signup.acceptPrivacyLink')}</button>
                       {t('signup.acceptTermsSuffix')}
                     </Label>
                   </div>
