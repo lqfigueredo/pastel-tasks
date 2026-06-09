@@ -30,6 +30,8 @@ const Auth = () => {
   const [password, setPassword] = useState('');
   const [displayName, setDisplayName] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [termsError, setTermsError] = useState<string | undefined>(undefined);
   const [errors, setErrors] = useState<FieldErrors>({});
 
 
@@ -77,6 +79,11 @@ const Auth = () => {
     setErrors(next);
     if (hasErrors(next)) return;
 
+    if (!isLogin && !acceptedTerms) {
+      setTermsError(t('validation.termsRequired'));
+      return;
+    }
+
     setSubmitting(true);
     if (isLogin) {
       const { error } = await signIn(email.trim(), password);
@@ -89,6 +96,8 @@ const Auth = () => {
         successToast(t('signup.successTitle'), t('signup.successDescription'));
         setIsLogin(true);
         setPassword('');
+        setAcceptedTerms(false);
+        setTermsError(undefined);
       }
     }
 
@@ -173,7 +182,32 @@ const Auth = () => {
                 />
                 {errors.password && <p className="text-xs text-destructive">{errors.password}</p>}
               </div>
-              <Button type="submit" className="w-full" disabled={submitting}>
+              {!isLogin && (
+                <div className="space-y-1.5">
+                  <div className="flex items-start gap-2">
+                    <Checkbox
+                      id="acceptTerms"
+                      checked={acceptedTerms}
+                      onCheckedChange={(v) => {
+                        const checked = v === true;
+                        setAcceptedTerms(checked);
+                        if (checked) setTermsError(undefined);
+                      }}
+                      className="mt-0.5"
+                      aria-invalid={!!termsError}
+                    />
+                    <Label htmlFor="acceptTerms" className="text-xs font-normal leading-snug text-muted-foreground cursor-pointer">
+                      {t('signup.acceptTermsPrefix')}
+                      <Link to="/termos" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">{t('signup.acceptTermsLink')}</Link>
+                      {t('signup.acceptTermsAnd')}
+                      <Link to="/privacidade" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">{t('signup.acceptPrivacyLink')}</Link>
+                      {t('signup.acceptTermsSuffix')}
+                    </Label>
+                  </div>
+                  {termsError && <p className="text-xs text-destructive">{termsError}</p>}
+                </div>
+              )}
+              <Button type="submit" className="w-full" disabled={submitting || (!isLogin && !acceptedTerms)}>
                 {submitting ? t('submitting') : isLogin ? t('login.submit') : t('signup.submit')}
               </Button>
 
@@ -184,6 +218,8 @@ const Auth = () => {
                 onClick={() => {
                   setIsLogin(!isLogin);
                   setErrors({});
+                  setAcceptedTerms(false);
+                  setTermsError(undefined);
                 }}
                 className="text-sm text-primary hover:underline block w-full"
               >
@@ -193,18 +229,7 @@ const Auth = () => {
                 {t('viewPlans')}
               </Link>
             </div>
-            {!isLogin && (
-              <p className="mt-4 text-center text-xs text-muted-foreground">
-                <Trans
-                  i18nKey="signup.termsPrefix"
-                  ns="auth"
-                />
-                <Link to="/termos" className="text-primary hover:underline">{t('signup.termsLink')}</Link>
-                {t('signup.termsAnd')}
-                <Link to="/privacidade" className="text-primary hover:underline">{t('signup.privacyLink')}</Link>
-                {t('signup.termsSuffix')}
-              </p>
-            )}
+
           </CardContent>
         </Card>
       </div>
