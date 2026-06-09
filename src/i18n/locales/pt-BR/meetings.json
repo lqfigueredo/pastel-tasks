@@ -90,7 +90,12 @@
     "preview": "Pré-visualizar",
     "delete": "Excluir",
     "errorUpload": "Erro ao enviar {{name}}",
-    "uploaded": "Anexo(s) enviado(s)!"
+    "uploaded": "Anexo(s) enviado(s)!",
+    "expiresIn": "Expira em {{count}} dia",
+    "expiresIn_plural": "Expira em {{count}} dias",
+    "expiringToday": "Expira hoje",
+    "expired": "Será removido em breve",
+    "recordingRetentionTooltip": "Gravações são removidas automaticamente 15 dias após o upload para economizar armazenamento. Baixe antes desse prazo se quiser manter."
   },
   "recorder": {
     "trigger": "Gravar",

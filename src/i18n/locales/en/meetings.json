@@ -90,7 +90,12 @@
     "preview": "Preview",
     "delete": "Delete",
     "errorUpload": "Failed to upload {{name}}",
-    "uploaded": "Attachment(s) uploaded!"
+    "uploaded": "Attachment(s) uploaded!",
+    "expiresIn": "Expires in {{count}} day",
+    "expiresIn_plural": "Expires in {{count}} days",
+    "expiringToday": "Expires today",
+    "expired": "Will be removed soon",
+    "recordingRetentionTooltip": "Recordings are automatically removed 15 days after upload to save storage. Download before then if you want to keep a copy."
   },
   "recorder": {
     "trigger": "Record",

@@ -3,9 +3,18 @@ import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
-import { Upload, Trash2, FileText, Image as ImageIcon, Eye } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { Upload, Trash2, FileText, Image as ImageIcon, Eye, Clock } from 'lucide-react';
 import { toast } from 'sonner';
 import { AttachmentPreview } from '@/components/AttachmentPreview';
+
+const RECORDING_RETENTION_DAYS = 15;
+const isRecording = (type: string) => type.startsWith('video/') || type.startsWith('audio/');
+const daysUntilExpiry = (createdAt: string) => {
+  const expiresAt = new Date(createdAt).getTime() + RECORDING_RETENTION_DAYS * 86400000;
+  return Math.ceil((expiresAt - Date.now()) / 86400000);
+};
 
 interface Attachment {
   id: string;
@@ -115,34 +124,65 @@ export function MeetingAttachments({ meetingId, canUpload, createdBy }: Props) {
       )}
 
       <div className="space-y-2">
-        {attachments.map((att) => (
-          <div
-            key={att.id}
-            className="flex items-center gap-2 rounded-lg bg-muted/50 p-2 text-sm"
-          >
-            {isImage(att.file_type) ? (
-              <ImageIcon className="h-4 w-4 text-primary shrink-0" />
-            ) : (
-              <FileText className="h-4 w-4 text-primary shrink-0" />
-            )}
-            <button
-              type="button"
-              onClick={() => setPreviewAtt(att)}
-              className="truncate flex-1 text-left hover:underline focus:outline-none focus:underline"
-              title={t('attachments.preview')}
+        {attachments.map((att) => {
+          const recording = isRecording(att.file_type);
+          const days = recording ? daysUntilExpiry(att.created_at) : null;
+          let expiryLabel = '';
+          let expiryVariant: 'secondary' | 'destructive' = 'secondary';
+          if (recording && days !== null) {
+            if (days <= 0) {
+              expiryLabel = t('attachments.expired');
+              expiryVariant = 'destructive';
+            } else if (days === 1) {
+              expiryLabel = t('attachments.expiringToday');
+              expiryVariant = 'destructive';
+            } else {
+              expiryLabel = t('attachments.expiresIn', { count: days });
+              if (days <= 3) expiryVariant = 'destructive';
+            }
+          }
+          return (
+            <div
+              key={att.id}
+              className="flex items-center gap-2 rounded-lg bg-muted/50 p-2 text-sm"
             >
-              {att.file_name}
-            </button>
-            <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => setPreviewAtt(att)} title={t('attachments.preview')}>
-              <Eye className="h-3 w-3" />
-            </Button>
-            {canDelete(att) && (
-              <Button size="icon" variant="ghost" className="h-6 w-6 text-destructive" onClick={() => handleDelete(att)} title={t('attachments.delete')}>
-                <Trash2 className="h-3 w-3" />
+              {isImage(att.file_type) ? (
+                <ImageIcon className="h-4 w-4 text-primary shrink-0" />
+              ) : (
+                <FileText className="h-4 w-4 text-primary shrink-0" />
+              )}
+              <button
+                type="button"
+                onClick={() => setPreviewAtt(att)}
+                className="truncate flex-1 text-left hover:underline focus:outline-none focus:underline"
+                title={t('attachments.preview')}
+              >
+                {att.file_name}
+              </button>
+              {recording && expiryLabel && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Badge variant={expiryVariant} className="gap-1 text-[10px] font-normal whitespace-nowrap">
+                      <Clock className="h-2.5 w-2.5" />
+                      {expiryLabel}
+                    </Badge>
+                  </TooltipTrigger>
+                  <TooltipContent className="max-w-xs">
+                    {t('attachments.recordingRetentionTooltip')}
+                  </TooltipContent>
+                </Tooltip>
+              )}
+              <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => setPreviewAtt(att)} title={t('attachments.preview')}>
+                <Eye className="h-3 w-3" />
               </Button>
-            )}
-          </div>
-        ))}
+              {canDelete(att) && (
+                <Button size="icon" variant="ghost" className="h-6 w-6 text-destructive" onClick={() => handleDelete(att)} title={t('attachments.delete')}>
+                  <Trash2 className="h-3 w-3" />
+                </Button>
+              )}
+            </div>
+          );
+        })}
       </div>
 
       {previewAtt && (
