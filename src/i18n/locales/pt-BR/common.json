@@ -76,6 +76,15 @@
     "darkMode": "Modo escuro",
     "toggle": "Alternar tema"
   },
+  "pwa": {
+    "install": "Instalar app",
+    "installTitle": "Instalar Nevvoh",
+    "iosTitle": "Instalar na tela inicial",
+    "iosSubtitle": "Adicione o Nevvoh à sua tela inicial para abrir como um app.",
+    "iosStep1": "Toque no botão Compartilhar",
+    "iosStep2": "Escolha \"Adicionar à Tela de Início\"",
+    "iosStep3": "Confirme tocando em \"Adicionar\""
+  },
   "errors": {
     "generic": "Algo deu errado. Tente novamente.",
     "network": "Verifique sua conexão e tente novamente.",
