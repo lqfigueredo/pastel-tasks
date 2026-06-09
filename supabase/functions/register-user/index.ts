@@ -13,7 +13,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { email, password, displayName } = await req.json()
+    const { email, password, displayName, locale: rawLocale } = await req.json()
 
     if (!email || !password || !displayName) {
       return new Response(JSON.stringify({ error: 'Email, senha e nome são obrigatórios' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
@@ -23,8 +23,7 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: 'A senha deve ter pelo menos 8 caracteres' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
     }
 
-
-
+    const locale = typeof rawLocale === 'string' && rawLocale.startsWith('en') ? 'en' : 'pt-BR'
 
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL')!,
@@ -87,7 +86,6 @@ Deno.serve(async (req) => {
 
     // DB constraint enforces minimum_seats >= 10
     const minimumSeats = Math.max(plan?.minimum_seats ?? 10, 10)
-    const priceCents = plan?.price_per_seat_cents ?? 0
     const currency = plan?.currency ?? 'BRL'
     const planId = plan?.id ?? null
 
@@ -117,6 +115,46 @@ Deno.serve(async (req) => {
         JSON.stringify({ error: 'Falha ao criar assinatura gratuita. Tente novamente.' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
+    }
+
+    // Record legal acceptances (terms + privacy). Failure does not block signup.
+    try {
+      const ipAddress =
+        req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+        req.headers.get('cf-connecting-ip') ||
+        null
+      const userAgent = req.headers.get('user-agent') || null
+
+      const docTypes = ['terms', 'privacy'] as const
+      const acceptances: any[] = []
+      for (const docType of docTypes) {
+        const { data: doc } = await supabaseAdmin
+          .from('legal_documents')
+          .select('id, version')
+          .eq('doc_type', docType)
+          .eq('locale', locale)
+          .not('published_at', 'is', null)
+          .order('version', { ascending: false })
+          .limit(1)
+          .maybeSingle()
+
+        acceptances.push({
+          user_id: newUserId,
+          doc_type: docType,
+          document_id: doc?.id ?? null,
+          version: doc?.version ?? null,
+          locale,
+          ip_address: ipAddress,
+          user_agent: userAgent,
+        })
+      }
+
+      const { error: acceptErr } = await supabaseAdmin
+        .from('user_legal_acceptances')
+        .insert(acceptances)
+      if (acceptErr) console.error('Failed to record legal acceptances:', acceptErr)
+    } catch (e) {
+      console.error('Legal acceptance logging error:', e)
     }
 
     return new Response(

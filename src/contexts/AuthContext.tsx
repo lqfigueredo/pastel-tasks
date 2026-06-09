@@ -38,8 +38,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const signUp = async (email: string, password: string, displayName: string) => {
+    const locale = typeof window !== 'undefined' ? (localStorage.getItem('i18nextLng') || 'pt-BR') : 'pt-BR';
     const { data, error: invokeError } = await supabase.functions.invoke('register-user', {
-      body: { email, password, displayName },
+      body: { email, password, displayName, locale },
     });
 
 
