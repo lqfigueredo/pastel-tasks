@@ -8,7 +8,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { Video, Mic, Monitor, Square } from 'lucide-react';
 import { toast } from 'sonner';
 
-const MAX_DURATION_SECONDS = 2700; // 45 min
+const MAX_DURATION_SECONDS = 1200; // 20 min
 const MAX_SIZE_BYTES = 200 * 1024 * 1024; // 200 MB
 const WARNING_THRESHOLD = MAX_DURATION_SECONDS - 300; // 5 min before limit
 
