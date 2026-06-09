@@ -383,8 +383,6 @@ const Index = () => {
           <Plus className="h-6 w-6" />
         </button>
       )}
-      </div>
-      <KanbanBoard ref={boardRef} filterAssigneeId={filterAssigneeId} showCompleted={showCompleted} onCountChange={handleCountChange} />
       <CreateTaskDialog open={createOpen} onOpenChange={setCreateOpen} onTaskCreated={handleTaskCreated} />
     </div>
   );
