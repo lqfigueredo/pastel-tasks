@@ -8,9 +8,12 @@ import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { TimerProvider } from '@/contexts/TimerContext';
 import { useOnboardingStatus } from '@/hooks/useOnboardingStatus';
 import { useLocaleSync } from '@/hooks/useLocaleSync';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { MobileShell } from '@/components/layout/MobileShell';
 import { PageLoader } from '@/components/ui/loaders';
 import { Button } from '@/components/ui/button';
 import { Search } from 'lucide-react';
+
 
 // Defer non-critical global components — they don't need to block first paint
 const NotificationBell = lazy(() => import('@/components/NotificationBell').then(m => ({ default: m.NotificationBell })));
@@ -46,6 +49,8 @@ const AppLayout = () => {
   const { data: onboarding } = useOnboardingStatus();
   const location = useLocation();
   const [searchOpen, setSearchOpen] = useState(false);
+  const isMobile = useIsMobile();
+
 
   // Keep locale synced between localStorage, i18n and the user profile
   useLocaleSync();
@@ -75,66 +80,87 @@ const AppLayout = () => {
 
   return (
     <TimerProvider>
-      <SidebarProvider>
-        <div className="min-h-screen flex w-full">
-          <AppSidebar />
-          <div className="flex-1 flex flex-col min-w-0">
+      {isMobile ? (
+        <>
+          <MobileShell pageTitle={pageTitle} onOpenSearch={() => setSearchOpen(true)}>
             <Suspense fallback={null}>
               <SubscriptionStatusBanner />
               <TrialBanner />
             </Suspense>
-            <header className="h-14 flex items-center border-b border-border/50 px-4 bg-background/80 backdrop-blur-sm gap-3 min-w-0">
-              <SidebarTrigger />
-              {pageTitle && (
-                <h2 className="font-display text-sm font-semibold text-foreground/90 truncate min-w-0">
-                  {pageTitle}
-                </h2>
-              )}
-              <div className="flex-1 min-w-0" />
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setSearchOpen(true)}
-                className="hidden md:inline-flex h-8 items-center gap-2 text-xs text-muted-foreground"
-                aria-label={tCommon('search.openLabel')}
-              >
-                <Search className="h-3.5 w-3.5" />
-                <span>{tCommon('actions.search')}</span>
-                <kbd className="ml-1 rounded border border-border bg-muted px-1.5 py-0.5 text-[10px] font-mono">
-                  {tCommon('search.openShortcut')}
-                </kbd>
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setSearchOpen(true)}
-                className="md:hidden h-9 w-9"
-                aria-label={tCommon('search.openLabel')}
-              >
-                <Search className="h-4 w-4" />
-              </Button>
-              <LanguageSwitcher />
-              <Suspense fallback={null}>
-                <GlobalTimerIndicator />
-                <NotificationBell />
-              </Suspense>
-            </header>
-            <main className="flex-1 overflow-y-auto overflow-x-hidden min-w-0 p-4 md:p-6">
-              <Outlet />
-            </main>
-          </div>
-        </div>
-        <Suspense fallback={null}>
-          <GlobalSearch open={searchOpen} onOpenChange={setSearchOpen} />
-        </Suspense>
-        {onboarding?.shouldShow && (
+            <Outlet />
+          </MobileShell>
           <Suspense fallback={null}>
-            <OnboardingWizard />
+            <GlobalSearch open={searchOpen} onOpenChange={setSearchOpen} />
           </Suspense>
-        )}
-      </SidebarProvider>
+          {onboarding?.shouldShow && (
+            <Suspense fallback={null}>
+              <OnboardingWizard />
+            </Suspense>
+          )}
+        </>
+      ) : (
+        <SidebarProvider>
+          <div className="min-h-screen flex w-full">
+            <AppSidebar />
+            <div className="flex-1 flex flex-col min-w-0">
+              <Suspense fallback={null}>
+                <SubscriptionStatusBanner />
+                <TrialBanner />
+              </Suspense>
+              <header className="h-14 flex items-center border-b border-border/50 px-4 bg-background/80 backdrop-blur-sm gap-3 min-w-0">
+                <SidebarTrigger />
+                {pageTitle && (
+                  <h2 className="font-display text-sm font-semibold text-foreground/90 truncate min-w-0">
+                    {pageTitle}
+                  </h2>
+                )}
+                <div className="flex-1 min-w-0" />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setSearchOpen(true)}
+                  className="hidden md:inline-flex h-8 items-center gap-2 text-xs text-muted-foreground"
+                  aria-label={tCommon('search.openLabel')}
+                >
+                  <Search className="h-3.5 w-3.5" />
+                  <span>{tCommon('actions.search')}</span>
+                  <kbd className="ml-1 rounded border border-border bg-muted px-1.5 py-0.5 text-[10px] font-mono">
+                    {tCommon('search.openShortcut')}
+                  </kbd>
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setSearchOpen(true)}
+                  className="md:hidden h-9 w-9"
+                  aria-label={tCommon('search.openLabel')}
+                >
+                  <Search className="h-4 w-4" />
+                </Button>
+                <LanguageSwitcher />
+                <Suspense fallback={null}>
+                  <GlobalTimerIndicator />
+                  <NotificationBell />
+                </Suspense>
+              </header>
+              <main className="flex-1 overflow-y-auto overflow-x-hidden min-w-0 p-4 md:p-6">
+                <Outlet />
+              </main>
+            </div>
+          </div>
+          <Suspense fallback={null}>
+            <GlobalSearch open={searchOpen} onOpenChange={setSearchOpen} />
+          </Suspense>
+          {onboarding?.shouldShow && (
+            <Suspense fallback={null}>
+              <OnboardingWizard />
+            </Suspense>
+          )}
+        </SidebarProvider>
+      )}
     </TimerProvider>
   );
 };
+
 
 export default AppLayout;
