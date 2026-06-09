@@ -41,6 +41,8 @@ export default function MeetingMinutes() {
   const [dateFrom, setDateFrom] = useState<Date | undefined>();
   const [dateTo, setDateTo] = useState<Date | undefined>();
   const [onlyWithPendencies, setOnlyWithPendencies] = useState(false);
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+  const isMobile = useIsMobile();
 
   const { data: meetings = [], isLoading: loading } = useQuery({
     queryKey: ['meetings', user?.id],
