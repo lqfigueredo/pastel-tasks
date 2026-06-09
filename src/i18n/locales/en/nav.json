@@ -43,5 +43,11 @@
     "confirmDescription": "You will need to sign in again to access your account.",
     "cancel": "Cancel",
     "confirm": "Sign out"
+  },
+  "mobileNav": {
+    "label": "Primary navigation",
+    "more": "More",
+    "menuTitle": "Menu"
   }
 }
+
