@@ -235,6 +235,11 @@ const Auth = () => {
           </CardContent>
         </Card>
       </div>
+      <LegalDocumentDialog
+        open={legalDialog !== null}
+        onOpenChange={(o) => { if (!o) setLegalDialog(null); }}
+        docType={legalDialog}
+      />
     </div>
   );
 };
