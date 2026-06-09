@@ -9,13 +9,15 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Plus, FileText, CalendarDays, Users, AlertCircle, Search, X, CalendarIcon } from 'lucide-react';
+import { Plus, FileText, CalendarDays, Users, AlertCircle, Search, X, CalendarIcon, SlidersHorizontal } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { format } from 'date-fns';
 import { getCurrentLocale } from '@/lib/date';
 import { cn } from '@/lib/utils';
 import { CreateMeetingDialog } from '@/components/meetings/CreateMeetingDialog';
 import { HelpButton } from '@/components/HelpButton';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { EmptyState } from '@/components/ui/empty-state';
 import { ListSkeleton } from '@/components/ui/loaders';
 
