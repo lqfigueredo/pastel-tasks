@@ -100,21 +100,21 @@ export default function MeetingMinutes() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
+      <div className="flex items-center justify-between gap-2">
+        <div className="min-w-0">
           <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold text-foreground">{t('list.title')}</h1>
+            <h1 className="text-xl md:text-2xl font-bold text-foreground truncate">{t('list.title')}</h1>
             <HelpButton pageKey="meetings" />
           </div>
-          <p className="text-sm text-muted-foreground">{t('list.subtitle')}</p>
+          <p className="text-sm text-muted-foreground hidden md:block">{t('list.subtitle')}</p>
         </div>
-        <Button onClick={() => setDialogOpen(true)}>
+        <Button onClick={() => setDialogOpen(true)} className="hidden md:inline-flex">
           <Plus className="mr-2 h-4 w-4" /> {t('list.newMeeting')}
         </Button>
       </div>
 
-      {/* Filtros */}
-      <div className="flex flex-wrap items-center gap-3">
+      {/* Filtros desktop */}
+      <div className="hidden md:flex flex-wrap items-center gap-3">
         <div className="relative flex-1 min-w-[200px] max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
@@ -160,6 +160,77 @@ export default function MeetingMinutes() {
             <X className="mr-1 h-4 w-4" /> {t('list.clear')}
           </Button>
         )}
+      </div>
+
+      {/* Filtros mobile */}
+      <div className="flex md:hidden items-center gap-2">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder={t('list.searchPlaceholder')}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-9 h-11"
+          />
+        </div>
+        <Sheet open={mobileFiltersOpen} onOpenChange={setMobileFiltersOpen}>
+          <SheetTrigger asChild>
+            <Button variant="outline" size="icon" className="h-11 w-11 shrink-0 relative">
+              <SlidersHorizontal className="h-5 w-5" />
+              {(dateFrom || dateTo || onlyWithPendencies) && (
+                <span className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-primary" />
+              )}
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="bottom" className="rounded-t-2xl">
+            <SheetHeader>
+              <SheetTitle>{t('list.title')}</SheetTitle>
+            </SheetHeader>
+            <div className="mt-4 space-y-4">
+              <div className="space-y-2">
+                <p className="text-xs font-medium text-muted-foreground">{t('list.dateFrom')}</p>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" className={cn("w-full h-11 justify-start text-left font-normal", !dateFrom && "text-muted-foreground")}>
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {dateFrom ? format(dateFrom, "dd/MM/yyyy") : t('list.dateFrom')}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar mode="single" selected={dateFrom} onSelect={setDateFrom} initialFocus className="p-3 pointer-events-auto" locale={getCurrentLocale()} />
+                  </PopoverContent>
+                </Popover>
+              </div>
+              <div className="space-y-2">
+                <p className="text-xs font-medium text-muted-foreground">{t('list.dateTo')}</p>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" className={cn("w-full h-11 justify-start text-left font-normal", !dateTo && "text-muted-foreground")}>
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {dateTo ? format(dateTo, "dd/MM/yyyy") : t('list.dateTo')}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar mode="single" selected={dateTo} onSelect={setDateTo} initialFocus className="p-3 pointer-events-auto" locale={getCurrentLocale()} />
+                  </PopoverContent>
+                </Popover>
+              </div>
+              <Button
+                variant={onlyWithPendencies ? "default" : "outline"}
+                onClick={() => setOnlyWithPendencies(!onlyWithPendencies)}
+                className="w-full h-12 gap-2 justify-start"
+              >
+                <AlertCircle className="h-4 w-4" />
+                {t('list.withPendencies')}
+              </Button>
+              {hasFilters && (
+                <Button variant="ghost" onClick={clearFilters} className="w-full">
+                  <X className="mr-1 h-4 w-4" /> {t('list.clear')}
+                </Button>
+              )}
+            </div>
+          </SheetContent>
+        </Sheet>
       </div>
 
       {loading ? (
