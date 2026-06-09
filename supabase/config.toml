@@ -23,3 +23,5 @@ project_id = "pzhwmxmlozmwvscndirw"
     verify_jwt = false
   [functions.process-recurring-tasks]
     verify_jwt = false
+  [functions.cleanup-meeting-recordings]
+    verify_jwt = false
