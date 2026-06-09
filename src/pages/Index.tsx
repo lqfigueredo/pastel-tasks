@@ -28,6 +28,8 @@ import { toast } from 'sonner';
 import { format } from 'date-fns';
 
 const Index = () => {
+  const isMobile = useIsMobile();
+  const [filtersSheetOpen, setFiltersSheetOpen] = useState(false);
   const { t } = useTranslation('kanban');
   const [createOpen, setCreateOpen] = useState(false);
   const { user } = useAuth();
