@@ -71,7 +71,7 @@ const Pricing = () => {
       <header className="border-b border-border/50 bg-background/80 backdrop-blur-sm sticky top-0 z-10">
         <div className="mx-auto max-w-6xl flex items-center justify-between px-6 py-4">
           <Link to="/" className="flex items-center gap-2">
-            <img src={logo} alt="Nevvoh" className="h-9 w-9 rounded-xl" />
+            <img src={logo} alt="Nevvoh - Gerenciador de tarefas e equipes" className="h-9 w-9 rounded-xl" />
             <Wordmark className="text-lg font-display" />
           </Link>
           <nav className="flex items-center gap-2">
@@ -186,7 +186,7 @@ const Pricing = () => {
       <footer className="border-t border-border/50 py-10">
         <div className="mx-auto max-w-6xl px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
-            <img src={logo} alt="Nevvoh" className="h-7 w-7 rounded-lg" />
+            <img src={logo} alt="Nevvoh - Gerenciador de tarefas e equipes" className="h-7 w-7 rounded-lg" />
             <Wordmark className="text-sm font-display" />
           </div>
           <p className="text-sm text-muted-foreground">

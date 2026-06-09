@@ -102,7 +102,7 @@ export function AppSidebar() {
     <Sidebar collapsible="icon">
       <SidebarHeader className={collapsed ? 'p-2' : 'p-4'}>
         <div className="flex items-center gap-2">
-          <img src={logo} alt="Nevvoh" className="h-9 w-9 shrink-0 rounded-xl object-contain" />
+          <img src={logo} alt="Nevvoh - Gerenciador de tarefas e equipes" className="h-9 w-9 shrink-0 rounded-xl object-contain" />
           {!collapsed && (
             <span className="font-display text-lg text-sidebar-foreground">
               <span className="font-semibold">Nevvoh</span>
